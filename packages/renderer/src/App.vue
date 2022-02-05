@@ -11,11 +11,6 @@
   </fieldset>
 
   <fieldset>
-    <legend>Test Vue Reactivity</legend>
-    <reactive-counter />
-  </fieldset>
-
-  <fieldset>
     <legend>Test Node.js API</legend>
     <reactive-hash />
   </fieldset>
