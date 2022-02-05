@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
+    "sourceMap": false,
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "strict": true,
+    "isolatedModules": true,
+
+    "types" : ["node"],
+
+    "baseUrl": ".",
+    "paths": {
+      "/@/*": [
+        "./src/*"
+      ]
+    },
+    "lib": ["ESNext", "dom", "dom.iterable"]
+  },
+
+  "include": [
+    "src/**/*.vue",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "types/**/*.d.ts",
+    "../../types/**/*.d.ts",
+    "../preload/exposedInMainWorld.d.ts"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+  ]
+}
