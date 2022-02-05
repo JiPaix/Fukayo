@@ -26,3 +26,4 @@ myApp.use(Quasar, {
 });
 
 myApp.mount('#app');
+// basically trying stuff
