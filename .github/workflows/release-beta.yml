@@ -10,7 +10,7 @@ on:
       - '.gitignore'
       - '.github/**'
       - '!.github/workflows/release.yml'
-
+      - '!.github/workflows/beta.yml'
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: true

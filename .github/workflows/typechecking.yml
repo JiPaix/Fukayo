@@ -18,6 +18,10 @@ on:
       - 'package-lock.json'
       - '.github/workflows/typechecking.yml'
 
+concurrency:
+  group: lint-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
 defaults:
   run:
     shell: 'bash'
