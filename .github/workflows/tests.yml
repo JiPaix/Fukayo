@@ -58,10 +58,7 @@ jobs:
 
 
   e2e:
-    strategy:
-      matrix:
-        os: [ windows-latest ]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
