@@ -18,8 +18,8 @@ on:
       - 'package-lock.json'
       - '.github/workflows/lint.yml'
 concurrency:
-  group: lint-${{ github.ref }}-${{ github.sha }}
-  cancel-in-progress: false
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
