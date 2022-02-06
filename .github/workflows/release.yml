@@ -30,20 +30,33 @@ jobs:
       release-note: ${{ steps.release-note.outputs.release-note }}
       version: ${{ steps.version.outputs.build-version }}
       draft-id: ${{ steps.draft-create.outputs.id }}
+      has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
+
+      - uses: MontyD/package-json-updated-action
+        id: version-updated
+        with:
+          path: package.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/checkout@v2
+        if: steps.version-updated.outputs.has-updated
         with:
           fetch-depth: 0
 
       - uses: actions/setup-node@v2
+        if: steps.version-updated.outputs.has-updated
         with:
           node-version: 14
 
       - name: Get last git tag
+        if: steps.version-updated.outputs.has-updated
         id: tag
         run: echo "::set-output name=last-tag::$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}})"
 
       - name: Generate release notes
+        if: steps.version-updated.outputs.has-updated
         uses: ./.github/actions/release-notes
         id: release-note
         with:
@@ -53,11 +66,13 @@ jobs:
           include-abbreviated-commit: true
 
       - name: Get version from current date
+        if: steps.version-updated.outputs.has-updated
         id: version
         run: echo "::set-output name=build-version::$(node -e "try{console.log(require('./.electron-builder.config.js').extraMetadata.version)}catch(e){console.error(e);process.exit(1)}")"
 
 
       - name: Waiting on All checks
+        if: steps.version-updated.outputs.has-updated
         uses: lewagon/wait-on-check-action@v0.2
         with:
           ref: ${{ github.ref }}
@@ -65,11 +80,13 @@ jobs:
           running-workflow-name: 'draft'
 
       - name: Delete outdated drafts
+        if: steps.version-updated.outputs.has-updated
         uses: hugo19941994/delete-draft-releases@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Draft
+        if: steps.version-updated.outputs.has-updated
         id: draft-create
         uses: softprops/action-gh-release@v1
         env:
@@ -82,8 +99,8 @@ jobs:
           body: ${{ steps.release-note.outputs.release-note }}
 
   upload_artifacts:
+    if: ${{ needs.draft.outputs.has-updated }}
     needs: [ draft ]
-
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
