@@ -17,8 +17,8 @@ on:
       - '.github/workflows/tests.yml'
 
 concurrency:
-  group: tests-${{ github.ref }}-${{ github.sha }}
-  cancel-in-progress: false
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 
 defaults:
   run:
