@@ -1,8 +1,8 @@
-name: Release
+name: Release Beta
 on:
   push:
     branches:
-      - main
+      - beta
     paths-ignore:
       - '**.md'
       - '**.spec.js'
@@ -52,7 +52,7 @@ jobs:
       - name: Get version
         id: version
         if: steps.version-updated.outputs.has-updated
-        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}"
+        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}-beta}"
 
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated
@@ -90,7 +90,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          prerelease: false
+          prerelease: true
           draft: true
           tag_name: v${{ steps.version.outputs.build-version }}
           name: v${{ steps.version.outputs.build-version }}
