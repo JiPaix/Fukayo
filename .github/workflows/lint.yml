@@ -17,7 +17,9 @@ on:
       - '**.vue'
       - 'package-lock.json'
       - '.github/workflows/lint.yml'
-
+concurrency:
+  group: lint-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
 
 defaults:
   run:

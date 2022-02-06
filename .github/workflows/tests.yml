@@ -16,6 +16,10 @@ on:
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
 
+concurrency:
+  group: tests-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
 defaults:
   run:
     shell: 'bash'
