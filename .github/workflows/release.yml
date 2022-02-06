@@ -97,8 +97,8 @@ jobs:
           body: ${{ steps.release-note.outputs.release-note }}
 
   upload_artifacts:
-    if: ${{ needs.draft.outputs.has-updated }}
     needs: [ draft ]
+    if: needs.draft.outputs.has-updated
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
@@ -164,7 +164,7 @@ jobs:
 
   publish:
     needs: [ draft, upload_artifacts ]
-
+    if: needs.draft.outputs.has-updated
     strategy:
       matrix:
         os: [ ubuntu-latest ]
