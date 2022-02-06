@@ -52,7 +52,7 @@ jobs:
       - name: Get version
         id: version
         if: steps.version-updated.outputs.has-updated
-        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}-beta}"
+        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}-beta"
 
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated
