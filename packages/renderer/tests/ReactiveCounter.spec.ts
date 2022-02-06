@@ -8,7 +8,7 @@ test('ReactiveHash component', async () => {
 
   const button = wrapper.get('button');
 
-  expect(button.text()).toBe('count is: 0');
+  expect(button.text()).toBe('click count is 0');
   await button.trigger('click');
-  expect(button.text()).toBe('count is: 1');
+  expect(button.text()).toBe('click count is 1');
 });
