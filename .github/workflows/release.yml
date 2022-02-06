@@ -50,6 +50,16 @@ jobs:
         with:
           node-version: 14
 
+      - name: is Beta
+        id: beta
+        if: steps.version-updated.outputs.has-updated && github.ref == 'refs/heads/beta'
+        run: echo "::set-ouput name=isbeta::true"
+
+      - name: Get version
+        id: version
+        if: steps.version-updated.outputs.has-updated
+        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}${{steps.beta.outputs.isbeta || ''}}"
+
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated
         id: tag
@@ -64,12 +74,6 @@ jobs:
           to: ${{ github.ref }}
           include-commit-body: true
           include-abbreviated-commit: true
-
-      - name: Get version from package.json
-        if: steps.version-updated.outputs.has-updated
-        id: version
-        run: echo "::set-output name=build-version::$(node -e "try{console.log(require('./.electron-builder.config.js').extraMetadata.version + '${{ github.ref }}' == 'refs/heads/beta' ? '-beta':'')}catch(e){console.error(e);process.exit(1)}")"
-
 
       - name: Waiting on All checks
         if: steps.version-updated.outputs.has-updated
