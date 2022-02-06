@@ -53,7 +53,7 @@ jobs:
       - name: is Beta
         id: beta
         if: steps.version-updated.outputs.has-updated && github.ref == 'refs/heads/beta'
-        run: echo "::set-ouput name=isbeta::true"
+        run: echo "::set-ouput name=isbeta::-beta"
 
       - name: Get version
         id: version
@@ -96,7 +96,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          prerelease: github.ref == 'refs/heads/beta'
+          prerelease: ${{ github.ref == 'refs/heads/beta' }}
           draft: true
           tag_name: v${{ steps.version.outputs.build-version }}
           name: v${{ steps.version.outputs.build-version }}
