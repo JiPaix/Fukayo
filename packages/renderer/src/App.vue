@@ -6,6 +6,10 @@
 </script>
 <template>
   <fieldset>
+    <legend>Vue Reactivness</legend>
+    <ReactiveCounter />
+  </fieldset>
+  <fieldset>
     <legend>Quasar</legend>
     <quasar-app-bar />
   </fieldset>
