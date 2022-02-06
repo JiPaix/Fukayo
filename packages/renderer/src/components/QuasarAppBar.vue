@@ -8,7 +8,7 @@
         rounded
         class="bg-purple-8 text-white"
       >
-        We can't find your saved recipes until you sign in.
+        that's a v-card replacement using quasar
 
         <template #action>
           <q-btn
