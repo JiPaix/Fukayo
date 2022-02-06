@@ -19,7 +19,7 @@ on:
       - '.github/workflows/typechecking.yml'
 
 concurrency:
-  group: lint-${{ github.ref }}-${{ github.sha }}
+  group: typecheck-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 defaults:
