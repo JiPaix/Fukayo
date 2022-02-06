@@ -64,9 +64,15 @@ jobs:
           to: ${{ github.ref }}
           include-commit-body: true
           include-abbreviated-commit: true
+      - name:
 
-      - name: Get version from current date
-        if: steps.version-updated.outputs.has-updated
+      - name: Get beta version
+        if: steps.version-updated.outputs.has-updated && github.ref == 'refs/heads/beta'
+        id: version
+        run: echo "::set-output name=build-version::$(node -e "try{console.log(require('./.electron-builder.config.js').extraMetadata.version + '-beta')}catch(e){console.error(e);process.exit(1)}")"
+
+      - name: Get stable version
+        if: steps.version-updated.outputs.has-updated && github.ref == 'refs/heads/main'
         id: version
         run: echo "::set-output name=build-version::$(node -e "try{console.log(require('./.electron-builder.config.js').extraMetadata.version)}catch(e){console.error(e);process.exit(1)}")"
 
