@@ -64,7 +64,6 @@ jobs:
           to: ${{ github.ref }}
           include-commit-body: true
           include-abbreviated-commit: true
-      - name:
 
       - name: Get beta version
         if: steps.version-updated.outputs.has-updated && github.ref == 'refs/heads/beta'
