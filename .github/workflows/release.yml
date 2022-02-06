@@ -28,7 +28,7 @@ jobs:
     outputs:
       release-note: ${{ steps.release-note.outputs.release-note }}
       version: ${{ steps.version.outputs.build-version }}
-
+      draft-id: ${{ steps.draft-create.outputs.id }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -69,7 +69,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Draft
-        id: create_release
+        id: draft-create
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,9 +144,20 @@ jobs:
 
           # Password for decrypting `mac_certs`
           # mac_certs_password: ''
+
+
+  publish:
+    needs: [ draft, upload_artifacts ]
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+
+      runs-on: ${{ matrix.os }}
+    steps:
       - name: Publish release
         uses: eregon/publish-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          release_id: ${{ steps.create_release.outputs.id }}
+          release_id: ${{ needs.draft.outputs.draft-id }}
