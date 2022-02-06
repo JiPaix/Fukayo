@@ -1,6 +1,7 @@
 {
-  "name": "vite-electron-builder",
-  "private": true,
+  "name": "all-mangas-reader-desktop",
+  "description": "All Mangas Reader Desktop",
+  "private": false,
   "engines": {
     "node": ">=v16.13",
     "npm": ">=8.1"
@@ -51,5 +52,6 @@
     "electron-updater": "4.6.5",
     "quasar": "^2.5.3",
     "vue": "3.2.29"
-  }
+  },
+  "repository": "github:JiPaix/AMR"
 }
