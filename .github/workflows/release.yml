@@ -33,7 +33,7 @@ jobs:
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
 
-      - uses: MontyD/package-json-updated-action
+      - uses: MontyD/package-json-updated-action@1.0.1
         id: version-updated
         with:
           path: package.json
