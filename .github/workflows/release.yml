@@ -144,8 +144,6 @@ jobs:
 
           # Password for decrypting `mac_certs`
           # mac_certs_password: ''
-
-
   publish:
     needs: [ draft, upload_artifacts ]
 
@@ -153,7 +151,7 @@ jobs:
       matrix:
         os: [ ubuntu-latest ]
 
-      runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Publish release
         uses: eregon/publish-release@v1
