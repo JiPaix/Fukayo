@@ -1,6 +1,10 @@
 {
   "name": "all-mangas-reader-desktop",
-  "description": "All Mangas Reader Desktop",
+  "description": "Read your favorite manga from your favorite website, keep track of your reading progress and share your reading history with your friends.",
+  "author": "some People",
+  "homepage": "https://homepage.com",
+  "repository": "github:JiPaix/AMR",
+  "license": "MIT",
   "version": "0.0.48",
   "private": false,
   "engines": {
@@ -53,6 +57,5 @@
     "electron-updater": "4.6.5",
     "quasar": "^2.5.3",
     "vue": "3.2.29"
-  },
-  "repository": "github:JiPaix/AMR"
+  }
 }
