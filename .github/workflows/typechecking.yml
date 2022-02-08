@@ -1,6 +1,6 @@
 name: Typechecking
 on:
-  push:
+  pull_request:
     branches:
       - main
       - beta
@@ -10,16 +10,9 @@ on:
       - '**/tsconfig.json'
       - 'package-lock.json'
       - '.github/workflows/typechecking.yml'
-  pull_request:
-    paths:
-      - '**.ts'
-      - '**.vue'
-      - '**/tsconfig.json'
-      - 'package-lock.json'
-      - '.github/workflows/typechecking.yml'
 
 concurrency:
-  group: typecheck-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 defaults:

@@ -12,7 +12,7 @@ on:
       - '!.github/workflows/release.yml'
       - '!.github/workflows/release-beta.yml'
 concurrency:
-  group: release-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 

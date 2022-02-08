@@ -1,6 +1,6 @@
 name: Tests
 on:
-  push:
+  pull_request:
     branches:
       - main
       - beta
@@ -9,15 +9,9 @@ on:
       - 'tests/**'
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
-  pull_request:
-    paths:
-      - 'packages/**'
-      - 'tests/**'
-      - 'package-lock.json'
-      - '.github/workflows/tests.yml'
 
 concurrency:
-  group: tests-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 defaults:

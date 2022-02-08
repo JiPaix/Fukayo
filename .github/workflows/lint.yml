@@ -1,6 +1,6 @@
 name: Linters
 on:
-  push:
+  pull_request:
     branches:
       - main
       - beta
@@ -10,15 +10,8 @@ on:
       - '**.vue'
       - 'package-lock.json'
       - '.github/workflows/lint.yml'
-  pull_request:
-    paths:
-      - '**.js'
-      - '**.ts'
-      - '**.vue'
-      - 'package-lock.json'
-      - '.github/workflows/lint.yml'
 concurrency:
-  group: lint-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref }}
   cancel-in-progress: true
 
 defaults:
