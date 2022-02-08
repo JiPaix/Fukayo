@@ -1,7 +1,7 @@
 {
   "name": "all-mangas-reader-desktop",
   "description": "All Mangas Reader Desktop",
-  "version": "0.0.47",
+  "version": "0.0.48",
   "private": false,
   "engines": {
     "node": ">=v16.13",
