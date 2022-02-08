@@ -177,3 +177,27 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ needs.draft.outputs.draft-id }}
+
+  fast_forward:
+    needs: [ publish ]
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out beta Branch
+        uses: actions/checkout@v2
+        with:
+          ref: beta
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "Github Actions"
+
+      - name: Merge main back to beta
+        run: |
+          git checkout beta
+          git pull origin main
+          git push origin beta
