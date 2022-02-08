@@ -3,6 +3,14 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - '**.js'
+      - '**.ts'
+      - '**.vue'
+      - 'package-lock.json'
+      - '.github/workflows/lint.yml'
+  push:
+    branches:
       - beta
     paths:
       - '**.js'
