@@ -3,6 +3,13 @@ on:
   pull_request:
     branches:
       - main
+    paths:
+      - 'packages/**'
+      - 'tests/**'
+      - 'package-lock.json'
+      - '.github/workflows/tests.yml'
+  push:
+    branches:
       - beta
     paths:
       - 'packages/**'
