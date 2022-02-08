@@ -19,7 +19,7 @@ on:
       - '.github/workflows/typechecking.yml'
 
 concurrency:
-  group: typecheck-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 defaults:

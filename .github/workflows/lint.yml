@@ -18,7 +18,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/lint.yml'
 concurrency:
-  group: lint-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 defaults:
