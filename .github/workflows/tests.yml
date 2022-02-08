@@ -1,15 +1,9 @@
 name: Tests
 on:
-  push:
+  pull_request:
     branches:
       - main
       - beta
-    paths:
-      - 'packages/**'
-      - 'tests/**'
-      - 'package-lock.json'
-      - '.github/workflows/tests.yml'
-  pull_request:
     paths:
       - 'packages/**'
       - 'tests/**'
