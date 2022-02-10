@@ -2,13 +2,16 @@ import {createApp} from 'vue';
 import App from '/@/App.vue';
 import { Quasar } from 'quasar';
 
+// stores
+import { store as storeSettings, key as keySettings } from './store/settings';
+
 // Import Quasar css
 import 'quasar/dist/quasar.css';
 // Import icon libraries
 import '@quasar/extras/material-icons/material-icons.css';
 
 const myApp = createApp(App);
-
+myApp.use(storeSettings, keySettings);
 myApp.use(Quasar, {
   plugins: {}, // import Quasar plugins and add here
   /*
