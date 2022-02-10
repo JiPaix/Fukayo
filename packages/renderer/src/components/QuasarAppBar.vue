@@ -58,5 +58,8 @@
         icon="close"
       />
     </q-bar>
+    <br>
+    <br>
+    <code>packages/renderer/src/components/QuasarAppBar.vue</code>
   </div>
 </template>
