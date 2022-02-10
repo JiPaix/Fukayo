@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "5.10.2",
+    "@typescript-eslint/parser": "^5.11.0",
     "@vitejs/plugin-vue": "2.1.0",
     "@vue/test-utils": "2.0.0-rc.18",
     "cross-env": "7.0.3",
@@ -56,6 +57,7 @@
     "@quasar/vite-plugin": "^1.0.4",
     "electron-updater": "4.6.5",
     "quasar": "^2.5.3",
-    "vue": "3.2.29"
+    "vue": "3.2.29",
+    "vuex": "^4.0.2"
   }
 }

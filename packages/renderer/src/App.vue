@@ -6,7 +6,7 @@
 </script>
 <template>
   <fieldset>
-    <legend>Vue Reactivness</legend>
+    <legend>Vuex</legend>
     <ReactiveCounter />
   </fieldset>
   <fieldset>
