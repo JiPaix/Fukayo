@@ -40,11 +40,13 @@
 
 #### lint.yml
 - Description: Linting
+- Trigger: PRs (main/beta)
 - Actions:
   - Runs: `eslint . --ext js,ts,vue`
 
 #### release.yml
 - Description: Release new version
+- Trigger: Pushes (main)
 - Actions:
   - Check if target version in package.json is `!=` from current version
   - Generate changelog using `.github/actions/release-notes/main.js`
@@ -56,6 +58,7 @@
 
 #### release-beta.yml
 - Description: Release new version
+- Trigger: Pushes (beta)
 - Actions:
   - Check if target version in package.json is `!=` from current version
   - Add `-beta` suffix to target version
@@ -67,6 +70,7 @@
 
 #### tests.yml
 - Description: Test the Application
+- Trigger: PRs (main/beta)
 - Actions:
   - Test the Electron process `main` 
   - Test the Electron preloader `preload` 
@@ -74,6 +78,8 @@
   - End-To-End testing `e2e`
 #### typechecking.yml
 - Description: TypeScript testing
+- Trigger: PRs (main/beta)
+- Actions:
   - runs typecheck on `main`, `preload` and `renderer`
 
 </details>
