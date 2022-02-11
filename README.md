@@ -82,6 +82,11 @@
 - Actions:
   - runs typecheck on `main`, `preload` and `renderer`
 
+#### update-electron-vendors.yml
+- Description: Check if Electron's chrome version has updated. Used in builds.
+- Trigger: Pushes, if package.json has been updated
+- Actions:
+  - update `.electron-vendors.cache.json` file
 </details>
 
 ## Packages Tests
