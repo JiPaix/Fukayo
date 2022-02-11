@@ -3,7 +3,7 @@
 
 <details>
   <summary>
-    AMR Workflow
+    <b><i>AMR Workflow</b></i>
   </summary>
 
 ![gitflow](workflow.png)
@@ -35,7 +35,7 @@
 </details>
 <details>
   <summary>
-    CI: explaining Github Actions
+    <b><i>CI: explaining Github Actions</b></i>
   </summary>
 
 #### lint.yml
