@@ -1,17 +1,12 @@
 <script lang="ts" setup>
-  import ReactiveCounter from '/@/components/ReactiveCounter.vue';
+  import ReactiveCounter from './components/ReactiveStore.vue';
   import ReactiveHash from '/@/components/ReactiveHash.vue';
   import ElectronVersions from '/@/components/ElectronVersions.vue';
-  import QuasarAppBar from '/@/components/QuasarAppBar.vue';
 </script>
 <template>
   <fieldset>
     <legend>Vuex</legend>
     <ReactiveCounter />
-  </fieldset>
-  <fieldset>
-    <legend>Quasar</legend>
-    <quasar-app-bar />
   </fieldset>
 
   <fieldset>
