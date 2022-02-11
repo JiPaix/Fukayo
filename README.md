@@ -25,9 +25,9 @@
   - :shit: DON'T!
 - Accept/Submit PR from a fork
   - :shit: DON'T!
-- Submit PR from JiPaix/beta to JiPaix/main
+- Submit PR from [JiPaix/beta](https://github.com/JiPaix/AMR/tree/beta) to [JiPaix/main](https://github.com/JiPaix/AMR/tree/main)
   - Ci will run tests to check pull requests
-- Accept PR from JiPaix/beta to JiPaix/main
+- Accept PR from [JiPaix/beta](https://github.com/JiPaix/AMR/tree/beta) to [JiPaix/main](https://github.com/JiPaix/AMR/tree/main)
   - Changes are merged
   - Deploy a pre-release if package.json version is incremented
   - Beta branch is updated (fast-forward) to include merge commit
