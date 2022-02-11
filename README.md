@@ -3,7 +3,7 @@
 
 <details>
   <summary>
-    Gitflow Workflow
+    AMR Workflow
   </summary>
 
 ![gitflow](workflow.png)
