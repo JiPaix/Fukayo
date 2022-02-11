@@ -77,3 +77,57 @@
   - runs typecheck on `main`, `preload` and `renderer`
 
 </details>
+
+## Packages Tests
+
+<details>
+  <summary>
+    <b><i>Main</b></i>
+  </summary>
+
+`packages/main/tests/unit.spec.ts`
+
+This files test the electron BrowserWindow API itself.  
+Included tests:
+- Create window
+- Minimize/Maximize window
+- Destroy window
+
+
+</details>
+
+<details>
+  <summary>
+    <b><i>Preload</b></i>
+  </summary>
+
+`packages/preload/tests/unit.spec.ts`
+
+This files test if libraries exposed to the renderer are working.  
+Included tests:
+- Test `createHash` from `crypto`
+
+</details>
+
+<details>
+  <summary>
+    <b><i>Renderer</b></i>
+  </summary>
+
+`packages/preload/tests/ReactiveHash.spec.ts`
+
+Test the `ReactiveHash` Vue component:
+- Setup a `string` and it's `hash`
+- Give `string` to component `input`
+- Take the hashing result from component `output`
+- check if `output` === `hash`
+
+`packages/preload/tests/ReactiveStore.spec.ts`
+
+Test the `ReactiveStore` Vue component:
+- Setup a `string`
+- Check if component `output` loads with its default value
+- `click` first button and check if `output` has changed
+- Give `string` to `input` and check if `output` === `string`
+
+</details>
