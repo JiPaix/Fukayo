@@ -1,6 +1,13 @@
 import {mount} from '@vue/test-utils';
-import {expect, test} from 'vitest';
+import {expect, test, vi} from 'vitest';
 import ReactiveStore from '../src/components/ReactiveStore.vue';
+
+/**
+ * Mock expected global api exposed by {@link module:preload}
+ */
+ (window as Window & typeof globalThis & { userData: { configPath: () => Promise<string> } }).userData = {
+  configPath: vi.fn(() => Promise.resolve('string')),
+};
 
 test('ReactiveStore component', async () => {
   expect(ReactiveStore).toBeTruthy();
