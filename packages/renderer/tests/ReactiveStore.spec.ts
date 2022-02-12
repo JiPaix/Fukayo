@@ -2,7 +2,7 @@ import {mount} from '@vue/test-utils';
 import {expect, test} from 'vitest';
 import ReactiveStore from '../src/components/ReactiveStore.vue';
 
-test('ReactiveHash component', async () => {
+test('ReactiveStore component', async () => {
   expect(ReactiveStore).toBeTruthy();
   const wrapper = mount(ReactiveStore);
 
