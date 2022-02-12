@@ -1,7 +1,8 @@
 /* eslint-disable semi */
-export default interface Settings {
+export interface State {
   count: number
   name: string
+  userDataPath?: string
 }
 
 
@@ -9,5 +10,3 @@ export const state = {
   count: 0,
   name: 'No name',
 }
-
-export type State = typeof state

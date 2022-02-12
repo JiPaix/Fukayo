@@ -1,4 +1,4 @@
-import {app} from 'electron';
+import {app, ipcMain} from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
 
@@ -66,3 +66,9 @@ if (import.meta.env.PROD) {
     .catch((e) => console.error('Failed check updates:', e));
 }
 
+/**
+ * Returns the user data path when vuex store plugin is used
+ */
+ipcMain.handle('userData', () => {
+  return app.getPath('userData');
+});

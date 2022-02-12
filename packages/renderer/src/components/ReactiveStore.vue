@@ -6,9 +6,16 @@ import { ActionTypes } from '../store/settings/actions';
 
 const settings = useStore();
 const name = ref('');
+
 </script>
 
 <template>
+  <p>
+    user data path:
+    <code>
+      {{ settings.state.userDataPath }}
+    </code>
+  </p>
   <p>
     Name retrieved using getters: <b id="name">{{ settings.getters.nameWithMister }}</b>
   </p>

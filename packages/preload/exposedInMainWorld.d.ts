@@ -10,5 +10,10 @@ interface Window {
      * @example
      * window.nodeCrypto('data')
      */
-    readonly nodeCrypto: { sha256sum: (data: import("crypto").BinaryLike) => string; };
+     readonly nodeCrypto: { sha256sum: (data: import("crypto").BinaryLike) => string; };
+     /**
+      * Expose the user data path.
+      * intended to be used in a vuex Store plugin
+      */
+     readonly userDataPath:() => Promise<string>;
 }

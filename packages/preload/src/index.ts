@@ -3,6 +3,7 @@
  */
 
 import {contextBridge} from 'electron';
+import { show } from '/@/userDataPath';
 import {sha256sum} from '/@/sha256sum';
 
 /**
@@ -34,3 +35,9 @@ contextBridge.exposeInMainWorld('versions', process.versions);
  * window.nodeCrypto('data')
  */
 contextBridge.exposeInMainWorld('nodeCrypto', {sha256sum});
+
+/**
+  * Expose the user data path.
+  * intended to be used in a vuex store plugin
+  */
+contextBridge.exposeInMainWorld('userDataPath', show);
