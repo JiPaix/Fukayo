@@ -89,7 +89,7 @@
   - update `.electron-vendors.cache.json` file
 </details>
 
-## Packages Tests
+## Tests
 
 <details>
   <summary>
