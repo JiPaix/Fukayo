@@ -15,14 +15,14 @@ import { mutations } from './mutations';
 import type { Actions } from './actions';
 import { actions } from './actions';
 import type { InjectionKey } from 'vue';
-import { plugins } from './plugins';
+import { localStorage } from '../localStorage';
 
 export const store = createStore({
   state,
   getters,
   mutations,
   actions,
-  plugins,
+  plugins: [localStorage],
 });
 
 export type Store = Omit<
