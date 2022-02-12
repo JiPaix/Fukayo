@@ -142,3 +142,31 @@ Test the `ReactiveStore` Vue component:
 - Give `string` to `input` and check if `output` === `string`
 
 </details>
+
+## Builds
+
+<details>
+  <summary>
+    <b><i>Main and Preload</b></i>
+  </summary>
+
+Nothing special there, its pretty basic:
+- each package have aliases that match their relative path `/@/`
+- use `.electron-bendors.cache.json` as node target
+- include devtools
+- minify files on production
+
+</details>
+
+<details>
+  <summary>
+    <b><i>Renderer</b></i>
+  </summary>
+
+- alias that match relative path `/@/`
+- use `.electron-bendors.cache.json` as chrome target
+- minify files on production
+- library declaration files that describe the target runtime environment: `ESNEXT`, `dom`, `dom.iterable`
+- test environment uses `happy-dom`
+
+</details>
