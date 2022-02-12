@@ -11,9 +11,9 @@ const name = ref('');
 
 <template>
   <p>
-    user data path:
+    user data:
     <code>
-      {{ settings.state.userDataPath }}
+      {{ path }}
     </code>
   </p>
   <p>
@@ -41,3 +41,20 @@ const name = ref('');
   <br>
   <code>packages/renderer/src/components/ReactiveStore.vue</code>
 </template>
+<script lang="ts">
+export default {
+  data() {
+    return { path: '' };
+  },
+  created() {
+    this.loadName();
+  },
+  methods: {
+    loadName() {
+      window.userData.configPath().then(path => {
+        this.path = path;
+      });
+    },
+  },
+};
+</script>

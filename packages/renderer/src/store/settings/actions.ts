@@ -13,17 +13,12 @@ type AugmentedActionContext = {
 
 export enum ActionTypes {
   GET_NAME = 'GET_NAME',
-  GET_USERDATAPATH = 'GET_SERDATA'
 }
 
 export interface Actions {
   [ActionTypes.GET_NAME](
     { commit }: AugmentedActionContext,
     payload: string
-  ): Promise<string>
-
-  [ActionTypes.GET_USERDATAPATH](
-    { commit }: AugmentedActionContext
   ): Promise<string>
 }
 
@@ -35,15 +30,6 @@ export const actions: ActionTree<State, State> & Actions = {
         resolve(payload);
       }, 500);
     });
-  },
-  [ActionTypes.GET_USERDATAPATH]({ commit }) {
-    return new Promise((resolve) => {
-      window.userDataPath().then(userPath => {
-        commit(MutationTypes.SET_USERDATAPATH, userPath);
-        resolve(userPath);
-      });
-    });
-
   },
 };
 
