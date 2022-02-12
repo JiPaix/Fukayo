@@ -15,5 +15,5 @@ interface Window {
       * Expose the user data path.
       * intended to be used in a vuex Store plugin
       */
-     readonly userDataPath:() => Promise<string>;
+     readonly userData : { configPath:() => Promise<string>; };
 }
