@@ -3,6 +3,7 @@
  */
 
 import {contextBridge} from 'electron';
+import { quit } from './windowControl';
 import { configPath } from '/@/configPath';
 import {sha256sum} from '/@/sha256sum';
 
@@ -41,3 +42,5 @@ contextBridge.exposeInMainWorld('nodeCrypto', {sha256sum});
   * intended to be used in a vuex store plugin
   */
 contextBridge.exposeInMainWorld('userData', {configPath});
+
+contextBridge.exposeInMainWorld('windowControl', {quit});

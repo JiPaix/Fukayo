@@ -16,4 +16,8 @@ interface Window {
       * intended to be used in a vuex Store plugin
       */
      readonly userData : { configPath:() => Promise<string>; };
+     /**
+      * window control
+      */
+     readonly windowControl: { quit:() => Promise<void>; };
 }

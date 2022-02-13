@@ -10,6 +10,9 @@ const name = ref('');
 </script>
 
 <template>
+  <h1 @click="quit()">
+    QUIT
+  </h1>
   <p>
     user data:
     <code>
@@ -54,6 +57,9 @@ export default {
       window.userData.configPath().then(path => {
         this.path = path;
       });
+    },
+    quit() {
+      window.windowControl.quit();
     },
   },
 };

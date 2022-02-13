@@ -1,6 +1,7 @@
-import {app, ipcMain} from 'electron';
+import {app, ipcMain, BrowserWindow} from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
+
 
 
 /**
@@ -71,4 +72,8 @@ if (import.meta.env.PROD) {
  */
 ipcMain.handle('userData', () => {
   return app.getPath('userData');
+});
+
+ipcMain.handle('quit-app', () => {
+  BrowserWindow.getAllWindows().forEach(w => w.close());
 });
