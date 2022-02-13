@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "strict": true,
     "isolatedModules": true,
-
+    "resolveJsonModule": true,
     "types" : ["node"],
 
     "baseUrl": ".",

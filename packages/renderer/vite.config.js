@@ -4,7 +4,7 @@ import {chrome} from '../../.electron-vendors.cache.json';
 import {join} from 'path';
 import {builtinModules} from 'module';
 import vue from '@vitejs/plugin-vue';
-
+import vueI18n from '@intlify/vite-plugin-vue-i18n';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -22,6 +22,9 @@ const config = {
   },
   plugins: [
     vue(),
+    vueI18n({
+      include: join(PACKAGE_ROOT, 'src', 'locales') + '/**',
+    }),
   ],
   base: '',
   server: {

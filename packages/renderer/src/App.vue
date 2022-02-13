@@ -4,6 +4,7 @@
   import ElectronVersions from '/@/components/ElectronVersions.vue';
 </script>
 <template>
+  <h1>{{ $t('homepage.hello') }}</h1>
   <fieldset>
     <legend>Vuex</legend>
     <ReactiveCounter />
