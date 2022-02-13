@@ -9,6 +9,8 @@ on:
       - 'tests/**'
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
+    paths-ignore:
+      - 'packages/src/renderer/locales/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
