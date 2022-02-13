@@ -4,6 +4,8 @@ import {URL} from 'url';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
+    frame: false,
+    roundedCorners: true,
     show: false, // Use 'ready-to-show' event to show window
     webPreferences: {
       nativeWindowOpen: true,
@@ -19,6 +21,7 @@ async function createWindow() {
    * @see https://github.com/electron/electron/issues/25012
    */
   browserWindow.on('ready-to-show', () => {
+    browserWindow?.setMenuBarVisibility(false);
     browserWindow?.show();
 
     if (import.meta.env.DEV) {
