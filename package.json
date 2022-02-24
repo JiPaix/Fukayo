@@ -58,7 +58,7 @@
     "@quasar/vite-plugin": "^1.0.4",
     "electron-updater": "4.6.5",
     "quasar": "^2.5.5",
-    "vue": "3.2.29",
+    "vue": "3.2.31",
     "vue-i18n": "^9.1.9",
     "vuex": "^4.0.2"
   }
