@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.12.5",
-    "@quasar/vite-plugin": "^1.0.4",
+    "@quasar/vite-plugin": "^1.0.5",
     "electron-updater": "4.6.5",
     "quasar": "^2.5.5",
     "vue": "3.2.31",
