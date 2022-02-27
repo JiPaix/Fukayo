@@ -21,9 +21,16 @@ import { createVuetify } from 'vuetify';
 import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
 const vuetify = createVuetify();
+
+// pinia stores
+import { createPinia } from 'pinia';
+import { piniaLocalStorage } from './store/localStorage';
+const pinia = createPinia();
+pinia.use(piniaLocalStorage);
+
+// init
 const myApp = createApp(App);
-myApp.use(storeSettings, keySettings);
+myApp.use(pinia);
 myApp.use(i18n);
 myApp.use(vuetify);
 myApp.mount('#app');
-// basically trying stuff

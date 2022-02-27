@@ -1,13 +1,10 @@
-import type {Store} from 'vuex';
+import type { PiniaPluginContext } from 'pinia';
 
-export function localStorage<T>(store:Store<T & { storeName: string}>) {
-  const data = window.localStorage.getItem(store.state.storeName);
-
-  if(data) {
-    store.replaceState(JSON.parse(data));
-  }
-
-  store.subscribe((mutation, state) => {
-    window.localStorage.setItem(state.storeName, JSON.stringify(state));
+export function piniaLocalStorage(context: PiniaPluginContext) {
+  context.store.$patch(JSON.parse(localStorage.getItem(context.store.$id) || '{}'));
+  context.store.$subscribe((mutation) => {
+    localStorage.setItem(mutation.storeId, JSON.stringify(context.store.$state));
+    console.log(`[🍍 ${mutation.storeId}]: ${mutation.type}.`);
+    console.log(mutation.events);
   });
 }
