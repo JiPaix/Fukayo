@@ -1,42 +1,69 @@
 <script lang="ts" setup>
-  import ReactiveCounter from './components/ReactiveStore.vue';
-  import ReactiveHash from '/@/components/ReactiveHash.vue';
   import ElectronVersions from '/@/components/ElectronVersions.vue';
+  import AppBarVue from '/@/components/AppBar.vue';
+  import { useStore } from '/@/store/settings';
+
+  const settings = useStore();
+
+  const win = window.versions;
+  console.log('🌐 window Location', window.location.href);
 </script>
 <template>
-  <h1>{{ $t('homepage.hello') }}</h1>
-  <fieldset>
-    <legend>Vuex</legend>
-    <ReactiveCounter />
-  </fieldset>
+  <v-app :theme="settings.global.theme">
+    <AppBarVue v-if="win" />
+    <!-- Sizes your content based upon application components -->
+    <v-main>
+      <!-- Provides the application the proper gutter -->
+      <v-container
+        fluid
+      >
+        <h1>{{ $t('homepage.hello') }}</h1>
+        <fieldset>
+          <legend>Environment</legend>
+          <electron-versions v-if="win" />
+        </fieldset>
 
-  <fieldset>
-    <legend>Test Node.js API</legend>
-    <reactive-hash />
-  </fieldset>
+        <!-- <h1>{{ $t('homepage.hello') }}</h1>
+        <fieldset>
+          <legend>Vuex</legend>
+          <ReactiveCounter />
+        </fieldset>
 
-  <fieldset>
-    <legend>Environment</legend>
-    <electron-versions />
-  </fieldset>
-  <p>
-    Edit
-    <code>packages/renderer/src/App.vue</code> to test hot module replacement.
-  </p>
+        <fieldset>
+          <legend>Test Node.js API</legend>
+          <reactive-hash />
+        </fieldset>
+
+
+        <p>
+          Edit
+          <code>packages/renderer/src/App.vue</code> to test hot module replacement.
+        </p> -->
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
-
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin: 60px auto;
-  max-width: 700px;
+html, body {
+  overflow-y: hidden!important;
 }
+body {
+  margin: 0;
+  padding: 0;
+}
+.v-app-bar {
+  padding: 0!important;
+}
+.v-container {
+  overflow: auto;
+  position: absolute;
+  height: 100%;
+}
+</style>
+<style scoped>
 fieldset {
   margin: 2rem;
   padding: 1rem;
 }
+
 </style>
