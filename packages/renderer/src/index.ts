@@ -1,13 +1,10 @@
 import {createApp} from 'vue';
 import App from '/@/App.vue';
 
-// stores
-import { store as storeSettings, key as keySettings } from './store/settings';
-import { createI18n } from 'vue-i18n';
-
 // locales
+import { createI18n } from 'vue-i18n';
 import en from './locales/en.json';
-
+import fr from './locales/fr.json';
 const i18n = createI18n({
   legacy: false,
   locale: navigator.language,
@@ -15,6 +12,7 @@ const i18n = createI18n({
   fallbackLocale: 'en',
   messages: {
     en,
+    fr,
   },
 });
 
