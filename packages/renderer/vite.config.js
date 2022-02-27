@@ -5,6 +5,7 @@ import {join} from 'path';
 import {builtinModules} from 'module';
 import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/vite-plugin-vue-i18n';
+import vuetify from '@vuetify/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -25,6 +26,7 @@ const config = {
     vueI18n({
       include: join(PACKAGE_ROOT, 'src', 'locales') + '/**',
     }),
+    vuetify({ autoImport: true }),
   ],
   base: '',
   server: {
