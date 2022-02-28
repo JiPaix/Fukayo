@@ -14,16 +14,13 @@
     <!-- Sizes your content based upon application components -->
     <v-main>
       <!-- Provides the application the proper gutter -->
-      <v-container
-        fluid
-      >
-        <h1>{{ $t('homepage.hello') }}</h1>
-        <fieldset>
-          <legend>Environment</legend>
-          <electron-versions v-if="win" />
-        </fieldset>
+      <h1>{{ $t('homepage.hello') }}</h1>
+      <fieldset>
+        <legend>Environment</legend>
+        <electron-versions v-if="win" />
+      </fieldset>
 
-        <!-- <h1>{{ $t('homepage.hello') }}</h1>
+      <!-- <h1>{{ $t('homepage.hello') }}</h1>
         <fieldset>
           <legend>Vuex</legend>
           <ReactiveCounter />
@@ -39,7 +36,6 @@
           Edit
           <code>packages/renderer/src/App.vue</code> to test hot module replacement.
         </p> -->
-      </v-container>
     </v-main>
   </v-app>
 </template>
