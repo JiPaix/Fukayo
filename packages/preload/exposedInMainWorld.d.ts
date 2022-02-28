@@ -19,5 +19,9 @@ interface Window {
      /**
       * window control
       */
-     readonly windowControl: { quit:() => Promise<void>; };
+     readonly windowControl: {
+        quit:() => Promise<void>;
+        minimize:() => Promise<boolean>;
+        maximize:() => Promise<boolean>;
+      };
 }

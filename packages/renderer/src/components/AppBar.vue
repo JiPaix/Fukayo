@@ -1,12 +1,22 @@
 <script lang="ts" setup>
 import { useStore } from '/@/store/settings';
-
+import { ref } from 'vue';
+const maximized = ref(false);
+const control = window.windowControl;
 const settings = useStore();
+
+const maximize = () => {
+  window.windowControl.maximize().then(v => {
+    maximized.value = v;
+  });
+};
+
 </script>
 <template>
   <v-theme-provider
     theme="dark"
     with-background
+    style="-webkit-app-region: drag"
   >
     <v-app-bar
       app
@@ -21,7 +31,7 @@ const settings = useStore();
       </v-app-bar-title>
 
       <v-spacer />
-
+      Some app
       <v-spacer />
       <v-btn
         class="mx-0 px-1"
@@ -40,6 +50,7 @@ const settings = useStore();
       >
         <v-icon
           icon="mdi-window-minimize"
+          @click="control.minimize()"
         />
       </v-btn>
       <v-btn
@@ -48,7 +59,8 @@ const settings = useStore();
         size="x-small"
       >
         <v-icon
-          icon="mdi-window-maximize"
+          :icon="maximized ? 'mdi-window-restore' : 'mdi-window-maximize'"
+          @click="maximize()"
         />
       </v-btn>
       <v-btn
@@ -58,8 +70,19 @@ const settings = useStore();
       >
         <v-icon
           icon="mdi-window-close"
+          @click="control.quit()"
         />
       </v-btn>
     </v-app-bar>
   </v-theme-provider>
 </template>
+<style scoped>
+.v-app-bar {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+}
+.v-app-bar .v-btn {
+  -webkit-app-region: no-drag;
+}
+</style>

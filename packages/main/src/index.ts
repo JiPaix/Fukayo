@@ -74,6 +74,24 @@ ipcMain.handle('userData', () => {
   return app.getPath('userData');
 });
 
-ipcMain.handle('quit-app', () => {
-  BrowserWindow.getAllWindows().forEach(w => w.close());
+ipcMain.handle('quit', (event) => {
+  const id = event.sender.id;
+  if(id === 1) BrowserWindow.getAllWindows().forEach(w => w.close());
+  else BrowserWindow.fromId(id)?.close();
+});
+
+ipcMain.handle('minimize', (event) => {
+  const id = event.sender.id;
+  BrowserWindow.fromId(id)?.minimize();
+});
+
+ipcMain.handle('maximize', (event) => {
+  const window = BrowserWindow.fromId(event.sender.id);
+  if(!window) return;
+  if(window.isMaximized()) {
+    window.unmaximize();
+    return false;
+  }
+  window.maximize();
+  return true;
 });

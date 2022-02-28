@@ -3,7 +3,7 @@
  */
 
 import {contextBridge} from 'electron';
-import { quit } from './windowControl';
+import { quit, minimize, maximize } from './windowControl';
 import { configPath } from '/@/configPath';
 import {sha256sum} from '/@/sha256sum';
 
@@ -43,4 +43,4 @@ contextBridge.exposeInMainWorld('nodeCrypto', {sha256sum});
   */
 contextBridge.exposeInMainWorld('userData', {configPath});
 
-contextBridge.exposeInMainWorld('windowControl', {quit});
+contextBridge.exposeInMainWorld('windowControl', { quit, minimize, maximize });
