@@ -4,20 +4,19 @@
   import { useStore } from '/@/store/settings';
 
   const settings = useStore();
-
-  const win = window.versions;
-  console.log('🌐 window Location', window.location.href);
+  const isElectron = window.windowControl !== undefined;
+  const versions = isElectron && window.versions !== undefined;
 </script>
 <template>
   <v-app :theme="settings.global.theme">
-    <AppBarVue v-if="win" />
+    <AppBarVue v-if="isElectron" />
     <!-- Sizes your content based upon application components -->
     <v-main>
       <!-- Provides the application the proper gutter -->
       <h1>{{ $t('homepage.hello') }}</h1>
       <fieldset>
         <legend>Environment</legend>
-        <electron-versions v-if="win" />
+        <electron-versions v-if="versions" />
       </fieldset>
 
       <!-- <h1>{{ $t('homepage.hello') }}</h1>
