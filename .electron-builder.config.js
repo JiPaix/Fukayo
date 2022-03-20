@@ -28,7 +28,7 @@ const config = {
     target: "appImage",
     synopsis: 'Read your favorite manga',
     category: 'Utility',
-    icon: 'buildResources/icon_32.png',
+    icon: 'buildResources/icon_256.png',
   },
   win: {
     target: "nsis",
