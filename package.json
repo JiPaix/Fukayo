@@ -5,7 +5,7 @@
   "homepage": "https://homepage.com",
   "repository": "github:JiPaix/AMR",
   "license": "MIT",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "engines": {
     "node": ">=v16.13",
@@ -91,7 +91,7 @@
     "vue": "3.2.31",
     "vue-i18n": "^9.1.9",
     "vue-tsc": "0.33.2",
-    "vuetify": "^3.0.0-alpha.13",
+    "vuetify": "^3.0.0-beta.0",
     "vuex": "^4.0.2"
   },
   "dependencies": {
