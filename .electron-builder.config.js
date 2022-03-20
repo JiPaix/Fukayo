@@ -32,13 +32,13 @@ const config = {
   },
   win: {
     target: "nsis",
-    icon: 'buildResources/icon_32.ico',
+    icon: 'buildResources/icon_256.ico',
     // legalTrademarks: undefined,
   },
   nsis: {
     oneClick: true,
     perMachine: false,
-    // installerIcon: "buildResources/icons/win/icon.ico",
+    installerIcon: "buildResources/icon_256.ico",
     // installerHeaderIcon: "buildResources/icons/win/icon.ico",
     // license: "eula.txt",
   },
