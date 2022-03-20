@@ -18,6 +18,7 @@ const config = {
   },
   files: [
     'packages/**/dist/**',
+    'packages/api/docs/**',
   ],
   extraMetadata: {
     version: process.env.VITE_APP_VERSION,
@@ -27,11 +28,11 @@ const config = {
     target: "appImage",
     synopsis: 'Read your favorite manga',
     category: 'Utility',
-    // icon: 'buildResources/icons/linux/icon.png',
+    icon: 'buildResources/icon_32.png',
   },
   win: {
     target: "nsis",
-    // icon: 'buildResources/icons/win/icon.ico',
+    icon: 'buildResources/icon_32.ico',
     // legalTrademarks: undefined,
   },
   nsis: {

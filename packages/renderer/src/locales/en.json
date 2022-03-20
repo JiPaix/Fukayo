@@ -1,5 +1,60 @@
 {
+    "app": {
+      "name": {
+        "desc": "The application name",
+        "value": "Electron mangas reader"
+      },
+      "description": {
+        "desc": "The application description",
+        "value": "A simple electron app to read mangas"
+      }
+    },
+    "setup": {
+        "message": {
+          "desc": "The message to display when the app is not configured",
+          "value": "Before we start a little setup is needed"
+        },
+        "setPassword" : {
+          "desc": "Set the password for the server",
+          "value": "Password"
+        },
+        "passwordHint" : {
+          "desc": "Password must be at least 6 characters long",
+          "value": "Password must be at least 6 characters long"
+        },
+        "passwordHintStrong": {
+          "desc": "Tell the user that the password is strong",
+          "value": "Password strenght: <b class=\"text-success\">STRONG</b>"
+        },
+        "passwordHintAverage": {
+          "desc": "Tell the user that the password is average",
+          "value": "Password strenght: <b class=\"text-warning\">AVERAGE</b>"
+        },
+        "passwordHintWeak": {
+          "desc": "Tell the user that the password is weak",
+          "value": "Password strenght: <b class=\"text-red\">WEAK</b>"
+        },
+        "setPort": {
+          "desc": "Set the port for the server",
+          "value": "Port"
+        },
+        "portHint": {
+          "desc": "Port must be between 1024 and 65535",
+          "value": "Port must be between 1024 and 65535"
+        }
+    },
     "homepage": {
-      "hello": "Hello people"
+      "hello": "Hello people",
+
+      "sidebar": {
+        "home": {
+          "desc": "Home button subtitle",
+          "value":  "Home"
+        },
+        "settings": {
+          "desc": "Settings button subtitle",
+          "value": "Settings"
+        }
+      }
     }
 }

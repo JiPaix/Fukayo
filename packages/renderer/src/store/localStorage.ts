@@ -4,7 +4,5 @@ export function piniaLocalStorage(context: PiniaPluginContext) {
   context.store.$patch(JSON.parse(localStorage.getItem(context.store.$id) || '{}'));
   context.store.$subscribe((mutation) => {
     localStorage.setItem(mutation.storeId, JSON.stringify(context.store.$state));
-    console.log(`[🍍 ${mutation.storeId}]: ${mutation.type}.`);
-    console.log(mutation.events);
   });
 }

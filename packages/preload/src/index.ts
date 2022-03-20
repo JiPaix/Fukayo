@@ -3,9 +3,9 @@
  */
 
 import {contextBridge} from 'electron';
-import { quit, minimize, maximize } from './windowControl';
-import { configPath } from '/@/configPath';
-import {sha256sum} from '/@/sha256sum';
+import { configPath } from './config';
+import { startServer, stopServer } from './apiServer';
+
 
 /**
  * The "Main World" is the JavaScript context that your main renderer code runs in.
@@ -31,16 +31,8 @@ import {sha256sum} from '/@/sha256sum';
 contextBridge.exposeInMainWorld('versions', process.versions);
 
 /**
- * Safe expose node.js API
- * @example
- * window.nodeCrypto('data')
- */
-contextBridge.exposeInMainWorld('nodeCrypto', {sha256sum});
-
-/**
   * Expose the user data path.
   * intended to be used in a vuex store plugin
   */
 contextBridge.exposeInMainWorld('userData', {configPath});
-
-contextBridge.exposeInMainWorld('windowControl', { quit, minimize, maximize });
+contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer });

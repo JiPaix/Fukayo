@@ -15,9 +15,9 @@ const i18n = createI18n({
 });
 
 // vuetify
-import { createVuetify } from 'vuetify';
+import { createVuetify } from '@vuetify/nightly';
 import '@mdi/font/css/materialdesignicons.css';
-import 'vuetify/styles';
+import '@vuetify/nightly/styles';
 const vuetify = createVuetify();
 
 // pinia stores

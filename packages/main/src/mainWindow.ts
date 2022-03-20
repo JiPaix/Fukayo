@@ -1,10 +1,9 @@
-import {BrowserWindow} from 'electron';
+import { BrowserWindow } from 'electron';
 import {join} from 'path';
 import {URL} from 'url';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
-    frame: false,
     roundedCorners: true,
     show: false, // Use 'ready-to-show' event to show window
     webPreferences: {
@@ -12,8 +11,8 @@ async function createWindow() {
       webviewTag: false, // The webview tag is not recommended. Consider alternatives like iframe or Electron's BrowserView. https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(__dirname, '../../preload/dist/index.cjs'),
     },
+    icon: join(__dirname, '../../../buildResources/icon_128.png'),
   });
-
   /**
    * If you install `show: true` then it can cause issues when trying to close the window.
    * Use `show: false` and listener events `ready-to-show` to fix these issues.

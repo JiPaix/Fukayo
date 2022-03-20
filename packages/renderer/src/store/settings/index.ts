@@ -2,19 +2,13 @@
 import { defineStore } from 'pinia';
 
 
-
 export const useStore = defineStore('settings', {
   state: () => {
     return {
-      global: {
-        theme: 'light',
+      theme: 'dark',
+      server : {
+        port: 4444,
       },
-      counter: 0,
     };
-  },
-  actions: {
-    increment() {
-      this.counter++;
-    },
   },
 });

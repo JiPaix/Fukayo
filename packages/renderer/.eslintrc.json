@@ -1,7 +1,11 @@
 {
   "env": {
     "browser": true,
-    "node": false
+    "node": false,
+    "vue/setup-compiler-macros": true
+  },
+  "rules": {
+    "vue/no-v-html": "off"
   },
   "extends": [
     /** @see https://eslint.vuejs.org/rules/ */

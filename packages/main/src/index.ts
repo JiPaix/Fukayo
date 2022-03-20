@@ -1,8 +1,9 @@
-import {app, ipcMain, BrowserWindow} from 'electron';
+import { app, ipcMain } from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
+import { ForkedAPI } from './forkedAPI';
 
-
+const api = new ForkedAPI();
 
 /**
  * Prevent multiple instances
@@ -24,11 +25,14 @@ app.disableHardwareAcceleration();
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  if (process.platform !== 'darwin') app.quit();
 });
 
+app.on('before-quit', async() => {
+  const stop = await api.stop();
+  if(stop.success) console.log('api stopped');
+  else console.error('api stop failed');
+});
 /**
  * @see https://www.electronjs.org/docs/v14-x-y/api/app#event-activate-macos Event: 'activate'
  */
@@ -68,30 +72,12 @@ if (import.meta.env.PROD) {
 }
 
 /**
- * Returns the user data path when vuex store plugin is used
+ * Returns the user data path
  */
 ipcMain.handle('userData', () => {
   return app.getPath('userData');
 });
 
-ipcMain.handle('quit', (event) => {
-  const id = event.sender.id;
-  if(id === 1) BrowserWindow.getAllWindows().forEach(w => w.close());
-  else BrowserWindow.fromId(id)?.close();
-});
-
-ipcMain.handle('minimize', (event) => {
-  const id = event.sender.id;
-  BrowserWindow.fromId(id)?.minimize();
-});
-
-ipcMain.handle('maximize', (event) => {
-  const window = BrowserWindow.fromId(event.sender.id);
-  if(!window) return;
-  if(window.isMaximized()) {
-    window.unmaximize();
-    return false;
-  }
-  window.maximize();
-  return true;
+ipcMain.handle('start-server', (ev,  {port, password}: { port: number, password:string}) => {
+  return api.start({port: port.toString(), password });
 });

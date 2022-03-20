@@ -1,64 +1,53 @@
 <script lang="ts" setup>
-  import ElectronVersions from '/@/components/ElectronVersions.vue';
-  import AppBarVue from '/@/components/AppBar.vue';
+  import { ref, watch } from 'vue';
   import { useStore } from '/@/store/settings';
-
+  import setupMenu from '/@/components/setupMenu.vue';
+  import theWorld from '/@/components/theWorld.vue';
   const settings = useStore();
-  const isElectron = window.windowControl !== undefined;
-  const versions = isElectron && window.versions !== undefined;
+  const showSetup = ref(true);
+
+  const showTheWorld = ref(false);
+
+  watch(showSetup, (val) => {
+    if(val === false) {
+      setTimeout(() => {
+        showTheWorld.value = true;
+      }, 0);
+    }
+  });
 </script>
 <template>
-  <v-app :theme="settings.global.theme">
-    <AppBarVue v-if="isElectron" />
-    <!-- Sizes your content based upon application components -->
+  <v-app
+    :theme="settings.theme"
+    style="min-height: 100hv!important;"
+  >
     <v-main>
-      <!-- Provides the application the proper gutter -->
-      <h1>{{ $t('homepage.hello') }}</h1>
-      <fieldset>
-        <legend>Environment</legend>
-        <electron-versions v-if="versions" />
-      </fieldset>
-
-      <!-- <h1>{{ $t('homepage.hello') }}</h1>
-        <fieldset>
-          <legend>Vuex</legend>
-          <ReactiveCounter />
-        </fieldset>
-
-        <fieldset>
-          <legend>Test Node.js API</legend>
-          <reactive-hash />
-        </fieldset>
-
-
-        <p>
-          Edit
-          <code>packages/renderer/src/App.vue</code> to test hot module replacement.
-        </p> -->
+      <v-container
+        :fluid="showTheWorld"
+      >
+        <v-expand-transition>
+          <setupMenu
+            v-if="showSetup"
+            @done="showSetup = false"
+          />
+        </v-expand-transition>
+        <theWorld
+          v-if="showTheWorld"
+        />
+      </v-container>
     </v-main>
   </v-app>
 </template>
-<style>
-html, body {
-  overflow-y: hidden!important;
-}
-body {
-  margin: 0;
-  padding: 0;
-}
-.v-app-bar {
-  padding: 0!important;
-}
-.v-container {
-  overflow: auto;
-  position: absolute;
-  height: 100%;
-}
-</style>
-<style scoped>
-fieldset {
-  margin: 2rem;
-  padding: 1rem;
-}
 
+<style lang="css">
+  html, body {
+    overflow: auto!important;
+  }
+  .v-application {
+    min-height: 100vh!important;
+  }
+  .v-field__input {
+  color: inherit;
+}
 </style>
+

@@ -53,12 +53,15 @@ const setupMainPackageWatcher = ({config: {server}}) => {
     const port = server.port; // Vite searches for and occupies the first free port: 3000, 3001, 3002 and so on
     const path = '/';
     process.env.VITE_DEV_SERVER_URL = `${protocol}//${host}:${port}${path}`;
+    process.env.VITE_DEV_PORT = port;
   }
 
   const logger = createLogger(LOG_LEVEL, {
     prefix: '[main]',
   });
-
+  const apilogger = createLogger(LOG_LEVEL, {
+    prefix: '[api]',
+  });
   /** @type {ChildProcessWithoutNullStreams | null} */
   let spawnProcess = null;
 
@@ -74,13 +77,21 @@ const setupMainPackageWatcher = ({config: {server}}) => {
 
       spawnProcess = spawn(String(electronPath), ['.']);
 
-      spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), {timestamp: true}));
+      spawnProcess.stdout.on('data', d => {
+        const data = d.toString().trim();
+        if(!data) return;
+        if (data.includes('[api]')) apilogger.warn(data.replace(/\[api\]\s*/g, ''), {timestamp: true});
+        else logger.warn(data, {timestamp: true});
+      });
+
       spawnProcess.stderr.on('data', d => {
         const data = d.toString().trim();
         if (!data) return;
         const mayIgnore = stderrFilterPatterns.some((r) => r.test(data));
         if (mayIgnore) return;
-        logger.error(data, { timestamp: true });
+
+        if (data.includes('[api]')) apilogger.error(data.replace(/\[api\]\s*/g, ''), {timestamp: true});
+        else logger.error(data, {timestamp: true});
       });
 
       // Stops the watch script when the application has been quit
@@ -105,6 +116,19 @@ const setupPreloadPackageWatcher = ({ws}) =>
     },
   });
 
+const setupApiPackageWatcher = ({ws}) =>
+  getWatcher({
+    name: 'reload-page-on-api-package-change',
+    configFile: 'packages/api/vite.config.js',
+    writeBundle() {
+      if(process && process.send) process.send({type: 'shutdown'});
+      ws.send({
+        type: 'full-reload',
+      });
+
+    },
+  });
+
 (async () => {
   try {
     const viteDevServer = await createServer({
@@ -116,6 +140,7 @@ const setupPreloadPackageWatcher = ({ws}) =>
 
     await setupPreloadPackageWatcher(viteDevServer);
     await setupMainPackageWatcher(viteDevServer);
+    await setupApiPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);
     process.exit(1);

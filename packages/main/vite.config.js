@@ -27,6 +27,8 @@ const config = {
     lib: {
       entry: 'src/index.ts',
       formats: ['cjs'],
+      name: 'api',
+      fileName: 'index',
     },
     rollupOptions: {
       external: [
@@ -39,7 +41,7 @@ const config = {
       },
     },
     emptyOutDir: true,
-    brotliSize: false,
+    reportCompressedSize: false,
   },
 };
 
