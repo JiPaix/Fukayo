@@ -102,6 +102,6 @@
     "puppeteer-extra-plugin-adblocker-no-vulnerabilities": "^2.12.2",
     "puppeteer-extra-plugin-stealth": "^2.9.0",
     "sharp": "^0.30.3",
-    "systeminformation": "^5.11.8"
+    "systeminformation": "^5.11.9"
   }
 }
