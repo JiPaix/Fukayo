@@ -1,7 +1,9 @@
 import { fork } from 'child_process';
 import { app } from 'electron';
+import { resolve } from 'path';
 import type { ChildProcess } from 'child_process';
 
+const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
 export class ForkedAPI {
@@ -24,7 +26,7 @@ export class ForkedAPI {
     if(password) this.password;
     if(this.stopPending || this.startPending) await wait(10);
     if(this.stopPending || this.startPending) this.forceShutdown();
-    this.fork = fork('../../packages/api/dist/index.js', {env: {
+    this.fork = fork(apiPath, {env: {
       ...process.env,
       USER_PATH: app.getPath('userData'),
       PORT: this.port || this.defaultPort,
