@@ -47,13 +47,13 @@ class Mangafox extends Mirror implements MirrorInterface {
         const name = $('p.manga-list-4-item-title', el).text().trim();
         const link = $('p.manga-list-4-item-title > a', el).attr('href');
         const isLinkaPage = this.regexes.manga.test(this.host + link);
-        
+
         // safeguard
         if(!name || !link || !isLinkaPage) continue;
 
         const cover = $('img.manga-list-4-cover', el).attr('src');
         const last_chapter = $('p.manga-list-4-item-tip:contains("Latest Chapter:")', el).text().replace('Latest Chapter:', '').trim();
-        
+
         // we check if we can get any info regarding the last chapter
         const match = this.regexes.chapter_info.exec(last_chapter);
         let last_release;
@@ -66,7 +66,7 @@ class Mangafox extends Mirror implements MirrorInterface {
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }
-        
+
         // we push the current manga to the results
         results.push({
           name,
@@ -96,36 +96,34 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(!isLinkaPage) return {error: 'manga_error_invalid_link'};
 
     try {
-      // using Axios for this  
+      // using Axios for this
       const response = await this.fetch({url, headers: {'Cookie': 'isAdult=1 path=/; domain=fanfox.net'}});
       const $ = this.loadHTML(response.data);
 
       const name = $('span.detail-info-right-title-font').text().trim();
       const synopsis = $('p.fullcontent').text().trim();
-      
+
       const chapters:MangaPage['chapters'] = [];
       const covers:string[] = [];
-      
+
       // looping through the chapters
       $('ul.detail-main-list > li > a').each((i, el) => {
-        
+
         // making sure we have a valid link
         const chapterHref = $(el).attr('href');
         if(!chapterHref || !this.regexes.chapter.test(chapterHref)) return;
-
         // this regex make sure we at least have a valid chapter number
         const match = this.regexes.chapter_info.exec($('.detail-main-list-main > p.title3', el).text());
         if(!match || typeof match !== 'object') return;
-
         // getting capture groups
         const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
-        
+
         // parsing the values
         const volumeNumberInt = volumeNumber ? parseInt(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
         const chapterNumberFloat = parseFloat(chapterNumber);
         const chapterNameTrim = chapterName ? chapterName.trim() : undefined; // if no chapter name is given, we set it to undefined
         const chapterUrl = chapterHref.trim();
-        
+
         // pushing the chapter to the chapters array
         chapters.push({
           name: chapterNameTrim,
@@ -141,7 +139,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         const cover = $(el).attr('src');
         if(cover) covers.push(cover);
       });
-      
+
       // returning the manga page based on MangaPage model
       return {langs: this.langs, mirror: this.name, name, synopsis, covers, chapters };
 
@@ -160,7 +158,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     // safeguard, we return an error if the link is not a chapter page
     if(!isLinkaChapter) return {error: 'chapter_error_invalid_link'};
 
-  
+
     try {
       // We make a first request using Axios to get the number of pages (faster)
       const response = await this.fetch({url:current_url});
@@ -175,7 +173,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       const urls = [...Array(count).keys()].map(i => {
         return current_url.replace(/\/\d+\.html$/, `/${i + 1}.html`);
       });
-      
+
       // preparing the results
       const images:(ChapterPage|ChapterPageErrorMessage)[] = [];
 
@@ -187,7 +185,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       res.forEach(r => {
         // if puppeteer failed to load the page, we return an error in the images array
         if(isCrawlerError(r)) return images.push({error: 'chapter_error_fetch', trace: r.error, url: r.url.replace(this.host, ''), index: r.index});
-        
+
         // loading the HTML and getting the image url
         const $ = this.loadHTML(r.data);
         const src = $('img.reader-main-img').attr('src');
@@ -197,7 +195,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       });
       // we return the images based on ChapterPage model and sort them by index
       return images.sort((a, b) => a.index - b.index);
-  
+
     } catch(e) {
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return {error: 'chapter_error', trace: e.message};
@@ -221,7 +219,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       const res = await this.crawler({urls: [current_url], waitForSelector: 'img.reader-main-img', waitTime: this.waitTime});
       // if puppeteer failed to load the page, we return an error in the images array
       if(isCrawlerError(res[0])) return {error: 'chapter_error_fetch', trace: res[0].error, url: current_url.replace(this.host, ''), index};
-      
+
       // loading the HTML and getting the image url
       const $ = this.loadHTML(res[0].data);
       const src = $('img.reader-main-img').attr('src');
