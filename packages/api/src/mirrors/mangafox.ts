@@ -180,7 +180,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       const images:(ChapterPage|ChapterPageErrorMessage)[] = [];
 
       // We use puppeteer to make the requests
-      const res = await this.crawler({urls, waitForSelector: 'img.reader-main-img', waitTime: this.waitTime});
+      const res = await this.crawler({urls, waitForSelector: 'img.reader-main-img:not([src*=loading\\.gif])', waitTime: this.waitTime});
 
       // looping through the chapter pages
       // for any response (failed or succeded) we must also return the page index
