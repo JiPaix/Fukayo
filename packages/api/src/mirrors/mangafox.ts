@@ -16,8 +16,8 @@ class Mangafox extends Mirror implements MirrorInterface {
   headless = true;
   options: { adult: boolean };
   regexes = {
-    manga: new RegExp(`^${this.host}\\/manga\\/\\w+(\\/)?$`, 'gmi'),
-    chapter: new RegExp(`${this.host}\\/manga\\/\\w+(\\/v\\d+)?\\/c\\d+\\/\\d+\\.html$`, 'gmi'),
+    manga: new RegExp('^\\/manga\\/\\w+(\\/)?$', 'gmi'),
+    chapter: new RegExp('\\/manga\\/\\w+(\\/v\\d+)?\\/c\\d+\\/\\d+\\.html$', 'gmi'),
     chapter_info: new RegExp('^(Vol\\.(\\d+)\\s)?Ch\\.([0-9]+(\\.)?([0-9]+)?)(\\s-\\s(.*))?$', 'gmi'),
   };
 
