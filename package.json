@@ -56,7 +56,7 @@
     "@typescript-eslint/parser": "^5.15.0",
     "@vitejs/plugin-vue": "2.2.4",
     "@vue/test-utils": "2.0.0-rc.18",
-    "@vuetify/nightly": "^3.0.0-next-20220319.0",
+    "@vuetify/nightly": "^3.0.0-next-20220328.0",
     "@vuetify/vite-plugin": "^1.0.0-alpha.10",
     "aws-sdk": "^2.1096.0",
     "bcrypt": "^5.0.1",
