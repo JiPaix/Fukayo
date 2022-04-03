@@ -1,4 +1,5 @@
 export type SearchResult = {
+  mirror:string,
   lang: string,
   name: string,
   link: string,

@@ -9,6 +9,7 @@ export type MangaErrorMessage = {
 }
 
 export type SearchErrorMessage = {
+    mirror: string;
     error:'search_error'|'search_error_unknown'
     trace?:string
 }

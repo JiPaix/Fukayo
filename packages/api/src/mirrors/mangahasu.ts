@@ -2,50 +2,59 @@ import Mirror from './model';
 import icon from './icons/mangahasu.png';
 import type MirrorInterface from './model/types';
 import type { SearchResult } from './types/search';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, SearchErrorMessage } from './types/errorMessages';
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './types/errorMessages';
 import type { MangaPage } from './types/manga';
 import type { ChapterPage } from './types/chapter';
+import type { socketInstance } from '../routes';
 
-class MangaHasu extends Mirror implements MirrorInterface { 
+class MangaHasu extends Mirror implements MirrorInterface {
 
   host = 'https://mangahasu.se';
   displayName = 'MangaHasu';
   name = 'mangahasu';
   enabled = true;
   langs = ['en'];
-  headless = true;
-  
-  regexes = {
-    manga: new RegExp(`^${this.host}\\/.*-\\w{3,4}-p\\d+\\.html$`, 'gmi'),
-    chapter: new RegExp(`^${this.host}\\/.*\\/.*-\\w{3,4}-c\\d+\\.html$`, 'gmi'),
-    chapter_info: new RegExp('(Vol\\s(\\d+)\\s)?Chapter\\s([0-9]+(\\.)?([0-9]+)?)(:\\s(.*))?', 'gmi'),
-  };
-  
+
   constructor() {
     super({icon});
   }
 
-  async search(query:string):Promise<SearchResult[]|SearchErrorMessage> {
+  isMangaPage(url: string): boolean {
+      return /^\/.*-\w{3,4}-p\d+\.html$/gmi.test(url);
+  }
+  isChapterPage(url: string): boolean {
+      return /\/.*\/.*-\w{3,4}-c\d+\.html$/gmi.test(url);
+  }
+  getChapterInfoFromString(str:string) {
+    return /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
+  }
+
+  async search(query:string, socket: socketInstance, id:number) {
     const url = `${this.host}/advanced-search.html?keyword=${query}`;
-    const results:SearchResult[] = [];
     try {
       const res = await this.fetch({url});
-      
+
       const $ = this.loadHTML(res.data);
       for(const el of $('div.div_item')) {
-        
-        const cover = $('div.wrapper_imgage > a > img', el).attr('src');
+
         const name = $('a.name-manga > h3', el).text().trim();
         const link = $('a.name-manga', el).attr('href');
-  
+
+        // mangahasu images can't be linked from external sources
+        let cover:string|undefined;
+        const coverLink = $('.wrapper_imgage img', el).attr('src');
+        if(coverLink) {
+          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer', headers: { referer: this.host }});
+          cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
+        }
         if(!name || !link) continue;
-  
+
         let last_release: SearchResult['last_release'];
         const last_chapter = $('a.name-chapter > span', el).text().trim();
-        const match = this.regexes.chapter_info.exec(last_chapter);
-  
+        const match = this.getChapterInfoFromString(last_chapter);
+
         if(!match) last_release = {name: last_chapter.replace(/Chapter/gi, '').trim()};
-  
+
         if(match && typeof match === 'object') {
           const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
           last_release = {
@@ -54,8 +63,8 @@ class MangaHasu extends Mirror implements MirrorInterface {
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }
-  
-        results.push({
+        socket.emit('searchInMirrors', id, {
+          mirror: this.name,
           name,
           link,
           cover,
@@ -63,17 +72,16 @@ class MangaHasu extends Mirror implements MirrorInterface {
           lang: 'en',
         });
       }
-      return results;
     } catch(e) {
-      if(e instanceof Error) return {error: 'search_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'search_error', trace: e};
-      return {error: 'search_error'};
+      if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
+      if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
+      socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
   }
 
   async manga(link:string): Promise<MangaPage | MangaErrorMessage> {
     const url = `${this.host}/${link}`;
-    const isMangaPage = this.regexes.manga.test(url);
+    const isMangaPage = this.isMangaPage(url);
     if(!isMangaPage) return {error: 'manga_error_invalid_link'};
 
     try {
@@ -92,11 +100,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const current_chapter = $(el).text().trim();
         const link = $(el).attr('href');
         if(!link) continue;
-        const match = this.regexes.chapter_info.exec(current_chapter);
-        let release: MangaPage['chapters'][0] | undefined = undefined; 
+        const match = this.getChapterInfoFromString(current_chapter);
+        let release: MangaPage['chapters'][0] | undefined = undefined;
 
         if(!match) release = {name: current_chapter.replace(/Chapter/gi, '').trim(), number: i, volume: 0, link};
-  
+
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
@@ -118,7 +126,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
   async chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage> {
     const url = `${this.host}/${link}`;
-    const isChapterPage = this.regexes.chapter.test(url);
+    const isChapterPage = this.isChapterPage(url);
     if(!isChapterPage) return {error: 'chapter_error_invalid_link'};
 
     try {
@@ -144,9 +152,9 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
   async retryChapterImage(link: string, index: number): Promise<ChapterPage | ChapterPageErrorMessage> {
     const url = `${this.host}/${link}`;
-    const isChapterPage = this.regexes.chapter.test(url);
+    const isChapterPage = this.isChapterPage(url);
     if(!isChapterPage) return {error: 'chapter_error_invalid_link', index};
-    
+
     try {
       const res = await this.fetch({url});
       const $ = this.loadHTML(res.data);

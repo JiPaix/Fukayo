@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { load } from 'cheerio';
-import sharp from 'sharp';
 import { crawler } from './crawler';
 import { resolve } from 'path';
 import type { AxiosRequestConfig } from 'axios';
@@ -9,7 +8,7 @@ import type { MirrorConstructor } from './types';
 
 
 export default class Mirror {
-  
+
   enabled = true;
   waitTime: number;
   protected concurrency = 0;
@@ -17,7 +16,7 @@ export default class Mirror {
   protected name = '';
   private _icon;
 
-  
+
   constructor(opts: MirrorConstructor) {
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
@@ -50,44 +49,14 @@ export default class Mirror {
 
   /**
    * Cheerio.load() wrapper
-   * @param {string | Buffer | Node | Node[]} content 
-   * @param {CheerioOptions | null | undefined} options 
-   * @param {boolean | undefined} isDocument 
+   * @param {string | Buffer | Node | Node[]} content
+   * @param {CheerioOptions | null | undefined} options
+   * @param {boolean | undefined} isDocument
    * @returns {CheerioAPI}
    */
   protected loadHTML(content: string | Buffer | Node | Node[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
     return load(content, options, isDocument);
   }
-
-  private async pngify(
-    input?:
-        | Buffer
-        | Uint8Array
-        | Uint8ClampedArray
-        | Int8Array
-        | Uint16Array
-        | Int16Array
-        | Uint32Array
-        | Int32Array
-        | Float32Array
-        | Float64Array
-        | string,
-  ): Promise<string> {
-    return (await sharp(input).png().toBuffer()).toString('base64');
-  }
-
-  /**
-   * Takes an image url and returns a base64 encoded png
-   * @param {String} url absolute url to image
-   * @returns {Promise<String>} base64 encoded image
-   * @example
-   * this.getImage("https://mangafox.me/images/manga/one_piece/1.jpg")
-   */
-  protected async getImage(url:string): Promise<string> {
-    const response = await this.fetch({url, responseType: 'arraybuffer'});
-    return this.pngify(Buffer.from(response.data, 'binary'));
-  }
-
 
   protected getVariableFromScript<Expected>(varname:string, sc:string):Expected {
     let res = undefined;

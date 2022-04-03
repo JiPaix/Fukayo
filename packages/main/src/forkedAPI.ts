@@ -14,23 +14,53 @@ export class ForkedAPI {
 
   private pingInterval?: NodeJS.Timeout;
   private pongTimeout?: NodeJS.Timeout;
-  private port?: string;
+  private port?: number;
   private password?: string;
+  private ssl?: startPayload['ssl'];
+  private cert?: string | null;
+  private key?: string | null;
+  private userdata = app.getPath('userData');
+  private appdata = app.getPath('appData');
+  private tempdata = app.getPath('temp');
+  private picturedata = app.getPath('pictures');
+  private login = 'admin';
+
   get defaultPort() {
     return import.meta.env.DEV && import.meta.env.VITE_DEV_PORT !== undefined
     ? String(parseInt(import.meta.env.VITE_DEV_PORT)+1) : '3000';
   }
 
-  async init({port, password}: { port?: string, password: string }  ){
-    if(port) this.port = port;
-    if(password) this.password;
+  get running() {
+    return !!this.fork;
+  }
+
+  get startPayload():startPayloadInternal {
+    return {
+      login: this.login,
+      port: this.port,
+      password: this.password,
+      ssl: this.ssl,
+      cert: this.cert,
+      key: this.key,
+    };
+  }
+
+  async init(payload: startPayloadInternal) {
+    this.login = payload.login;
+    this.port = payload.port;
+    this.password = payload.password;
+    this.ssl = payload.ssl;
+    this.cert = payload.cert;
+    this.key = payload.key;
     if(this.stopPending || this.startPending) await wait(10);
     if(this.stopPending || this.startPending) this.forceShutdown();
     this.fork = fork(apiPath, {env: {
       ...process.env,
-      USER_PATH: app.getPath('userData'),
-      PORT: this.port || this.defaultPort,
-      PASSWORD: password || this.password,
+      USER_DATA: this.userdata,
+      APP_DATA: this.appdata,
+      TEMP_DATA: this.tempdata,
+      PICTURE_DATA: this.picturedata,
+      MODE: import.meta.env.MODE,
     }});
   }
 
@@ -44,7 +74,7 @@ export class ForkedAPI {
           console.error(err);
           this.forceShutdown();
           if(!this.password) throw new Error('ping shouldn\'t be called before init');
-          return this.start({port: this.port, password: this.password});
+          this.start(this.startPayload);
         }
       });
     }
@@ -58,7 +88,7 @@ export class ForkedAPI {
     this.pongTimeout = setTimeout(() => {
       this.forceShutdown();
       if(!this.password) throw new Error('pong shouldn\'t be called before init');
-      this.start({port: this.port, password: this.password});
+      this.start(this.startPayload);
     }, 10000);
 
     this.fork.on('message', (msg: ForkResponse) => {
@@ -68,7 +98,7 @@ export class ForkedAPI {
       this.pongTimeout = setTimeout(() => {
         this.forceShutdown();
         if(!this.password) throw new Error('pong shouldn\'t be called before init');
-        this.start({port: this.port, password: this.password});
+        this.start(this.startPayload);
       }, 10000);
     });
 
@@ -76,9 +106,9 @@ export class ForkedAPI {
 
   }
 
-  public async start({port, password}: { port?: string, password: string }):Promise<ForkResponse> {
+  public async start(payload: startPayloadInternal):Promise<ForkResponse> {
     // init the fork if it hasn't been already
-    if(!this.fork) this.init({port, password});
+    if(!this.fork) this.init(payload);
     // if fork is already in the process of being started or stoped, wait for it to finish
     if(this.stopPending || this.startPending) await wait(5);
     // if fork is still in the process of being started or stoped after waiting, force shutdown (could happen if process hangs)
@@ -92,7 +122,7 @@ export class ForkedAPI {
         resolve({ type: 'start', success: false, message: 'timeout' });
       }, 5000);
       // sending start message to fork and setting up a watch to see if it responds
-      this.fork?.send({type: 'start', port: port||this.port});
+      this.fork?.send({type: 'start', payload: this.startPayload});
       this.startPending = true;
       // if fork responds, clear timeout, watcher and resolve
       const listener = (msg: ForkResponse) => {
@@ -170,4 +200,22 @@ type ForkResponse = {
   type: 'start' | 'shutdown' | 'pong',
   success: boolean,
   message?: string,
+}
+
+export type startPayload = {
+  login:string,
+  password: string,
+  port: number,
+  ssl: 'false' | 'provided' | 'app',
+  cert?: string | null,
+  key?: string | null,
+}
+
+type startPayloadInternal = {
+  login:string,
+  password?: string,
+  port?: number,
+  ssl: 'false' | 'provided' | 'app' | undefined
+  cert?: string | null,
+  key?: string | null,
 }

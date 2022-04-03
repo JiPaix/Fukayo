@@ -1,9 +1,11 @@
 import { app, ipcMain } from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
+import type { startPayload } from './forkedAPI';
 import { ForkedAPI } from './forkedAPI';
 
 const api = new ForkedAPI();
+app.commandLine.appendSwitch('ignore-certificate-errors');
 
 /**
  * Prevent multiple instances
@@ -78,6 +80,6 @@ ipcMain.handle('userData', () => {
   return app.getPath('userData');
 });
 
-ipcMain.handle('start-server', (ev,  {port, password}: { port: number, password:string}) => {
-  return api.start({port: port.toString(), password });
+ipcMain.handle('start-server', (ev,  payload: startPayload) => {
+  return api.start(payload);
 });

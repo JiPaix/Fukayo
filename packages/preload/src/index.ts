@@ -35,4 +35,4 @@ contextBridge.exposeInMainWorld('versions', process.versions);
   * intended to be used in a vuex store plugin
   */
 contextBridge.exposeInMainWorld('userData', {configPath});
-contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer });
+contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE });

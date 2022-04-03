@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, globalShortcut } from 'electron';
 import {join} from 'path';
 import {URL} from 'url';
 
@@ -13,6 +13,22 @@ async function createWindow() {
     },
     icon: join(__dirname, '../../../buildResources/icon_128.png'),
   });
+
+  /**
+   * Do not allow page refreshes in production
+   */
+  if(import.meta.env.PROD) {
+    browserWindow.on('focus', () => {
+      globalShortcut.register('CommandOrControl+R', () => { /** */ });
+      globalShortcut.register('CommandOrControl+Shift+I', () => { /** */ });
+      globalShortcut.register('F5', () => { /** */ });
+    });
+
+    browserWindow.on('blur', () => {
+      globalShortcut.unregisterAll();
+    });
+  }
+
   /**
    * If you install `show: true` then it can cause issues when trying to close the window.
    * Use `show: false` and listener events `ready-to-show` to fix these issues.

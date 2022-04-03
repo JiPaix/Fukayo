@@ -1,7 +1,7 @@
 export type ClusterJob = {
   url:string;
   waitForSelector?: string;
-  id:string;
+  id:number;
   index:number;
   waitTime: number;
 }
@@ -17,7 +17,7 @@ export type CrawlerJob = {
    waitForSelector?: string;
    /**
     * Time to wait between each requests
-    * 
+    *
     * `mirror.waitTime`
     */
     waitTime:number;

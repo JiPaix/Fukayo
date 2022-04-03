@@ -360,6 +360,8 @@ components:
     SearchErrorMessage:
       type: object
       properties:
+        mirror:
+          type: string
         error:
           type: string
           enum:
@@ -368,6 +370,7 @@ components:
         trace:
           type: string
       required:
+        - mirror
         - error
     searchMangaResponseError:
       type: object
@@ -390,6 +393,8 @@ components:
     SearchResult:
       type: object
       properties:
+        mirror:
+          type: string
         lang:
           type: string
         name:
@@ -412,6 +417,7 @@ components:
               type: number
               format: float
       required:
+        - mirror
         - lang
         - name
         - link
