@@ -1,7 +1,7 @@
 import type { ChapterPage } from '../../types/chapter';
-import type { SearchErrorMessage, MangaErrorMessage, ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
+import type { MangaErrorMessage, ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
 import type { MangaPage } from '../../types/manga';
-import type { SearchResult } from '../../types/search';
+import type { socketInstance } from '../../../routes';
 
 export type MirrorConstructor = {
   /**
@@ -26,7 +26,7 @@ export default interface MirrorInterface {
   displayName: string;
   /**
    * Mirror name slug
-   * 
+   *
    * This is used to generate the mirror route
    * @example
    * ✅ name: 'my_awesome-mirror'
@@ -42,10 +42,6 @@ export default interface MirrorInterface {
    */
   host: string;
   /**
-   * indicate if the mirror use an headless browser
-   */
-  headless: boolean;
-  /**
    * list of options
    */
   options?: { [key:string]: unknown };
@@ -58,27 +54,27 @@ export default interface MirrorInterface {
    */
   get icon(): string;
   /**
-   * Regexes related to mirror:
+   * Test if url is a manga page
    */
-  regexes: {
-    /**
-     * Regex to test if the page is a manga page
-     */
-    manga: RegExp,
-    /**
-     * Regex to test if the page is a chapter page
-     */
-    chapter: RegExp,
-    /**
-     * Regex to capture volume, chapter, and chapter name
-     */
-    chapter_info: RegExp,
-  };
+  isMangaPage(url:string): boolean;
+
+  /**
+   * Test if url is a chapter page
+   */
+  isChapterPage(url:string): boolean;
+
+  /**
+   * Optional: get volume, chapter number and chapter name from string
+   */
+  getChapterInfoFromString?(str:string): RegExpExecArray | null
+
   /**
    * Search manga by name
-   * @param {String} query Search string  
+   * @param {String} query Search string
+   * @param {socketInstance} socket user socket
+   * @param {Number} id request's uid
    */
-  search(query: string): Promise<SearchResult[] | SearchErrorMessage>;
+  search(query: string, socket:socketInstance, id:number): void;
   /**
    * Returns manga information and chapters
    * @param {String} link link to manga page (Relative URL)
@@ -90,15 +86,15 @@ export default interface MirrorInterface {
 
   /**
    * Returns all images from chapter
-   * @param link Relative url of chapter page (any page) 
+   * @param link Relative url of chapter page (any page)
    */
   chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage>
 
   /**
    * Same as chapter() but for a specific page
-   * @param link Relative url of the chapter page 
+   * @param link Relative url of the chapter page
    * @param index the page index, starting from 0
    */
-   retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> 
+   retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage>
 // eslint-disable-next-line semi
 }

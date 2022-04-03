@@ -4,8 +4,9 @@ import {chrome} from '../../.electron-vendors.cache.json';
 import {join} from 'path';
 import {builtinModules} from 'module';
 import vue from '@vitejs/plugin-vue';
+import { transformAssetUrls } from '@quasar/vite-plugin';
 import vueI18n from '@intlify/vite-plugin-vue-i18n';
-import vuetify from '@vuetify/vite-plugin';
+// import vuetify from '@vuetify/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -22,11 +23,10 @@ const config = {
     },
   },
   plugins: [
-    vue(),
+    vue({template: transformAssetUrls}),
     vueI18n({
       include: join(PACKAGE_ROOT, 'src', 'locales') + '/**',
     }),
-    vuetify({ autoImport: true }),
   ],
   base: '',
   server: {
@@ -44,6 +44,13 @@ const config = {
       external: [
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],
+        output:{
+            manualChunks(id) {
+              if (id.includes('node_modules')) {
+                  return id.toString().split('node_modules/')[1].split('/')[0].toString();
+              }
+          },
+        },
     },
     emptyOutDir: true,
     reportCompressedSize: false,

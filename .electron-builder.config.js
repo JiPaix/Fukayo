@@ -9,8 +9,8 @@ if (process.env.VITE_APP_VERSION === undefined) {
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
-  appId: 'com.electron.allmangasreader',
-  productName: 'All Mangas Reader',
+  appId: 'com.electron.electronmangasreader',
+  productName: 'Electron Mangas Reader',
   // copyright: '',
   directories: {
     output: 'dist',
@@ -18,7 +18,6 @@ const config = {
   },
   files: [
     'packages/**/dist/**',
-    'packages/api/docs/**',
   ],
   extraMetadata: {
     version: process.env.VITE_APP_VERSION,

@@ -33,9 +33,6 @@ puppeteer.use(StealthPlugin());
 
 const intercept:ResourceType[] = ['stylesheet', 'font', 'image', 'media'];
 
-function wait (ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // instance watchers
 let cluster:Cluster<ClusterJob,ClusterResult|ClusterError> | null = null;
@@ -60,6 +57,7 @@ async function useCluster() {
     puppeteer,
     puppeteerOptions: {
       headless: process.env.MODE === 'development' ? false : true,
+      // headless:true,
     },
   });
   return cluster;
@@ -86,22 +84,32 @@ async function useCluster() {
  * @returns
  */
 async function task({page, data }: { page: Page, data: ClusterJob }) {
-  await wait(runningTask*data.waitTime);
+  console.log('task()');
   try {
+    await page.setCookie({name: 'isAdult', value: '1', domain: new URL(data.url).hostname, path: '/'});
     await page.setRequestInterception(true);
     page.on('request', async (req) => {
       if (req.isInterceptResolutionHandled()) return;
       if(intercept.includes(req.resourceType())) req.abort();
     });
+    // let start: number | undefined;
+    page.once('requestfinished', () => {
+      // start = Date.now();
+    });
+    page.once('response', () => {
+      // const stop = Date.now();
+      // emitter.emit(`req:${data.id}`, stop-(start||0));
+      emitter.emit(`req:${data.id}`);
+    });
     await page.goto(data.url);
+
     if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, {timeout: 1000*60});
+
     const html = await page.content();
     page.close();
-    runningTask = runningTask -1;
     emitter.emit(`done:${data.id}`, {index: data.index, url: data.url, data: html});
     return {index: data.index, url:data.url, data: html};
   } catch(e) {
-    runningTask = runningTask -1;
     if(e instanceof Error) {
       emitter.emit(`done:${data.id}`, {index: data.index, url:data.url, error: 'cralwer_error', trace: e.message});
       return {index: data.index, url:data.url, error: 'cralwer_error', trace: e.message};
@@ -132,24 +140,42 @@ export function isCrawlerError(x: unknown): x is ClusterError {
  */
 export async function crawler({ urls, waitForSelector, waitTime }: CrawlerJob): Promise<(ClusterResult|ClusterError)[]> {
   const instance = await useCluster();
-  runningTask = runningTask + 1;
+  runningTask = runningTask + urls.length;
 
   // generate a random id for the task
-  const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const id = new Date().getTime();
   // watch task advance
-  let start = 0;
-  const finish = urls.length-1;
+  let todo = urls.length;
 
-  urls.forEach((url, i) => instance.queue({url, waitForSelector, id, index:i, waitTime}, task));
+  let index = 0;
+  instance.queue({url:urls[index], waitForSelector, id, index:index, waitTime}, task);
+  index = index + 1;
+  instance.queue({url:urls[index], waitForSelector, id, index:index, waitTime}, task);
+
+  emitter.on(`req:${id}`, async ()=> {
+    index = index + 1;
+    const url = urls[index];
+    if(typeof url === 'undefined') return;
+    // if(time < waitTime) {
+    //   await wait(waitTime - time);
+    // }
+    instance.queue({url, waitForSelector, id, index:index, waitTime}, task);
+  });
+
+
+
+
+  // urls.forEach((url, i) => instance.queue({url, waitForSelector, id, index:urls.length-i-1, waitTime}, task));
 
   const res:(ClusterResult|ClusterError)[] = [];
 
   return new Promise(resolve => {
     emitter.on(`done:${id}`, (data: ClusterResult|ClusterError) => {
-      start = start + 1;
+      runningTask = runningTask -1;
+      todo = todo - 1;
       res.push(data);
-      if(start === finish) {
-        closeClusterIfAllDone(10);
+      if(todo === 0) {
+        if(runningTask === 0) closeClusterIfAllDone(10);
         resolve(res);
       }
     });

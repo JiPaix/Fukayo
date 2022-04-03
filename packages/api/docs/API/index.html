@@ -1085,9 +1085,12 @@ ul.nav-tabs {
   }
 };
     defs["SearchErrorMessage"] = {
-  "required" : [ "error" ],
+  "required" : [ "error", "mirror" ],
   "type" : "object",
   "properties" : {
+    "mirror" : {
+      "type" : "string"
+    },
     "error" : {
       "type" : "string",
       "enum" : [ "search_error", "search_error_unknown" ]
@@ -1134,9 +1137,12 @@ ul.nav-tabs {
   }
 };
     defs["SearchResult"] = {
-  "required" : [ "lang", "link", "name" ],
+  "required" : [ "lang", "link", "mirror", "name" ],
   "type" : "object",
   "properties" : {
+    "mirror" : {
+      "type" : "string"
+    },
     "lang" : {
       "type" : "string"
     },

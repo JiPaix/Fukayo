@@ -1,7 +1,8 @@
 import { ipcRenderer } from 'electron';
+import type { startPayload } from '../../main/src/forkedAPI';
 
-export async function startServer(port:number, password: string) {
-  return ipcRenderer.invoke('start-server', {port, password});
+export async function startServer(payload:startPayload) {
+  return ipcRenderer.invoke('start-server', payload);
 }
 
 export async function stopServer() {

@@ -24,15 +24,23 @@
         },
         "passwordHintStrong": {
           "desc": "Tell the user that the password is strong",
-          "value": "Password strenght: <b class=\"text-success\">STRONG</b>"
+          "value": "Password strength: <b class=\"text-positive\">STRONG</b>"
         },
         "passwordHintAverage": {
           "desc": "Tell the user that the password is average",
-          "value": "Password strenght: <b class=\"text-warning\">AVERAGE</b>"
+          "value": "Password strength: <b class=\"text-warning\">AVERAGE</b>"
         },
         "passwordHintWeak": {
           "desc": "Tell the user that the password is weak",
-          "value": "Password strenght: <b class=\"text-red\">WEAK</b>"
+          "value": "Password strength: <b class=\"text-negative\">WEAK</b>"
+        },
+        "badPassword": {
+          "desc": "Tell the user that the password is wrong",
+          "value": "Wrong Password"
+        },
+        "retry": {
+          "desc": "The retry button text when the password is wrong",
+          "value": "Retry"
         },
         "setPort": {
           "desc": "Set the port for the server",
@@ -41,6 +49,60 @@
         "portHint": {
           "desc": "Port must be between 1024 and 65535",
           "value": "Port must be between 1024 and 65535"
+        },
+        "setLogin": {
+          "desc": "The login button label",
+          "value": "Login"
+        },
+        "security": {
+          "choose": {
+            "desc": "The security question",
+            "value": "Choose a security policy"
+          },
+          "none" : {
+            "desc": "Security Answer: None",
+            "value": "None",
+            "description": {
+              "desc": "The description of the security answer",
+              "value": "I don't need https and/or intend to use a service such as cloudflare"
+            }
+          },
+          "app": {
+            "desc": "Security Answer: let the app handle the security",
+            "value": "Auto",
+            "description": {
+              "desc": "The description of the security answer",
+              "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give me false security a warning upon first access"
+            }
+          },
+          "selfsigned": {
+            "desc": "Additionnal info for 'app' security",
+            "value": "self-signed certificate"
+          },
+          "provided" : {
+            "desc": "Security Answer: I provide the certificate",
+            "value": "Provided",
+            "description": {
+              "desc": "The description of the security answer",
+              "value": "I want to use my own key and certificate"
+            }
+          },
+          "certificate" : {
+            "desc": "The certificate label",
+            "value": "Certificate"
+          },
+          "privkey" : {
+            "desc": "The private key label",
+            "value": "Key"
+          },
+          "pastcert" : {
+            "desc": "The past certificate label",
+            "value": "Past your certificate"
+          },
+          "pastprivkey" : {
+            "desc": "The past private key label",
+            "value": "Past your key"
+          }
         }
     },
     "homepage": {

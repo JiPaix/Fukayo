@@ -1,11 +1,11 @@
-import type { SearchResult } from './types/search';
 import type { MangaPage } from './types/manga';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, SearchErrorMessage } from './types/errorMessages';
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './types/errorMessages';
 import Mirror from './model';
 import type { ChapterPage } from './types/chapter';
 import { isCrawlerError } from './model/crawler';
 import icon from './icons/mangafox.png';
 import type MirrorInterface from './model/types/index';
+import type { socketInstance } from '../routes';
 class Mangafox extends Mirror implements MirrorInterface {
 
   host = 'https://fanfox.net';
@@ -13,22 +13,26 @@ class Mangafox extends Mirror implements MirrorInterface {
   name = 'mangafox';
   enabled = true;
   langs = ['en'];
-  headless = true;
   options: { adult: boolean };
-  regexes = {
-    manga: new RegExp('^\\/manga\\/\\w+(\\/)?$', 'gmi'),
-    chapter: new RegExp('\\/manga\\/\\w+(\\/v\\d+)?\\/c\\d+\\/\\d+\\.html$', 'gmi'),
-    chapter_info: new RegExp('^(Vol\\.(\\d+)\\s)?Ch\\.([0-9]+(\\.)?([0-9]+)?)(\\s-\\s(.*))?$', 'gmi'),
-  };
 
   constructor(options: { adult:boolean } = { adult: true }) {
     super({icon});
     this.options = options;
   }
 
-  async search(query:string): Promise<SearchResult[] | SearchErrorMessage> {
+  isMangaPage(str:string) {
+    return /^\/manga\/\w+(\/)?$/gmi.test(str);
+  }
+  isChapterPage(str:string) {
+    return /\/manga\/\w+(\/v\d+)?\/c\d+\/\d+\.html$/gmi.test(str);
+  }
+
+  getChapterInfoFromString(str:string) {
+    return /^(Vol\.(\d+)\s)?Ch\.([0-9]+(\.)?([0-9]+)?)(\s-\s(.*))?$/gmi.exec(str);
+  }
+
+  async search(query:string, socket: socketInstance, id:number) {
     const url = `${this.host}/search?page=1&title=${query}`;
-    const results:SearchResult[] = [];
 
     try {
       // we use Axios for this and set the adult cookie
@@ -46,18 +50,18 @@ class Mangafox extends Mirror implements MirrorInterface {
       for(const el of $('ul.manga-list-4-list > li')) {
         const name = $('p.manga-list-4-item-title', el).text().trim();
         const link = $('p.manga-list-4-item-title > a', el).attr('href');
-        const isLinkaPage = this.regexes.manga.test(this.host + link);
-
+        const isMangaLink = this.isMangaPage(link||'');
         // safeguard
-        if(!name || !link || !isLinkaPage) continue;
+        if(!link || !isMangaLink || !name) continue;
 
+        // getting additional infos (these are all optional)
         const cover = $('img.manga-list-4-cover', el).attr('src');
-        const last_chapter = $('p.manga-list-4-item-tip:contains("Latest Chapter:")', el).text().replace('Latest Chapter:', '').trim();
+        const last_chapter = $('p.manga-list-4-item-tip', el).filter((i,e) => $(e).text().trim().indexOf('Latest Chapter:') > -1).text().replace('Latest Chapter:', '').trim();
+        const synopsis = $('p.manga-list-4-item-tip:last-of-type', el).text().trim();
 
-        // we check if we can get any info regarding the last chapter
-        const match = this.regexes.chapter_info.exec(last_chapter);
+        // check if we can get any info regarding the last chapter
+        const match = this.getChapterInfoFromString(last_chapter);
         let last_release;
-
         if(match && typeof match === 'object') {
           const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
           last_release = {
@@ -67,30 +71,29 @@ class Mangafox extends Mirror implements MirrorInterface {
           };
         }
 
-        // we push the current manga to the results
-        results.push({
+        // we return the results based on SearchResult model
+        socket.emit('searchInMirrors', id, {
+          mirror: this.name,
           name,
           link,
           cover,
+          synopsis,
           last_release,
           lang: 'en',
         });
       }
-
-      // we return the results based on SearchResult model
-      return results;
-
     } catch(e) {
         // we catch any errors because the client needs to be able to handle them
-        if(e instanceof Error) return {error: 'search_error', trace: e.message};
-        if(typeof e === 'string') return {error: 'search_error', trace: e};
-        return {error: 'search_error_unknown'};
+        if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
+        else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
+        else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error' });
+        console.log('[api]', 'mangafox CATCH', e);
     }
   }
 
   async manga(link:string): Promise<MangaPage | MangaErrorMessage> {
     const url = `${this.host}${link}`;
-    const isLinkaPage = this.regexes.manga.test(url);
+    const isLinkaPage = this.isMangaPage(url);
 
     // safeguard, we return an error if the link is not a manga page
     if(!isLinkaPage) return {error: 'manga_error_invalid_link'};
@@ -111,9 +114,9 @@ class Mangafox extends Mirror implements MirrorInterface {
 
         // making sure we have a valid link
         const chapterHref = $(el).attr('href');
-        if(!chapterHref || !this.regexes.chapter.test(chapterHref)) return;
+        if(!chapterHref || !this.isChapterPage(chapterHref)) return;
         // this regex make sure we at least have a valid chapter number
-        const match = this.regexes.chapter_info.exec($('.detail-main-list-main > p.title3', el).text());
+        const match = this.getChapterInfoFromString($('.detail-main-list-main > p.title3', el).text());
         if(!match || typeof match !== 'object') return;
         // getting capture groups
         const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
@@ -153,7 +156,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
   async chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage> {
     const current_url = `${this.host}${link}`;
-    const isLinkaChapter = this.regexes.chapter.test(current_url);
+    const isLinkaChapter = this.isChapterPage(current_url);
 
     // safeguard, we return an error if the link is not a chapter page
     if(!isLinkaChapter) return {error: 'chapter_error_invalid_link'};
@@ -206,7 +209,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
   public async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
     const current_url = `${this.host}${link}`;
-    const isLinkaChapter = this.regexes.chapter.test(current_url);
+    const isLinkaChapter = this.isChapterPage(current_url);
 
     // safeguard, we return an error if the link is not a chapter page
     if(!isLinkaChapter) return {error: 'chapter_error_invalid_link', index};
