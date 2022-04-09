@@ -111,18 +111,26 @@ export default class IOWrapper {
   }
 
   routes(socket:socketInstance) {
+    /** Default Events */
     socket.on('disconnect', () => socket.removeAllListeners());
-    socket.on('getMirrors', (ack) => {
-      console.log('[api]', 'getMirrors()');
-      ack(mirrors.map(m => {
+
+    /** Routes */
+
+    /**
+     * Get all mirrors (enabled or not)
+     */
+    socket.on('getMirrors', callback => {
+      callback(mirrors.map(m => {
         return {
           name: m.name,
+          displayName: m.displayName,
           host: m.host,
           enabled: m.enabled,
           icon: m.icon,
+          langs: m.langs,
         };
       }));
-     });
+    });
     socket.on('searchInMirrors', (query, id) => mirrors.forEach(m => m.search(query, socket, id)));
   }
 

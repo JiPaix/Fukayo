@@ -42,6 +42,11 @@ export default interface MirrorInterface {
    */
   host: string;
   /**
+   * Mirror Language
+   * @important make sure the language is localized in the renderer
+   */
+  langs: string[];
+  /**
    * list of options
    */
   options?: { [key:string]: unknown };
