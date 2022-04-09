@@ -35,7 +35,7 @@ export default class IOWrapper {
     this.refreshTokens.push({token: tokens.refreshToken, expire: Date.now() + (7 * 24 * 60 * 60 * 1000)});
     this.authorizedTokens.push({token: tokens.accessToken, expire: Date.now() + (5 * 60 * 1000), parent: tokens.refreshToken});
     this.use();
-    this.io.on('connection', this.listeners);
+    this.io.on('connection', this.routes);
   }
 
   use() {
@@ -110,7 +110,7 @@ export default class IOWrapper {
     }));
   }
 
-  listeners(socket:socketInstance) {
+  routes(socket:socketInstance) {
     socket.on('disconnect', () => socket.removeAllListeners());
     socket.on('getMirrors', (ack) => {
       console.log('[api]', 'getMirrors()');
