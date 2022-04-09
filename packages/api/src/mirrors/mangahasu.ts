@@ -40,13 +40,14 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const name = $('a.name-manga > h3', el).text().trim();
         const link = $('a.name-manga', el).attr('href');
 
-        // mangahasu images can't be linked from external sources
+        // mangahasu images needs to be downloaded.
         let cover:string|undefined;
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
-          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer', headers: { referer: this.host }});
+          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
           cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
         }
+
         if(!name || !link) continue;
 
         let last_release: SearchResult['last_release'];
