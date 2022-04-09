@@ -5,19 +5,14 @@ import { createServer as createHttp } from 'http';
 import { createServer as createHttps } from 'https';
 import express from 'express';
 import { join } from 'path';
-// import mirrorRoutes from './routes/api/mirrors';
 import morgan from 'morgan';
-import cors from 'cors';
-import helmet from 'helmet';
 import generateKeyPair from './lib/certificate';
 import IOWrapper from './routes';
 
 // basic express setup
 const app = express();
-app.use(helmet({contentSecurityPolicy: false})); // needed to display external images
-app.use(cors());
 
-// default credentials, these are placeholders and will be changed by the user
+// default credentials, these are placeholders and will be changed by the user at startup
 const CREDENTIALS = {
   login: 'admin',
   password: 'password',
