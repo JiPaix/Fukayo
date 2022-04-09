@@ -27,7 +27,7 @@
     "types/**/*.d.ts",
     "../../types/**/*.d.ts",
     "../preload/exposedInMainWorld.d.ts"
-  ],
+, "src/shims-vue.d.ts"  ],
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
