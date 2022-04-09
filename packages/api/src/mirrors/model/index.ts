@@ -11,9 +11,10 @@ export default class Mirror {
 
   enabled = true;
   waitTime: number;
-  protected concurrency = 0;
+  private concurrency = 0;
   protected crawler = crawler;
   protected name = '';
+  protected host = '';
   private _icon;
 
 
