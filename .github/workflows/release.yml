@@ -195,3 +195,9 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "Github Actions"
+
+      - name: Merge main back to beta
+        run: |
+          git checkout beta
+          git pull origin main
+          git push origin beta
