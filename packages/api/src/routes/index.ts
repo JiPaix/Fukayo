@@ -14,8 +14,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  getMirrors: (callback: (m: {name:string, host:string, enabled:boolean, icon:string}[]) => void) => void;
-  searchInMirrors: (query:string, id:number) => void;
+  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[]) => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
@@ -131,8 +130,16 @@ export default class IOWrapper {
         };
       }));
     });
-    socket.on('searchInMirrors', (query, id) => mirrors.forEach(m => m.search(query, socket, id)));
+
+    /**
+     * Search mangas in enabled mirrors
+     */
+    socket.on('searchInMirrors', (query, id, selectedMirrors, selectedLangs) =>
+      mirrors
+      .filter(m =>  m.langs.some(l => selectedLangs.includes(l)))
+      .filter(m => selectedMirrors.includes(m.name))
+      .forEach(m => {
+        if(m.enabled) m.search(query, socket, id);
+      }));
   }
-
-
 }
