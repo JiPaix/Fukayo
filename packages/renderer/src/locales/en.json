@@ -1,122 +1,274 @@
 {
-    "app": {
-      "name": {
-        "desc": "The application name",
-        "value": "Electron mangas reader"
-      },
-      "description": {
-        "desc": "The application description",
-        "value": "A simple electron app to read mangas"
-      }
+  "app": {
+    "name": {
+      "desc": "The application name",
+      "value": "Electron mangas reader"
     },
-    "setup": {
-        "message": {
-          "desc": "The message to display when the app is not configured",
-          "value": "Before we start a little setup is needed"
-        },
-        "setPassword" : {
-          "desc": "Set the password for the server",
-          "value": "Password"
-        },
-        "passwordHint" : {
-          "desc": "Password must be at least 6 characters long",
-          "value": "Password must be at least 6 characters long"
-        },
-        "passwordHintStrong": {
-          "desc": "Tell the user that the password is strong",
-          "value": "Password strength: <b class=\"text-positive\">STRONG</b>"
-        },
-        "passwordHintAverage": {
-          "desc": "Tell the user that the password is average",
-          "value": "Password strength: <b class=\"text-warning\">AVERAGE</b>"
-        },
-        "passwordHintWeak": {
-          "desc": "Tell the user that the password is weak",
-          "value": "Password strength: <b class=\"text-negative\">WEAK</b>"
-        },
-        "badPassword": {
-          "desc": "Tell the user that the password is wrong",
-          "value": "Wrong Password"
-        },
-        "retry": {
-          "desc": "The retry button text when the password is wrong",
-          "value": "Retry"
-        },
-        "setPort": {
-          "desc": "Set the port for the server",
-          "value": "Port"
-        },
-        "portHint": {
-          "desc": "Port must be between 1024 and 65535",
-          "value": "Port must be between 1024 and 65535"
-        },
-        "setLogin": {
-          "desc": "The login button label",
-          "value": "Login"
-        },
-        "security": {
-          "choose": {
-            "desc": "The security question",
-            "value": "Choose a security policy"
-          },
-          "none" : {
-            "desc": "Security Answer: None",
-            "value": "None",
-            "description": {
-              "desc": "The description of the security answer",
-              "value": "I don't need https and/or intend to use a service such as cloudflare"
-            }
-          },
-          "app": {
-            "desc": "Security Answer: let the app handle the security",
-            "value": "Auto",
-            "description": {
-              "desc": "The description of the security answer",
-              "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give me false security a warning upon first access"
-            }
-          },
-          "selfsigned": {
-            "desc": "Additionnal info for 'app' security",
-            "value": "self-signed certificate"
-          },
-          "provided" : {
-            "desc": "Security Answer: I provide the certificate",
-            "value": "Provided",
-            "description": {
-              "desc": "The description of the security answer",
-              "value": "I want to use my own key and certificate"
-            }
-          },
-          "certificate" : {
-            "desc": "The certificate label",
-            "value": "Certificate"
-          },
-          "privkey" : {
-            "desc": "The private key label",
-            "value": "Key"
-          },
-          "pastcert" : {
-            "desc": "The past certificate label",
-            "value": "Past your certificate"
-          },
-          "pastprivkey" : {
-            "desc": "The past private key label",
-            "value": "Past your key"
-          }
-        }
-    },
-    "homepage": {
-      "hello": "Hello people",
-
-      "sidebar": {
-        "home": {
-          "desc": "Home button subtitle",
-          "value":  "Home"
-        },
-        "settings": {
-          "desc": "Settings button subtitle",
-          "value": "Settings"
-        }
-      }
+    "description": {
+      "desc": "The application description",
+      "value": "A simple electron app to read mangas"
     }
+  },
+  "setup": {
+      "message": {
+        "desc": "The message to display when the app is not configured",
+        "value": "Before we start a little setup is needed"
+      },
+      "setPassword" : {
+        "desc": "Set the password for the server",
+        "value": "Password"
+      },
+      "passwordHint" : {
+        "desc": "Password must be at least 6 characters long",
+        "value": "Password must be at least 6 characters long"
+      },
+      "passwordHintStrong": {
+        "desc": "Tell the user that the password is strong",
+        "value": "Password strength: <b class=\"text-positive\">STRONG</b>"
+      },
+      "passwordHintAverage": {
+        "desc": "Tell the user that the password is average",
+        "value": "Password strength: <b class=\"text-warning\">AVERAGE</b>"
+      },
+      "passwordHintWeak": {
+        "desc": "Tell the user that the password is weak",
+        "value": "Password strength: <b class=\"text-negative\">WEAK</b>"
+      },
+      "badPassword": {
+        "desc": "Tell the user that the password is wrong",
+        "value": "Wrong Password"
+      },
+      "retry": {
+        "desc": "The retry button text when the password is wrong",
+        "value": "Retry"
+      },
+      "setPort": {
+        "desc": "Set the port for the server",
+        "value": "Port"
+      },
+      "portHint": {
+        "desc": "Port must be between 1024 and 65535",
+        "value": "Port must be between 1024 and 65535"
+      },
+      "setLogin": {
+        "desc": "The login button label",
+        "value": "Login"
+      },
+      "security": {
+        "choose": {
+          "desc": "The security question",
+          "value": "Choose a security policy"
+        },
+        "none" : {
+          "desc": "Security Answer: None",
+          "value": "None",
+          "description": {
+            "desc": "The description of the security answer",
+            "value": "I don't need https and/or intend to use a service such as cloudflare"
+          }
+        },
+        "app": {
+          "desc": "Security Answer: let the app handle the security",
+          "value": "Auto",
+          "description": {
+            "desc": "The description of the security answer",
+            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give me false security a warning upon first access"
+          }
+        },
+        "selfsigned": {
+          "desc": "Additionnal info for 'app' security",
+          "value": "self-signed certificate"
+        },
+        "provided" : {
+          "desc": "Security Answer: I provide the certificate",
+          "value": "Provided",
+          "description": {
+            "desc": "The description of the security answer",
+            "value": "I want to use my own key and certificate"
+          }
+        },
+        "certificate" : {
+          "desc": "The certificate label",
+          "value": "Certificate"
+        },
+        "privkey" : {
+          "desc": "The private key label",
+          "value": "Key"
+        },
+        "pastcert" : {
+          "desc": "The past certificate label",
+          "value": "Past your certificate"
+        },
+        "pastprivkey" : {
+          "desc": "The past private key label",
+          "value": "Past your key"
+        }
+      }
+  },
+  "searchMangas": {
+    "tab": {
+      "desc": "The tab label",
+      "value": "Search"
+    },
+    "placeholder": {
+      "desc": "The placeholder text",
+      "value": "Search for a manga"
+    },
+    "selectAll": {
+      "desc": "The check all mirrors button label",
+      "value": "Select All"
+    },
+    "unselectAll" : {
+      "desc": "The unselect all mirrors button label",
+      "value": "Unselect All"
+    },
+    "mirrorLabel" : {
+      "desc": "The mirror label",
+      "value": "Mirror"
+    },
+    "languageLabel" : {
+      "desc": "The language label",
+      "value": "Language"
+    }
+  },
+  "mangas": {
+    "chapter": {
+      "desc": "The chapter label",
+      "value": "Chapter"
+    },
+    "volume": {
+      "desc": "The volume label",
+      "value": "Volume"
+    },
+    "chaptername": {
+      "desc": "The chapter name Label",
+      "value": "Name"
+    }
+  },
+  "languages" : {
+    "current" : {
+      "desc": "The language the user's browser is using",
+      "value": "English"
+    },
+    "en" : {
+      "desc": "English",
+      "value": "English",
+      "flag": "us",
+      "localvalue": "English"
+    },
+    "fr" : {
+      "desc": "French",
+      "value": "French",
+      "flag": "fr",
+      "localvalue": "Français"
+    },
+    "es" : {
+      "desc": "Spanish",
+      "value": "Spanish",
+      "flag": "es",
+      "localvalue": "Español"
+    },
+    "de" : {
+      "desc": "German",
+      "value": "German",
+      "flag": "de",
+      "localvalue": "Deutsch"
+    },
+    "it" : {
+      "desc": "Italian",
+      "value": "Italian",
+      "flag": "it",
+      "localvalue": "Italiano"
+    },
+    "ja" : {
+      "desc": "Japanese",
+      "value": "Japanese",
+      "flag": "jp",
+      "localvalue": "日本語"
+    },
+    "ko" : {
+      "desc": "Korean",
+      "value": "Korean",
+      "flag": "kr",
+      "localvalue": "한국어"
+    },
+    "pt" : {
+      "desc": "Portuguese",
+      "value": "Portuguese",
+      "flag": "pt",
+      "localvalue": "Português"
+    },
+    "ru" : {
+      "desc": "Russian",
+      "value": "Russian",
+      "flag": "ru",
+      "localvalue": "Русский"
+    },
+    "zh" : {
+      "desc": "Chinese",
+      "value": "Chinese",
+      "flag": "cn",
+      "localvalue": "中文"
+    },
+    "ar" : {
+      "desc": "Arabic",
+      "value": "Arabic",
+      "flag": "ar",
+      "localvalue": "العربية"
+    },
+    "tr" : {
+      "desc": "Turkish",
+      "value": "Turkish",
+      "flag": "tr",
+      "localvalue": "Türkçe"
+    },
+    "es-la" : {
+      "desc": "Spanish (Latin America)",
+      "value": "Spanish (Latin America)",
+      "flag": "es",
+      "localvalue": "Español"
+    },
+    "pt-br" : {
+      "desc": "Portuguese (Brazil)",
+      "value": "Portuguese (Brazil)",
+      "flag": "br",
+      "localvalue": "Português"
+    },
+    "tw" : {
+      "desc": "Chinese (Taiwan)",
+      "value": "Chinese (Taiwan)",
+      "flag": "tw",
+      "localvalue": "中文"
+    },
+    "zh-tw" : {
+      "desc": "Chinese (Taiwan)",
+      "value": "Chinese (Taiwan)",
+      "flag": "tw",
+      "localvalue": "中文"
+    },
+    "zh-cn" : {
+      "desc": "Chinese (China)",
+      "value": "Chinese (China)",
+      "flag": "cn",
+      "localvalue": "中文"
+    },
+    "cn" : {
+      "desc": "Chinese (China)",
+      "value": "Chinese (China)",
+      "flag": "cn",
+      "localvalue": "中文"
+    },
+    "zh-hk" : {
+      "desc": "Chinese (Hong Kong)",
+      "value": "Chinese (Hong Kong)",
+      "flag": "hk",
+      "localvalue": "中文"
+    },
+    "hk" : {
+      "desc": "Chinese (Hong Kong)",
+      "value": "Chinese (Hong Kong)",
+      "flag": "hk",
+      "localvalue": "中文"
+    }
+  }
 }
