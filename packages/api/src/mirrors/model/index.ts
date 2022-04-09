@@ -40,6 +40,8 @@ export default class Mirror {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected async fetch(config: AxiosRequestConfig<any>) {
+    if(config.headers) config.headers.referer = this.host;
+    else config.headers = { referer: this.host };
     this.concurrency++;
     await this.wait();
     const response = await axios(config);
