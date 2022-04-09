@@ -14,6 +14,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
+  getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[]) => void;
 }
 
@@ -98,10 +99,11 @@ export default class IOWrapper {
     });
   }
 
-  getMirrors(callback: (m: {name:string, host:string, enabled:boolean, icon:string}[]) => void) {
+  getMirrors(callback: (m: {name:string, displayName:string, host:string, enabled:boolean, icon:string}[]) => void) {
     callback(mirrors.map(m => {
       return {
         name: m.name,
+        displayName: m.displayName,
         host: m.host,
         enabled: m.enabled,
         icon: m.icon,
