@@ -72,7 +72,7 @@
           "value": "Auto",
           "description": {
             "desc": "The description of the security answer",
-            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give me false security a warning upon first access"
+            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access"
           }
         },
         "selfsigned": {
