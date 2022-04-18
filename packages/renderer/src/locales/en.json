@@ -114,13 +114,9 @@
       "desc": "The placeholder text",
       "value": "Search for a manga"
     },
-    "selectAll": {
-      "desc": "The check all mirrors button label",
-      "value": "Select All"
-    },
-    "unselectAll" : {
-      "desc": "The unselect all mirrors button label",
-      "value": "Unselect All"
+    "all": {
+      "desc": "The check/uncheck all mirrors/languages button label",
+      "value": "All"
     },
     "mirrorLabel" : {
       "desc": "The mirror label",
