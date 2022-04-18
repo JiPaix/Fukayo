@@ -12,56 +12,73 @@ type settings = {
 export type sock = Socket<ServerToClientEvents, ClientToServerEvents>
 class socket {
 
-  public connected: boolean;
-
   private socket?: sock;
-  private password?: string;
-  private needLogin: boolean;
   private settings: settings;
 
   constructor(settings:settings) {
     this.settings =  settings;
-    this.connected = false;
-    this.needLogin = false;
+
   }
-  get auth() {
-    if(this.settings.accessToken && this.settings.refreshToken) {
-      return {
-        accessToken: this.settings.accessToken,
-        refreshToken: this.settings.refreshToken,
-      };
+
+  private removeListeners() {
+    if(this.socket) {
+      this.socket.removeAllListeners('token')
+      this.socket.removeAllListeners('refreshToken')
+      this.socket.removeAllListeners('unauthorized')
+      this.socket.removeAllListeners('authorized')
+      this.socket.removeAllListeners('connect_error')
     }
   }
-  get use() {
-    if(!this.socket) this.connect();
-    if(!this.socket) throw Error('call use before connect');
-    return this.socket;
+  private initSocket() {
+    if(!this.socket) throw Error('unreachable');
+    this.removeListeners()
+    this.socket.on('token', t => this.settings.accessToken = t);
+    this.socket.on('refreshToken', t => this.settings.refreshToken = t);
+    return this.socket
   }
-  get login() {
-    return this.connected && this.needLogin;
-  }
-  connect(auth?: authByLogin) {
-    if(this.socket && !this.socket.disconnected) return this.socket;
-    const authentification = auth ? auth : { token: this.settings.accessToken, refreshToken: this.settings.refreshToken };
-    const socket:sock = io(this.getServer(),
-    {
-      auth: authentification,
-      reconnection: true,
-    });
 
-    socket.on('connect', () => this.connected = true);
-    socket.on('connect_error', (e) => {
-      this.connected = false;
-      if(e.message === 'xhr poll error') {
-        socket.disconnect();
+  private unplugSocket(reason?:string) {
+    if(this.socket) {
+      this.removeListeners()
+      if(this.socket.connected) this.socket.disconnect()
+    }
+    return reason
+  }
+
+  connect(auth?: authByLogin): Promise<sock> {
+    return new Promise((resolve, reject) => {
+
+      if(this.socket && !this.socket.disconnected) {
+        console.log('providing already existing socket')
+        return resolve(this.initSocket());
       }
-    });
-    socket.on('disconnect', ()=> this.connected = false);
-    socket.on('token', t => this.settings.accessToken = t);
-    socket.on('refreshToken', t => this.settings.refreshToken = t);
 
-    return socket;
+      const authentification = auth ? auth : { token: this.settings.accessToken, refreshToken: this.settings.refreshToken };
+      const socket:sock = io(this.getServer(),
+      {
+        auth: authentification,
+        reconnection: true,
+      });
+
+      socket.once('authorized', () => {
+        console.log('creating socket')
+        this.socket = socket
+        resolve(this.initSocket())
+      })
+
+      socket.once('unauthorized', () => {
+        const reason = auth ? 'badpassword' : undefined
+        reject(this.unplugSocket(reason))
+      })
+
+      socket.once('connect_error', (e) => {
+        if(e.message === 'xhr poll error') {
+          reject(this.unplugSocket(e.message))
+        }
+      });
+    })
   }
+
   private getServer() {
     const url = window.location.href;
     const location = 'localhost:'+this.settings.port;
@@ -81,9 +98,6 @@ class socket {
   }
 }
 
-let socketInstance: socket;
 export function socketManager(settings:settings) {
-  if(socketInstance) return socketInstance;
-  socketInstance = new socket(settings);
-  return socketInstance;
+  return new socket(settings);
 }
