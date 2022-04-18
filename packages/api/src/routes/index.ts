@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import mirrors from '../mirrors';
 import type { SearchResult } from '../mirrors/types/search';
 import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
+import type { TaskDone } from '../mirrors/types/shared';
 
 import { ExtendedError } from 'socket.io/dist/namespace';
 export interface ServerToClientEvents {
@@ -13,11 +14,12 @@ export interface ServerToClientEvents {
   unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage) => void;
+  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage|TaskDone) => void;
 }
 
 export interface ClientToServerEvents {
   getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
+  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
 }
 
@@ -159,12 +161,13 @@ export default class IOWrapper {
     /**
      * Search mangas in enabled mirrors
      */
-    socket.on('searchInMirrors', (query, id, selectedMirrors, selectedLangs) =>
-      mirrors
+    socket.on('searchInMirrors', (query, id, selectedMirrors, selectedLangs, callback) => {
+      const filtered = mirrors
       .filter(m =>  m.langs.some(l => selectedLangs.includes(l)))
       .filter(m => selectedMirrors.includes(m.name))
-      .forEach(m => {
-        if(m.enabled) m.search(query, socket, id);
-      }));
+      .filter(m => m.enabled);
+      callback(filtered.length);
+      filtered.forEach(m => m.search(query, socket, id));
+    });
   }
 }

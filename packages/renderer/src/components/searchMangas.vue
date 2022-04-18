@@ -1,17 +1,20 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
-import { useDialogPluginComponent } from 'quasar';
+import { computed, onMounted, ref, onBeforeUnmount } from 'vue';
+import { useDialogPluginComponent, useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import 'animate.css';
 import type { sock } from '../socketClient';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
 import type { SearchErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
 import countryFlag from './countryFlag.vue';
+import type { TaskDone } from '../../../api/src/mirrors/types/shared';
+import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
 
 const props = defineProps<{
   socket: sock
 }>();
 
+const $q = useQuasar();
 const $t = useI18n().t.bind(useI18n());
 const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
 
@@ -21,15 +24,22 @@ defineEmits([
   ...useDialogPluginComponent.emits,
 ]);
 
-const query = ref('');
-const currentQuery = ref('');
-const display = ref(false);
-const rawResults = ref([] as (SearchResult)[]);
-const includedMirrors = ref<string[]>([]);
-const sortAZ = ref<boolean>(true);
+// related to the search query
+const inputRef = ref<HTMLInputElement | null>(null) // ref to the input element
+const query = ref(''); // what's currently in the search input
+const currentQuery = ref(''); // what's been searched
+const display = ref(false); // whether the search results are displayed
+const loading = ref(false); // whether the search is in progress
+const rawResults = ref([] as (SearchResult)[]); // the raw search results
+
+// filters: filter can be applied before a search is made to limit the amount of queries the server has to do
+const includedMirrors = ref<string[]>([]); // mirrors to include in the search
+const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
+const includedLangs = ref<string[]>([]); // languages to include
 
 
-
+// before mouting we get available mirrors and languages
+const allLangs = ref<string[]>([]);
 const mirrorsList = ref([] as {
   name: string;
   displayName: string;
@@ -39,8 +49,6 @@ const mirrorsList = ref([] as {
   langs: string[];
 }[]);
 
-const includedLangs = ref<string[]>([]);
-const allLangs = ref<string[]>([]);
 onMounted(() => {
   props.socket.emit('getMirrors', (mirrors) => {
     mirrorsList.value = mirrors;
@@ -57,30 +65,48 @@ onBeforeUnmount(() => {
 });
 
 // Typescript hack to differentiate between searchResults and searchErrorMessages
-function isSearchResult(res: SearchResult | SearchErrorMessage): res is SearchResult {
+function isSearchResult(res: SearchResult | SearchErrorMessage | TaskDone): res is SearchResult {
   return (res as SearchResult).link !== undefined;
+}
+
+function isTaskDone(res: SearchResult | SearchErrorMessage | TaskDone): res is TaskDone {
+  return (res as TaskDone).done !== undefined;
 }
 
 // trigger search
 function research() {
-  display.value = false;
   if(!query.value || query.value.length < 3) return;
+  if(query.value === currentQuery.value) return;
+  if(inputRef.value && $q.platform.has.touch) inputRef.value.blur(); // blur the input to hide the keyboard
+  display.value = false;
   props.socket.emit('stopSearchInMirrors'); // stop previous search
   currentQuery.value = query.value;
   rawResults.value = [];
-  const now = Date.now();
-  props.socket.emit('searchInMirrors', query.value, now, includedMirrors.value, includedLangs.value);
-  display.value = true;
-  const listener = (id:number, res?:SearchResult | SearchErrorMessage) => {
-    if(id === now) {
 
+  const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
+  const listener = (id:number, res?:SearchResult | SearchErrorMessage | TaskDone) => {
+    if(id === task.id) {
       if(res && isSearchResult(res)) rawResults.value.push(res);
+      else if(res && isTaskDone(res)) {
+        task.dones++;
+         if(task.dones === task.nbOfDonesToExpect) {
+           props.socket.off('searchInMirrors', listener);
+           loading.value = false;
+         }
+      }
     }
   };
-  props.socket.on('searchInMirrors', listener);
+
+  props.socket.emit('searchInMirrors', query.value, task.id, includedMirrors.value, includedLangs.value, (nbOfDonesToExpect) => {
+    task.nbOfDonesToExpect = nbOfDonesToExpect;
+    display.value = true;
+    loading.value = true;
+    props.socket.on('searchInMirrors', listener);
+  });
+
 }
 
-// computed search results (just adds mirrorinfo to each result)
+// computed search results (it just adds mirrorinfo to each result)
 const results = computed(() => {
   return rawResults.value.map(r => {
     const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirror);
@@ -93,16 +119,12 @@ const results = computed(() => {
   .filter(r => includedMirrors.value.includes(r.mirrorinfo.name))
   .filter(r => includedLangs.value.some(l => r.mirrorinfo.langs.includes(l)))
   .sort((a,b) => {
-    if(sortAZ.value) {
-        if(a.name < b.name) return -1;
-        return 0;
-    } else {
-        if(a.name > b.name) return -1;
-        return 0;
-    }
+    if(sortAZ.value) return a.name.localeCompare(b.name);
+    return b.name.localeCompare(a.name);
   });
 });
 
+// are all mirrors included in the filter list?
 const includedAllMirrors = computed(() => {
   if(includedMirrors.value.length < mirrorsList.value.length) {
     if(includedMirrors.value.length === 0) return false;
@@ -111,34 +133,33 @@ const includedAllMirrors = computed(() => {
   return true;
 });
 
+// include all mirrors in the filter list
 const toggleAllMirrors = () => {
   if(includedAllMirrors.value) {
-    includedMirrors.value = [];
+    mirrorsList.value.forEach(m => {
+      if(includedMirrors.value.includes(m.name)) toggleMirror(m.name);
+    });
   } else {
-    includedMirrors.value = mirrorsList.value.map(m => m.name);
+    mirrorsList.value.forEach(m => {
+      if(!includedMirrors.value.includes(m.name)) toggleMirror(m.name);
+    });
   }
 };
 
+// include/exclude a mirror in the filter list
 const toggleMirror = (mirror:string) => {
   if(includedMirrors.value.some(m => m === mirror)) {
     includedMirrors.value = includedMirrors.value.filter(m => m !== mirror);
   } else {
     includedMirrors.value.push(mirror);
   }
+
+  const mirrors = mirrorsList.value.filter(m => includedMirrors.value.includes(m.name));
+  includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
+
 };
 
-const langsInIncludedMirrors = computed(() => {
-  const langs = new Set<string>();
-  mirrorsList.value.forEach(m => {
-    if(includedMirrors.value.includes(m.name)) {
-      m.langs.forEach(l => {
-        langs.add(l);
-      });
-    }
-  });
-  return Array.from(langs);
-});
-
+// are all langs included in the filter list?
 const includedAllLanguage = computed(() => {
   if(includedLangs.value.length < allLangs.value.length) {
     if(includedLangs.value.length === 0) return false;
@@ -147,20 +168,34 @@ const includedAllLanguage = computed(() => {
   return true;
 });
 
+// include all langs in the filter list
 const toggleAllLanguages = () => {
+
   if(includedAllLanguage.value) {
-    includedLangs.value = [];
+    allLangs.value.forEach(l => {
+      if(includedLangs.value.includes(l)) toggleLang(l);
+    });
   } else {
-    includedLangs.value = allLangs.value;
+    allLangs.value.forEach(l => {
+
+      if(!includedLangs.value.includes(l)) toggleLang(l);
+    });
   }
 };
 
+// include/exclude a lang in the filter list
+// exclude mirrors with matching langs
 const toggleLang = (lang:string) => {
   if(includedLangs.value.some(m => m === lang)) {
     includedLangs.value = includedLangs.value.filter(m => m !== lang);
   } else {
     includedLangs.value.push(lang);
   }
+
+  // only include mirrors which support at least one of the included langs
+  includedMirrors.value = mirrorsList.value.filter(m => {
+    return includedLangs.value.some(l => m.langs.includes(l));
+  }).map(m => m.name);
 };
 </script>
 <template>
@@ -172,7 +207,7 @@ const toggleLang = (lang:string) => {
     <q-card class="q-dialog-plugin">
       <q-card-section class="flex">
         <q-btn
-          size="md"
+          size="1em"
           round
           outline
           icon="close"
@@ -183,6 +218,7 @@ const toggleLang = (lang:string) => {
       </q-card-section>
       <q-card-section>
         <q-input
+          ref="inputRef"
           v-model="query"
           type="text"
           outlined
@@ -192,6 +228,7 @@ const toggleLang = (lang:string) => {
           :class="rawResults.length ? 'no-r-border' : ''"
           autofocus
           @keyup.enter="research"
+          :loading="loading"
         >
           <template
             #append
@@ -205,36 +242,31 @@ const toggleLang = (lang:string) => {
           </template>
         </q-input>
       </q-card-section>
-      <q-card-section class="q-mt-lg">
+      <q-card-section class="flex q-mt-lg justify-center">
         <q-btn-group
-          outline
           rounded
-          class="flex justify-center"
-          style="width:100%;"
         >
-          <q-avatar
-            square
-            color="white"
-          >
-            <q-icon
-              name="filter_alt"
-              size="24"
-              color="orange"
-            />
-          </q-avatar>
           <q-btn
-            outline
-            rounded
+            :ripple="false"
             color="white"
+            text-color="orange"
+            rounded
+            icon="filter_alt"
+            style="cursor:default!important;"
+            size="1em"
+          />
+          <q-btn
+            rounded
+
             :icon="sortAZ ? 'text_rotation_angleup' : 'text_rotation_angledown'"
             @click="sortAZ = !sortAZ"
+            size="1em"
           />
 
           <q-btn-dropdown
-            outline
-            color="white"
-            :label="$t('searchMangas.mirrorLabel.value')"
-            :icon="includedMirrors.length === mirrorsList.length ? 'bookmark_added' : 'bookmark_remove'"
+            :text-color="includedAllMirrors ? 'white' : 'orange'"
+            icon="bookmarks"
+            size="1em"
           >
             <q-list>
               <q-item
@@ -244,12 +276,23 @@ const toggleLang = (lang:string) => {
               >
                 <q-checkbox
                   v-model="includedAllMirrors"
-                  color="primary"
+                  color="orange"
                   toggle-indeterminate
                   @click="toggleAllMirrors"
+                  class="q-ma-none q-pa-none"
                 />
-                <q-item-section class="q-ml-sm text-uppercase">
-                  {{ !includedAllMirrors ? $t('searchMangas.selectAll.value') : $t('searchMangas.unselectAll.value') }}
+                <q-item-section
+                  avatar
+                  class="q-ml-sm"
+                >
+                  <q-avatar
+                    size="46px"
+                    text-color="primary"
+                    icon="bookmarks"
+                  />
+                </q-item-section>
+                <q-item-section class="text-uppercase text-bold">
+                  {{ $t('searchMangas.all.value')}}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -267,8 +310,7 @@ const toggleLang = (lang:string) => {
                 />
                 <q-item-section
                   avatar
-                  class="q-pr-none"
-                  style="min-width: 40px;"
+                  class="q-ml-sm"
                 >
                   <q-avatar
 
@@ -276,16 +318,17 @@ const toggleLang = (lang:string) => {
                   />
                 </q-item-section>
                 <q-item-section>
-                  {{ mirror.displayName }}
+                  {{ mirror.displayName }} {{
+                    rawResults.filter(r=> r.mirror === mirror.name).length ?
+                    '('+rawResults.filter(r=> r.mirror === mirror.name).length+')' : ''
+                    }}
                 </q-item-section>
               </q-item>
             </q-list>
           </q-btn-dropdown>
           <q-btn-dropdown
-            outline
-            color="white"
-            :label="$t('searchMangas.languageLabel.value')"
             icon="translate"
+            size="1em"
           >
             <q-list>
               <q-item
@@ -299,8 +342,13 @@ const toggleLang = (lang:string) => {
                   toggle-indeterminate
                   @click="toggleAllLanguages"
                 />
-                <q-item-section class="q-ml-sm text-uppercase">
-                  {{ !includedAllLanguage ? $t('searchMangas.selectAll.value') : $t('searchMangas.unselectAll.value') }}
+                <q-item-section class="q-ml-sm">
+                <q-icon
+                  name="language"
+                  size="24px"
+                  color="primary"
+                >
+                </q-icon>
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -318,10 +366,11 @@ const toggleLang = (lang:string) => {
                 />
                 <q-item-section>
                   <countryFlag
-                    class="q-ml-auto q-mr-auto"
                     :country="lang"
-                    size="40px"
-                    showname
+                    height="auto"
+                    width="auto"
+                    :square="false"
+                    class="q-ml-sm"
                   />
                 </q-item-section>
               </q-item>
@@ -330,85 +379,7 @@ const toggleLang = (lang:string) => {
         </q-btn-group>
       </q-card-section>
       <q-card-section>
-        {{ langsInIncludedMirrors }}
-      </q-card-section>
-      <q-card-section>
-        <q-virtual-scroll
-          style="max-height: 100%;"
-          :items="results"
-          separator
-        >
-          <template #default="{item}">
-            <q-card
-              v-ripple
-              class="q-ma-md row"
-              style="cursor:pointer;height: 150px!important;overflow: hidden;"
-            >
-              <div class="flex">
-                <q-img
-                  :src="item.cover"
-                  fit="scale-down"
-                  style="width: 100px;height: 150px;"
-                />
-              </div>
-              <div class="col">
-                <div class="q-ml-sm">
-                  <span class="text-h6">
-                    {{ item.name }}
-                    <q-avatar size="16px">
-                      <img
-                        :src="item.mirrorinfo.icon"
-                        small
-                      >
-                      <q-tooltip
-                        anchor="top right"
-                        self="center middle"
-                      >
-                        {{ item.mirror }}
-                      </q-tooltip>
-                    </q-avatar>
-                    <q-avatar size="18px">
-                      <countryFlag
-                        :country="item.lang"
-                        size="16px"
-                      />
-                    </q-avatar>
-
-                  </span>
-
-                  <div v-if="item.last_release">
-                    <q-chip
-                      v-if="item.last_release.volume !== undefined"
-                      color="teal"
-                      dense
-                    >
-                      {{ $t('mangas.volume.value') }}: {{ item.last_release.volume }}
-                    </q-chip>
-                    <q-chip
-                      v-if="item.last_release.chapter !== undefined"
-                      color="teal"
-                      dense
-                    >
-                      {{ $t('mangas.chapter.value') }}: {{ item.last_release.chapter }}
-                    </q-chip>
-                    <q-chip
-                      v-if="item.last_release.name !== undefined"
-                      color="teal"
-                      dense
-                    >
-                      {{ $t('mangas.chaptername.value') }}: {{ item.last_release.name }}
-                    </q-chip>
-                  </div>
-
-
-                  <div class="caption q-mt-md ellipsis-3-lines q-pr-lg">
-                    {{ item.synopsis }}
-                  </div>
-                </div>
-              </div>
-            </q-card>
-          </template>
-        </q-virtual-scroll>
+      <searchMangasInfiniteScroll :results="results" :loading="loading"/>
       </q-card-section>
     </q-card>
   </q-dialog>
