@@ -22,7 +22,6 @@ const config = {
   extraMetadata: {
     version: process.env.VITE_APP_VERSION,
   },
-  defaultArch: 'x64',
   linux: {
     target: "appImage",
     synopsis: 'Read your favorite manga',
