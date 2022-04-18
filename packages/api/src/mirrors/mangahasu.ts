@@ -30,13 +30,22 @@ class MangaHasu extends Mirror implements MirrorInterface {
   }
 
   async search(query:string, socket: socketInstance, id:number) {
+    // we will check if user don't need results anymore
+    let cancel = false;
+    socket.on('stopSearchInMirrors', () => {
+      console.log('[api]', 'search canceled');
+      cancel = true;
+      socket.removeAllListeners('stopSearchInMirrors');
+    });
+
     const url = `${this.host}/advanced-search.html?keyword=${query}`;
     try {
+      if(cancel) return; //=> 1st cancel check before request
       const res = await this.fetch({url});
 
       const $ = this.loadHTML(res.data);
       for(const el of $('div.div_item')) {
-
+        if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('a.name-manga > h3', el).text().trim();
         const link = $('a.name-manga', el).attr('href');
 
@@ -73,11 +82,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
           lang: 'en',
         });
       }
+      if(cancel) return; // 3rd obligatory check
     } catch(e) {
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
       if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
       socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
+    socket.emit('searchInMirrors', id, { done: true });
   }
 
   async manga(link:string): Promise<MangaPage | MangaErrorMessage> {

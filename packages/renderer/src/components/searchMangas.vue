@@ -51,6 +51,11 @@ onMounted(() => {
 
 });
 
+// when search page is closed we send a message to the server to stop the search
+onBeforeUnmount(() => {
+  props.socket.emit('stopSearchInMirrors');
+});
+
 // Typescript hack to differentiate between searchResults and searchErrorMessages
 function isSearchResult(res: SearchResult | SearchErrorMessage): res is SearchResult {
   return (res as SearchResult).link !== undefined;
@@ -60,6 +65,7 @@ function isSearchResult(res: SearchResult | SearchErrorMessage): res is SearchRe
 function research() {
   display.value = false;
   if(!query.value || query.value.length < 3) return;
+  props.socket.emit('stopSearchInMirrors'); // stop previous search
   currentQuery.value = query.value;
   rawResults.value = [];
   const now = Date.now();

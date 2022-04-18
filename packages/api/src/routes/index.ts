@@ -15,7 +15,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
-  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[]) => void;
+  stopSearchInMirrors: () => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
