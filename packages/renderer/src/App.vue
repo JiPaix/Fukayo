@@ -91,5 +91,11 @@ const socket = ref<sock|undefined>();
   html, body {
     overflow: auto!important;
   }
+  .w-100 {
+    width: 100%!important;
+  }
+  .cursor-pointer {
+    cursor: pointer;
+  }
 </style>
 
