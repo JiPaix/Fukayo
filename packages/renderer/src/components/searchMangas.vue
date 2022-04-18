@@ -3,10 +3,10 @@ import { computed, onMounted, ref, onBeforeUnmount } from 'vue';
 import { useDialogPluginComponent, useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import 'animate.css';
+import 'flag-icons';
 import type { sock } from '../socketClient';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
 import type { SearchErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
-import countryFlag from './countryFlag.vue';
 import type { TaskDone } from '../../../api/src/mirrors/types/shared';
 import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
 
@@ -364,14 +364,8 @@ const toggleLang = (lang:string) => {
                   :val="lang"
                   class="q-ma-none q-pa-none"
                 />
-                <q-item-section>
-                  <countryFlag
-                    :country="lang"
-                    height="auto"
-                    width="auto"
-                    :square="false"
-                    class="q-ml-sm"
-                  />
+                <q-item-section class="q-ml-sm">
+                <div class="fi" :class="'fi-'+$t('languages.'+lang+'.flag')" style="width:24px;" />
                 </q-item-section>
               </q-item>
             </q-list>
