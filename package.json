@@ -87,6 +87,6 @@
     "puppeteer-extra-plugin-stealth": "^2.9.0",
     "socket.io": "^4.4.1",
     "socket.io-client": "^4.4.1",
-    "systeminformation": "^5.11.10"
+    "systeminformation": "^5.11.12"
   }
 }
