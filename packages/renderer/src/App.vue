@@ -7,7 +7,8 @@
   import mainPage from '/@/components/mainPage.vue';
   import { useFavicon } from '@vueuse/core';
   import favicon from '../assets/icon.svg';
-  import { sock, socketManager } from '/@/socketClient';
+  import { socketManager } from '/@/socketClient';
+  import type { sock} from '/@/socketClient';
   import type { authByLogin } from './components/helpers/login';
 
 
@@ -51,7 +52,7 @@ const socket = ref<sock|undefined>();
       } else {
         badPassword.value = false;
       }
-    })
+    });
 
   };
 

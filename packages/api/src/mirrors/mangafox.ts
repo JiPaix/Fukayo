@@ -70,9 +70,11 @@ class Mangafox extends Mirror implements MirrorInterface {
           const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
           cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
         }
+
+
         const last_chapter = $('p.manga-list-4-item-tip', el).filter((i,e) => $(e).text().trim().indexOf('Latest Chapter:') > -1).text().replace('Latest Chapter:', '').trim();
         let synopsis:string|undefined = $('p.manga-list-4-item-tip:last-of-type', el).text().trim();
-        if(synopsis && synopsis.length === 0) synopsis = undefined
+        if(synopsis && synopsis.length === 0) synopsis = undefined;
         // check if we can get any info regarding the last chapter
         const match = this.getChapterInfoFromString(last_chapter);
         let last_release;

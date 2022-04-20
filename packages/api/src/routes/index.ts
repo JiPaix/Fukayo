@@ -7,8 +7,7 @@ import mirrors from '../mirrors';
 import type { SearchResult } from '../mirrors/types/search';
 import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
 import type { TaskDone } from '../mirrors/types/shared';
-
-import { ExtendedError } from 'socket.io/dist/namespace';
+import type { ExtendedError } from 'socket.io/dist/namespace';
 export interface ServerToClientEvents {
   authorized: () => void;
   unauthorized: () => void;
@@ -43,19 +42,19 @@ export default class IOWrapper {
     this.io.on('connection', this.routes);
   }
 
-  authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: "token"|"refreshToken", payload:string}[]}) {
+  authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: 'token'|'refreshToken', payload:string}[]}) {
     if(!o.socket.rooms.has('authorized')) {
-      o.socket.join('authorized')
-      o.socket.emit('authorized')
+      o.socket.join('authorized');
+      o.socket.emit('authorized');
     }
-    if(o.emit) o.emit.forEach(e => o.socket.emit(e.event, e.payload))
+    if(o.emit) o.emit.forEach(e => o.socket.emit(e.event, e.payload));
     return o.next();
   }
 
   unauthorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void }) {
-    o.socket.emit('unauthorized')
-    o.socket.disconnect
-    o.next()
+    o.socket.emit('unauthorized');
+    o.socket.disconnect;
+    o.next();
   }
   use() {
     this.io.use((socket, next) => {
@@ -65,7 +64,7 @@ export default class IOWrapper {
         // if there's an access token and it's not expired
         if(findAccess) {
           if(findAccess.expire > Date.now()) {
-            return this.authorize({socket, next})
+            return this.authorize({socket, next});
           }
         }
         // if there's no refresh token
@@ -86,8 +85,8 @@ export default class IOWrapper {
               return this.authorize({
                 socket,
                 next,
-                emit:[ {event:'token', payload:token} ]
-              })
+                emit:[ {event:'token', payload:token} ],
+              });
             }
           }
           // but if the refresh token is expired
@@ -101,7 +100,7 @@ export default class IOWrapper {
           // remove all access tokens with the same parent
           this.authorizedTokens.splice(this.authorizedTokens.findIndex(t => t.parent === findAccess.parent), 1);
         }
-        return this.unauthorize({socket, next})
+        return this.unauthorize({socket, next});
       }
       else if(socket.handshake.auth.login && socket.handshake.auth.password) {
         if(socket.handshake.auth.login === this.login && socket.handshake.auth.password === this.password) {
@@ -115,12 +114,12 @@ export default class IOWrapper {
           return this.authorize({
             socket,
             next,
-            emit: [ { event: 'token', payload: token}, { event: 'refreshToken', payload: refreshToken} ]
-          })
+            emit: [ { event: 'token', payload: token}, { event: 'refreshToken', payload: refreshToken} ],
+          });
 
         }
       }
-      return this.unauthorize({socket, next})
+      return this.unauthorize({socket, next});
     });
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref, onBeforeUnmount } from 'vue';
-import { useDialogPluginComponent, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import 'animate.css';
 import 'flag-icons';
@@ -16,16 +16,9 @@ const props = defineProps<{
 
 const $q = useQuasar();
 const $t = useI18n().t.bind(useI18n());
-const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
-
-defineEmits([
-  // REQUIRED; need to specify some events that your
-  // component will emit through useDialogPluginComponent()
-  ...useDialogPluginComponent.emits,
-]);
 
 // related to the search query
-const inputRef = ref<HTMLInputElement | null>(null) // ref to the input element
+const inputRef = ref<HTMLInputElement | null>(null); // ref to the input element
 const query = ref(''); // what's currently in the search input
 const currentQuery = ref(''); // what's been searched
 const display = ref(false); // whether the search results are displayed
@@ -278,8 +271,8 @@ const toggleLang = (lang:string) => {
                   v-model="includedAllMirrors"
                   color="orange"
                   toggle-indeterminate
-                  @click="toggleAllMirrors"
                   class="q-ma-none q-pa-none"
+                  @click="toggleAllMirrors"
                 />
                 <q-item-section
                   avatar
@@ -292,7 +285,7 @@ const toggleLang = (lang:string) => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('searchMangas.all.value')}}
+                  {{ $t('searchMangas.all.value') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -320,8 +313,8 @@ const toggleLang = (lang:string) => {
                 <q-item-section>
                   {{ mirror.displayName }} {{
                     rawResults.filter(r=> r.mirror === mirror.name).length ?
-                    '('+rawResults.filter(r=> r.mirror === mirror.name).length+')' : ''
-                    }}
+                      '('+rawResults.filter(r=> r.mirror === mirror.name).length+')' : ''
+                  }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -343,12 +336,11 @@ const toggleLang = (lang:string) => {
                   @click="toggleAllLanguages"
                 />
                 <q-item-section class="q-ml-sm">
-                <q-icon
-                  name="language"
-                  size="24px"
-                  color="primary"
-                >
-                </q-icon>
+                  <q-icon
+                    name="language"
+                    size="24px"
+                    color="primary"
+                  />
                 </q-item-section>
               </q-item>
               <q-separator />

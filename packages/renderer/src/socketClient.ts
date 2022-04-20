@@ -22,34 +22,34 @@ class socket {
 
   private removeListeners() {
     if(this.socket) {
-      this.socket.removeAllListeners('token')
-      this.socket.removeAllListeners('refreshToken')
-      this.socket.removeAllListeners('unauthorized')
-      this.socket.removeAllListeners('authorized')
-      this.socket.removeAllListeners('connect_error')
+      this.socket.removeAllListeners('token');
+      this.socket.removeAllListeners('refreshToken');
+      this.socket.removeAllListeners('unauthorized');
+      this.socket.removeAllListeners('authorized');
+      this.socket.removeAllListeners('connect_error');
     }
   }
   private initSocket() {
     if(!this.socket) throw Error('unreachable');
-    this.removeListeners()
+    this.removeListeners();
     this.socket.on('token', t => this.settings.accessToken = t);
     this.socket.on('refreshToken', t => this.settings.refreshToken = t);
-    return this.socket
+    return this.socket;
   }
 
   private unplugSocket(reason?:string) {
     if(this.socket) {
-      this.removeListeners()
-      if(this.socket.connected) this.socket.disconnect()
+      this.removeListeners();
+      if(this.socket.connected) this.socket.disconnect();
     }
-    return reason
+    return reason;
   }
 
   connect(auth?: authByLogin): Promise<sock> {
     return new Promise((resolve, reject) => {
 
       if(this.socket && !this.socket.disconnected) {
-        console.log('providing already existing socket')
+        console.log('providing already existing socket');
         return resolve(this.initSocket());
       }
 
@@ -61,22 +61,22 @@ class socket {
       });
 
       socket.once('authorized', () => {
-        console.log('creating socket')
-        this.socket = socket
-        resolve(this.initSocket())
-      })
+        console.log('creating socket');
+        this.socket = socket;
+        resolve(this.initSocket());
+      });
 
       socket.once('unauthorized', () => {
-        const reason = auth ? 'badpassword' : undefined
-        reject(this.unplugSocket(reason))
-      })
+        const reason = auth ? 'badpassword' : undefined;
+        reject(this.unplugSocket(reason));
+      });
 
       socket.once('connect_error', (e) => {
         if(e.message === 'xhr poll error') {
-          reject(this.unplugSocket(e.message))
+          reject(this.unplugSocket(e.message));
         }
       });
-    })
+    });
   }
 
   private getServer() {
