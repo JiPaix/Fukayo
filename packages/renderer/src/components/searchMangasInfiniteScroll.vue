@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { computed } from 'vue';
 import { useQuasar } from 'quasar';
 import 'flag-icons';
 
@@ -43,6 +44,13 @@ function showSynopsis (title:string, synopsis: string) {
   });
 }
 
+const sizes = computed(() => {
+  const classes = [];
+  if($q.screen.lt.sm) classes.push('h-xs');
+  else classes.push('h-lg');
+  if($q.screen.gt.sm) classes.push('q-gutter-x-xl');
+  return classes.join(' ');
+});
 
 </script>
 
@@ -51,15 +59,17 @@ function showSynopsis (title:string, synopsis: string) {
     <q-intersection
       v-for="item in results"
       :key="item.link"
+      class="col-xs-12 col-sm-5 q-mt-xl col-lg-3"
+      :class="sizes"
       margin="500px 500px 500px 500px"
       transition="fade"
     >
       <div
-        class="row shadow-5 overflow-hidden cursor-pointer"
-        :class="$q.screen.lt.sm ? 'h600' : 'h300'"
+        class="row shadow-5 overflow-hidden"
+        :class="$q.screen.lt.sm ? 'h-xs' : 'h-lg'"
       >
         <div
-          class="col-xs-12 col-sm-6 cover flex"
+          class="col-xs-12 col-sm-6 cover flex cursor-pointer"
           :style="'background-image: url('+item.cover+');'"
           :class="$q.screen.lt.sm ? 'xs-cover' : ''"
         >
@@ -76,63 +86,93 @@ function showSynopsis (title:string, synopsis: string) {
           </div>
         </div>
 
-        <div class="col-xs-12 col-sm-6">
-          <div v-if="item.last_release">
-            <div class="q-pa-sm flex column">
+        <div
+          class="col-xs-12 col-sm-6"
+        >
+          <div
+            v-if="item.last_release"
+            class="q-pa-sm flex column"
+            :class="$q.screen.gt.xs ? 'h-lg':''"
+          >
+            <div
+              v-if="(item.last_release.name !== undefined && item.last_release.chapter === undefined) || $q.screen.lt.sm"
+              class="bg-orange text-white text-center q-pa-md rounded-borders w-100 text-weight-medium"
+            >
+              {{ item.last_release.name ? item.last_release.name : $t('mangas.chapter.value').toLocaleUpperCase() + ' ' + item.last_release.chapter }}
+            </div>
+            <div
+              v-if="item.last_release.volume !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
+              class="row q-ma-sm shadow-1"
+            >
               <div
-                v-if="item.last_release.name !== undefined && item.last_release.chapter === undefined"
-                style="font-size:1.2rem;"
-                class="bg-orange text-white text-center q-pa-md rounded-borders w-100"
+                class="col-4 q-py-sm bg-orange text-center text-weight-medium text-black"
+                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
               >
-                {{ item.last_release.name }}
+                {{ item.last_release.volume }}
               </div>
-              <q-btn-group
-                v-if="item.last_release.volume !== undefined"
-                class="q-mb-sm"
-              >
-                <q-btn
-                  round
-                  color="orange"
-                  text-color="dark"
-                >
-                  {{ item.last_release.volume }}
-                </q-btn>
-                <q-btn>
-                  Volume
-                </q-btn>
-              </q-btn-group>
+              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
+                {{ $t('mangas.volume.value') }}
+              </div>
+            </div>
 
-              <q-btn-group
-                v-if="item.last_release.chapter !== undefined"
-                class="q-mb-sm"
+            <div
+              v-if="item.last_release.chapter !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
+              class="row q-ma-sm shadow-1"
+            >
+              <div
+                class="col-4 q-py-sm bg-orange text-center text-weight-medium"
+                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
               >
-                <q-btn
-                  round
-                  color="orange"
-                >
-                  {{ item.last_release.chapter }}
-                </q-btn>
-                <q-btn>
-                  chapter
-                </q-btn>
-              </q-btn-group>
+                {{ item.last_release.chapter }}
+              </div>
+              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
+                {{ $t('mangas.chapter.value') }}
+              </div>
+            </div>
 
-              <q-btn-group
-                v-if="item.synopsis !== undefined"
-                class="q-mb-sm"
-                @click="showSynopsis(item.name, item.synopsis!)"
+            <div
+              v-if="item.synopsis !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
+              v-ripple
+              class="row q-ma-sm shadow-1"
+              @click="showSynopsis(item.name, item.synopsis!)"
+            >
+              <div
+                class="col-4 q-py-sm bg-info text-center"
+                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
               >
-                <q-btn
-                  round
-                  color="info"
-                  icon="o_feed"
+                <q-icon
+                  name="o_feed"
+                  size="1.5em"
                 />
-                <q-btn>
-                  Synopsis
-                </q-btn>
-              </q-btn-group>
+              </div>
+              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
+                {{ $t('mangas.synopsis.value') }}
+              </div>
+            </div>
+            <div
+              v-if="$q.screen.gt.sm || $q.screen.sm"
+              class="text-center q-mt-auto q-mb-xl"
+            >
+              <q-btn
+                round
+                :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
+                :size="$q.screen.lt.sm ? 'lg' : 'md'"
+                icon="add"
+                text-color="white"
+                color="orange"
+              />
+              <q-btn
+                round
+                color="primary"
+                text-color="white"
+                :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
+                :size="$q.screen.lt.sm ? 'lg' : 'md'"
+                icon="visibility"
+              />
             </div>
           </div>
+
+
           <div class="absolute-bottom-right flex items-center">
             <img
               width="16"

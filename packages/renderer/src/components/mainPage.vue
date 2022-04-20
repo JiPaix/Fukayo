@@ -45,6 +45,10 @@ const tab = ref<string|null>(null);
           :label="$t('searchMangas.tab.value')"
           @click="tab = 'search'"
         />
+        <q-route-tab
+          :label="'X'"
+          @click="tab = ''"
+        />
       </q-tabs>
     </q-header>
 
