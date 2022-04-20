@@ -50,9 +50,7 @@ function showSynopsis (title:string, synopsis: string) {
   <div class="q-pa-md row justify-evenly">
     <q-intersection
       v-for="item in results"
-      :key="item.name"
-      class="col-xs-12 col-sm-5 q-mt-xl"
-      :class="$q.screen.lt.sm ? 'h600' : 'h300'"
+      :key="item.link"
       margin="500px 500px 500px 500px"
       transition="fade"
     >
