@@ -132,11 +132,19 @@
       "desc": "The chapter label",
       "value": "Chapter"
     },
+    "chapters": {
+      "desc": "The chapter label",
+      "value": "Chapters"
+    },
     "volume": {
       "desc": "The volume label",
       "value": "Volume"
     },
-    "chaptername": {
+    "volumes": {
+      "desc": "The volume label",
+      "value": "Volumes"
+    },
+    "synopsis": {
       "desc": "The chapter name Label",
       "value": "Name"
     }
