@@ -156,13 +156,13 @@ function showSynopsis (title:string, synopsis: string) {
   background-position: 50% 50%;
 }
 
-.h300 {
+.h-lg {
   height: 300px!important;
 }
-.h600 {
-  height: 600px!important;
+.h-xs {
+  height: 530px!important;
 }
 .xs-cover {
-  height:370px!important;
+  height:400px!important;
 }
 </style>
