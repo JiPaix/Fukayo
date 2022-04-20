@@ -192,36 +192,20 @@ const toggleLang = (lang:string) => {
 };
 </script>
 <template>
-  <q-dialog
-    ref="dialogRef"
-    maximized
-    @hide="onDialogHide"
-  >
-    <q-card class="q-dialog-plugin">
-      <q-card-section class="flex">
-        <q-btn
-          size="1em"
-          round
-          outline
-          icon="close"
-          color="orange"
-          class="q-ml-auto"
-          @click="onDialogCancel"
-        />
-      </q-card-section>
-      <q-card-section>
+  <q-card class="q-dialog-plugin">
+    <q-card-section class="row items-center">
+      <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
           ref="inputRef"
           v-model="query"
           type="text"
+          :label="$t('searchMangas.placeholder.value')"
           outlined
-          :placeholder="$t('searchMangas.placeholder.value')"
           clearable
-          color="white"
-          :class="rawResults.length ? 'no-r-border' : ''"
           autofocus
-          @keyup.enter="research"
+          color="white"
           :loading="loading"
+          @keyup.enter="research"
         >
           <template
             #append
@@ -234,26 +218,20 @@ const toggleLang = (lang:string) => {
             />
           </template>
         </q-input>
-      </q-card-section>
-      <q-card-section class="flex q-mt-lg justify-center">
-        <q-btn-group
-          rounded
-        >
+      </div>
+      <div class="col-12 q-mt-md text-center">
+        <q-btn-group>
           <q-btn
             :ripple="false"
             color="white"
             text-color="orange"
-            rounded
             icon="filter_alt"
             style="cursor:default!important;"
-            size="1em"
           />
           <q-btn
-            rounded
-
             :icon="sortAZ ? 'text_rotation_angleup' : 'text_rotation_angledown'"
-            @click="sortAZ = !sortAZ"
             size="1em"
+            @click="sortAZ = !sortAZ"
           />
 
           <q-btn-dropdown
@@ -269,6 +247,7 @@ const toggleLang = (lang:string) => {
               >
                 <q-checkbox
                   v-model="includedAllMirrors"
+                  size="32px"
                   color="orange"
                   toggle-indeterminate
                   class="q-ma-none q-pa-none"
@@ -276,12 +255,11 @@ const toggleLang = (lang:string) => {
                 />
                 <q-item-section
                   avatar
-                  class="q-ml-sm"
                 >
                   <q-avatar
-                    size="46px"
+                    size="36px"
                     text-color="primary"
-                    icon="bookmarks"
+                    icon="o_bookmarks"
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
@@ -297,20 +275,20 @@ const toggleLang = (lang:string) => {
               >
                 <q-checkbox
                   v-model="includedMirrors"
+                  size="32px"
                   color="orange"
                   :val="mirror.name"
                   class="q-ma-none q-pa-none"
                 />
                 <q-item-section
                   avatar
-                  class="q-ml-sm"
                 >
                   <q-avatar
-
+                    size="32px"
                     :icon="'img:'+mirror.icon"
                   />
                 </q-item-section>
-                <q-item-section>
+                <q-item-section class="q-ma-none q-pa-none">
                   {{ mirror.displayName }} {{
                     rawResults.filter(r=> r.mirror === mirror.name).length ?
                       '('+rawResults.filter(r=> r.mirror === mirror.name).length+')' : ''
@@ -331,6 +309,7 @@ const toggleLang = (lang:string) => {
               >
                 <q-checkbox
                   v-model="includedAllLanguage"
+                  size="32px"
                   color="primary"
                   toggle-indeterminate
                   @click="toggleAllLanguages"
@@ -338,7 +317,7 @@ const toggleLang = (lang:string) => {
                 <q-item-section class="q-ml-sm">
                   <q-icon
                     name="language"
-                    size="24px"
+                    size="16px"
                     color="primary"
                   />
                 </q-item-section>
@@ -352,21 +331,30 @@ const toggleLang = (lang:string) => {
               >
                 <q-checkbox
                   v-model="includedLangs"
+                  size="32px"
                   color="orange"
                   :val="lang"
                   class="q-ma-none q-pa-none"
                 />
                 <q-item-section class="q-ml-sm">
-                <div class="fi" :class="'fi-'+$t('languages.'+lang+'.flag')" style="width:24px;" />
+                  <div
+                    class="fi"
+                    :class="'fi-'+$t('languages.'+lang+'.flag')"
+                    style="width:16px;"
+                  />
                 </q-item-section>
               </q-item>
             </q-list>
           </q-btn-dropdown>
         </q-btn-group>
-      </q-card-section>
-      <q-card-section>
-      <searchMangasInfiniteScroll :results="results" :loading="loading"/>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+      </div>
+    </q-card-section>
+
+    <q-card-section v-if="results.length">
+      <searchMangasInfiniteScroll
+        :results="results"
+        :loading="loading"
+      />
+    </q-card-section>
+  </q-card>
 </template>
