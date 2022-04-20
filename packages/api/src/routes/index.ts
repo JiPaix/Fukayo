@@ -6,16 +6,20 @@ import crypto from 'crypto';
 import mirrors from '../mirrors';
 import type { SearchResult } from '../mirrors/types/search';
 import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
-
+import type { TaskDone } from '../mirrors/types/shared';
+import type { ExtendedError } from 'socket.io/dist/namespace';
 export interface ServerToClientEvents {
+  authorized: () => void;
+  unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage) => void;
+  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage|TaskDone) => void;
 }
 
 export interface ClientToServerEvents {
   getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
-  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[]) => void;
+  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
+  stopSearchInMirrors: () => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
@@ -38,6 +42,20 @@ export default class IOWrapper {
     this.io.on('connection', this.routes);
   }
 
+  authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: 'token'|'refreshToken', payload:string}[]}) {
+    if(!o.socket.rooms.has('authorized')) {
+      o.socket.join('authorized');
+      o.socket.emit('authorized');
+    }
+    if(o.emit) o.emit.forEach(e => o.socket.emit(e.event, e.payload));
+    return o.next();
+  }
+
+  unauthorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void }) {
+    o.socket.emit('unauthorized');
+    o.socket.disconnect;
+    o.next();
+  }
   use() {
     this.io.use((socket, next) => {
       // use token to authenticate
@@ -46,7 +64,7 @@ export default class IOWrapper {
         // if there's an access token and it's not expired
         if(findAccess) {
           if(findAccess.expire > Date.now()) {
-            return next();
+            return this.authorize({socket, next});
           }
         }
         // if there's no refresh token
@@ -64,8 +82,11 @@ export default class IOWrapper {
               const token = crypto.randomBytes(32).toString('hex');
               const in5minutes = Date.now() + (5 * 60 * 1000);
               this.authorizedTokens.push({token, expire: in5minutes, parent: findRefresh.token});
-              socket.emit('token', token);
-              return next();
+              return this.authorize({
+                socket,
+                next,
+                emit:[ {event:'token', payload:token} ],
+              });
             }
           }
           // but if the refresh token is expired
@@ -79,7 +100,7 @@ export default class IOWrapper {
           // remove all access tokens with the same parent
           this.authorizedTokens.splice(this.authorizedTokens.findIndex(t => t.parent === findAccess.parent), 1);
         }
-        return next(new Error('refresh_token_expired'));
+        return this.unauthorize({socket, next});
       }
       else if(socket.handshake.auth.login && socket.handshake.auth.password) {
         if(socket.handshake.auth.login === this.login && socket.handshake.auth.password === this.password) {
@@ -90,12 +111,15 @@ export default class IOWrapper {
           const in7days = Date.now() + (7 * 24 * 60 * 60 * 1000);
           this.authorizedTokens.push({token, expire: in5minutes, parent: refreshToken});
           this.refreshTokens.push({token: refreshToken, expire: in7days});
-          socket.emit('token', token);
-          socket.emit('refreshToken', refreshToken);
-          return next();
+          return this.authorize({
+            socket,
+            next,
+            emit: [ { event: 'token', payload: token}, { event: 'refreshToken', payload: refreshToken} ],
+          });
+
         }
       }
-      next(new Error('unauthorized'));
+      return this.unauthorize({socket, next});
     });
   }
 
@@ -136,12 +160,13 @@ export default class IOWrapper {
     /**
      * Search mangas in enabled mirrors
      */
-    socket.on('searchInMirrors', (query, id, selectedMirrors, selectedLangs) =>
-      mirrors
+    socket.on('searchInMirrors', (query, id, selectedMirrors, selectedLangs, callback) => {
+      const filtered = mirrors
       .filter(m =>  m.langs.some(l => selectedLangs.includes(l)))
       .filter(m => selectedMirrors.includes(m.name))
-      .forEach(m => {
-        if(m.enabled) m.search(query, socket, id);
-      }));
+      .filter(m => m.enabled);
+      callback(filtered.length);
+      filtered.forEach(m => m.search(query, socket, id));
+    });
   }
 }

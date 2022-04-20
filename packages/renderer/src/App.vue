@@ -8,6 +8,7 @@
   import { useFavicon } from '@vueuse/core';
   import favicon from '../assets/icon.svg';
   import { socketManager } from '/@/socketClient';
+  import type { sock} from '/@/socketClient';
   import type { authByLogin } from './components/helpers/login';
 
 
@@ -19,8 +20,8 @@
   // load quasar, and show loading screen
   const $q = useQuasar();
   $q.dark.set(true);
-  $q.loading.show();
-  const loading = ref(true);
+  $q.loading.hide();
+  const loading = ref(false);
 
   // helpers
   const isBrowser = typeof window.apiServer === 'undefined' ? true : false;
@@ -29,41 +30,33 @@
   const badPassword = ref(false);
   const connected = ref(false);
 
+
+
+const socket = ref<sock|undefined>();
   // connect to socket server with login and password or token if exists
   const useSocket = (auth?: authByLogin) => {
-    const sock = socketManager(settings.server).connect(auth);
+    $q.loading.show();
+    const loading = ref(true);
 
-    sock.on('connect', () => {
+    socketManager(settings.server).connect(auth).then((sock)=> {
+      socket.value = sock;
       connected.value = true;
       badPassword.value = false;
       $q.loading.hide();
       loading.value = false;
-    });
-
-
-    sock.on('connect_error', (e) => {
-      if(e.message === 'unauthorized') {
-        // bad password or token (need to login again)
-        badPassword.value = true;
-      }
-      connected.value = false;
-      // hide loading screen
+    }).catch(r => {
       $q.loading.hide();
       loading.value = false;
+      if(r === 'badpassword') {
+        badPassword.value = true;
+      } else {
+        badPassword.value = false;
+      }
     });
 
-    sock.on('disconnect', () => connected.value = false);
-
-    // refresh token is only sent on login
-    sock.on('refreshToken', (t) => settings.server.refreshToken = t);
-
-    // token is sent on login and on refresh
-    sock.on('token', (t) => settings.server.accessToken = t);
-    return sock;
   };
 
-  // attempt to login with localStorage token
-  let socket = useSocket();
+
 
 </script>
 <template>
@@ -76,16 +69,16 @@
             <loginPage
               v-if="isBrowser"
               :bad-password="badPassword"
-              @done="socket = useSocket($event)"
+              @done="useSocket"
             />
             <!-- Setup page if client is electron -->
             <setupPage
               v-else
-              @done="socket = useSocket()"
+              @done="useSocket"
             />
           </div>
           <mainPage
-            v-else
+            v-else-if="connected && typeof socket !== 'undefined'"
             :logo="favicon"
             :socket="socket"
           />
@@ -98,6 +91,12 @@
 <style lang="css">
   html, body {
     overflow: auto!important;
+  }
+  .w-100 {
+    width: 100%!important;
+  }
+  .cursor-pointer {
+    cursor: pointer;
   }
 </style>
 

@@ -32,8 +32,16 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   async search(query:string, socket: socketInstance, id:number) {
-    const url = `${this.host}/search?page=1&title=${query}`;
+    // we will check if user don't need results anymore
+    let cancel = false;
+    socket.on('stopSearchInMirrors', () => {
+      console.log('[api]', 'search canceled');
+      cancel = true;
+      socket.removeAllListeners('stopSearchInMirrors');
+    });
 
+    const url = `${this.host}/search?page=1&title=${query}`;
+    if(cancel) return; //=> 1st cancel check before request
     try {
       // we use Axios for this and set the adult cookie
       const response = await this.fetch({
@@ -48,17 +56,25 @@ class Mangafox extends Mirror implements MirrorInterface {
 
       // we loop through the search results
       for(const el of $('ul.manga-list-4-list > li')) {
+        if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('p.manga-list-4-item-title', el).text().trim();
         const link = $('p.manga-list-4-item-title > a', el).attr('href');
         const isMangaLink = this.isMangaPage(link||'');
         // safeguard
         if(!link || !isMangaLink || !name) continue;
 
-        // getting additional infos (these are all optional)
-        const cover = $('img.manga-list-4-cover', el).attr('src');
-        const last_chapter = $('p.manga-list-4-item-tip', el).filter((i,e) => $(e).text().trim().indexOf('Latest Chapter:') > -1).text().replace('Latest Chapter:', '').trim();
-        const synopsis = $('p.manga-list-4-item-tip:last-of-type', el).text().trim();
+        // mangafox images needs to be downloaded.
+        let cover:string|undefined;
+        const coverLink =  $('img.manga-list-4-cover', el).attr('src');
+        if(coverLink) {
+          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
+          cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
+        }
 
+
+        const last_chapter = $('p.manga-list-4-item-tip', el).filter((i,e) => $(e).text().trim().indexOf('Latest Chapter:') > -1).text().replace('Latest Chapter:', '').trim();
+        let synopsis:string|undefined = $('p.manga-list-4-item-tip:last-of-type', el).text().trim();
+        if(synopsis && synopsis.length === 0) synopsis = undefined;
         // check if we can get any info regarding the last chapter
         const match = this.getChapterInfoFromString(last_chapter);
         let last_release;
@@ -82,13 +98,14 @@ class Mangafox extends Mirror implements MirrorInterface {
           lang: 'en',
         });
       }
+      if(cancel) return; // 3rd obligatory check
     } catch(e) {
         // we catch any errors because the client needs to be able to handle them
         if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
         else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
         else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error' });
-        console.log('[api]', 'mangafox CATCH', e);
     }
+    socket.emit('searchInMirrors', id, { done: true });
   }
 
   async manga(link:string): Promise<MangaPage | MangaErrorMessage> {

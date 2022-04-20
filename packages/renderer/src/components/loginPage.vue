@@ -66,7 +66,7 @@
         <q-card-section>
           <q-form
             class="q-gutter-md"
-            @submit.prevent="connect"
+            @submit="connect"
           >
             <q-input
               v-model="settings.server.login"
@@ -105,6 +105,8 @@
                     flat
                     color="white"
                     :label="$t('setup.retry.value')"
+                    :disabled="!readyToStart()"
+                    type="submit"
                   />
                 </template>
               </q-banner>

@@ -72,7 +72,7 @@
           "value": "Auto",
           "description": {
             "desc": "The description of the security answer",
-            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give me false security a warning upon first access"
+            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access"
           }
         },
         "selfsigned": {
@@ -114,13 +114,9 @@
       "desc": "The placeholder text",
       "value": "Search for a manga"
     },
-    "selectAll": {
-      "desc": "The check all mirrors button label",
-      "value": "Select All"
-    },
-    "unselectAll" : {
-      "desc": "The unselect all mirrors button label",
-      "value": "Unselect All"
+    "all": {
+      "desc": "The check/uncheck all mirrors/languages button label",
+      "value": "All"
     },
     "mirrorLabel" : {
       "desc": "The mirror label",
@@ -136,11 +132,19 @@
       "desc": "The chapter label",
       "value": "Chapter"
     },
+    "chapters": {
+      "desc": "The chapter label",
+      "value": "Chapters"
+    },
     "volume": {
       "desc": "The volume label",
       "value": "Volume"
     },
-    "chaptername": {
+    "volumes": {
+      "desc": "The volume label",
+      "value": "Volumes"
+    },
+    "synopsis": {
       "desc": "The chapter name Label",
       "value": "Name"
     }
