@@ -31,13 +31,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
   }
 
   async search(query:string, socket: socketInstance, id:number) {
-    // we will check if user don't need results anymore
-    let cancel = false;
-    socket.on('stopSearchInMirrors', () => {
-      console.log('[api]', 'search canceled');
-      cancel = true;
-      socket.removeAllListeners('stopSearchInMirrors');
-    });
+    try {
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      socket.once('stopSearchInMirrors', () => {
+        console.log('[api]', 'search canceled');
+        cancel = true;
+      });
 
       const url = `${this.host}/advanced-search.html?keyword=${query}`;
       const $ = await this.fetch({
@@ -74,22 +74,28 @@ class MangaHasu extends Mirror implements MirrorInterface {
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }
+
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
         socket.emit('searchInMirrors', id, {
-          mirror: this.name,
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
           name,
           link,
-          cover,
+          covers,
           last_release,
-          lang: 'en',
+          lang: this.langs[0],
         });
       }
       if(cancel) return; // 3rd obligatory check
+      socket.emit('searchInMirrors', id, { done: true });
     } catch(e) {
-      if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
-      if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
-      socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+          if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
+          else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
+          else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+          socket.emit('searchInMirrors', id, { done: true });
     }
-    socket.emit('searchInMirrors', id, { done: true });
   }
 
   async manga(link:string): Promise<MangaPage | MangaErrorMessage> {

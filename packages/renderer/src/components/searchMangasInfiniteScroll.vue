@@ -1,33 +1,12 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { useQuasar } from 'quasar';
-import 'flag-icons';
+import type { SearchResult } from '../../../api/src/mirrors/types/search';
 
 const $q = useQuasar();
 
-type results = {
-    mirrorinfo: {
-        name: string;
-        displayName: string;
-        host: string;
-        enabled: boolean;
-        icon: string;
-        langs: string[];
-    };
-    mirror: string;
-    lang: string;
-    name: string;
-    link: string;
-    cover?: string | undefined;
-    synopsis?: string | undefined;
-    last_release?: {
-        name?:string
-        volume?:number
-        chapter?:number
-    }
-  }[]
 defineProps<{
-  results: results
+  results: SearchResult[]
   loading: boolean
 }>();
 
@@ -69,8 +48,9 @@ const sizes = computed(() => {
         :class="$q.screen.lt.sm ? 'h-xs' : 'h-lg'"
       >
         <div
+          v-if="item.covers.length > 0"
           class="col-xs-12 col-sm-6 cover flex cursor-pointer"
-          :style="'background-image: url('+item.cover+');'"
+          :style="'background-image: url('+item.covers[0]+');'"
           :class="$q.screen.lt.sm ? 'xs-cover' : ''"
         >
           <div
@@ -98,7 +78,15 @@ const sizes = computed(() => {
               v-if="(item.last_release.name !== undefined && item.last_release.chapter === undefined) || $q.screen.lt.sm"
               class="bg-orange text-white text-center q-pa-md rounded-borders w-100 text-weight-medium"
             >
-              {{ item.last_release.name ? item.last_release.name : $t('mangas.chapter.value').toLocaleUpperCase() + ' ' + item.last_release.chapter }}
+              <span v-if="item.last_release.chapter !== undefined">
+                {{ $t('mangas.chapter.value').toLocaleUpperCase() }} {{ item.last_release.chapter }}
+              </span>
+              <span v-if="item.last_release.chapter !== undefined && item.last_release.name !== undefined">
+                -
+              </span>
+              <span v-if="item.last_release.name !== undefined">
+                {{ item.last_release.name }}
+              </span>
             </div>
             <div
               v-if="item.last_release.volume !== undefined && ($q.screen.sm || $q.screen.gt.sm)"

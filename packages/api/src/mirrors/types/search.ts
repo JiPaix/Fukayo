@@ -1,9 +1,13 @@
+import type { mirrorInfo } from './shared';
+
 export type SearchResult = {
-  mirror:string,
+  id:string,
+  mirrorinfo:mirrorInfo,
   lang: string,
   name: string,
   link: string,
-  cover?:string,
+  covers:string[],
   synopsis?: string,
+  tags?: string[]
   last_release?: {name?:string, volume?: number, chapter?: number},
 }

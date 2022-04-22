@@ -35,12 +35,11 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   async search(query:string, socket: socketInstance, id:number) {
-    // we will check if user don't need results anymore
+    // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.on('stopSearchInMirrors', () => {
+    socket.once('stopSearchInMirrors', () => {
       console.log('[api]', 'search canceled');
       cancel = true;
-      socket.removeAllListeners('stopSearchInMirrors');
     });
 
     const url = `${this.host}/search?page=1&title=${query}`;
@@ -81,17 +80,21 @@ class Mangafox extends Mirror implements MirrorInterface {
           const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
           last_release = {
             name: chapterName ? chapterName.trim() : undefined,
-            volume: volumeNumber ? parseInt(volumeNumber) : undefined,
+            volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }
 
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
         // we return the results based on SearchResult model
         socket.emit('searchInMirrors', id, {
-          mirror: this.name,
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
           name,
           link,
-          cover,
+          covers,
           synopsis,
           last_release,
           lang: 'en',

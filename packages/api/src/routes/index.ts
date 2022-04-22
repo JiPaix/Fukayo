@@ -13,7 +13,7 @@ export interface ServerToClientEvents {
   unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage|TaskDone) => void;
+  searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
 }
 
 export interface ClientToServerEvents {
