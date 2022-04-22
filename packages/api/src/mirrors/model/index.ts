@@ -39,6 +39,16 @@ export default class Mirror {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }
 
+  protected async downloadImage(url:string) {
+    // https://github.com/sindresorhus/file-type/issues/535#issuecomment-1065952695
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
+
+    const ab = await axios({ method: 'GET' , url, responseType: 'arraybuffer', headers: { referer: this.host } });
+    const buffer = Buffer.from(ab.data, 'binary');
+    const fT = await fileTypeFromBuffer(buffer);
+    return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected async fetch(config: AxiosRequestConfig<any>) {
     if(config.headers) config.headers.referer = this.host;
