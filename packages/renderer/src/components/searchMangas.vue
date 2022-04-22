@@ -201,6 +201,15 @@ const toggleLang = (lang:string) => {
     return includedLangs.value.some(l => m.langs.includes(l));
   }).map(m => m.name);
 };
+
+// passing the showManga event to parent
+const emit = defineEmits<{
+  (event: 'showManga', item:SearchResult): void
+}>();
+
+const showManga = (item:SearchResult) => {
+  emit('showManga', item);
+};
 </script>
 <template>
   <q-card v-show="props.visible">
@@ -365,6 +374,7 @@ const toggleLang = (lang:string) => {
       <searchMangasInfiniteScroll
         :results="results"
         :loading="loading"
+        @show-manga="showManga"
       />
     </q-card-section>
   </q-card>

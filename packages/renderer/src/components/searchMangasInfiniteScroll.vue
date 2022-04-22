@@ -31,6 +31,14 @@ const sizes = computed(() => {
   return classes.join(' ');
 });
 
+const emit = defineEmits<{
+  (event: 'showManga', item:SearchResult): void
+}>();
+
+const showManga = (item:SearchResult) => {
+  emit('showManga', item);
+};
+
 </script>
 
 <template>
@@ -52,6 +60,7 @@ const sizes = computed(() => {
           class="col-xs-12 col-sm-6 cover flex cursor-pointer"
           :style="'background-image: url('+item.covers[0]+');'"
           :class="$q.screen.lt.sm ? 'xs-cover' : ''"
+          @click="showManga(item)"
         >
           <div
             class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
@@ -65,7 +74,24 @@ const sizes = computed(() => {
             </q-tooltip>
           </div>
         </div>
-
+        <q-skeleton
+          v-else
+          class="col-xs-12 col-sm-6 cover flex cursor-pointer"
+          :class="$q.screen.lt.sm ? 'xs-cover' : ''"
+          @click="showManga(item)"
+        >
+          <div
+            class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
+            style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
+            rounded
+            dense
+          >
+            {{ item.name }}
+            <q-tooltip>
+              {{ item.name }}
+            </q-tooltip>
+          </div>
+        </q-skeleton>
         <div
           class="col-xs-12 col-sm-6"
         >
@@ -156,6 +182,7 @@ const sizes = computed(() => {
                 :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
                 :size="$q.screen.lt.sm ? 'lg' : 'md'"
                 icon="visibility"
+                @click="showManga(item)"
               />
             </div>
           </div>

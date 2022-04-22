@@ -2,6 +2,9 @@
 import { ref } from 'vue';
 import searchMangas from './searchMangas.vue';
 import type { sock } from '../socketClient';
+import ShowManga from './showManga.vue';
+import type { SearchResult } from '../../../api/src/mirrors/types/search';
+import type { MangaPage } from '../../../api/src/mirrors/types/manga';
 
 const props = defineProps<{
   logo: string;
@@ -10,7 +13,29 @@ const props = defineProps<{
 
 const leftDrawerOpen = ref(false);
 
-const tab = ref<string|null>(null);
+const tab = ref<'' | 'search' | 'manga'>('');
+
+const mangaTabProps = ref<MangaPage & {
+  chapters?: MangaPage['chapters']
+}>();
+
+const openMangaTab = (item:SearchResult) => {
+  mangaTabProps.value = {
+    id: item.id,
+    mirrorInfo: item.mirrorinfo,
+    url:item.link,
+    lang:item.lang,
+    name:item.name,
+    covers:item.covers,
+    synopsis:item.synopsis,
+    tags:item.tags,
+    chapters:[],
+  };
+  tab.value = 'manga';
+};
+
+
+
 </script>
 
 <template>
@@ -72,6 +97,13 @@ const tab = ref<string|null>(null);
           class="col-12 q-pt-xl"
           :visible="tab === 'search'"
           :socket="props.socket"
+          @show-manga="openMangaTab"
+        />
+        <ShowManga
+          v-if="tab === 'manga' && mangaTabProps !== undefined"
+          class="col-12"
+          :socket="props.socket"
+          :manga="mangaTabProps"
         />
       </q-page>
     </q-page-container>
