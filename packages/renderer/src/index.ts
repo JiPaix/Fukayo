@@ -17,11 +17,28 @@ const i18n = createI18n({
   },
 });
 
-// // vuetify
-// import { createVuetify } from '@vuetify/nightly';
-// import '@mdi/font/css/materialdesignicons.css';
-// import '@vuetify/nightly/styles';
-// const vuetify = createVuetify();
+// dayjs
+import dayjs from 'dayjs';
+import dayjsrelative from 'dayjs/plugin/relativeTime';
+import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
+import 'dayjs/locale/en';
+import 'dayjs/locale/fr';
+const availableLanguages = ['en', 'fr'];
+
+const localeHelper = (lang:string) => {
+  const locale = availableLanguages.find(locale => {
+    if (locale === lang) {
+      return true;
+    }
+    const regex = new RegExp(`${locale}-.*`);
+    return regex.test(lang);
+  });
+  return locale ? locale : 'en';
+};
+
+dayjs.extend(dayjsrelative);
+dayjs.extend(dayjslocalizedformat);
+dayjs.locale(localeHelper(navigator.language));
 
 // quasar
 import { Quasar, Dialog, Notify, Loading } from 'quasar';
@@ -61,5 +78,6 @@ myApp.use(Quasar, {
 });
 myApp.use(pinia);
 myApp.use(i18n);
+myApp.provide('dayJS', dayjs);
 // myApp.use(vuetify);
 myApp.mount('#app');
