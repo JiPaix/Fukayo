@@ -6,6 +6,7 @@ import type { AxiosRequestConfig } from 'axios';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { MirrorConstructor } from './types';
 import type { mirrorInfo } from '../types/shared';
+import type { ClusterJob } from './types/crawler';
 
 
 export default class Mirror {
@@ -69,14 +70,31 @@ export default class Mirror {
     return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async fetch(config: AxiosRequestConfig<any>) {
-    if(config.headers) config.headers.referer = this.host;
-    else config.headers = { referer: this.host };
+  protected async fetch(config: ClusterJob) {
+
+    const axiosConfig:AxiosRequestConfig = {
+      url: config.url,
+      headers: {
+        referer: this.host.replace(/http(s?):\/\//g, ''),
+        'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
+      },
+    };
+
     this.concurrency++;
     await this.wait();
-    const response = await axios(config);
+    const response = await axios(axiosConfig);
     this.concurrency--;
-    return response;
+    let $ = this.loadHTML(response.data);
+    if($(config.waitForSelector).length) return $;
+    else {
+      const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
+      if(typeof res === 'string') {
+        $ = this.loadHTML(res);
+        if($(config.waitForSelector).length) return $;
+      }
+      else throw new Error(res?.message || 'cloudflare');
+    }
+    throw new Error('cloudflare');
   }
 
   /**

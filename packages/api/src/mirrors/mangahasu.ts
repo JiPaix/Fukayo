@@ -39,12 +39,12 @@ class MangaHasu extends Mirror implements MirrorInterface {
       socket.removeAllListeners('stopSearchInMirrors');
     });
 
-    const url = `${this.host}/advanced-search.html?keyword=${query}`;
-    try {
-      if(cancel) return; //=> 1st cancel check before request
-      const res = await this.fetch({url});
+      const url = `${this.host}/advanced-search.html?keyword=${query}`;
+      const $ = await this.fetch({
+        url,
+        waitForSelector: 'ul.list_manga',
+      });
 
-      const $ = this.loadHTML(res.data);
       for(const el of $('div.div_item')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('a.name-manga > h3', el).text().trim();
@@ -98,9 +98,10 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(!isMangaPage) return {error: 'manga_error_invalid_link'};
 
     try {
-      const res = await this.fetch({url});
-
-      const $ = this.loadHTML(res.data);
+      const $ = await this.fetch({
+        url,
+        waitForSelector: 'td.name > a',
+      });
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];

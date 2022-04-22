@@ -46,16 +46,12 @@ class Mangafox extends Mirror implements MirrorInterface {
     const url = `${this.host}/search?page=1&title=${query}`;
     if(cancel) return; //=> 1st cancel check before request
     try {
-      // we use Axios for this and set the adult cookie
-      const response = await this.fetch({
+      const $ = await this.fetch({
         url,
-        headers:{
-          'Cookie': `isAdult=${this.options.adult ? '1' : '0'} path=/; domain=fanfox.net`,
-        },
+        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        waitForSelector: 'ul.manga-list-4-list > li',
       });
 
-      // we load the html
-      const $ = this.loadHTML(response.data);
 
       // we loop through the search results
       for(const el of $('ul.manga-list-4-list > li')) {
@@ -119,9 +115,11 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(!isLinkaPage) return {error: 'manga_error_invalid_link'};
 
     try {
-      // using Axios for this
-      const response = await this.fetch({url, headers: {'Cookie': 'isAdult=1 path=/; domain=fanfox.net'}});
-      const $ = this.loadHTML(response.data);
+      const $ = await this.fetch({
+        url,
+        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        waitForSelector: 'ul.detail-main-list > li > a',
+      });
 
       const name = $('span.detail-info-right-title-font').text().trim();
       const synopsis = $('p.fullcontent').text().trim();
