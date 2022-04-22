@@ -17,7 +17,7 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
+  getMirrors: (callback: (m: mirrorInfo[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
 }
