@@ -51,11 +51,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const link = $('a.name-manga', el).attr('href');
 
         // mangahasu images needs to be downloaded.
-        let cover:string|undefined;
+        const covers:string[] = [];
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
-          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
-          cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
         }
 
         if(!name || !link) continue;
@@ -105,8 +105,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];
-      const cover = $('.info-img > img').attr('src');
-      if(cover) covers.push(cover);
+
+      // mangahasu images needs to be downloaded.
+      const coverLink = $('.info-img > img').attr('src');
+      if(coverLink) {
+        const img = await this.downloadImage(coverLink).catch(() => undefined);
+        if(img) covers.push(img);
+      }
       const chapters:MangaPage['chapters'] = [];
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {

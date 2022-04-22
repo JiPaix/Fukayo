@@ -63,11 +63,11 @@ class Mangafox extends Mirror implements MirrorInterface {
         if(!link || !isMangaLink || !name) continue;
 
         // mangafox images needs to be downloaded.
-        let cover:string|undefined;
+        const covers:string[] = [];
         const coverLink =  $('img.manga-list-4-cover', el).attr('src');
         if(coverLink) {
-          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
-          cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
         }
 
 
