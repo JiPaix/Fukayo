@@ -49,7 +49,6 @@ onMounted(() => {
     includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
     allLangs.value = includedLangs.value;
   });
-
 });
 
 // when search page is closed we send a message to the server to stop the search

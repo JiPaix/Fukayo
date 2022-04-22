@@ -14,12 +14,6 @@ function showSynopsis (title:string, synopsis: string) {
   $q.dialog({
     title: title,
     message: synopsis,
-  }).onOk(() => {
-    // console.log('OK')
-  }).onCancel(() => {
-    // console.log('Cancel')
-  }).onDismiss(() => {
-    // console.log('I am triggered on both OK and Cancel')
   });
 }
 
