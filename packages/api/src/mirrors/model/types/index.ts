@@ -1,7 +1,6 @@
 import type { mirrorInfo } from './../../types/shared';
 import type { ChapterPage } from '../../types/chapter';
-import type { MangaErrorMessage, ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
-import type { MangaPage } from '../../types/manga';
+import type { ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
 import type { socketInstance } from '../../../routes';
 
 export type MirrorConstructor = {
@@ -113,12 +112,15 @@ export default interface MirrorInterface {
   search(query: string, socket:socketInstance, id:number): void;
   /**
    * Returns manga information and chapters
-   * @param {String} link link to manga page (Relative URL)
+   * @param {String} url url to manga page
+   * @param {String} lang requested language
+   * @param {socketInstance} socket the request initiator
+   * @param {Number} id arbitrary id
    * @example
    * this.manga("/mangas/one-piece/")
    * //=> https://{mirror.host}/mangas/one-piece/
    */
-  manga(link:string): Promise<MangaPage| MangaErrorMessage>
+  manga(url:string, lang:string, socket:socketInstance, id:number): void;
 
   /**
    * Returns all images from chapter

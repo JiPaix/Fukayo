@@ -2,7 +2,7 @@ import Mirror from './model';
 import icon from './icons/mangahasu.png';
 import type MirrorInterface from './model/types';
 import type { SearchResult } from './types/search';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './types/errorMessages';
+import type { ChapterPageErrorMessage } from './types/errorMessages';
 import type { MangaPage } from './types/manga';
 import type { ChapterPage } from './types/chapter';
 import type { socketInstance } from '../routes';
@@ -98,10 +98,12 @@ class MangaHasu extends Mirror implements MirrorInterface {
     }
   }
 
-  async manga(link:string): Promise<MangaPage | MangaErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isMangaPage = this.isMangaPage(url);
-    if(!isMangaPage) return {error: 'manga_error_invalid_link'};
+  async manga(url:string, lang:string, socket:socketInstance, id:number)  {
+    const link = url.replace(this.host, '');
+    const isMangaPage = this.isMangaPage(link);
+    if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+
+    const mangaId = `${this.name}/${this.langs[0]}${link}`;
 
     try {
       const $ = await this.fetch({
@@ -118,82 +120,62 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const img = await this.downloadImage(coverLink).catch(() => undefined);
         if(img) covers.push(img);
       }
+
+      // getting author(s) and tags
+      const authors:string[] = [];
+      const tags:string[] = [];
+
+      $('.info-c .detail_item > .row:contains("Author(s)") a').each((i, el) => {
+        const author = $(el).text().trim().toLocaleLowerCase();
+        if(author.length) authors.push(author);
+      });
+
+      $('.info-c .detail_item.row-a:contains("Genre(s)") a').each((i, el) => {
+        const tag = $(el).text().trim().toLocaleLowerCase();
+        if(tag.length) tags.push(tag);
+      });
+
       const chapters:MangaPage['chapters'] = [];
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {
 
         const current_chapter = $(el).text().trim();
-        const link = $(el).attr('href');
-        if(!link) continue;
+        const chaplink = $(el).attr('href');
+        if(!chaplink) continue;
         const match = this.getChapterInfoFromString(current_chapter);
-        let release: MangaPage['chapters'][0] | undefined = undefined;
+        let release: MangaPage['chapters'][0] | undefined;
 
-        if(!match) release = {name: current_chapter.replace(/Chapter/gi, '').trim(), number: i, volume: 0, link};
+        const date = Date.now(); // dates in manga pages aren't reliable so we use the fetch date instead
+
+        if(!match) release = {name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(), number: i+1, volume: undefined, url: chaplink, date};
 
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
-            name: chapterName ? chapterName.trim() : current_chapter.replace(/Chapter/gi, '').trim(),
-            volume: 0,
-            number: i,
-            link,
+            name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
+            volume: undefined,
+            number: i+1,
+            url: chaplink,
+            date,
           };
         }
         if(release) chapters.push(release);
       }
-      return { langs: this.langs, mirror: this.name, name, synopsis, covers, chapters };
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
     } catch(e) {
-      if(e instanceof Error) return {error: 'manga_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'manga_error', trace: e};
-      return {error: 'manga_error'};
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
+      return socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
   }
 
-  async chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isChapterPage = this.isChapterPage(url);
-    if(!isChapterPage) return {error: 'chapter_error_invalid_link'};
-
-    try {
-      const res = await this.fetch({url});
-      const $ = this.loadHTML(res.data);
-
-      const images:(ChapterPage|ChapterPageErrorMessage)[] = [];
-
-      for(const [i, el] of $('.img > img').toArray().entries()) {
-        const src = $(el).attr('src');
-        if(src) images.push({src, index: i});
-        else images.push({error: 'chapter_error_no_image', url: url.replace(this.host, ''), index: i});
-      }
-
-      return images;
-
-    } catch(e) {
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e};
-      return {error: 'chapter_error'};
-    }
+  async chapter(link: string):Promise<(ChapterPage|ChapterPageErrorMessage)[]> {
+    throw Error('not impt');
   }
 
-  async retryChapterImage(link: string, index: number): Promise<ChapterPage | ChapterPageErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isChapterPage = this.isChapterPage(url);
-    if(!isChapterPage) return {error: 'chapter_error_invalid_link', index};
-
-    try {
-      const res = await this.fetch({url});
-      const $ = this.loadHTML(res.data);
-
-      const img = $('.img > img')[index];
-      if(!img) return {error: 'chapter_error_no_image', url: url.replace(this.host, ''), index};
-      const src = $(img).attr('src');
-      if(!src) return {error: 'chapter_error_no_image', url: url.replace(this.host, ''), index};
-      return {src, index};
-    } catch(e) {
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message, index};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e, index};
-      return {error: 'chapter_error', index};
-    }
+  async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
+    throw Error('not impt');
   }
 }
 

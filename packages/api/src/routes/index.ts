@@ -1,3 +1,5 @@
+import type { MangaErrorMessage } from './../mirrors/types/errorMessages';
+import type { MangaPage } from './../mirrors/types/manga';
 import type { Socket } from 'socket.io';
 import { Server as ioServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';
@@ -8,18 +10,21 @@ import type { SearchResult } from '../mirrors/types/search';
 import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
 import type { mirrorInfo, TaskDone } from '../mirrors/types/shared';
 import type { ExtendedError } from 'socket.io/dist/namespace';
+
 export interface ServerToClientEvents {
   authorized: () => void;
   unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
   searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
+  showManga: (id:number, manga:MangaPage|MangaErrorMessage) =>void
 }
 
 export interface ClientToServerEvents {
   getMirrors: (callback: (m: mirrorInfo[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
+  showManga: (id:number, mirror:string, lang:string, url:string) => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
@@ -147,5 +152,16 @@ export default class IOWrapper {
       callback(filtered.length);
       filtered.forEach(m => m.search(query, socket, id));
     });
+
+  /**
+   * Show a manga page
+   */
+  socket.on('showManga', (id, mirror, lang, url) => {
+    // before that we should check if the manga is in database
+    // TODO
+    mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+  });
   }
+
+
 }

@@ -1,8 +1,6 @@
 import type { MangaPage } from './types/manga';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './types/errorMessages';
 import Mirror from './model';
 import type { ChapterPage } from './types/chapter';
-import { isCrawlerError } from './model/crawler';
 import icon from './icons/mangafox.png';
 import type MirrorInterface from './model/types/index';
 import type { socketInstance } from '../routes';
@@ -110,12 +108,19 @@ class Mangafox extends Mirror implements MirrorInterface {
     socket.emit('searchInMirrors', id, { done: true });
   }
 
-  async manga(link:string): Promise<MangaPage | MangaErrorMessage> {
+  async manga(link:string, lang:string, socket:socketInstance, id:number) {
+    // link = relative url
+    // url = full url (hostname+path)
     const url = `${this.host}${link}`;
-    const isLinkaPage = this.isMangaPage(url);
 
     // safeguard, we return an error if the link is not a manga page
-    if(!isLinkaPage) return {error: 'manga_error_invalid_link'};
+    const isLinkaPage = this.isMangaPage(link);
+    if(!isLinkaPage) {
+      return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    }
+
+    // manga id = "mirror_name/lang/link-of-manga-page"
+    const mangaId = `${this.name}/${this.langs[0]}${link}`;
 
     try {
       const $ = await this.fetch({
@@ -124,19 +129,43 @@ class Mangafox extends Mirror implements MirrorInterface {
         waitForSelector: 'ul.detail-main-list > li > a',
       });
 
+      // title of manga
       const name = $('span.detail-info-right-title-font').text().trim();
-      const synopsis = $('p.fullcontent').text().trim();
+      // synopsis
+      const synopsis = $('p.fullcontent').text().trim(); // optional
 
-      const chapters:MangaPage['chapters'] = [];
+      // covers (some mirror have multiple covers, not fanfox though)
       const covers:string[] = [];
+      const coverLink =  $('img.detail-info-cover-img').attr('src');
+      if(coverLink) {
+        // mangafox images needs to be downloaded (you can't just link the external url due to cors).
+        const img = await this.downloadImage(coverLink).catch(() => undefined);
+        if(img) covers.push(img);
+      }
 
-      // looping through the chapters
+      // authors and tags
+      const authors:string[] = [];
+      const tags:string[] = [];
+
+      $('p.detail-info-right-say > a').each((i, el) => {
+        const author = $(el).text().toLocaleLowerCase().trim();
+        if(author.length) authors.push(author);
+      });
+
+      $('p.detail-info-right-tag-list > a').each((i, el) => {
+        const tag = $(el).text().toLocaleLowerCase().trim();
+        if(tag.length) tags.push(tag);
+      });
+
+      // chapters table
+      const chapters:MangaPage['chapters'] = [];
+      const tablesize = $('ul.detail-main-list > li > a').length;
       $('ul.detail-main-list > li > a').each((i, el) => {
-
-        // making sure we have a valid link
+        // making sure the link match the pattern we're expecting
         const chapterHref = $(el).attr('href');
         if(!chapterHref || !this.isChapterPage(chapterHref)) return;
-        // this regex make sure we at least have a valid chapter number
+
+        // a regex that help us get the volume, chapter number and chapter name
         const match = this.getChapterInfoFromString($('.detail-main-list-main > p.title3', el).text());
         if(!match || typeof match !== 'object') return;
         // getting capture groups
@@ -144,119 +173,45 @@ class Mangafox extends Mirror implements MirrorInterface {
 
         // parsing the values
         const volumeNumberInt = volumeNumber ? parseInt(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
-        const chapterNumberFloat = parseFloat(chapterNumber);
+        const chapterNumberFloat = chapterNumber ? parseFloat(chapterNumber) : tablesize-i; // if no chapter number is found we fallback to the position in the table
         const chapterNameTrim = chapterName ? chapterName.trim() : undefined; // if no chapter name is given, we set it to undefined
         const chapterUrl = chapterHref.trim();
+
+        // ensure we at least have a chapter number OR a chapter name
+        if(!chapterNameTrim && !chapterNumberFloat) return;
+
+        // dates in manga pages aren't reliable so we use the fetch date instead
+        const date = Date.now();
 
         // pushing the chapter to the chapters array
         chapters.push({
           name: chapterNameTrim,
           number: chapterNumberFloat,
           volume: volumeNumberInt,
-          link: chapterUrl,
+          url: chapterUrl,
+          date,
         });
 
       });
 
-      // looping through the covers and pushing them to the covers array
-      $('img.detail-info-cover-img').each((i, el) => {
-        const cover = $(el).attr('src');
-        if(cover) covers.push(cover);
-      });
-
       // returning the manga page based on MangaPage model
-      return {langs: this.langs, mirror: this.name, name, synopsis, covers, chapters };
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
 
     } catch(e) {
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return {error: 'manga_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'manga_error', trace: e};
-      return {error: 'manga_error_unknown'};
+      if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
+      console.log('[api]', 'mangafox error', e);
+      return socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
   }
 
-  async chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage> {
-    const current_url = `${this.host}${link}`;
-    const isLinkaChapter = this.isChapterPage(current_url);
-
-    // safeguard, we return an error if the link is not a chapter page
-    if(!isLinkaChapter) return {error: 'chapter_error_invalid_link'};
-
-
-    try {
-      // We make a first request using Axios to get the number of pages (faster)
-      const response = await this.fetch({url:current_url});
-      const µ = this.loadHTML(response.data);
-
-      // @see AMR.getVariableFromScript()
-      const count = this.getVariableFromScript<number|undefined>('imagecount', µ.html());
-      if(!count) return {error: 'chapter_error_no_pages'};
-
-      // we made a request using https://mangafox/manga/one_piece/v01/c001/1.html
-      // so we generate a link for each page
-      const urls = [...Array(count).keys()].map(i => {
-        return current_url.replace(/\/\d+\.html$/, `/${i + 1}.html`);
-      });
-
-      // preparing the results
-      const images:(ChapterPage|ChapterPageErrorMessage)[] = [];
-
-      // We use puppeteer to make the requests
-      const res = await this.crawler({urls, waitForSelector: 'img.reader-main-img:not([src*=loading\\.gif])', waitTime: this.waitTime});
-
-      // looping through the chapter pages
-      // for any response (failed or succeded) we must also return the page index
-      res.forEach(r => {
-        // if puppeteer failed to load the page, we return an error in the images array
-        if(isCrawlerError(r)) return images.push({error: 'chapter_error_fetch', trace: r.error, url: r.url.replace(this.host, ''), index: r.index});
-
-        // loading the HTML and getting the image url
-        const $ = this.loadHTML(r.data);
-        const src = $('img.reader-main-img').attr('src');
-        // if we don't have a valid image url, we return an error in the images array.
-        if(!src) return images.push({error: 'chapter_error_no_image', url: r.url.replace(this.host, ''), index: r.index});
-        images.push({index: r.index, src});
-      });
-      // we return the images based on ChapterPage model and sort them by index
-      return images.sort((a, b) => a.index - b.index);
-
-    } catch(e) {
-      // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e};
-      return {error: 'chapter_error_unknown'};
-    }
+  async chapter(link: string):Promise<(ChapterPage|ChapterPageErrorMessage)[]> {
+    throw Error('not impt');
   }
 
-  public async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
-    const current_url = `${this.host}${link}`;
-    const isLinkaChapter = this.isChapterPage(current_url);
-
-    // safeguard, we return an error if the link is not a chapter page
-    if(!isLinkaChapter) return {error: 'chapter_error_invalid_link', index};
-
-    // for any response (failed or succeded) we must also return the page index
-    // compared to the chapter method, the request will return a "wrong" index.
-    // so we must ALWAYS use the index parameter from this method
-    try {
-      // We are directly making the request using puppeteer
-      const res = await this.crawler({urls: [current_url], waitForSelector: 'img.reader-main-img', waitTime: this.waitTime});
-      // if puppeteer failed to load the page, we return an error in the images array
-      if(isCrawlerError(res[0])) return {error: 'chapter_error_fetch', trace: res[0].error, url: current_url.replace(this.host, ''), index};
-
-      // loading the HTML and getting the image url
-      const $ = this.loadHTML(res[0].data);
-      const src = $('img.reader-main-img').attr('src');
-
-      // if we don't have a valid image url, we return an error. (no array this time)
-      if(!src) return {error: 'chapter_error_no_image', url: current_url.replace(this.host, ''), index};
-      return {index, src};
-    } catch(e) {
-      // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message, index};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e, index};
-      return {error: 'chapter_error_unknown', src: current_url.replace(this.host, ''), index};
-    }
+  async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
+    throw Error('not impt');
   }
 }
 
