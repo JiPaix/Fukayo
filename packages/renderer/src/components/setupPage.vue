@@ -22,7 +22,14 @@
         isValid: val => kind === 'key' ? isProvidedKeyValid(val) : isProvidedCertificateValid(val), // << here is the magic
         type: 'textarea', // optional
       },
-      cancel: true,
+      cancel: {
+        label: $t('setup.security.cancel.value'),
+        color: 'dark',
+      },
+      ok: {
+        label: $t('setup.security.ok.value'),
+        color: 'orange',
+      },
       persistent: true,
     }).onOk(data => {
       if(typeof data === 'string') {
