@@ -123,19 +123,6 @@ export default class IOWrapper {
     });
   }
 
-  getMirrors(callback: (m: mirrorInfo[]) => void) {
-    callback(mirrors.map(m => {
-      return {
-        name: m.name,
-        displayName: m.displayName,
-        host: m.host,
-        enabled: m.enabled,
-        icon: m.icon,
-        langs: m.langs,
-      };
-    }));
-  }
-
   routes(socket:socketInstance) {
     /** Default Events */
     socket.on('disconnect', () => socket.removeAllListeners());
