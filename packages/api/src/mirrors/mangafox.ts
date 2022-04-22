@@ -31,7 +31,7 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   getChapterInfoFromString(str:string) {
-    return /^(Vol\.(\d+)\s)?Ch\.([0-9]+(\.)?([0-9]+)?)(\s-\s(.*))?$/gmi.exec(str);
+    return /^(Vol\.(.+)\s)?Ch\.([0-9]+(\.)?([0-9]+)?)(\s-\s(.*))?$/gmi.exec(str);
   }
 
   async search(query:string, socket: socketInstance, id:number) {
