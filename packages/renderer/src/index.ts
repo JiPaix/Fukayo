@@ -34,6 +34,9 @@ import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);
 
+// flags
+import 'flag-icons';
+
 // init
 const myApp = createApp(App);
 myApp.use(Quasar, {

@@ -3,7 +3,6 @@ import { computed, onMounted, ref, onBeforeUnmount } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import 'animate.css';
-import 'flag-icons';
 import type { sock } from '../socketClient';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
 import type { SearchErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
