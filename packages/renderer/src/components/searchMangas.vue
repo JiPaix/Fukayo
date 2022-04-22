@@ -87,32 +87,33 @@ function research() {
   rawResults.value = [];
 
   const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
-  const listener = (id:number, res?:SearchResult | SearchErrorMessage | TaskDone) => {
-    if(id === task.id) {
-      if(res && isSearchResult(res)) rawResults.value.push(res);
-      else if(res && isTaskDone(res)) {
-        task.dones++;
-         if(task.dones === task.nbOfDonesToExpect) {
-           props.socket.off('searchInMirrors', listener);
-           loading.value = false;
-         }
-      }
-    }
-  };
 
   props.socket.emit('searchInMirrors', query.value, task.id, includedMirrors.value, includedLangs.value, (nbOfDonesToExpect) => {
     task.nbOfDonesToExpect = nbOfDonesToExpect;
     display.value = true;
     loading.value = true;
-    props.socket.on('searchInMirrors', listener);
+
+    props.socket.on('searchInMirrors', (id, res) => {
+      if(id === task.id) {
+        if(res && isSearchResult(res)) rawResults.value.push(res);
+        else if(res && isTaskDone(res)) {
+          task.dones++;
+          if(task.dones === task.nbOfDonesToExpect) {
+            props.socket.off('searchInMirrors');
+            loading.value = false;
+          }
+        }
+      }
+    });
+
   });
 
 }
 
 // computed search results (it just adds mirrorinfo to each result)
 const results = computed(() => {
-  return rawResults.value.map(r => {
-    const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirror);
+  return rawResults.value.map<SearchResult>(r => {
+    const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirrorinfo.name);
     if(!mirrorinfo) throw Error('mirrorinfo not found');
       return {
         ...r,
@@ -300,8 +301,8 @@ const toggleLang = (lang:string) => {
                 </q-item-section>
                 <q-item-section class="q-ma-none q-pa-none">
                   {{ mirror.displayName }} {{
-                    rawResults.filter(r=> r.mirror === mirror.name).length ?
-                      '('+rawResults.filter(r=> r.mirror === mirror.name).length+')' : ''
+                    rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length ?
+                      '('+rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length+')' : ''
                   }}
                 </q-item-section>
               </q-item>
