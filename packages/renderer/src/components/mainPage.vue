@@ -68,9 +68,9 @@ const tab = ref<string|null>(null);
       <q-page
         class="row bg-dark"
       >
-        <search-mangas
-          v-if="tab === 'search'"
+        <searchMangas
           class="col-12 q-pt-xl"
+          :visible="tab === 'search'"
           :socket="props.socket"
         />
       </q-page>

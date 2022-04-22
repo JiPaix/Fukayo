@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, onBeforeUnmount } from 'vue';
+import { computed, onMounted, ref, onBeforeUnmount, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import 'animate.css';
@@ -11,6 +11,7 @@ import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
 
 const props = defineProps<{
   socket: sock
+  visible: boolean
 }>();
 
 const $q = useQuasar();
@@ -54,6 +55,16 @@ onMounted(() => {
 // when search page is closed we send a message to the server to stop the search
 onBeforeUnmount(() => {
   props.socket.emit('stopSearchInMirrors');
+});
+
+// when search page is hidden we send a message to the server to stop the search
+watch(() => props.visible, (val) => {
+  if(!val) {
+    props.socket.emit('stopSearchInMirrors');
+    loading.value = false;
+  } else {
+    window.scrollTo(0,0);
+  }
 });
 
 // Typescript hack to differentiate between searchResults and searchErrorMessages
@@ -191,7 +202,7 @@ const toggleLang = (lang:string) => {
 };
 </script>
 <template>
-  <q-card class="q-dialog-plugin">
+  <q-card v-show="props.visible">
     <q-card-section class="row items-center">
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
