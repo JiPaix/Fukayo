@@ -40,7 +40,7 @@
     "@openapitools/openapi-generator-cli": "^2.4.26",
     "@quasar/extras": "^1.13.5",
     "@quasar/vite-plugin": "^1.0.9",
-    "@swc/core": "^1.2.168",
+    "@swc/core": "^1.2.171",
     "@types/express": "^4.17.13",
     "@types/lowdb": "^1.0.11",
     "@types/morgan": "^1.9.3",
