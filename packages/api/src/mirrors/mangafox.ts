@@ -8,16 +8,19 @@ import type MirrorInterface from './model/types/index';
 import type { socketInstance } from '../routes';
 class Mangafox extends Mirror implements MirrorInterface {
 
-  host = 'https://fanfox.net';
-  displayName = 'Mangafox';
-  name = 'mangafox';
-  enabled = true;
-  langs = ['en'];
   options: { adult: boolean };
 
-  constructor(options: { adult:boolean } = { adult: true }) {
-    super({icon});
-    this.options = options;
+  constructor() {
+    super({
+      host: 'https://fanfox.net',
+      name: 'mangafox',
+      displayName: 'Mangafox',
+      enabled: true,
+      langs: ['en'],
+      icon,
+    });
+
+    this.options = { adult: true };
   }
 
   isMangaPage(str:string) {

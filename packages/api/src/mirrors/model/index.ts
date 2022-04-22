@@ -5,22 +5,31 @@ import { resolve } from 'path';
 import type { AxiosRequestConfig } from 'axios';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { MirrorConstructor } from './types';
+import type { mirrorInfo } from '../types/shared';
 
 
 export default class Mirror {
 
-  enabled = true;
-  waitTime: number;
   private concurrency = 0;
   protected crawler = crawler;
-  protected name = '';
-  protected host = '';
   private _icon;
-
+  name: string;
+  displayName: string;
+  host: string;
+  enabled: boolean;
+  langs: string[];
+  waitTime: number;
+  options: Record<string, unknown> | undefined;
 
   constructor(opts: MirrorConstructor) {
+    this.name = opts.name;
+    this.displayName = opts.displayName;
+    this.host = opts.host;
+    this.enabled = opts.enabled;
+    this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
+    this.options = opts.options;
   }
   /**
    * Returns the mirror icon
@@ -35,6 +44,16 @@ export default class Mirror {
     return this._icon;
   }
 
+  public get mirrorInfo():mirrorInfo {
+    return {
+      name: this.name,
+      displayName: this.displayName,
+      host: this.host,
+      enabled: this.enabled,
+      icon: this.icon,
+      langs: this.langs,
+    };
+  }
   private async wait() {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }

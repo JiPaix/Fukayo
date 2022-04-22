@@ -1,3 +1,4 @@
+import type { mirrorInfo } from './../../types/shared';
 import type { ChapterPage } from '../../types/chapter';
 import type { MangaErrorMessage, ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
 import type { MangaPage } from '../../types/manga';
@@ -5,13 +6,38 @@ import type { socketInstance } from '../../../routes';
 
 export type MirrorConstructor = {
   /**
-   * Time to wait in ms between requests
+   * slug name of mirror
    */
-  waitTime?: number,
+  name: string,
+  /**
+   * display name
+   */
+  displayName: string,
+  /**
+   * mirror url
+   */
+  host: string,
+  /**
+   * is the mirror enabled?
+   */
+  enabled: boolean,
+
   /**
    * mirror icon (import)
    */
-  icon: string,
+  icon: string
+
+  /**
+   * languages supported by this mirror
+   */
+  langs: string[],
+  /**
+   * Time to wait in ms between requests
+   */
+  waitTime?: number,
+
+  options?: Record<string, unknown>
+
 }
 
 export default interface MirrorInterface {
@@ -58,6 +84,11 @@ export default interface MirrorInterface {
    * The icon of the mirror
    */
   get icon(): string;
+
+  /**
+   * Mirror informations
+   */
+  get mirrorInfo(): mirrorInfo;
   /**
    * Test if url is a manga page
    */

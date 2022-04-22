@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import mirrors from '../mirrors';
 import type { SearchResult } from '../mirrors/types/search';
 import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
-import type { TaskDone } from '../mirrors/types/shared';
+import type { mirrorInfo, TaskDone } from '../mirrors/types/shared';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 export interface ServerToClientEvents {
   authorized: () => void;
@@ -123,7 +123,7 @@ export default class IOWrapper {
     });
   }
 
-  getMirrors(callback: (m: {name:string, displayName:string, host:string, enabled:boolean, icon:string}[]) => void) {
+  getMirrors(callback: (m: mirrorInfo[]) => void) {
     callback(mirrors.map(m => {
       return {
         name: m.name,
@@ -131,6 +131,7 @@ export default class IOWrapper {
         host: m.host,
         enabled: m.enabled,
         icon: m.icon,
+        langs: m.langs,
       };
     }));
   }
@@ -145,16 +146,7 @@ export default class IOWrapper {
      * Get all mirrors (enabled or not)
      */
     socket.on('getMirrors', callback => {
-      callback(mirrors.map(m => {
-        return {
-          name: m.name,
-          displayName: m.displayName,
-          host: m.host,
-          enabled: m.enabled,
-          icon: m.icon,
-          langs: m.langs,
-        };
-      }));
+      callback(mirrors.map(m => m.mirrorInfo));
     });
 
     /**

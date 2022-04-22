@@ -9,14 +9,15 @@ import type { socketInstance } from '../routes';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
-  host = 'https://mangahasu.se';
-  displayName = 'MangaHasu';
-  name = 'mangahasu';
-  enabled = true;
-  langs = ['en'];
-
   constructor() {
-    super({icon});
+    super({
+      host: 'https://mangahasu.se',
+      name: 'mangahasu',
+      displayName: 'MangaHasu',
+      enabled: true,
+      langs: ['en'],
+      icon,
+    });
   }
 
   isMangaPage(url: string): boolean {
