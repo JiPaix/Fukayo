@@ -187,7 +187,7 @@ watch([images, prev, next, current, nbOfImagesToExpectFromChapter, chapterError]
         />
       </div>
       <div class="flex items-center">
-        <span class="q-mr-sm">SOURCE: </span>
+        <span class="q-mr-sm">{{ $t('mangas.source.value') }}</span>
         <span class="text-weight-medium">{{ manga.mirrorInfo.displayName }}</span>
         <img
           :src="manga.mirrorInfo.icon"
@@ -196,7 +196,7 @@ watch([images, prev, next, current, nbOfImagesToExpectFromChapter, chapterError]
         >
       </div>
       <div class="flex items-center">
-        Language:
+        {{ $t('languages.language.value') }}
         <span class="text-weight-medium q-ml-sm">{{ $t('languages.'+props.manga.lang+'.value') }}</span>
         <span
           class="fi q-ml-sm"

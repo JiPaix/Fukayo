@@ -125,42 +125,35 @@
     "all": {
       "desc": "The check/uncheck all mirrors/languages button label",
       "value": "All"
-    },
-    "mirrorLabel" : {
-      "desc": "The mirror label",
-      "value": "Mirror"
-    },
-    "languageLabel" : {
-      "desc": "The language label",
-      "value": "Language"
     }
   },
   "mangas": {
     "chapter": {
       "desc": "The chapter label",
-      "value": "Chapter"
-    },
-    "chapters": {
-      "desc": "The chapter label",
-      "value": "Chapters"
+      "value": "Chapter | Chapters"
     },
     "volume": {
       "desc": "The volume label",
-      "value": "Volume"
-    },
-    "volumes": {
-      "desc": "The volume label",
-      "value": "Volumes"
+      "value": "Volume | Volumes"
     },
     "synopsis": {
       "desc": "The chapter name Label",
       "value": "Synopsis"
+    },
+    "source": {
+      "desc": "The source label",
+      "value": "Source | Sources"
     }
   },
   "languages" : {
+    "language" : {
+      "desc": "The language label",
+      "value": "Language | Languages"
+    },
     "current" : {
       "desc": "The language the user's browser is using",
-      "value": "English"
+      "value": "English",
+      "flag": "us"
     },
     "en" : {
       "desc": "English",

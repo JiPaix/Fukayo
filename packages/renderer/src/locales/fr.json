@@ -138,29 +138,30 @@
   "mangas": {
     "chapter": {
       "desc": "The chapter label",
-      "value": "Chapitre"
-    },
-    "chapters": {
-      "desc": "The chapter label",
-      "value": "Chapitres"
+      "value": "Chapitre | Chapitres"
     },
     "volume": {
       "desc": "The volume label",
-      "value": "Volume"
-    },
-    "volumes": {
-      "desc": "The volume label",
-      "value": "Volumes"
+      "value": "Volume | Volumes"
     },
     "synopsis": {
       "desc": "The chapter name Label",
       "value": "Synopsis"
+    },
+    "source" : {
+      "desc": "The source label",
+      "value": "Source | Sources"
     }
   },
   "languages" : {
+    "language" : {
+      "desc": "The language label",
+      "value": "Langue | Langues"
+    },
     "current" : {
       "desc": "The language the user's browser is using",
-      "value": "English"
+      "value": "Français",
+      "flag": "fr"
     },
     "en" : {
       "desc": "English",
