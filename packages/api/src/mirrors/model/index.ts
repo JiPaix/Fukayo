@@ -1,8 +1,8 @@
+import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from './crawler';
 import { resolve } from 'path';
-import type { AxiosRequestConfig } from 'axios';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { MirrorConstructor } from './types';
 import type { mirrorInfo } from '../types/shared';
@@ -69,23 +69,31 @@ export default class Mirror {
     const fT = await fileTypeFromBuffer(buffer);
     return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async fetch(config: ClusterJob) {
 
-    const axiosConfig:AxiosRequestConfig = {
-      url: config.url,
-      headers: {
-        referer: this.host.replace(/http(s?):\/\//g, ''),
-        'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
-      },
+  /**
+   *
+   * @param config request options
+   * @param noCrawl simplify the request (no headless browser, no html parsing)
+   */
+  protected async fetch<T = unknown>(config: ClusterJob, noCrawl:true):Promise<T>;
+  protected async fetch(config: ClusterJob, noCrawl:false):Promise<CheerioAPI>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected async fetch(config: ClusterJob, noCrawl = false):Promise<CheerioAPI|AxiosResponse> {
+    config.headers = {
+      referer: this.host.replace(/http(s?):\/\//g, ''),
+      'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
+      ...config.headers,
     };
+
 
     this.concurrency++;
     await this.wait();
-    const response = await axios(axiosConfig);
+    const response = await axios(config);
     this.concurrency--;
+    if(noCrawl) return response.data;
     let $ = this.loadHTML(response.data);
-    if($(config.waitForSelector).length) return $;
+    if(!config.waitForSelector) return $;
+    else if($(config.waitForSelector).length) return $;
     else {
       const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
       if(typeof res === 'string') {

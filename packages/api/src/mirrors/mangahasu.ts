@@ -43,7 +43,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const $ = await this.fetch({
         url,
         waitForSelector: 'ul.list_manga',
-      });
+      }, false);
 
       for(const el of $('div.div_item')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
@@ -109,7 +109,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const $ = await this.fetch({
         url,
         waitForSelector: 'td.name > a',
-      });
+      }, false);
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];

@@ -47,7 +47,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.manga-list-4-list > li',
-      });
+      }, false);
 
 
       // we loop through the search results
@@ -127,7 +127,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.detail-main-list > li > a',
-      });
+      }, false);
 
       // title of manga
       const name = $('span.detail-info-right-title-font').text().trim();
