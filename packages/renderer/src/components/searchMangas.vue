@@ -218,7 +218,7 @@ const showManga = (item:SearchResult) => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :label="$t('searchMangas.placeholder.value')"
+          :placeholder="$t('searchMangas.placeholder.value')"
           outlined
           clearable
           autofocus
