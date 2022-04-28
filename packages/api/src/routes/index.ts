@@ -156,14 +156,14 @@ export default class IOWrapper {
       filtered.forEach(m => m.search(query, socket, id));
     });
 
-  /**
-   * Show a manga page
-   */
-  socket.on('showManga', (id, mirror, lang, url) => {
-    // before that we should check if the manga is in database
-    // TODO
-    mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
-  });
+    /**
+     * Show a manga page
+     */
+    socket.on('showManga', (id, mirror, lang, url) => {
+      // before that we should check if the manga is in database
+      // TODO
+      mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+    });
 
     /**
      * Show chapters pages
