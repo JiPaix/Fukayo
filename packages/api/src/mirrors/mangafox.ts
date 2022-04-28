@@ -172,13 +172,13 @@ class Mangafox extends Mirror implements MirrorInterface {
         const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
 
         // parsing the values
-        const volumeNumberInt = volumeNumber ? parseInt(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
-        const chapterNumberFloat = chapterNumber ? parseFloat(chapterNumber) : tablesize-i; // if no chapter number is found we fallback to the position in the table
-        const chapterNameTrim = chapterName ? chapterName.trim() : undefined; // if no chapter name is given, we set it to undefined
+        const volumeNumberInt = volumeNumber !== undefined ? parseInt(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
+        const chapterNumberFloat = chapterNumber !== undefined ? parseFloat(chapterNumber) : tablesize-i; // if no chapter number is found we fallback to the position in the table
+        const chapterNameTrim = chapterName !== undefined ? chapterName.trim() : undefined; // if no chapter name is given, we set it to undefined
         const chapterUrl = chapterHref.trim();
 
         // ensure we at least have a chapter number OR a chapter name
-        if(!chapterNameTrim && !chapterNumberFloat) return;
+        if(chapterNameTrim === undefined && chapterNumberFloat === undefined) return;
 
         // dates in manga pages aren't reliable so we use the fetch date instead
         const date = Date.now();
