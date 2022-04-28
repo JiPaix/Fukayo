@@ -1,4 +1,5 @@
-import type { MangaErrorMessage } from './../mirrors/types/errorMessages';
+import type { ChapterPage } from './../mirrors/types/chapter';
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './../mirrors/types/errorMessages';
 import type { MangaPage } from './../mirrors/types/manga';
 import type { Socket } from 'socket.io';
 import { Server as ioServer } from 'socket.io';
@@ -18,6 +19,7 @@ export interface ServerToClientEvents {
   refreshToken: (acessToken: string) => void;
   searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
   showManga: (id:number, manga:MangaPage|MangaErrorMessage) =>void
+  showChapter: (id:number, chapter:ChapterPage|ChapterPageErrorMessage|ChapterErrorMessage) => void;
 }
 
 export interface ClientToServerEvents {
@@ -25,6 +27,7 @@ export interface ClientToServerEvents {
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
+  showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void) => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
@@ -161,6 +164,13 @@ export default class IOWrapper {
     // TODO
     mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
   });
+
+    /**
+     * Show chapters pages
+     */
+    socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void) => {
+      mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback);
+    });
   }
 
 

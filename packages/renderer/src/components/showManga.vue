@@ -1,11 +1,16 @@
 <script lang="ts" setup>
-import { onBeforeMount, onMounted, onBeforeUnmount,ref, computed } from 'vue';
+import { onBeforeMount, onMounted, onBeforeUnmount, ref, watch, computed, inject } from 'vue';
+import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
+import chapterPage from './showChapter.vue';
+import type dayjs from 'dayjs';
 import type { sock } from '../socketClient';
 import type { MangaPage } from '../../../api/src/mirrors/types/manga';
-import type { MangaErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
-import type dayjs from 'dayjs';
-import { inject } from 'vue'; // import inject from vue
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
+import type { ChapterPage } from '../../../api/src/mirrors/types/chapter';
+
+
+
 const dayJS = inject<typeof dayjs>('dayJS'); // inject dayJS
 
 const $t = useI18n().t.bind(useI18n());
@@ -74,6 +79,80 @@ onMounted(() => {
   coverHeight.value = cover.value?.height;
   window.scrollTo(0,0);
 });
+
+
+
+// ref passed to dialog
+const images = ref<(ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage)[]>([]);
+const chapterError = ref<ChapterErrorMessage|null>(null);
+const nbOfImagesToExpectFromChapter = ref(0);
+const prev = ref<(() => void) | null>(null);
+const next = ref<(() => void) | null>(null);
+const current = ref<MangaPage['chapters'][0] | null>(null);
+
+const $q = useQuasar();
+
+function isChapterErrorMessage(res: ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage): res is ChapterErrorMessage {
+  return (res as ChapterPage).index === undefined;
+}
+
+function showChapter(chapter:MangaPage['chapters'][0], index:number) {
+  current.value = chapter;
+  chapterError.value = null;
+  images.value = [];
+  nbOfImagesToExpectFromChapter.value = 0;
+
+  const dialog = $q.dialog({
+    component: chapterPage,
+    componentProps: {
+      socket: props.socket,
+      manga: manga.value,
+      images: images.value,
+      pagination : { prev: prev.value, next: next.value, current: current.value, nbOfPages: nbOfImagesToExpectFromChapter.value },
+      error: chapterError.value,
+    },
+  });
+
+watch([images, prev, next, current, nbOfImagesToExpectFromChapter, chapterError], ([images, prev, next, current, nbOfImages, error]) => {
+  dialog.update({ componentProps: { images, pagination: { prev, next, current, nbOfPages: nbOfImages }, error } });
+});
+
+  // check if there's a previous chapter in manga.value.chapters
+  const prevChapter = manga.value.chapters[index - 1];
+  if(prevChapter) {
+    prev.value = () => {
+      showChapter(prevChapter, index - 1);
+    };
+  } else {
+    prev.value = null;
+  }
+
+  // check if there's a next chapter in manga.value.chapters
+  const nextChapter = manga.value.chapters[index + 1];
+  if(nextChapter) {
+    next.value = () => {
+      showChapter(nextChapter, index + 1);
+    };
+  } else {
+    next.value = null;
+  }
+
+  const id = Date.now();
+  props.socket.emit('showChapter', id, manga.value.mirrorInfo.name, manga.value.lang, chapter.url, (nb) => {
+    nbOfImagesToExpectFromChapter.value = nb;
+    props.socket.on('showChapter', (id2, res) => {
+      if(id === id2) {
+        if(isChapterErrorMessage(res)) {
+          chapterError.value = res;
+          props.socket.off('showChapter');
+        } else {
+          images.value.push(res);
+          if(res.lastpage) props.socket.off('showChapter');
+        }
+      }
+    });
+  });
+}
 
 </script>
 <template>
@@ -165,6 +244,7 @@ onMounted(() => {
               :key="index"
               v-ripple
               clickable
+              @click="showChapter(item, index)"
             >
               <q-item-section>
                 <q-item-label>
@@ -190,6 +270,11 @@ onMounted(() => {
                 <q-icon
                   name="visibility"
                   color="yellow"
+                />
+                <q-icon
+                  name="play_circle"
+                  color="teal"
+                  @click="showChapter(item, index)"
                 />
               </q-item-section>
             </q-item>

@@ -1,6 +1,6 @@
 import type { mirrorInfo } from './../../types/shared';
 import type { ChapterPage } from '../../types/chapter';
-import type { ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
+import type { ChapterPageErrorMessage } from '../../types/errorMessages';
 import type { socketInstance } from '../../../routes';
 
 export type MirrorConstructor = {
@@ -126,7 +126,7 @@ export default interface MirrorInterface {
    * Returns all images from chapter
    * @param link Relative url of chapter page (any page)
    */
-  chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage>
+  chapter(link:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void): void;
 
   /**
    * Same as chapter() but for a specific page

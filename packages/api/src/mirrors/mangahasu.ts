@@ -170,8 +170,39 @@ class MangaHasu extends Mirror implements MirrorInterface {
     }
   }
 
-  async chapter(link: string):Promise<(ChapterPage|ChapterPageErrorMessage)[]> {
-    throw Error('not impt');
+  async chapter(url:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+    const link = url.replace(this.host, '');
+
+    // safeguard, we return an error if the link is not a chapter page
+    const isLinkaChapter = this.isChapterPage(link);
+    if(!isLinkaChapter) return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+
+
+    try {
+      console.log('[api]', 'fetching:', url);
+      const $ = await this.fetch({
+        url,
+        waitForSelector: '.img-chapter',
+      }, false);
+
+      const nbOfPages = $('.img-chapter img').length;
+      callback(nbOfPages);
+      for(const [i, el] of $('.img-chapter img').toArray().entries()) {
+        const imgLink = $(el).attr('src');
+        if(imgLink) {
+          const img = await this.downloadImage(imgLink);
+          socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+        } else {
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+        }
+      }
+    } catch(e) {
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
+      console.log('[api]', 'mangahasu error', e);
+      return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
+    }
   }
 
   async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {

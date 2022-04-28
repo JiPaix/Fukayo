@@ -206,9 +206,118 @@ class Mangafox extends Mirror implements MirrorInterface {
     }
   }
 
-  async chapter(link: string):Promise<(ChapterPage|ChapterPageErrorMessage)[]> {
-    throw Error('not impt');
+  // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
+  async chapter(link:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+    // link = relative url
+    // url = full url (hostname+path)
+    const url = `${this.host}${link}`;
+
+    // safeguard, we return an error if the link is not a chapter page
+    const isLinkaChapter = this.isChapterPage(link);
+    if(!isLinkaChapter) {
+      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+    }
+
+    try {
+      const $ = await this.fetch({
+        url,
+        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        waitForSelector: '#xf-new',
+      }, false);
+
+      // we gather every parameters needed to build the request to the actual image
+      const imagecount = this.getVariableFromScript<number>('imagecount', $.html());
+      const chapfunurl = url.substring(0, url.lastIndexOf('/') + 1) + 'chapterfun.ashx';
+      const cid = this.getVariableFromScript<number>('chapterid', $.html());
+      let mkey: unknown = '';
+      if ($('#dm5_key', $.html()).length > 0) {
+          mkey = $('#dm5_key', $.html()).val();
+      }
+
+      callback(imagecount);
+      for(const [i] of [...Array(imagecount-1)].entries()) {
+
+        // build parameters for the request
+        const params = {
+          cid: cid,
+          page: i+1,
+          key: mkey,
+        };
+
+        const data = await this.fetch<string>({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, true);
+
+        // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
+        const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g;
+        const match = regexpargs.exec(data);
+
+        if(match) {
+          const args = [match[1], match[3], match[4], match[5].split('|'), 0, {}];
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          let sc = this.unpack(...args); // call the unpack function
+          sc = sc.replace(/\\'/g, '\'');
+
+
+          // the result is another js function containing the data, we mimic here what it does
+          // retrieve the variables
+          const key = this.getVariableFromScript<string|undefined>('key', sc) || '',
+                pix = this.getVariableFromScript<string>('pix', sc),
+                pvalues = this.getVariableFromScript<string[]>('pvalue', sc), // array of scan urls (contains current one and next one)
+                pvalue = pvalues.map(img => pix + img + '?cid=' + cid + '&key=' + key);
+
+          // download and pass to client
+          const bs64 = await this.downloadImage(pvalue[0].replace(/^\/\//g, 'http://'));
+          socket.emit('showChapter', id, { index: i, src: bs64, lastpage: i+1 === imagecount });
+
+        } else {
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === imagecount });
+        }
+      }
+
+    } catch(e) {
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
+      console.log('[api]', 'mangafox error', e);
+      return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
+    }
   }
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  private unpack(p, a, c, k, e, d):string {
+    // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
+    // the retrieved data is packed through an obfuscator
+    // dm5 is unpacking the images url through an eval
+    // we do it manually (below is the unpack function shipped with the data to decode)
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    e = function (c) {
+        return (
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            (c < a ? '' : e(parseInt(c / a))) +
+            ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))
+        );
+    };
+    if (!''.replace(/^/, String)) {
+        while (c--) d[e(c)] = k[c] || e(c);
+        k = [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            function (e) {
+                return d[e];
+            },
+        ];
+        e = function () {
+            return '\\w+';
+        };
+        c = 1;
+    }
+    while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
+    return p;
+}
 
   async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
     throw Error('not impt');
