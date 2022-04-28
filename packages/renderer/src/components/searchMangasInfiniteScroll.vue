@@ -141,7 +141,7 @@ const showManga = (item:SearchResult) => {
             <div
               v-if="item.synopsis !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
               v-ripple
-              class="row q-ma-sm shadow-1"
+              class="row q-ma-sm shadow-1 cursor-pointer"
               @click="showSynopsis(item.name, item.synopsis!)"
             >
               <div
