@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { ref, onBeforeMount } from 'vue';
   import { useQuasar } from 'quasar';
   import { useStore as useSettingsStore } from '/@/store/settings';
   import setupPage from '/@/components/setupPage.vue';
@@ -56,7 +56,9 @@ const socket = ref<sock|undefined>();
 
   };
 
-
+onBeforeMount(()=> {
+  useSocket();
+});
 
 </script>
 <template>
