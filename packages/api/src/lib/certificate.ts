@@ -183,9 +183,6 @@ class CertificateGeneration {
       const cert = fs.readFileSync(path.join(process.env.USER_DATA, 'cert.pem'));
       return { key, cert };
     }
-
-
-
 	}
 }
 
