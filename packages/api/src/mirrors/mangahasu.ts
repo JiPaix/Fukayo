@@ -180,13 +180,20 @@ class MangaHasu extends Mirror implements MirrorInterface {
   }
 
   async chapter(url:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowManga', () => {
+      console.log('[api]', 'show-manga canceled');
+      cancel = true;
+    });
+
     const link = url.replace(this.host, '');
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);
     if(!isLinkaChapter) return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
 
-
+    if(cancel) return;
     try {
       console.log('[api]', 'fetching:', url);
       const $ = await this.fetch({
@@ -196,7 +203,9 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
       const nbOfPages = $('.img-chapter img').length;
       callback(nbOfPages);
+      if(cancel) return;
       for(const [i, el] of $('.img-chapter img').toArray().entries()) {
+        if(cancel) break;
         const imgLink = $(el).attr('src');
         if(imgLink) {
           const img = await this.downloadImage(imgLink);

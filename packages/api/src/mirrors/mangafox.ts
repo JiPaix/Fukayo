@@ -218,6 +218,12 @@ class Mangafox extends Mirror implements MirrorInterface {
 
   // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
   async chapter(link:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowManga', () => {
+      console.log('[api]', 'show-manga canceled');
+      cancel = true;
+    });
     // link = relative url
     // url = full url (hostname+path)
     const url = `${this.host}${link}`;
@@ -228,6 +234,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
     }
 
+    if(cancel) return;
     try {
       const $ = await this.fetch({
         url,
@@ -244,9 +251,11 @@ class Mangafox extends Mirror implements MirrorInterface {
           mkey = $('#dm5_key', $.html()).val();
       }
 
+      if(cancel) return;
       callback(imagecount);
-      for(const [i] of [...Array(imagecount-1)].entries()) {
 
+      for(const [i] of [...Array(imagecount-1)].entries()) {
+        if(cancel) break;
         // build parameters for the request
         const params = {
           cid: cid,
@@ -283,7 +292,6 @@ class Mangafox extends Mirror implements MirrorInterface {
           socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === imagecount });
         }
       }
-
     } catch(e) {
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
