@@ -179,7 +179,10 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <q-card v-if="manga">
+  <q-card
+    v-if="manga"
+    class="w-100"
+  >
     <q-card-section
       class="text-center"
     >
