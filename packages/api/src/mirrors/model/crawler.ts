@@ -88,7 +88,7 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
 
     // get the content
     await page.goto(data.url);
-    await page.waitForSelector(data.waitForSelector, {timeout: 1000*60});
+    if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, {timeout: 1000*60});
     const html = await page.content();
 
     // remove task from task list then close cluster if needed
