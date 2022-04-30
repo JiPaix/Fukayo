@@ -1,34 +1,49 @@
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  import type { authByLogin } from './helpers/login';
-  import { useStore } from '/@/store/settings';
-  import icon from '../../assets/icon.svg';
-  import { useI18n } from 'vue-i18n';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useStore as useSettingsStore } from '/@/store/settings';
+import icon from '../../assets/icon.svg';
+import type { authByLogin} from './helpers/login';
 
-  defineProps({
-    badPassword: {
-      type: Boolean,
-      default: false,
-    },
-  });
+/** vue-i18n */
+const $t = useI18n().t.bind(useI18n());
+/** stored settings */
+const settings = useSettingsStore();
+/** emit */
+const emit = defineEmits<{ (event: 'done', auth: authByLogin): void }>();
 
-  const emit = defineEmits<{ (event: 'done', auth: authByLogin): void }>();
-  const $t = useI18n().t.bind(useI18n());
-  const settings = useStore();
 
-  const login = ref(settings.server.login);
-  const password = ref<string|null>(null);
-  const loading = ref(false);
-  const showPassword = ref(false);
-  const readyToStart = () => {
-    return login.value && password.value;
-  };
-  const connect = () => {
-    if(!password.value || !login.value) return;
-    loading.value = true;
-    settings.server.login = login.value;
-    emit('done', { login: login.value, password: password.value });
-  };
+/** props */
+defineProps({
+  /** display a bad password error */
+  badPassword: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+
+/** user login */
+const login = ref(settings.server.login);
+/** user password */
+const password = ref<string|null>(null);
+/** show a loading while connecting to the server */
+const loading = ref(false);
+/** toggler to display the password */
+const showPassword = ref(false);
+
+/** check the user inputed a login and password */
+function readyToStart() {
+  return login.value && password.value;
+}
+
+/** connect to the server by sending an event to the parent component */
+function connect() {
+  if(!password.value || !login.value) return;
+  loading.value = true;
+  settings.server.login = login.value;
+  emit('done', { login: login.value, password: password.value });
+}
 </script>
 
 <template>

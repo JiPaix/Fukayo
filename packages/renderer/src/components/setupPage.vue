@@ -1,85 +1,92 @@
 <script lang="ts" setup>
-  import { ref } from 'vue';
-  import { useQuasar } from 'quasar';
-  import { useStore } from '/@/store/settings';
-  import icon from '../../assets/icon.svg';
-  import { useI18n } from 'vue-i18n';
-  import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from './helpers/login';
-  const $t = useI18n().t.bind(useI18n());
-  const $q = useQuasar();
-  const emit = defineEmits<{ (event: 'done'): void }>();
+import { ref } from 'vue';
+import { useQuasar } from 'quasar';
+import { useStore as useSettingsStore } from '/@/store/settings';
+import icon from '../../assets/icon.svg';
+import { useI18n } from 'vue-i18n';
+import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from './helpers/login';
 
-  const settings = useStore();
+/** vue-i18n */
+const $t = useI18n().t.bind(useI18n());
+/** quasar */
+const $q = useQuasar();
+/** stored settings */
+const settings = useSettingsStore();
+/** emit */
+const emit = defineEmits<{ (event: 'done'): void }>();
 
-  const password = ref<string | null>(null);
-  const showPassword = ref(false);
 
-  const prompt = (title:string, kind:'cert'|'key', model?:string|null) => {
-    $q.dialog({
-      title,
-      prompt: {
-        model : model || '',
-        isValid: val => kind === 'key' ? isProvidedKeyValid(val) : isProvidedCertificateValid(val), // << here is the magic
-        type: 'textarea', // optional
-      },
-      cancel: {
-        label: $t('setup.security.cancel.value'),
-        color: 'dark',
-      },
-      ok: {
-        label: $t('setup.security.ok.value'),
-        color: 'orange',
-      },
-      persistent: true,
-    }).onOk(data => {
-      if(typeof data === 'string') {
-        settings.server[kind] = data;
-      }
-    });
-  };
+/** setup password */
+const password = ref<string | null>(null);
+/** toggler to show the password */
+const showPassword = ref(false);
+/** show a loading screen while the server starts */
+const starting = ref(false);
 
-  const starting = ref(false);
-
-  const startServer = async () => {
-    // checks
-    if(!readyToStart()) return;
-    if(!password.value) {
-      $q.notify({
-          type: 'negative',
-          message: $t(passwordHint(password.value)),
-          icon: 'error',
-        });
-        return;
+/** display a prompt and ask user for a key+cert */
+function prompt (title:string, kind:'cert'|'key', model?:string|null) {
+  $q.dialog({
+    title,
+    prompt: {
+      model : model || '',
+      isValid: val => kind === 'key' ? isProvidedKeyValid(val) : isProvidedCertificateValid(val), // << here is the magic
+      type: 'textarea', // optional
+    },
+    cancel: {
+      label: $t('setup.security.cancel.value'),
+      color: 'dark',
+    },
+    ok: {
+      label: $t('setup.security.ok.value'),
+      color: 'orange',
+    },
+    persistent: true,
+  }).onOk(data => {
+    if(typeof data === 'string') {
+      settings.server[kind] = data;
     }
-    // define the payload
-    const payload = {
-      login: settings.server.login || 'admin',
-      password: password.value,
-      port: settings.server.port,
-      ssl: settings.server.ssl,
-      cert: settings.server.cert,
-      key: settings.server.key,
-    };
-    // start the server
-    const response = await window.apiServer.startServer(payload);
-    starting.value = false;
-    // check the response
-    if(response.success) {
-      settings.server.accessToken = response.message.split('[split]')[0];
-      settings.server.refreshToken = response.message.split('[split]')[1];
-      emit('done');
-    }
-  };
+  });
+}
 
-  const readyToStart = () => {
-    if(!isPasswordValid(password.value)) return false;
-    if(!isPortValid(settings.server.port)) return false;
-    if(settings.server.ssl === 'provided') {
-      if(!isProvidedCertificateValid(settings.server.cert)) return false;
-      if(!isProvidedKeyValid(settings.server.key)) return false;
-    }
-    return true;
+/**
+ * checks that the user correctly set up the server
+ */
+function readyToStart() {
+  if(!isLoginValid(settings.server.login)) return false;
+  if(!isPasswordValid(password.value)) return false;
+  if(!isPortValid(settings.server.port)) return false;
+  if(settings.server.ssl === 'provided') {
+    if(!isProvidedCertificateValid(settings.server.cert)) return false;
+    if(!isProvidedKeyValid(settings.server.key)) return false;
+  }
+  return true;
+}
+
+/**
+ * starts the server
+ */
+async function startServer () {
+  // checks
+  if(!readyToStart()) return;
+  // define the payload
+  const payload = {
+    login: settings.server.login || 'admin',
+    password: password.value as string,
+    port: settings.server.port,
+    ssl: settings.server.ssl,
+    cert: settings.server.cert,
+    key: settings.server.key,
   };
+  // start the server
+  const response = await window.apiServer.startServer(payload);
+  starting.value = false;
+  // check the response
+  if(response.success) {
+    settings.server.accessToken = response.message.split('[split]')[0];
+    settings.server.refreshToken = response.message.split('[split]')[1];
+    emit('done');
+  }
+}
 </script>
 <template>
   <div

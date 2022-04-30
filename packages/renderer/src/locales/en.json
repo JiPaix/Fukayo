@@ -111,6 +111,14 @@
           "desc": "The cancel button label",
           "value": "Cancel"
         }
+      },
+      "error": {
+        "desc": "Error label",
+        "value": "Error"
+      },
+      "unexpectedError": {
+        "desc": "Unexpected error message",
+        "value": "An unexpected error occured"
       }
   },
   "searchMangas": {

@@ -1,38 +1,46 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, onBeforeUnmount, watch } from 'vue';
+import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
+import { useSocket } from './helpers/socket';
+import { useStore as useSettingsStore } from '/@/store/settings';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import 'animate.css';
+import { isSearchResult, isTaskDone } from './helpers/typechecker';
+import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
 import type { sock } from '../socketClient';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
-import type { SearchErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
-import type { TaskDone } from '../../../api/src/mirrors/types/shared';
-import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
 
-const props = defineProps<{
-  socket: sock
-  visible: boolean
-}>();
-
+/** current route */
+const route = useRoute();
+/** stored settings */
+const settings = useSettingsStore();
+/** quasar */
 const $q = useQuasar();
+/** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
+/** socket */
+let socket:sock|undefined;
 
-// related to the search query
-const inputRef = ref<HTMLInputElement | null>(null); // ref to the input element
-const query = ref(''); // what's currently in the search input
-const currentQuery = ref(''); // what's been searched
-const display = ref(false); // whether the search results are displayed
-const loading = ref(false); // whether the search is in progress
+
+/** template ref for the search input */
+const inputRef = ref<HTMLInputElement | null>(null);
+/** search input model */
+const query = ref('');
+/** last search we actually proceeded */
+const currentQuery = ref('');
+/** display results */
+const display = ref(false);
+/** display a loading circle next the the input while processing the request */
+const loading = ref(false);
+/** query results from the websocket */
 const rawResults = ref([] as (SearchResult)[]); // the raw search results
-
-// filters: filter can be applied before a search is made to limit the amount of queries the server has to do
-const includedMirrors = ref<string[]>([]); // mirrors to include in the search
+/** sort results A-Z or Z-A */
 const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
-const includedLangs = ref<string[]>([]); // languages to include
-
-
-// before mouting we get available mirrors and languages
+/** list of languages available from mirrors */
 const allLangs = ref<string[]>([]);
+/** language(s) to include in the query and/or results */
+const includedLangs = ref<string[]>([]);
+/** list of available mirrors */
 const mirrorsList = ref([] as {
   name: string;
   displayName: string;
@@ -41,75 +49,10 @@ const mirrorsList = ref([] as {
   icon: string;
   langs: string[];
 }[]);
+/** mirror(s) to include in the query and/or results */
+const includedMirrors = ref<string[]>([]);
 
-onMounted(() => {
-  props.socket.emit('getMirrors', (mirrors) => {
-    mirrorsList.value = mirrors;
-    includedMirrors.value = mirrors.map(m => m.name);
-    includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
-    allLangs.value = includedLangs.value;
-  });
-});
-
-// when search page is closed we send a message to the server to stop the search
-onBeforeUnmount(() => {
-  props.socket.emit('stopSearchInMirrors');
-});
-
-// when search page is hidden we send a message to the server to stop the search
-watch(() => props.visible, (val) => {
-  if(!val) {
-    props.socket.emit('stopSearchInMirrors');
-    loading.value = false;
-  } else {
-    window.scrollTo(0,0);
-  }
-});
-
-// Typescript hack to differentiate between searchResults and searchErrorMessages
-function isSearchResult(res: SearchResult | SearchErrorMessage | TaskDone): res is SearchResult {
-  return (res as SearchResult).link !== undefined;
-}
-
-function isTaskDone(res: SearchResult | SearchErrorMessage | TaskDone): res is TaskDone {
-  return (res as TaskDone).done !== undefined;
-}
-
-// trigger search
-function research() {
-  if(!query.value || query.value.length < 3) return;
-  if(query.value === currentQuery.value) return;
-  if(inputRef.value && $q.platform.has.touch) inputRef.value.blur(); // blur the input to hide the keyboard
-  display.value = false;
-  props.socket.emit('stopSearchInMirrors'); // stop previous search
-  currentQuery.value = query.value;
-  rawResults.value = [];
-
-  const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
-
-  props.socket.emit('searchInMirrors', query.value, task.id, includedMirrors.value, includedLangs.value, (nbOfDonesToExpect) => {
-    task.nbOfDonesToExpect = nbOfDonesToExpect;
-    display.value = true;
-    loading.value = true;
-
-    props.socket.on('searchInMirrors', (id, res) => {
-      if(id === task.id) {
-        if(res && isSearchResult(res)) rawResults.value.push(res);
-        else if(res && isTaskDone(res)) {
-          task.dones++;
-          if(task.dones === task.nbOfDonesToExpect) {
-            props.socket.off('searchInMirrors');
-            loading.value = false;
-          }
-        }
-      }
-    });
-
-  });
-
-}
-
-// computed search results (it just adds mirrorinfo to each result)
+/** search results filtered and sorted */
 const results = computed(() => {
   return rawResults.value.map<SearchResult>(r => {
     const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirrorinfo.name);
@@ -127,7 +70,7 @@ const results = computed(() => {
   });
 });
 
-// are all mirrors included in the filter list?
+/** returns true if all available mirror are included in the filter */
 const includedAllMirrors = computed(() => {
   if(includedMirrors.value.length < mirrorsList.value.length) {
     if(includedMirrors.value.length === 0) return false;
@@ -136,8 +79,28 @@ const includedAllMirrors = computed(() => {
   return true;
 });
 
-// include all mirrors in the filter list
-const toggleAllMirrors = () => {
+/** returns true if all available languages are included in the filter */
+const includedAllLanguage = computed(() => {
+  if(includedLangs.value.length < allLangs.value.length) {
+    if(includedLangs.value.length === 0) return false;
+    return null;
+  }
+  return true;
+});
+
+/** include/exclude a mirror from the filter, also affects the language filter */
+function toggleMirror(mirror:string) {
+  if(includedMirrors.value.some(m => m === mirror)) {
+    includedMirrors.value = includedMirrors.value.filter(m => m !== mirror);
+  } else {
+    includedMirrors.value.push(mirror);
+  }
+  const mirrors = mirrorsList.value.filter(m => includedMirrors.value.includes(m.name));
+  includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
+}
+
+/** include/exclude all mirrors from the filter */
+function toggleAllMirrors() {
   if(includedAllMirrors.value) {
     mirrorsList.value.forEach(m => {
       if(includedMirrors.value.includes(m.name)) toggleMirror(m.name);
@@ -147,71 +110,112 @@ const toggleAllMirrors = () => {
       if(!includedMirrors.value.includes(m.name)) toggleMirror(m.name);
     });
   }
-};
+}
 
-// include/exclude a mirror in the filter list
-const toggleMirror = (mirror:string) => {
-  if(includedMirrors.value.some(m => m === mirror)) {
-    includedMirrors.value = includedMirrors.value.filter(m => m !== mirror);
+/** include/exclude a language from the filter, also affects the mirror filter */
+function toggleLang(lang:string) {
+  if(includedLangs.value.some(m => m === lang)) {
+    includedLangs.value = includedLangs.value.filter(m => m !== lang);
   } else {
-    includedMirrors.value.push(mirror);
+    includedLangs.value.push(lang);
   }
+  includedMirrors.value = mirrorsList.value.filter(m => {
+    return includedLangs.value.some(l => m.langs.includes(l));
+  }).map(m => m.name);
+}
 
-  const mirrors = mirrorsList.value.filter(m => includedMirrors.value.includes(m.name));
-  includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
-
-};
-
-// are all langs included in the filter list?
-const includedAllLanguage = computed(() => {
-  if(includedLangs.value.length < allLangs.value.length) {
-    if(includedLangs.value.length === 0) return false;
-    return null;
-  }
-  return true;
-});
-
-// include all langs in the filter list
-const toggleAllLanguages = () => {
-
+/** include/exclude all languages from the filter */
+function toggleAllLanguages() {
   if(includedAllLanguage.value) {
     allLangs.value.forEach(l => {
       if(includedLangs.value.includes(l)) toggleLang(l);
     });
   } else {
     allLangs.value.forEach(l => {
-
       if(!includedLangs.value.includes(l)) toggleLang(l);
     });
   }
-};
+}
 
-// include/exclude a lang in the filter list
-// exclude mirrors with matching langs
-const toggleLang = (lang:string) => {
-  if(includedLangs.value.some(m => m === lang)) {
-    includedLangs.value = includedLangs.value.filter(m => m !== lang);
-  } else {
-    includedLangs.value.push(lang);
-  }
+/** sends a search query to the websocket server */
+async function research() {
+  // make sure the query is at least 3 characters long and has changed since the last search
+  if(!query.value || query.value.length < 3) return;
+  if(query.value === currentQuery.value) return;
 
-  // only include mirrors which support at least one of the included langs
-  includedMirrors.value = mirrorsList.value.filter(m => {
-    return includedLangs.value.some(l => m.langs.includes(l));
-  }).map(m => m.name);
-};
+  // We don't need to reload the page to trigger/display the search results
+  // But we still need to update the url to reflect the current query
+  // this way we the user can grab the url and share it
+  const refresh = window.location.href.replace(/\?.*/, '') + `?q=${query.value}`;
+  window.history.pushState({ path: refresh }, '', refresh);
 
-// passing the showManga event to parent
-const emit = defineEmits<{
-  (event: 'showManga', item:SearchResult): void
-}>();
+  // blur the input to hide the keyboard on touch devices
+  if(inputRef.value && $q.platform.has.touch) inputRef.value.blur();
 
-const showManga = (item:SearchResult) => {
-  emit('showManga', item);
-};
+  if(!socket) socket = await useSocket(settings.server);
+  // stop any ongoing search requests
+  socket?.emit('stopSearchInMirrors');
+
+  display.value = false;
+  currentQuery.value = query.value;
+  rawResults.value = [];
+  /** helper to keep track of on going query */
+  const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
+  socket?.emit(
+    'searchInMirrors',
+    query.value,
+    task.id,
+    includedMirrors.value,
+    includedLangs.value,
+    (
+      /** how many mirrors will respond */
+      nbOfDonesToExpect,
+    ) => {
+      task.nbOfDonesToExpect = nbOfDonesToExpect;
+      display.value = true;
+      loading.value = true;
+
+      socket?.on('searchInMirrors', (id, res) => {
+        if(id === task.id) {
+          if(res && isSearchResult(res)) rawResults.value.push(res);
+          else if(res && isTaskDone(res)) {
+            // mirror sent us a 'done' message
+            task.dones++;
+            if(task.dones === task.nbOfDonesToExpect) {
+              // if all mirrors have responded, we can stop listening and stop the loading animation
+              socket?.off('searchInMirrors');
+              loading.value = false;
+            }
+          }
+        }
+      });
+    },
+  );
+}
+
+// get available mirrors before rendering and start the search if params are present
+onBeforeMount(async () => {
+  if(!socket) socket = await useSocket(settings.server);
+  const queryParam = route.query.q as string;
+  socket?.emit('getMirrors', (mirrors) => {
+    mirrorsList.value = mirrors;
+    includedMirrors.value = mirrors.map(m => m.name);
+    includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
+    allLangs.value = includedLangs.value;
+    if(queryParam) {
+      query.value = queryParam;
+      research();
+    }
+  });
+});
+
+// prevent websocket server to keep searching after unmounting
+onBeforeUnmount(async () => {
+  if(socket) socket.emit('stopSearchInMirrors');
+});
 </script>
 <template>
-  <q-card v-show="props.visible">
+  <q-card class="w-100">
     <q-card-section class="row items-center">
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
@@ -372,8 +376,6 @@ const showManga = (item:SearchResult) => {
     <q-card-section v-if="results.length">
       <searchMangasInfiniteScroll
         :results="results"
-        :loading="loading"
-        @show-manga="showManga"
       />
     </q-card-section>
   </q-card>

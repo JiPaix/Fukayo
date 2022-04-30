@@ -1,40 +1,12 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
-import searchMangas from './searchMangas.vue';
-import type { sock } from '../socketClient';
-import ShowManga from './showManga.vue';
-import type { SearchResult } from '../../../api/src/mirrors/types/search';
-import type { MangaPage } from '../../../api/src/mirrors/types/manga';
 
-const props = defineProps<{
+defineProps<{
+  /** App's logo */
   logo: string;
-  socket: sock;
 }>();
 
 const leftDrawerOpen = ref(false);
-
-const tab = ref<'' | 'search' | 'manga'>('');
-
-const mangaTabProps = ref<MangaPage & {
-  chapters?: MangaPage['chapters']
-}>();
-
-const openMangaTab = (item:SearchResult) => {
-  mangaTabProps.value = {
-    id: item.id,
-    mirrorInfo: item.mirrorinfo,
-    url:item.link,
-    lang:item.lang,
-    name:item.name,
-    covers:item.covers,
-    synopsis:item.synopsis,
-    tags:item.tags,
-    chapters:[],
-  };
-  tab.value = 'manga';
-};
-
-
 
 </script>
 
@@ -56,7 +28,7 @@ const openMangaTab = (item:SearchResult) => {
 
         <q-toolbar-title>
           <q-img
-            :src="props.logo"
+            :src="logo"
             width="40px"
             height="40px"
             fit="scale-down"
@@ -68,11 +40,11 @@ const openMangaTab = (item:SearchResult) => {
       <q-tabs align="left">
         <q-route-tab
           :label="$t('searchMangas.tab.value')"
-          @click="tab = 'search'"
+          :to="{ name: 'search'}"
         />
         <q-route-tab
           :label="'X'"
-          @click="tab = ''"
+          :to="{ name: 'home'}"
         />
       </q-tabs>
     </q-header>
@@ -93,18 +65,7 @@ const openMangaTab = (item:SearchResult) => {
       <q-page
         class="row bg-dark"
       >
-        <searchMangas
-          class="col-12 q-pt-xl"
-          :visible="tab === 'search'"
-          :socket="props.socket"
-          @show-manga="openMangaTab"
-        />
-        <ShowManga
-          v-if="tab === 'manga' && mangaTabProps !== undefined"
-          class="col-12"
-          :socket="props.socket"
-          :manga="mangaTabProps"
-        />
+        <router-view />
       </q-page>
     </q-page-container>
   </q-layout>

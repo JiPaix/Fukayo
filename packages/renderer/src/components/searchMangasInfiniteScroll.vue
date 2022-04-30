@@ -1,22 +1,21 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
 
+/** router */
+const router = useRouter();
+/** quasar */
 const $q = useQuasar();
 
+/** props */
 defineProps<{
+  /** mangas infos */
   results: SearchResult[]
-  loading: boolean
 }>();
 
-function showSynopsis (title:string, synopsis: string) {
-  $q.dialog({
-    title: title,
-    message: synopsis,
-  });
-}
-
+/** return an array of css classes depending on the screen size */
 const sizes = computed(() => {
   const classes = [];
   if($q.screen.lt.sm) classes.push('h-xs');
@@ -25,16 +24,34 @@ const sizes = computed(() => {
   return classes.join(' ');
 });
 
-const emit = defineEmits<{
-  (event: 'showManga', item:SearchResult): void
-}>();
+/**
+ * Display a dialog containing the manga's synopsis
+ * @param title manga name
+ * @param synopsis manga synopsis
+ */
+function showSynopsis (title:string, synopsis: string) {
+  $q.dialog({
+    title: title,
+    message: synopsis,
+  });
+}
 
-const showManga = (item:SearchResult) => {
-  emit('showManga', item);
-};
+/**
+ * Redirect to the manga's page
+ * @param item manga infos
+ */
+function showManga (item:SearchResult) {
+  router.push({
+    name: 'manga',
+    params: {
+      mirror: item.mirrorinfo.name,
+      url:item.link,
+      lang: item.lang,
+    },
+  });
 
+}
 </script>
-
 <template>
   <div class="q-pa-md row justify-evenly">
     <q-intersection
@@ -180,8 +197,6 @@ const showManga = (item:SearchResult) => {
               />
             </div>
           </div>
-
-
           <div class="absolute-bottom-right flex items-center">
             <img
               width="16"
@@ -204,7 +219,6 @@ const showManga = (item:SearchResult) => {
   background-size:cover;
   background-position: 50% 50%;
 }
-
 .h-lg {
   height: 300px!important;
 }
