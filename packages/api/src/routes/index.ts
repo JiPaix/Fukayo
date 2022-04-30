@@ -86,7 +86,7 @@ export default class IOWrapper {
           // and it's not expired
           if(findRefresh.expire > Date.now()) {
             // if an access token exists and it's parent is the same as the refresh token
-            if(findAccess && findAccess.token === findRefresh.token) {
+            if(findAccess && findAccess.parent === findRefresh.token) {
               // generate a new access token
               this.authorizedTokens.splice(this.authorizedTokens.indexOf(findAccess), 1);
               const token = crypto.randomBytes(32).toString('hex');
