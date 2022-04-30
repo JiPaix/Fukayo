@@ -1,52 +1,8 @@
 import {createApp} from 'vue';
-import App from '/@/App.vue';
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
+import App from './App.vue';
 
-// locales
-import { createI18n } from 'vue-i18n';
-import en from './locales/en.json';
-import fr from './locales/fr.json';
-
-const i18n = createI18n({
-  legacy: false,
-  locale: navigator.language,
-  globalInjection: true,
-  fallbackLocale: 'en',
-  messages: {
-    en,
-    fr,
-  },
-});
-
-// dayjs
-import dayjs from 'dayjs';
-import dayjsrelative from 'dayjs/plugin/relativeTime';
-import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
-import 'dayjs/locale/en';
-import 'dayjs/locale/fr';
-const availableLanguages = ['en', 'fr'];
-
-const localeHelper = (lang:string) => {
-  const locale = availableLanguages.find(locale => {
-    if (locale === lang) {
-      return true;
-    }
-    const regex = new RegExp(`${locale}-.*`);
-    return regex.test(lang);
-  });
-  return locale ? locale : 'en';
-};
-
-dayjs.extend(dayjsrelative);
-dayjs.extend(dayjslocalizedformat);
-dayjs.locale(localeHelper(navigator.language));
-
-// quasar
-import { Quasar, Dialog, Notify, Loading } from 'quasar';
-import '@quasar/extras/roboto-font/roboto-font.css';
-import '@quasar/extras/material-icons/material-icons.css';
-import '@quasar/extras/material-icons-outlined/material-icons-outlined.css';
-import '@quasar/extras/material-icons-round/material-icons-round.css';
-import 'quasar/dist/quasar.css';
+const myApp = createApp(App);
 
 // pinia stores
 import { createPinia } from 'pinia';
@@ -54,11 +10,69 @@ import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);
 
-// flags
-import 'flag-icons';
+myApp.use(pinia);
 
-// init
-const myApp = createApp(App);
+// router
+const Search = () => import('./components/searchMangas.vue');
+const Library = () => import('./components/MangaLibrary.vue');
+const Manga = () => import('./components/showManga.vue');
+const router = createRouter({
+  history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
+  routes: [
+      {
+        name: 'home',
+        path: '/',
+        component: Library,
+      },
+      {
+        name: 'search',
+        path: '/search',
+        component: Search,
+        props: route => ({ query: route.query.q }),
+      },
+      {
+        name: 'manga',
+        path: '/manga/:mirror/:lang/:url',
+        component: Manga,
+      },
+    ],
+});
+
+myApp.use(router);
+
+// localization
+import { findLocales } from './locales/lib';
+import { setupI18n } from './locales/lib';
+import dayjs from 'dayjs';
+import dayjsrelative from 'dayjs/plugin/relativeTime';
+import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
+import type { availableLanguages } from './locales/lib/index';
+
+const lang = findLocales(navigator.language) as typeof availableLanguages[0];
+
+/**
+ * DayJS doesn't support locales lazy loading.
+ * for consistency sake, imported locales must be part of the i18n global localization.
+ * @see availableLanguages
+ */
+import 'dayjs/locale/en';
+import 'dayjs/locale/fr';
+
+dayjs.extend(dayjsrelative);
+dayjs.extend(dayjslocalizedformat);
+dayjs.locale(lang);
+
+myApp.provide('dayJS', dayjs);
+myApp.use(setupI18n({ locale: lang }));
+
+// quasar
+import { Quasar, Dialog, Notify, Loading } from 'quasar';
+import('@quasar/extras/roboto-font/roboto-font.css');
+import('@quasar/extras/material-icons/material-icons.css');
+import('@quasar/extras/material-icons-outlined/material-icons-outlined.css');
+import('@quasar/extras/material-icons-round/material-icons-round.css');
+import('quasar/dist/quasar.css');
+
 myApp.use(Quasar, {
   plugins: {Dialog, Notify, Loading},
   config: {
@@ -76,8 +90,12 @@ myApp.use(Quasar, {
     },
   },
 });
-myApp.use(pinia);
-myApp.use(i18n);
-myApp.provide('dayJS', dayjs);
-// myApp.use(vuetify);
+
+
+
+// flags
+import('flag-icons/css/flag-icons.css');
+
+
+// init
 myApp.mount('#app');
