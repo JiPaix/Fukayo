@@ -26,6 +26,7 @@ export interface ClientToServerEvents {
   getMirrors: (callback: (m: mirrorInfo[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
+  stopShowManga: () => void;
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void) => void;
 }

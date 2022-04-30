@@ -99,6 +99,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
   }
 
   async manga(url:string, lang:string, socket:socketInstance, id:number)  {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowManga', () => {
+      console.log('[api]', 'show-manga canceled');
+      cancel = true;
+    });
+
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
     if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
@@ -114,6 +121,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];
 
+      if(cancel) return;
       // mangahasu images needs to be downloaded.
       const coverLink = $('.info-img > img').attr('src');
       if(coverLink) {
@@ -138,7 +146,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const chapters:MangaPage['chapters'] = [];
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {
-
+        if(cancel) break;
         const current_chapter = $(el).text().trim();
         const chaplink = $(el).attr('href');
         if(!chaplink) continue;
@@ -161,6 +169,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
         if(release) chapters.push(release);
       }
+      if(cancel) return;
       return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
     } catch(e) {
       // we catch any errors because the client needs to be able to handle them

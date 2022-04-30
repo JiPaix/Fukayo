@@ -109,6 +109,14 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   async manga(link:string, lang:string, socket:socketInstance, id:number) {
+
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowManga', () => {
+      console.log('[api]', 'show-manga canceled');
+      cancel = true;
+    });
+
     // link = relative url
     // url = full url (hostname+path)
     const url = `${this.host}${link}`;
@@ -121,7 +129,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
     // manga id = "mirror_name/lang/link-of-manga-page"
     const mangaId = `${this.name}/${this.langs[0]}${link}`;
-
+    if(cancel) return;
     try {
       const $ = await this.fetch({
         url,
@@ -161,6 +169,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       const chapters:MangaPage['chapters'] = [];
       const tablesize = $('ul.detail-main-list > li > a').length;
       $('ul.detail-main-list > li > a').each((i, el) => {
+        if(cancel) return;
         // making sure the link match the pattern we're expecting
         const chapterHref = $(el).attr('href');
         if(!chapterHref || !this.isChapterPage(chapterHref)) return;
@@ -193,11 +202,12 @@ class Mangafox extends Mirror implements MirrorInterface {
         });
 
       });
-
+      if(cancel) return;
       // returning the manga page based on MangaPage model
       return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
 
     } catch(e) {
+
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
