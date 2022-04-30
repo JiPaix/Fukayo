@@ -8,6 +8,5 @@ export type SearchResult = {
   link: string,
   covers:string[],
   synopsis?: string,
-  tags?: string[]
   last_release?: {name?:string, volume?: number, chapter?: number},
 }
