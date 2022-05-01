@@ -116,19 +116,6 @@ const setupPreloadPackageWatcher = ({ws}) =>
     },
   });
 
-const setupApiPackageWatcher = ({ws}) =>
-  getWatcher({
-    name: 'reload-page-on-api-package-change',
-    configFile: 'packages/api/vite.config.js',
-    writeBundle() {
-      if(process && process.send) process.send({type: 'shutdown'});
-      ws.send({
-        type: 'full-reload',
-      });
-
-    },
-  });
-
 (async () => {
   try {
     const viteDevServer = await createServer({
@@ -140,7 +127,6 @@ const setupApiPackageWatcher = ({ws}) =>
 
     await setupPreloadPackageWatcher(viteDevServer);
     await setupMainPackageWatcher(viteDevServer);
-    await setupApiPackageWatcher(viteDevServer);
   } catch (e) {
     console.error(e);
     process.exit(1);
