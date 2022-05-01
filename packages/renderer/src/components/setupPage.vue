@@ -131,6 +131,7 @@ async function startServer () {
         >
           <q-input
             v-model="settings.server.login"
+            name="login"
             filled
             dense
             :rules="[isLoginValid]"
@@ -142,6 +143,7 @@ async function startServer () {
 
           <q-input
             v-model="password"
+            name="password"
             filled
             dense
             bottom-slots
@@ -163,9 +165,9 @@ async function startServer () {
 
           <q-input
             v-model.number="settings.server.port"
+            name="port"
             filled
             dense
-            name="port"
             type="number"
             :rules="[isPortValid]"
             bottom-slots
@@ -215,6 +217,7 @@ async function startServer () {
                 >
                   <q-item-section avatar>
                     <q-radio
+                      id="no-ssl"
                       v-model="settings.server.ssl"
                       val="false"
                       color="negative"
@@ -234,6 +237,7 @@ async function startServer () {
                 >
                   <q-item-section avatar>
                     <q-radio
+                      id="app-ssl"
                       v-model="settings.server.ssl"
                       val="app"
                       color="warning"
@@ -263,6 +267,7 @@ async function startServer () {
                     top
                   >
                     <q-radio
+                      id="user-ssl"
                       v-model="settings.server.ssl"
                       val="provided"
                       color="positive"
@@ -303,6 +308,7 @@ async function startServer () {
           </div>
           <div class="row justify-end">
             <q-btn
+              id="start"
               type="submit"
               size="xl"
               round
