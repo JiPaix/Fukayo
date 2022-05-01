@@ -31,7 +31,10 @@
     "typecheck:main": "tsc --noEmit -p packages/main/tsconfig.json",
     "typecheck:preload": "tsc --noEmit -p packages/preload/tsconfig.json",
     "typecheck:renderer": "npm run build:preload:types && vue-tsc --noEmit -p packages/renderer/tsconfig.json",
-    "typecheck": "npm run typecheck:main && npm run typecheck:preload && npm run typecheck:renderer && npm run typecheck:api"
+    "typecheck": "npm run typecheck:main && npm run typecheck:preload && npm run typecheck:renderer && npm run typecheck:api",
+    "release:patch": "node ./scripts/release.js --patch",
+    "release:minor": "node ./scripts/release.js --minor",
+    "release:major": "node ./scripts/release.js --major"
   },
   "devDependencies": {
     "@intlify/vite-plugin-vue-i18n": "^3.4.0",
