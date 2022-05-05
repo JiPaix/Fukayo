@@ -34,7 +34,10 @@
     "typecheck": "npm run typecheck:main && npm run typecheck:preload && npm run typecheck:renderer && npm run typecheck:api",
     "release:patch": "node ./scripts/release.js --patch",
     "release:minor": "node ./scripts/release.js --minor",
-    "release:major": "node ./scripts/release.js --major"
+    "release:major": "node ./scripts/release.js --major",
+    "release:patch:dry": "node ./scripts/release.js --patch --dry",
+    "release:minor:dry": "node ./scripts/release.js --minor --dry",
+    "release:major:dry": "node ./scripts/release.js --major --dry"
   },
   "devDependencies": {
     "@intlify/vite-plugin-vue-i18n": "^3.4.0",

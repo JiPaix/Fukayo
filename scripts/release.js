@@ -55,14 +55,14 @@ const args = process.argv.slice(2);
     else return console.log('invalid arg');
 
     const oldVersion = latest.replace('-beta', '').replace('v', '');
-    const newVersion = `v${semantic.join('.')}`;
-    const newPackage = readFileSync('./package.json').toString().replace(`"version": "${oldVersion}",`, `"version": "${newVersion.replace('v', '')}",`);
-
+    const newVersion = `${semantic.join('.')}`;
+    const newPackage = readFileSync('./package.json').toString().replace(`"version": "${oldVersion}",`, `"version": "${newVersion}",`);
+    if(args[1] === '--dry') return console.log(`Would update package.json from ${oldVersion} to ${newVersion}`);
     writeFileSync('./package.json', newPackage);
     const {stderr} = await exec('npm install');
     if(stderr) return console.log(stderr);
     await git.add(['./package.json', './package-lock.json']);
-    await git.commit(`beta ${newVersion.replace('v', '')}`, ['./package.json', './package-lock.json']);
+    await git.commit(`beta ${newVersion}`, ['./package.json', './package-lock.json']);
     await git.push();
   } catch(e) {
     console.error(e);
