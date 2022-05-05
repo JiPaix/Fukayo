@@ -1,38 +1,12 @@
-import type { ChapterPage } from './../mirrors/types/chapter';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './../mirrors/types/errorMessages';
-import type { MangaPage } from './../mirrors/types/manga';
-import type { Socket } from 'socket.io';
+
+import crypto from 'crypto';
+import mirrors from '../mirrors';
 import { Server as ioServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
-import crypto from 'crypto';
-import mirrors from '../mirrors';
-import type { SearchResult } from '../mirrors/types/search';
-import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
-import type { mirrorInfo, TaskDone } from '../mirrors/types/shared';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-
-export interface ServerToClientEvents {
-  authorized: () => void;
-  unauthorized: () => void;
-  token: (acessToken: string) => void;
-  refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
-  showManga: (id:number, manga:MangaPage|MangaErrorMessage) =>void
-  showChapter: (id:number, chapter:ChapterPage|ChapterPageErrorMessage|ChapterErrorMessage) => void;
-}
-
-export interface ClientToServerEvents {
-  getMirrors: (callback: (m: mirrorInfo[]) => void) => void;
-  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
-  stopSearchInMirrors: () => void;
-  stopShowManga: () => void;
-  stopShowChapter: () => void;
-  showManga: (id:number, mirror:string, lang:string, url:string) => void;
-  showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void) => void;
-}
-
-export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
+import type { ClientToServerEvents, ServerToClientEvents } from './types/socketEvents';
+import type { socketInstance } from './types/socketInterface';
 
 export default class IOWrapper {
 

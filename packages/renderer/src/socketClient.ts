@@ -1,5 +1,5 @@
 import type { Socket } from 'socket.io-client';
-import type { ServerToClientEvents, ClientToServerEvents } from '../../api/src/routes/index';
+import type { ServerToClientEvents, ClientToServerEvents } from '../../api/src/routes/types/socketEvents';
 import io from 'socket.io-client';
 import type { authByLogin } from './components/helpers/login';
 

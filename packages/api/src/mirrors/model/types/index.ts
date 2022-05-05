@@ -1,7 +1,5 @@
-import type { mirrorInfo } from './../../types/shared';
-import type { ChapterPage } from '../../types/chapter';
-import type { ChapterPageErrorMessage } from '../../types/errorMessages';
-import type { socketInstance } from '../../../routes';
+import type { mirrorInfo } from '/@/mirrors/types/shared';
+import type { socketInstance } from '/@/routes/types/socketInterface';
 
 export type MirrorConstructor = {
   /**

@@ -1,9 +1,9 @@
 import type { MangaPage } from './types/manga';
 import Mirror from './model';
-import type { ChapterPage } from './types/chapter';
 import icon from './icons/mangafox.png';
 import type MirrorInterface from './model/types/index';
-import type { socketInstance } from '../routes';
+import type { socketInstance } from '/@/routes/types/socketInterface';
+
 class Mangafox extends Mirror implements MirrorInterface {
 
   options: { adult: boolean };
