@@ -80,8 +80,8 @@ const setupMainPackageWatcher = ({config: {server}}) => {
       spawnProcess.stdout.on('data', d => {
         const data = d.toString().trim();
         if(!data) return;
-        if (data.includes('[api]')) apilogger.warn(data.replace(/\[api\]\s*/g, ''), {timestamp: true});
-        else logger.warn(data, {timestamp: true});
+        if (data.includes('[api]')) apilogger.info(data.replace(/\[api\]\s*/g, ''), {timestamp: true});
+        else logger.info(data, {timestamp: true});
       });
 
       spawnProcess.stderr.on('data', d => {

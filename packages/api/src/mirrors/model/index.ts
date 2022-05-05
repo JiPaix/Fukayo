@@ -59,6 +59,10 @@ export default class Mirror {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }
 
+  protected logger(...args: unknown[]) {
+    if(process.env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
+  }
+
   protected async downloadImage(url:string) {
     // https://github.com/sindresorhus/file-type/issues/535#issuecomment-1065952695
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports

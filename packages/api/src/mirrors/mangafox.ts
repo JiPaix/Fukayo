@@ -22,21 +22,27 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   isMangaPage(str:string) {
-    return /^\/manga\/\w+(\/)?$/gmi.test(str);
+    const res = /^\/manga\/\w+(\/)?$/gmi.test(str);
+    if(!res) this.logger('not a manga page', str);
+    return res;
   }
   isChapterPage(str:string) {
-    return /\/manga\/\w+(\/v\d+)?\/c\d+\/\d+\.html$/gmi.test(str);
+    const res = /\/manga\/\w+(\/v.+)?\/c([0-9]+(\.))?[0-9]+?\/\d+\.html$/gmi.test(str);
+    if(!res) this.logger('not a chapter page', str);
+    return res;
   }
 
   getChapterInfoFromString(str:string) {
-    return /^(Vol\.(.+)\s)?Ch\.([0-9]+(\.)?([0-9]+)?)(\s-\s(.*))?$/gmi.exec(str);
+    const res = /^(Vol\.(.+)\s)?Ch\.([0-9]+(\.)?([0-9]+)?)(\s-\s(.*))?$/gmi.exec(str);
+    if(!res) this.logger('not a chapter string', str);
+    return res;
   }
 
   async search(query:string, socket: socketInstance, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopSearchInMirrors', () => {
-      console.log('[api]', 'search canceled');
+      this.logger('search canceled');
       cancel = true;
     });
 
@@ -100,6 +106,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       }
       if(cancel) return; // 3rd obligatory check
     } catch(e) {
+        this.logger('error while searching mangas', e);
         // we catch any errors because the client needs to be able to handle them
         if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
         else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
@@ -113,7 +120,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopShowManga', () => {
-      console.log('[api]', 'show-manga canceled');
+      this.logger('fetching manga canceled');
       cancel = true;
     });
 
@@ -123,9 +130,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
     // safeguard, we return an error if the link is not a manga page
     const isLinkaPage = this.isMangaPage(link);
-    if(!isLinkaPage) {
-      return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
-    }
+    if(!isLinkaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
 
     // manga id = "mirror_name/lang/link-of-manga-page"
     const mangaId = `${this.name}/${this.langs[0]}${link}`;
@@ -207,11 +212,10 @@ class Mangafox extends Mirror implements MirrorInterface {
       return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
 
     } catch(e) {
-
+      this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
-      console.log('[api]', 'mangafox error', e);
       return socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
   }
@@ -220,8 +224,8 @@ class Mangafox extends Mirror implements MirrorInterface {
   async chapter(link:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowManga', () => {
-      console.log('[api]', 'show-manga canceled');
+    socket.once('stopShowChapter', () => {
+      this.logger('fetching chapter canceled');
       cancel = true;
     });
     // link = relative url
@@ -293,10 +297,10 @@ class Mangafox extends Mirror implements MirrorInterface {
         }
       }
     } catch(e) {
+      this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
-      console.log('[api]', 'mangafox error', e);
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
   }

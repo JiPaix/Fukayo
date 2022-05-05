@@ -21,13 +21,19 @@ class MangaHasu extends Mirror implements MirrorInterface {
   }
 
   isMangaPage(url: string): boolean {
-      return /^\/.*-\w{3,4}-p\d+\.html$/gmi.test(url);
+    const res = /^\/.*-\w{3,4}-p\d+\.html$/gmi.test(url);
+    if(!res) this.logger('not a manga page:', url);
+    return res;
   }
   isChapterPage(url: string): boolean {
-      return /\/.*\/.*-\w{3,4}-c\d+\.html$/gmi.test(url);
+    const res = /\/.*\/.*-\w{3,4}-c\d+\.html$/gmi.test(url);
+    if(!res) this.logger('not a chapter page:', url);
+    return res;
   }
   getChapterInfoFromString(str:string) {
-    return /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
+    const res = /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
+    if(!res) this.logger('not a chapter string:', str);
+    return res;
   }
 
   async search(query:string, socket: socketInstance, id:number) {
@@ -35,7 +41,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
       socket.once('stopSearchInMirrors', () => {
-        console.log('[api]', 'search canceled');
+        this.logger('search canceled');
         cancel = true;
       });
 
@@ -91,10 +97,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(cancel) return; // 3rd obligatory check
       socket.emit('searchInMirrors', id, { done: true });
     } catch(e) {
-          if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
-          else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
-          else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
-          socket.emit('searchInMirrors', id, { done: true });
+      this.logger('error while searching mangas', e);
+      if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
+      else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+      socket.emit('searchInMirrors', id, { done: true });
     }
   }
 
@@ -102,7 +109,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopShowManga', () => {
-      console.log('[api]', 'show-manga canceled');
+      this.logger('fetching manga canceled');
       cancel = true;
     });
 
@@ -172,6 +179,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(cancel) return;
       return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
     } catch(e) {
+      this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
@@ -182,8 +190,8 @@ class MangaHasu extends Mirror implements MirrorInterface {
   async chapter(url:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowManga', () => {
-      console.log('[api]', 'show-manga canceled');
+    socket.once('stopShowChapter', () => {
+      this.logger('fetching chapter canceled');
       cancel = true;
     });
 
@@ -195,7 +203,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
     if(cancel) return;
     try {
-      console.log('[api]', 'fetching:', url);
       const $ = await this.fetch({
         url,
         waitForSelector: '.img-chapter',
@@ -215,10 +222,10 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
       }
     } catch(e) {
+      this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
-      console.log('[api]', 'mangahasu error', e);
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
   }
