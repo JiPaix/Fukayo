@@ -182,6 +182,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         // a regex that help us get the volume, chapter number and chapter name
         const match = this.getChapterInfoFromString($('.detail-main-list-main > p.title3', el).text());
         if(!match || typeof match !== 'object') return;
+
         // getting capture groups
         const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
 
@@ -201,7 +202,8 @@ class Mangafox extends Mirror implements MirrorInterface {
         chapters.push({
           name: chapterNameTrim,
           number: chapterNumberFloat,
-          volume: volumeNumberInt,
+          // we test if the volume is a number, sometimes volume number is TBE/TBA or other weird stuff
+          volume: volumeNumberInt ? isNaN(volumeNumberInt) ? undefined : volumeNumberInt : undefined,
           url: chapterUrl,
           date,
         });
@@ -221,7 +223,7 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
-  async chapter(link:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+  async chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopShowChapter', () => {
@@ -234,9 +236,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);
-    if(!isLinkaChapter) {
-      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
-    }
+    if(!isLinkaChapter) return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
 
     if(cancel) return;
     try {
@@ -247,7 +247,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       }, false);
 
       // we gather every parameters needed to build the request to the actual image
-      const imagecount = this.getVariableFromScript<number>('imagecount', $.html());
+      const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
       const chapfunurl = url.substring(0, url.lastIndexOf('/') + 1) + 'chapterfun.ashx';
       const cid = this.getVariableFromScript<number>('chapterid', $.html());
       let mkey: unknown = '';
@@ -255,11 +255,15 @@ class Mangafox extends Mirror implements MirrorInterface {
           mkey = $('#dm5_key', $.html()).val();
       }
 
+      // return the number of pages to expect (1-based)
       if(cancel) return;
-      callback(imagecount);
+      if(callback) callback(typeof retryIndex === 'number' ? 1 : imagecount);
 
-      for(const [i] of [...Array(imagecount-1)].entries()) {
+      for(const [i] of [...Array(imagecount)].entries()) {
         if(cancel) break;
+        // if the user requested a specific page, we will skip the others
+        if(typeof retryIndex === 'number' && i !== retryIndex) continue;
+
         // build parameters for the request
         const params = {
           cid: cid,
@@ -339,10 +343,6 @@ class Mangafox extends Mirror implements MirrorInterface {
     }
     while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
     return p;
-}
-
-  async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
-    throw Error('not impt');
   }
 }
 

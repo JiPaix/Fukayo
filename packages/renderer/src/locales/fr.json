@@ -143,6 +143,12 @@
       "value": "Language"
     }
   },
+  "showChapter": {
+    "reload": {
+      "desc": "The reload broken image button label",
+      "value": "Recharger"
+    }
+  },
   "mangas": {
     "chapter": {
       "desc": "The chapter label",

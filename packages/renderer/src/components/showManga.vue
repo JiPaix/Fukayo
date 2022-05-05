@@ -132,7 +132,6 @@ async function startChapterFetch(chapterIndex:number) {
       if(id !== id) return; // should not happen
       if(isChapterPage(res) || isChapterPageErrorMessage(res)) {
         images.value.push(res);
-        if(res.lastpage) socket?.off('showChapter');
       } else if(isChapterErrorMessage(res)) {
         // TODO: show error message
         // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
@@ -141,6 +140,21 @@ async function startChapterFetch(chapterIndex:number) {
       }
     });
   });
+}
+
+async function reloadChapterImage(chapterIndex:number, pageIndex:number) {
+  if(!manga.value) return; // should not happen
+  // prepare and send the request
+  if(!socket) socket = await useSocket(settings.server);
+  const id = Date.now();
+  socket?.emit('showChapter', id, manga.value.mirrorInfo.name, manga.value.lang, manga.value.chapters[chapterIndex].url, () => {
+    socket?.on('showChapter', (id, res) => {
+      if(id !== id) return; // should not happen
+      if(isChapterPage(res) || isChapterPageErrorMessage(res)) {
+        images.value[pageIndex] = res;
+      }
+    });
+  }, pageIndex);
 }
 
 /**
@@ -176,6 +190,8 @@ onMounted(() => {
  */
 onBeforeUnmount(() => {
   socket?.emit('stopShowManga');
+  socket?.off('showChapter');
+  socket?.off('showManga');
 });
 </script>
 <template>
@@ -217,8 +233,21 @@ onBeforeUnmount(() => {
       </div>
       <!-- Mirror and Language -->
       <div class="flex items-center">
-        <span class="q-mr-sm">{{ $t('mangas.source.value') }}</span>
-        <span class="text-weight-medium">{{ manga.mirrorInfo.displayName }}</span>
+        <span class="q-mr-sm">{{ $t('mangas.source.value') }}: </span>
+        <a
+          class="text-weight-medium text-white"
+          style="text-decoration: none;"
+          :href="manga.mirrorInfo.host+manga.url"
+          target="_blank"
+        >
+          {{ manga.mirrorInfo.displayName }}
+
+
+
+          <q-icon name="open_in_new" />
+
+
+        </a>
         <img
           :src="manga.mirrorInfo.icon"
           :alt="manga.mirrorInfo.displayName"
@@ -226,7 +255,7 @@ onBeforeUnmount(() => {
         >
       </div>
       <div class="flex items-center">
-        {{ $t('languages.language.value') }}
+        {{ $t('languages.language.value') }}:
         <span class="text-weight-medium q-ml-sm">{{ $t('languages.'+manga.lang+'.value') }}</span>
         <span
           class="fi q-ml-sm"
@@ -342,6 +371,7 @@ onBeforeUnmount(() => {
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
         :sorted-images="sortedImages"
         @hide="hideChapterComp"
+        @reload="reloadChapterImage"
       />
     </q-dialog>
   </q-card>

@@ -1,27 +1,69 @@
 <script lang="ts" setup>
-import { isChapterPageErrorMessage } from './helpers/typechecker';
+import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { isChapterPage, isChapterPageErrorMessage } from './helpers/typechecker';
 import type { ChapterPage } from '../../../api/src/mirrors/types/chapter';
 import type { ChapterPageErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
 import type { MangaPage } from '../../../api/src/mirrors/types/manga';
 
+/** vue-i18n */
+const $t = useI18n().t.bind(useI18n());
 /** emit */
-const emit = defineEmits<{ (event: 'hide'): void }>();
+const emit = defineEmits<{
+  (event: 'hide'): void
+  (event: 'reload', chapterIndex:number, pageIndex:number): void
+}>();
 
 /** props */
-defineProps<{
+const props = defineProps<{
   /** the current manga infos */
   manga: MangaPage
   /** manga.chapter index to display on screen */
   chapterSelectedIndex: number
-  /** the number of pages expected to receive */
+  /** the number of pages expected to receive (1-based) */
   nbOfImagesToExpectFromChapter: number
   /** images sorted by index */
   sortedImages: (ChapterPage | ChapterPageErrorMessage)[]
 }>();
+
+/** displays a progress bar while images are loading */
+const showProgressBar = ref(true);
+
+/** color of the progress bar, orange = loading, red = has erroneous page */
+const progressBarColor = ref<'orange'|'negative'>('orange');
+
+/** hide the progress bar once all images are loaded */
+watch(props.sortedImages, (newValue) => {
+  if (newValue.length === props.nbOfImagesToExpectFromChapter) {
+    setTimeout(() => {
+      if(newValue.some(isChapterPageErrorMessage)) {
+        progressBarColor.value = 'negative';
+      } else {
+        showProgressBar.value = false;
+      }
+    }, 500); // matches q-linear-progress animation-speed
+  }
+});
+
+/** Array that acts as a buffer for props.sortedImages */
+const images = computed(() =>
+  Array.from({length: props.nbOfImagesToExpectFromChapter}, (k, v) => v)
+    .map((k, v) => props.sortedImages[v] || { index: v }),
+);
+
+/** Sates for "reload page" buttons */
+const reloaders = ref(Array.from({length: props.nbOfImagesToExpectFromChapter}, () => false));
+
+/** reload page */
+function reload(pageIndex: number) {
+  reloaders.value[pageIndex] = true;
+  emit('reload', props.chapterSelectedIndex, pageIndex);
+}
+
 </script>
 <template>
   <q-layout
-    view="hHh Lpr lff"
+    view="lHh lpr lFf"
     container
     class="shadow-2 rounded-borders"
   >
@@ -88,35 +130,76 @@ defineProps<{
         </span>
       </q-bar>
     </q-header>
-
+    <q-footer
+      elevated
+      class="bg-transparent"
+    >
+      <q-linear-progress
+        v-if="sortedImages.length && showProgressBar"
+        :color="progressBarColor"
+        :value="sortedImages.length/nbOfImagesToExpectFromChapter"
+        animation-speed="500"
+      />
+    </q-footer>
     <q-page-container>
       <q-page>
         <div
-          v-for="n in nbOfImagesToExpectFromChapter"
-          :key="n"
+          v-for="img in images"
+          :key="img.index"
         >
-          <div v-if="sortedImages[n]">
-            <q-img
-              v-if="!isChapterPageErrorMessage(sortedImages[n])"
-              :src="(sortedImages[n] as ChapterPage).src"
-            >
+          <q-img
+            :src="img && !isChapterPageErrorMessage(img) && isChapterPage(img) ? (img).src : 'undefined'"
+          >
+            <template #error>
               <div
-                class="absolute-bottom text-subtitle1 text-center"
-                style="background:none;"
+                v-if="(img as ChapterPage).src !== undefined"
+                class="absolute-full flex flex-center bg-negative text-white"
               >
-                <q-chip>
-                  {{ n }}/{{ nbOfImagesToExpectFromChapter }}
-                </q-chip>
+                <div>
+                  <q-btn
+                    icon-right="broken_image"
+                    :loading="reloaders[img.index]"
+                    color="white"
+                    text-color="black"
+                    @click="reload(img.index)"
+                  >
+                    {{ $t('showChapter.reload.value') }}
+                  </q-btn>
+                  <div
+                    v-if="isChapterPageErrorMessage(img)"
+                    class="text-center"
+                  >
+                    {{ img.error }}
+                  </div>
+                </div>
               </div>
-            </q-img>
-            <q-skeleton
-              v-else
-              height="600px"
-            />
-          </div>
-          <div v-else>
-            <q-skeleton height="600px" />
-          </div>
+              <div
+                v-else
+                class="absolute-full flex flex-center bg-dark text-white"
+              >
+                <div class="flex column items-center">
+                  <q-spinner-facebook
+                    size="10em"
+                    color="orange"
+                  />
+                  <q-chip
+                    color="white"
+                    text-color="black"
+                  >
+                    {{ img.index+1 }}/{{ nbOfImagesToExpectFromChapter }}
+                  </q-chip>
+                </div>
+              </div>
+            </template>
+            <div
+              class="absolute-bottom text-subtitle1 text-center"
+              style="background:none;"
+            >
+              <q-chip>
+                {{ img.index+1 }}/{{ nbOfImagesToExpectFromChapter }}
+              </q-chip>
+            </div>
+          </q-img>
         </div>
       </q-page>
     </q-page-container>

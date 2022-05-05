@@ -185,7 +185,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     }
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance, id:number, callback: (nbOfPagesToExpect:number)=>void) {
+  async chapter(url:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopShowChapter', () => {
@@ -206,11 +206,16 @@ class MangaHasu extends Mirror implements MirrorInterface {
         waitForSelector: '.img-chapter',
       }, false);
 
+      // return the number of pages to expect (1-based)
       const nbOfPages = $('.img-chapter img').length;
-      callback(nbOfPages);
+      if(callback) callback(nbOfPages);
+
       if(cancel) return;
       for(const [i, el] of $('.img-chapter img').toArray().entries()) {
         if(cancel) break;
+        // if the user requested a specific page, we will skip the others
+        if(typeof retryIndex === 'number' && i !== retryIndex) continue;
+
         const imgLink = $(el).attr('src');
         if(imgLink) {
           const img = await this.downloadImage(imgLink);
@@ -226,10 +231,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-  }
-
-  async retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage> {
-    throw Error('not impt');
   }
 }
 

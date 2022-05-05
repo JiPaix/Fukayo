@@ -135,6 +135,12 @@
       "value": "All"
     }
   },
+  "showChapter": {
+    "reload": {
+      "desc": "The reload broken image button label",
+      "value": "Reload"
+    }
+  },
   "mangas": {
     "chapter": {
       "desc": "The chapter label",

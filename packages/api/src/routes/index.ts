@@ -144,8 +144,8 @@ export default class IOWrapper {
     /**
      * Show chapters pages
      */
-    socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void) => {
-      mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback);
+    socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => {
+      mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback, retryIndex);
     });
   }
 
