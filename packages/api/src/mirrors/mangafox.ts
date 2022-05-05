@@ -97,7 +97,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           id: mangaId,
           mirrorinfo: this.mirrorInfo,
           name,
-          link,
+          url:link,
           covers,
           synopsis,
           last_release,

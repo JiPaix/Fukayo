@@ -86,7 +86,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           id: mangaId,
           mirrorinfo: this.mirrorInfo,
           name,
-          link,
+          url:link,
           covers,
           last_release,
           lang: this.langs[0],

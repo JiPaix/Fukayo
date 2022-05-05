@@ -45,7 +45,7 @@ function showManga (item:SearchResult) {
     name: 'manga',
     params: {
       mirror: item.mirrorinfo.name,
-      url:item.link,
+      url:item.url,
       lang: item.lang,
     },
   });
@@ -56,7 +56,7 @@ function showManga (item:SearchResult) {
   <div class="q-pa-md row justify-evenly">
     <q-intersection
       v-for="item in results"
-      :key="item.link"
+      :key="item.url"
       class="col-xs-12 col-sm-5 q-mt-xl col-lg-3"
       :class="sizes"
       margin="500px 500px 500px 500px"

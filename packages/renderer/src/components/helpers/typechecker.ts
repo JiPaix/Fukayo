@@ -17,7 +17,7 @@ export function isChapterPageErrorMessage(res: ChapterPage | ChapterPageErrorMes
 }
 
 export function isSearchResult(res: SearchResult | SearchErrorMessage | TaskDone): res is SearchResult {
-  return (res as SearchResult).link !== undefined;
+  return (res as SearchResult).url !== undefined;
 }
 
 export function isTaskDone(res: SearchResult | SearchErrorMessage | TaskDone): res is TaskDone {

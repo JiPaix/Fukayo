@@ -5,7 +5,7 @@ export type SearchResult = {
   mirrorinfo:mirrorInfo,
   lang: string,
   name: string,
-  link: string,
+  url: string,
   covers:string[],
   synopsis?: string,
   last_release?: {name?:string, volume?: number, chapter?: number},
