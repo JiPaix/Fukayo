@@ -14,12 +14,33 @@ export default class Mirror {
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
+  /** slug name */
   name: string;
+  /** full name */
   displayName: string;
+  /**
+   * hostname without ending slash
+   * @example 'https://www.mirror.com'
+   */
   host: string;
+  /**
+   * Whether the mirror is enabled
+   */
   enabled: boolean;
+  /**
+   * Languages supported by the mirror
+   *
+   * ISO 639-1 codes
+   */
   langs: string[];
+  /**
+   * Time to wait in ms between requests
+   */
   waitTime: number;
+  /**
+   * Mirror specific option
+   * @example { adult: true, lowres: false }
+   */
   options: Record<string, unknown> | undefined;
 
   constructor(opts: MirrorConstructor) {
