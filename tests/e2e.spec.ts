@@ -1,6 +1,6 @@
 import type {ElectronApplication} from 'playwright';
 import {_electron as electron} from 'playwright';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 let electronApp: ElectronApplication;
 
