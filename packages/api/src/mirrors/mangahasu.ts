@@ -2,59 +2,64 @@ import Mirror from './model';
 import icon from './icons/mangahasu.png';
 import type MirrorInterface from './model/types';
 import type { SearchResult } from './types/search';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage } from './types/errorMessages';
 import type { MangaPage } from './types/manga';
-import type { ChapterPage } from './types/chapter';
-import type { socketInstance } from '../routes';
+import type { socketInstance } from '/@/routes/types/socketInterface';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
-  host = 'https://mangahasu.se';
-  displayName = 'MangaHasu';
-  name = 'mangahasu';
-  enabled = true;
-  langs = ['en'];
-
   constructor() {
-    super({icon});
+    super({
+      host: 'https://mangahasu.se',
+      name: 'mangahasu',
+      displayName: 'MangaHasu',
+      enabled: true,
+      langs: ['en'],
+      icon,
+    });
   }
 
   isMangaPage(url: string): boolean {
-      return /^\/.*-\w{3,4}-p\d+\.html$/gmi.test(url);
+    const res = /^\/.*-\w{3,4}-p\d+\.html$/gmi.test(url);
+    if(!res) this.logger('not a manga page:', url);
+    return res;
   }
   isChapterPage(url: string): boolean {
-      return /\/.*\/.*-\w{3,4}-c\d+\.html$/gmi.test(url);
+    const res = /\/.*\/.*-\w{3,4}-c\d+\.html$/gmi.test(url);
+    if(!res) this.logger('not a chapter page:', url);
+    return res;
   }
   getChapterInfoFromString(str:string) {
-    return /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
+    const res = /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
+    if(!res) this.logger('not a chapter string:', str);
+    return res;
   }
 
   async search(query:string, socket: socketInstance, id:number) {
-    // we will check if user don't need results anymore
-    let cancel = false;
-    socket.on('stopSearchInMirrors', () => {
-      console.log('[api]', 'search canceled');
-      cancel = true;
-      socket.removeAllListeners('stopSearchInMirrors');
-    });
-
-    const url = `${this.host}/advanced-search.html?keyword=${query}`;
     try {
-      if(cancel) return; //=> 1st cancel check before request
-      const res = await this.fetch({url});
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      socket.once('stopSearchInMirrors', () => {
+        this.logger('search canceled');
+        cancel = true;
+      });
 
-      const $ = this.loadHTML(res.data);
+      const url = `${this.host}/advanced-search.html?keyword=${query}`;
+      const $ = await this.fetch({
+        url,
+        waitForSelector: 'ul.list_manga',
+      }, false);
+
       for(const el of $('div.div_item')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('a.name-manga > h3', el).text().trim();
         const link = $('a.name-manga', el).attr('href');
 
         // mangahasu images needs to be downloaded.
-        let cover:string|undefined;
+        const covers:string[] = [];
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
-          const ab = await this.fetch({url: coverLink, responseType: 'arraybuffer'});
-          cover =  'data:image/jpeg;charset=utf-8;base64,'+Buffer.from(ab.data, 'binary').toString('base64');
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
         }
 
         if(!name || !link) continue;
@@ -73,113 +78,158 @@ class MangaHasu extends Mirror implements MirrorInterface {
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }
+
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
         socket.emit('searchInMirrors', id, {
-          mirror: this.name,
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
           name,
-          link,
-          cover,
+          url:link,
+          covers,
           last_release,
-          lang: 'en',
+          lang: this.langs[0],
         });
       }
       if(cancel) return; // 3rd obligatory check
+      socket.emit('searchInMirrors', id, { done: true });
     } catch(e) {
+      this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
-      if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
-      socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+      else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
+      else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+      socket.emit('searchInMirrors', id, { done: true });
     }
-    socket.emit('searchInMirrors', id, { done: true });
   }
 
-  async manga(link:string): Promise<MangaPage | MangaErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isMangaPage = this.isMangaPage(url);
-    if(!isMangaPage) return {error: 'manga_error_invalid_link'};
+  async manga(url:string, lang:string, socket:socketInstance, id:number)  {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowManga', () => {
+      this.logger('fetching manga canceled');
+      cancel = true;
+    });
+
+    const link = url.replace(this.host, '');
+    const isMangaPage = this.isMangaPage(link);
+    if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+
+    const mangaId = `${this.name}/${this.langs[0]}${link}`;
 
     try {
-      const res = await this.fetch({url});
-
-      const $ = this.loadHTML(res.data);
+      const $ = await this.fetch({
+        url,
+        waitForSelector: 'td.name > a',
+      }, false);
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];
-      const cover = $('.info-img > img').attr('src');
-      if(cover) covers.push(cover);
+
+      if(cancel) return;
+      // mangahasu images needs to be downloaded.
+      const coverLink = $('.info-img > img').attr('src');
+      if(coverLink) {
+        const img = await this.downloadImage(coverLink).catch(() => undefined);
+        if(img) covers.push(img);
+      }
+
+      // getting author(s) and tags
+      const authors:string[] = [];
+      const tags:string[] = [];
+
+      $('.info-c .detail_item > .row:contains("Author(s)") a').each((i, el) => {
+        const author = $(el).text().trim().toLocaleLowerCase();
+        if(author.length) authors.push(author);
+      });
+
+      $('.info-c .detail_item.row-a:contains("Genre(s)") a').each((i, el) => {
+        const tag = $(el).text().trim().toLocaleLowerCase();
+        if(tag.length) tags.push(tag);
+      });
+
       const chapters:MangaPage['chapters'] = [];
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {
-
+        if(cancel) break;
         const current_chapter = $(el).text().trim();
-        const link = $(el).attr('href');
-        if(!link) continue;
+        const chaplink = $(el).attr('href');
+        if(!chaplink) continue;
         const match = this.getChapterInfoFromString(current_chapter);
-        let release: MangaPage['chapters'][0] | undefined = undefined;
+        let release: MangaPage['chapters'][0] | undefined;
 
-        if(!match) release = {name: current_chapter.replace(/Chapter/gi, '').trim(), number: i, volume: 0, link};
+        const date = Date.now(); // dates in manga pages aren't reliable so we use the fetch date instead
+
+        if(!match) release = {name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(), number: i+1, volume: undefined, url: chaplink, date};
 
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
-            name: chapterName ? chapterName.trim() : current_chapter.replace(/Chapter/gi, '').trim(),
-            volume: 0,
-            number: i,
-            link,
+            name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
+            volume: undefined,
+            number: i+1,
+            url: chaplink,
+            date,
           };
         }
         if(release) chapters.push(release);
       }
-      return { langs: this.langs, mirror: this.name, name, synopsis, covers, chapters };
+      if(cancel) return;
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
     } catch(e) {
-      if(e instanceof Error) return {error: 'manga_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'manga_error', trace: e};
-      return {error: 'manga_error'};
+      this.logger('error while fetching manga', e);
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
+      return socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
   }
 
-  async chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isChapterPage = this.isChapterPage(url);
-    if(!isChapterPage) return {error: 'chapter_error_invalid_link'};
+  async chapter(url:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowChapter', () => {
+      this.logger('fetching chapter canceled');
+      cancel = true;
+    });
 
+    const link = url.replace(this.host, '');
+
+    // safeguard, we return an error if the link is not a chapter page
+    const isLinkaChapter = this.isChapterPage(link);
+    if(!isLinkaChapter) return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+
+    if(cancel) return;
     try {
-      const res = await this.fetch({url});
-      const $ = this.loadHTML(res.data);
+      const $ = await this.fetch({
+        url,
+        waitForSelector: '.img-chapter',
+      }, false);
 
-      const images:(ChapterPage|ChapterPageErrorMessage)[] = [];
+      // return the number of pages to expect (1-based)
+      const nbOfPages = $('.img-chapter img').length;
+      if(callback) callback(nbOfPages);
 
-      for(const [i, el] of $('.img > img').toArray().entries()) {
-        const src = $(el).attr('src');
-        if(src) images.push({src, index: i});
-        else images.push({error: 'chapter_error_no_image', url: url.replace(this.host, ''), index: i});
+      if(cancel) return;
+      for(const [i, el] of $('.img-chapter img').toArray().entries()) {
+        if(cancel) break;
+        // if the user requested a specific page, we will skip the others
+        if(typeof retryIndex === 'number' && i !== retryIndex) continue;
+
+        const imgLink = $(el).attr('src');
+        if(imgLink) {
+          const img = await this.downloadImage(imgLink);
+          socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+        } else {
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+        }
       }
-
-      return images;
-
     } catch(e) {
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e};
-      return {error: 'chapter_error'};
-    }
-  }
-
-  async retryChapterImage(link: string, index: number): Promise<ChapterPage | ChapterPageErrorMessage> {
-    const url = `${this.host}/${link}`;
-    const isChapterPage = this.isChapterPage(url);
-    if(!isChapterPage) return {error: 'chapter_error_invalid_link', index};
-
-    try {
-      const res = await this.fetch({url});
-      const $ = this.loadHTML(res.data);
-
-      const img = $('.img > img')[index];
-      if(!img) return {error: 'chapter_error_no_image', url: url.replace(this.host, ''), index};
-      const src = $(img).attr('src');
-      if(!src) return {error: 'chapter_error_no_image', url: url.replace(this.host, ''), index};
-      return {src, index};
-    } catch(e) {
-      if(e instanceof Error) return {error: 'chapter_error', trace: e.message, index};
-      if(typeof e === 'string') return {error: 'chapter_error', trace: e, index};
-      return {error: 'chapter_error', index};
+      this.logger('error while fetching chapter', e);
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
+      if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
+      return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
   }
 }

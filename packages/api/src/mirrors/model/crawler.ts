@@ -5,9 +5,8 @@ import si from 'systeminformation';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
 
-import type { Page, ResourceType } from 'puppeteer';
-import {EventEmitter} from 'events';
-import type { ClusterError, ClusterJob, ClusterResult, CrawlerJob } from './types/crawler';
+import type { Page } from 'puppeteer';
+import type { ClusterJob } from './types/crawler';
 
 
 /**
@@ -28,16 +27,15 @@ function benchmark(CPU_cores_count:number, CPU_max_speed_inGhz:number, MEM_avail
   return Math.floor((CPU_max_speed_with_cores + MEM_available_500s) / 2);
 }
 
-puppeteer.use(AdblockerPlugin({blockTrackers: true}));
+puppeteer.use(AdblockerPlugin());
 puppeteer.use(StealthPlugin());
 
-const intercept:ResourceType[] = ['stylesheet', 'font', 'image', 'media'];
+
 
 
 // instance watchers
-let cluster:Cluster<ClusterJob,ClusterResult|ClusterError> | null = null;
+let cluster:Cluster<ClusterJob> | null = null;
 let runningTask = 0;
-const emitter = new EventEmitter();
 
 /**
  * Initialize cluster instance if not already initialized.
@@ -57,7 +55,6 @@ async function useCluster() {
     puppeteer,
     puppeteerOptions: {
       headless: process.env.MODE === 'development' ? false : true,
-      // headless:true,
     },
   });
   return cluster;
@@ -65,9 +62,8 @@ async function useCluster() {
 
 /**
  * Close cluster instance if all tasks are done.
- * @param {number} closeAfter - time in seconds to wait before closing cluster
  */
- async function closeClusterIfAllDone(closeAfter: number) {
+ async function closeClusterIfAllDone(closeAfter = 60) {
   setTimeout(async () => {
     if(!cluster) return;
     if(runningTask > 0) return;
@@ -78,106 +74,39 @@ async function useCluster() {
 }
 
 
-/**
- * task function to be executed by cluster instance.
- * @param param0
- * @returns
- */
-async function task({page, data }: { page: Page, data: ClusterJob }) {
-  console.log('task()');
+async function task({page, data}: { page: Page, data: ClusterJob }) {
   try {
-    await page.setCookie({name: 'isAdult', value: '1', domain: new URL(data.url).hostname, path: '/'});
+    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0');
+    if(data.cookies) data.cookies.forEach(c => page.setCookie(c));
+
+    // block: 'stylesheet', 'font', 'image', 'media'
     await page.setRequestInterception(true);
     page.on('request', async (req) => {
       if (req.isInterceptResolutionHandled()) return;
-      if(intercept.includes(req.resourceType())) req.abort();
+      if(['stylesheet', 'font', 'image', 'media'].includes(req.resourceType())) req.abort();
     });
-    // let start: number | undefined;
-    page.once('requestfinished', () => {
-      // start = Date.now();
-    });
-    page.once('response', () => {
-      // const stop = Date.now();
-      // emitter.emit(`req:${data.id}`, stop-(start||0));
-      emitter.emit(`req:${data.id}`);
-    });
+
+    // get the content
     await page.goto(data.url);
-
     if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, {timeout: 1000*60});
-
     const html = await page.content();
-    page.close();
-    emitter.emit(`done:${data.id}`, {index: data.index, url: data.url, data: html});
-    return {index: data.index, url:data.url, data: html};
+
+    // remove task from task list then close cluster if needed
+    runningTask = runningTask-1;
+    closeClusterIfAllDone();
+
+    return html;
   } catch(e) {
-    if(e instanceof Error) {
-      emitter.emit(`done:${data.id}`, {index: data.index, url:data.url, error: 'cralwer_error', trace: e.message});
-      return {index: data.index, url:data.url, error: 'cralwer_error', trace: e.message};
-    }
-    if(typeof e === 'string') {
-      emitter.emit(`done:${data.id}`, {index: data.index, url:data.url, error: 'cralwer_error', trace: e});
-      return {index: data.index, url:data.url, error: 'cralwer_error', trace: e};
-    }
-    emitter.emit(`done:${data.id}`, {index: data.index, url:data.url, error: 'cralwer_error'});
-    return {index: data.index, url:data.url, error: 'crawler_error_unknown'};
+    // in most cases happens because waitForSelector timeout is reached (cloudflare?)
+    runningTask = runningTask-1;
+    if(e instanceof Error) return e;
   }
 }
 
 /**
- * Helper to check if task response is an error.
+ * execute a task with headless browser
  */
-export function isCrawlerError(x: unknown): x is ClusterError {
-  if(!x) return false;
-  if(typeof x === 'object') {
-      return Object.prototype.hasOwnProperty.call(x, 'error');
-  }
-  return false;
-}
-
-
-/**
- * Returns the url HTML.
- */
-export async function crawler({ urls, waitForSelector, waitTime }: CrawlerJob): Promise<(ClusterResult|ClusterError)[]> {
+export async function crawler(data: ClusterJob): Promise<string | Error | undefined> {
   const instance = await useCluster();
-  runningTask = runningTask + urls.length;
-
-  // generate a random id for the task
-  const id = new Date().getTime();
-  // watch task advance
-  let todo = urls.length;
-
-  let index = 0;
-  instance.queue({url:urls[index], waitForSelector, id, index:index, waitTime}, task);
-  index = index + 1;
-  instance.queue({url:urls[index], waitForSelector, id, index:index, waitTime}, task);
-
-  emitter.on(`req:${id}`, async ()=> {
-    index = index + 1;
-    const url = urls[index];
-    if(typeof url === 'undefined') return;
-    // if(time < waitTime) {
-    //   await wait(waitTime - time);
-    // }
-    instance.queue({url, waitForSelector, id, index:index, waitTime}, task);
-  });
-
-
-
-
-  // urls.forEach((url, i) => instance.queue({url, waitForSelector, id, index:urls.length-i-1, waitTime}, task));
-
-  const res:(ClusterResult|ClusterError)[] = [];
-
-  return new Promise(resolve => {
-    emitter.on(`done:${id}`, (data: ClusterResult|ClusterError) => {
-      runningTask = runningTask -1;
-      todo = todo - 1;
-      res.push(data);
-      if(todo === 0) {
-        if(runningTask === 0) closeClusterIfAllDone(10);
-        resolve(res);
-      }
-    });
-  });
+  return instance.execute(data, task);
 }

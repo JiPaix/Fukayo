@@ -1,49 +1,21 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import 'flag-icons';
+import type { SearchResult } from '../../../api/src/mirrors/types/search';
 
+/** router */
+const router = useRouter();
+/** quasar */
 const $q = useQuasar();
 
-type results = {
-    mirrorinfo: {
-        name: string;
-        displayName: string;
-        host: string;
-        enabled: boolean;
-        icon: string;
-        langs: string[];
-    };
-    mirror: string;
-    lang: string;
-    name: string;
-    link: string;
-    cover?: string | undefined;
-    synopsis?: string | undefined;
-    last_release?: {
-        name?:string
-        volume?:number
-        chapter?:number
-    }
-  }[]
+/** props */
 defineProps<{
-  results: results
-  loading: boolean
+  /** mangas infos */
+  results: SearchResult[]
 }>();
 
-function showSynopsis (title:string, synopsis: string) {
-  $q.dialog({
-    title: title,
-    message: synopsis,
-  }).onOk(() => {
-    // console.log('OK')
-  }).onCancel(() => {
-    // console.log('Cancel')
-  }).onDismiss(() => {
-    // console.log('I am triggered on both OK and Cancel')
-  });
-}
-
+/** return an array of css classes depending on the screen size */
 const sizes = computed(() => {
   const classes = [];
   if($q.screen.lt.sm) classes.push('h-xs');
@@ -52,13 +24,39 @@ const sizes = computed(() => {
   return classes.join(' ');
 });
 
-</script>
+/**
+ * Display a dialog containing the manga's synopsis
+ * @param title manga name
+ * @param synopsis manga synopsis
+ */
+function showSynopsis (title:string, synopsis: string) {
+  $q.dialog({
+    title: title,
+    message: synopsis,
+  });
+}
 
+/**
+ * Redirect to the manga's page
+ * @param item manga infos
+ */
+function showManga (item:SearchResult) {
+  router.push({
+    name: 'manga',
+    params: {
+      mirror: item.mirrorinfo.name,
+      url:item.url,
+      lang: item.lang,
+    },
+  });
+
+}
+</script>
 <template>
   <div class="q-pa-md row justify-evenly">
     <q-intersection
       v-for="item in results"
-      :key="item.link"
+      :key="item.url"
       class="col-xs-12 col-sm-5 q-mt-xl col-lg-3"
       :class="sizes"
       margin="500px 500px 500px 500px"
@@ -69,9 +67,11 @@ const sizes = computed(() => {
         :class="$q.screen.lt.sm ? 'h-xs' : 'h-lg'"
       >
         <div
+          v-if="item.covers.length > 0"
           class="col-xs-12 col-sm-6 cover flex cursor-pointer"
-          :style="'background-image: url('+item.cover+');'"
+          :style="'background-image: url('+item.covers[0]+');'"
           :class="$q.screen.lt.sm ? 'xs-cover' : ''"
+          @click="showManga(item)"
         >
           <div
             class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
@@ -85,7 +85,24 @@ const sizes = computed(() => {
             </q-tooltip>
           </div>
         </div>
-
+        <q-skeleton
+          v-else
+          class="col-xs-12 col-sm-6 cover flex cursor-pointer"
+          :class="$q.screen.lt.sm ? 'xs-cover' : ''"
+          @click="showManga(item)"
+        >
+          <div
+            class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
+            style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
+            rounded
+            dense
+          >
+            {{ item.name }}
+            <q-tooltip>
+              {{ item.name }}
+            </q-tooltip>
+          </div>
+        </q-skeleton>
         <div
           class="col-xs-12 col-sm-6"
         >
@@ -98,7 +115,15 @@ const sizes = computed(() => {
               v-if="(item.last_release.name !== undefined && item.last_release.chapter === undefined) || $q.screen.lt.sm"
               class="bg-orange text-white text-center q-pa-md rounded-borders w-100 text-weight-medium"
             >
-              {{ item.last_release.name ? item.last_release.name : $t('mangas.chapter.value').toLocaleUpperCase() + ' ' + item.last_release.chapter }}
+              <span v-if="item.last_release.chapter !== undefined">
+                {{ $t('mangas.chapter.value').toLocaleUpperCase() }} {{ item.last_release.chapter }}
+              </span>
+              <span v-if="item.last_release.chapter !== undefined && item.last_release.name !== undefined">
+                -
+              </span>
+              <span v-if="item.last_release.name !== undefined">
+                {{ item.last_release.name }}
+              </span>
             </div>
             <div
               v-if="item.last_release.volume !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
@@ -133,7 +158,7 @@ const sizes = computed(() => {
             <div
               v-if="item.synopsis !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
               v-ripple
-              class="row q-ma-sm shadow-1"
+              class="row q-ma-sm shadow-1 cursor-pointer"
               @click="showSynopsis(item.name, item.synopsis!)"
             >
               <div
@@ -168,11 +193,10 @@ const sizes = computed(() => {
                 :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
                 :size="$q.screen.lt.sm ? 'lg' : 'md'"
                 icon="visibility"
+                @click="showManga(item)"
               />
             </div>
           </div>
-
-
           <div class="absolute-bottom-right flex items-center">
             <img
               width="16"
@@ -195,7 +219,6 @@ const sizes = computed(() => {
   background-size:cover;
   background-position: 50% 50%;
 }
-
 .h-lg {
   height: 300px!important;
 }

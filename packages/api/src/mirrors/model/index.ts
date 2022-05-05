@@ -1,26 +1,57 @@
+import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from './crawler';
 import { resolve } from 'path';
-import type { AxiosRequestConfig } from 'axios';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { MirrorConstructor } from './types';
+import type { mirrorInfo } from '../types/shared';
+import type { ClusterJob } from './types/crawler';
 
 
 export default class Mirror {
 
-  enabled = true;
-  waitTime: number;
   private concurrency = 0;
   protected crawler = crawler;
-  protected name = '';
-  protected host = '';
   private _icon;
-
+  /** slug name */
+  name: string;
+  /** full name */
+  displayName: string;
+  /**
+   * hostname without ending slash
+   * @example 'https://www.mirror.com'
+   */
+  host: string;
+  /**
+   * Whether the mirror is enabled
+   */
+  enabled: boolean;
+  /**
+   * Languages supported by the mirror
+   *
+   * ISO 639-1 codes
+   */
+  langs: string[];
+  /**
+   * Time to wait in ms between requests
+   */
+  waitTime: number;
+  /**
+   * Mirror specific option
+   * @example { adult: true, lowres: false }
+   */
+  options: Record<string, unknown> | undefined;
 
   constructor(opts: MirrorConstructor) {
+    this.name = opts.name;
+    this.displayName = opts.displayName;
+    this.host = opts.host;
+    this.enabled = opts.enabled;
+    this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
+    this.options = opts.options;
   }
   /**
    * Returns the mirror icon
@@ -35,19 +66,68 @@ export default class Mirror {
     return this._icon;
   }
 
+  public get mirrorInfo():mirrorInfo {
+    return {
+      name: this.name,
+      displayName: this.displayName,
+      host: this.host,
+      enabled: this.enabled,
+      icon: this.icon,
+      langs: this.langs,
+    };
+  }
   private async wait() {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }
 
+  protected logger(...args: unknown[]) {
+    if(process.env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
+  }
+
+  protected async downloadImage(url:string) {
+    // https://github.com/sindresorhus/file-type/issues/535#issuecomment-1065952695
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
+
+    const ab = await axios({ method: 'GET' , url, responseType: 'arraybuffer', headers: { referer: this.host } });
+    const buffer = Buffer.from(ab.data, 'binary');
+    const fT = await fileTypeFromBuffer(buffer);
+    return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
+  }
+
+  /**
+   *
+   * @param config request options
+   * @param noCrawl simplify the request (no headless browser, no html parsing)
+   */
+  protected async fetch<T = unknown>(config: ClusterJob, noCrawl:true):Promise<T>;
+  protected async fetch(config: ClusterJob, noCrawl:false):Promise<CheerioAPI>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async fetch(config: AxiosRequestConfig<any>) {
-    if(config.headers) config.headers.referer = this.host;
-    else config.headers = { referer: this.host };
+  protected async fetch(config: ClusterJob, noCrawl = false):Promise<CheerioAPI|AxiosResponse> {
+    config.headers = {
+      referer: this.host.replace(/http(s?):\/\//g, ''),
+      'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
+      ...config.headers,
+    };
+
+
     this.concurrency++;
     await this.wait();
     const response = await axios(config);
     this.concurrency--;
-    return response;
+    if(noCrawl) return response.data;
+    let $ = this.loadHTML(response.data);
+    if(!config.waitForSelector) return $;
+    else if($(config.waitForSelector).length) return $;
+    else {
+      const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
+      if(typeof res === 'string') {
+        $ = this.loadHTML(res);
+        if($(config.waitForSelector).length) return $;
+      }
+      else throw new Error(res?.message || 'cloudflare');
+    }
+    throw new Error('cloudflare');
   }
 
   /**

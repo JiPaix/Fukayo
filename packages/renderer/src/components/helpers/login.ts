@@ -1,7 +1,13 @@
-export const isLoginValid = (login:string) => {
-  return login.length > 0;
+/** Check login validity: not empty */
+export const isLoginValid = (login:string|null) => {
+  return login !== null && login.length > 0;
 };
 
+/**
+ * Check password validity:
+ * not null, not empty, at least 6 characters
+ * @param password password to check
+ */
 export const isPasswordValid = (password:string|null) => {
   return password !== null && password.length >= 6;
 };
@@ -15,16 +21,29 @@ export const passwordHint = (password:string|null) => {
   return 'setup.passwordHintWeak.value';
 };
 
+/**
+ * Check the port validity:
+ * a number, between 1024 and 65535
+ * @param port port to check
+ */
 export const isPortValid = (port:number) => {
   return port >= 1024 && port <= 65535;
 };
 
+/**
+ * Check the SSL certificate validity
+ * @param cert certificate to check
+ */
 export const isProvidedCertificateValid = (cert:string|null) => {
   if(!cert) return false;
   return cert.startsWith('-----BEGIN CERTIFICATE-----')
       && (cert.endsWith('-----END CERTIFICATE-----') || cert.endsWith('-----END CERTIFICATE-----\n')  );
 };
 
+/**
+ * Check the SSL key validity
+ * @param key key to check
+ */
 export const isProvidedKeyValid = (key:string|null) => {
   if(!key) return false;
   return key.startsWith('-----BEGIN PRIVATE KEY-----')

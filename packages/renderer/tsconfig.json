@@ -10,7 +10,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "types" : ["node"],
-
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
       "/@/*": [

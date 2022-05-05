@@ -1,9 +1,9 @@
 import type { Socket } from 'socket.io-client';
-import type { ServerToClientEvents, ClientToServerEvents } from '../../api/src/routes/index';
+import type { ServerToClientEvents, ClientToServerEvents } from '../../api/src/routes/types/socketEvents';
 import io from 'socket.io-client';
 import type { authByLogin } from './components/helpers/login';
 
-type settings = {
+export type SocketStoreSettings = {
   accessToken?: string | null
   refreshToken?: string | null
   ssl: 'false' | 'provided' | 'app'
@@ -13,9 +13,9 @@ export type sock = Socket<ServerToClientEvents, ClientToServerEvents>
 class socket {
 
   private socket?: sock;
-  private settings: settings;
+  private settings: SocketStoreSettings;
 
-  constructor(settings:settings) {
+  constructor(settings:SocketStoreSettings) {
     this.settings =  settings;
 
   }
@@ -61,13 +61,12 @@ class socket {
       });
 
       socket.once('authorized', () => {
-        console.log('creating socket');
         this.socket = socket;
         resolve(this.initSocket());
       });
 
       socket.once('unauthorized', () => {
-        const reason = auth ? 'badpassword' : undefined;
+        const reason = auth ? 'badpassword' : 'expiredtoken';
         reject(this.unplugSocket(reason));
       });
 
@@ -98,6 +97,6 @@ class socket {
   }
 }
 
-export function socketManager(settings:settings) {
+export function socketManager(settings:SocketStoreSettings) {
   return new socket(settings);
 }

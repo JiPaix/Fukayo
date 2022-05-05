@@ -1,7 +1,6 @@
 import type {ElectronApplication} from 'playwright';
 import {_electron as electron} from 'playwright';
-import {afterAll, beforeAll, expect, test} from 'vitest';
-import {createHash} from 'crypto';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
 let electronApp: ElectronApplication;
 
@@ -53,62 +52,45 @@ test('Preload versions', async () => {
   expect(exposedVersions).to.deep.equal(expectedVersions);
 });
 
-test('Preload nodeCrypto', async () => {
+test('Preload apiServer', async () => {
   const page = await electronApp.firstWindow();
 
-  const exposedNodeCrypto = await page.evaluate(() => globalThis.nodeCrypto);
-  expect(exposedNodeCrypto).to.haveOwnProperty('sha256sum');
+  const exposed = await page.evaluate(() => globalThis.apiServer);
 
-  const sha256sumType = await page.evaluate(() => typeof globalThis.nodeCrypto.sha256sum);
-  expect(sha256sumType).toEqual('function');
+  expect(exposed).to.haveOwnProperty('startServer');
+  expect(exposed).to.haveOwnProperty('stopServer');
+  expect(exposed).to.haveOwnProperty('getEnv');
 
-  const data = 'raw data';
-  const hash = await page.evaluate((d) => globalThis.nodeCrypto.sha256sum(d), data);
-  const expectedHash = createHash('sha256').update(data).digest('hex');
-  expect(hash).toEqual(expectedHash);
+  const startType = await page.evaluate(() => typeof globalThis.apiServer.startServer);
+  const stopType = await page.evaluate(() => typeof globalThis.apiServer.stopServer);
+  const getEnvType = await page.evaluate(() => typeof globalThis.apiServer.getEnv);
+
+  expect(startType).toEqual('function');
+  expect(stopType).toEqual('function');
+  expect(getEnvType).toEqual('string');
+
+  const env = await page.evaluate(() => globalThis.apiServer.getEnv);
+  expect(env).toEqual('production');
 });
 
-test('Preload windowControl', async () => {
+test('Server start', async () => {
   const page = await electronApp.firstWindow();
-
-  const exposedWindowControl = await page.evaluate(() => globalThis.windowControl);
-
-  expect(exposedWindowControl).to.haveOwnProperty('quit');
-  expect(exposedWindowControl).to.haveOwnProperty('minimize');
-  expect(exposedWindowControl).to.haveOwnProperty('maximize');
-
-  const quitType = await page.evaluate(() => typeof globalThis.windowControl.quit);
-  const minimizeType = await page.evaluate(() => typeof globalThis.windowControl.minimize);
-  const maximizeType = await page.evaluate(() => typeof globalThis.windowControl.maximize);
-
-  expect(quitType).toEqual('function');
-  expect(minimizeType).toEqual('function');
-  expect(maximizeType).toEqual('function');
-
-  const getMaximizedStatus = async () => {
-    return electronApp.evaluate(({BrowserWindow}) => {
-      const mainWindow = BrowserWindow.getAllWindows()[0];
-      return new Promise(resolve => {
-        setTimeout(() => resolve(mainWindow.isMaximized()), 200);
-      });
-    });
-  };
-
-  expect(await getMaximizedStatus()).toBe(false);
-  const maximize = await page.evaluate(() => globalThis.windowControl.maximize());
-  expect(await maximize).toBe(true);
-
-  const getMinimizedStatus = async () => {
-    return electronApp.evaluate(({BrowserWindow}) => {
-      const mainWindow = BrowserWindow.getAllWindows()[0];
-      return new Promise(resolve => {
-        setTimeout(() => resolve(mainWindow.isMinimized()), 200);
-      });
-    });
-  };
-
-  expect(await getMinimizedStatus()).toBe(false);
-  await page.evaluate(() => globalThis.windowControl.minimize());
-  expect(await getMinimizedStatus()).toBe(true);
-
+  await page.evaluate( async () => {
+    const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
+    login.value = 'test';
+    login.dispatchEvent(new Event('input'));
+    const password = globalThis.document.querySelector<HTMLInputElement>('input[name="password"]');
+    password.value = 'testtest';
+    password.dispatchEvent(new Event('input'));
+    const port = globalThis.document.querySelector<HTMLInputElement>('input[name="port"]');
+    port.value = '3000';
+    port.dispatchEvent(new Event('input'));
+    const ssl = globalThis.document.querySelector<HTMLInputElement>('#no-ssl');
+    ssl.click();
+    ssl.dispatchEvent(new Event('change'));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
+    button.click();
+  });
+  await new Promise(resolve => setTimeout(resolve, 10000));
 });

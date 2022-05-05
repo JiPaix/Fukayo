@@ -1,53 +1,67 @@
-import type { ChapterPage } from '../../types/chapter';
-import type { MangaErrorMessage, ChapterErrorMessage, ChapterPageErrorMessage } from '../../types/errorMessages';
-import type { MangaPage } from '../../types/manga';
-import type { socketInstance } from '../../../routes';
+import type { mirrorInfo } from '/@/mirrors/types/shared';
+import type { socketInstance } from '/@/routes/types/socketInterface';
 
 export type MirrorConstructor = {
+  /** slug name */
+  name: string,
+  /** full name */
+  displayName: string,
+  /**
+   * hostname without ending slash
+   * @example 'https://www.mirror.com'
+   */
+  host: string,
+  /**
+   * Whether the mirror is enabled
+   */
+  enabled: boolean,
+  /**
+   * mirror icon (import)
+   * @example
+   * import icon from './my-mirror.png';
+   * opts.icon = icon;
+   */
+  icon: string
+  /**
+   * Languages supported by the mirror
+   *
+   * ISO 639-1 codes
+   */
+  langs: string[],
   /**
    * Time to wait in ms between requests
    */
   waitTime?: number,
   /**
-   * mirror icon (import)
+   * Mirror specific option
+   * @example { adult: true, lowres: false }
    */
-  icon: string,
+  options?: Record<string, unknown>
 }
 
 export default interface MirrorInterface {
   /**
-   * Initialize the mirror
+   * Whether the mirror is enabled
    */
   enabled: boolean;
-  /**
-   * Mirror full name
-   * @example "Manwha "
-   */
+  /** full name */
   displayName: string;
-  /**
-   * Mirror name slug
-   *
-   * This is used to generate the mirror route
-   * @example
-   * ✅ name: 'my_awesome-mirror'
-   * ❌ name: 'My Awesome Mirror ©☆'
-   */
+  /** slug name */
   name: string;
   /**
-   * Mirror website
-   * @important no trailing slash
-   * @example
-   *  ✅ host = 'https://mangadex.org'
-   *  ❌ host = 'https://mangadex.org/'
+   * hostname without ending slash
+   * @example 'https://www.mirror.com'
    */
   host: string;
   /**
-   * Mirror Language
-   * @important make sure the language is localized in the renderer
+   * Languages supported by the mirror
+   *
+   * ISO 639-1 codes
    */
   langs: string[];
   /**
-   * list of options
+   * Mirror specific option
+   * @example { adult: true, lowres: false }
    */
   options?: { [key:string]: unknown };
   /**
@@ -55,9 +69,15 @@ export default interface MirrorInterface {
    */
   waitTime: number;
   /**
-   * The icon of the mirror
+   * The icon in base 64 data string
+   * @example "data:image/png;base64,..."
    */
   get icon(): string;
+
+  /**
+   * Mirror informations
+   */
+  get mirrorInfo(): mirrorInfo;
   /**
    * Test if url is a manga page
    */
@@ -81,25 +101,22 @@ export default interface MirrorInterface {
    */
   search(query: string, socket:socketInstance, id:number): void;
   /**
-   * Returns manga information and chapters
-   * @param {String} link link to manga page (Relative URL)
-   * @example
-   * this.manga("/mangas/one-piece/")
-   * //=> https://{mirror.host}/mangas/one-piece/
+   * Get manga info from
+   * @param {String} url Relative url to the manga page
+   * @param {String} lang ISO-639-1 language code
+   * @param {socketInstance} socket the request initiator
+   * @param {Number} id arbitrary id
    */
-  manga(link:string): Promise<MangaPage| MangaErrorMessage>
-
+  manga(url:string, lang:string, socket:socketInstance, id:number): void;
   /**
-   * Returns all images from chapter
+   * Get all images from chapter
    * @param link Relative url of chapter page (any page)
+   * @param lang requested language
+   * @param socket the request initiator
+   * @param id arbitrary id
+   * @param callback callback function to tell the client how many pages to expect
+   * @param retryIndex If you don't need the whole chapter, you can pass the index of the page you want to start from (0-based)
    */
-  chapter(link: string): Promise<(ChapterPage|ChapterPageErrorMessage)[] | ChapterErrorMessage>
-
-  /**
-   * Same as chapter() but for a specific page
-   * @param link Relative url of the chapter page
-   * @param index the page index, starting from 0
-   */
-   retryChapterImage(link: string, index:number): Promise<ChapterPage | ChapterPageErrorMessage>
+  chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
 // eslint-disable-next-line semi
 }

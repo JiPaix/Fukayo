@@ -24,6 +24,7 @@ export type ChapterPageErrorMessage = {
     trace?: string
     url?: string
     index: number
+    lastpage: boolean
 }
 
 export function isErrorMessage(x: unknown): x is ErrorMessage {

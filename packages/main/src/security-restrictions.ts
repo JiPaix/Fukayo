@@ -24,6 +24,8 @@ const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<string, Set<'clipboard-read' | '
  */
 const ALLOWED_EXTERNAL_ORIGINS = new Set<`${string}`>([
   'localhost',
+  'fanfox.net',
+  'mangahasu.se',
 ]);
 
 

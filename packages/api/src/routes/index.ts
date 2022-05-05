@@ -1,28 +1,12 @@
-import type { Socket } from 'socket.io';
+
+import crypto from 'crypto';
+import mirrors from '../mirrors';
 import { Server as ioServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
-import crypto from 'crypto';
-import mirrors from '../mirrors';
-import type { SearchResult } from '../mirrors/types/search';
-import type { SearchErrorMessage } from '../mirrors/types/errorMessages';
-import type { TaskDone } from '../mirrors/types/shared';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-export interface ServerToClientEvents {
-  authorized: () => void;
-  unauthorized: () => void;
-  token: (acessToken: string) => void;
-  refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, manga:SearchResult|SearchErrorMessage|TaskDone) => void;
-}
-
-export interface ClientToServerEvents {
-  getMirrors: (callback: (m: {name:string, displayName: string, host:string, enabled:boolean, icon:string, langs:string[]}[]) => void) => void;
-  searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
-  stopSearchInMirrors: () => void;
-}
-
-export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>
+import type { ClientToServerEvents, ServerToClientEvents } from './types/socketEvents';
+import type { socketInstance } from './types/socketInterface';
 
 export default class IOWrapper {
 
@@ -76,7 +60,7 @@ export default class IOWrapper {
           // and it's not expired
           if(findRefresh.expire > Date.now()) {
             // if an access token exists and it's parent is the same as the refresh token
-            if(findAccess && findAccess.token === findRefresh.token) {
+            if(findAccess && findAccess.parent === findRefresh.token) {
               // generate a new access token
               this.authorizedTokens.splice(this.authorizedTokens.indexOf(findAccess), 1);
               const token = crypto.randomBytes(32).toString('hex');
@@ -123,18 +107,6 @@ export default class IOWrapper {
     });
   }
 
-  getMirrors(callback: (m: {name:string, displayName:string, host:string, enabled:boolean, icon:string}[]) => void) {
-    callback(mirrors.map(m => {
-      return {
-        name: m.name,
-        displayName: m.displayName,
-        host: m.host,
-        enabled: m.enabled,
-        icon: m.icon,
-      };
-    }));
-  }
-
   routes(socket:socketInstance) {
     /** Default Events */
     socket.on('disconnect', () => socket.removeAllListeners());
@@ -145,16 +117,7 @@ export default class IOWrapper {
      * Get all mirrors (enabled or not)
      */
     socket.on('getMirrors', callback => {
-      callback(mirrors.map(m => {
-        return {
-          name: m.name,
-          displayName: m.displayName,
-          host: m.host,
-          enabled: m.enabled,
-          icon: m.icon,
-          langs: m.langs,
-        };
-      }));
+      callback(mirrors.map(m => m.mirrorInfo));
     });
 
     /**
@@ -168,5 +131,23 @@ export default class IOWrapper {
       callback(filtered.length);
       filtered.forEach(m => m.search(query, socket, id));
     });
+
+    /**
+     * Show a manga page
+     */
+    socket.on('showManga', (id, mirror, lang, url) => {
+      // before that we should check if the manga is in database
+      // TODO
+      mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+    });
+
+    /**
+     * Show chapters pages
+     */
+    socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => {
+      mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback, retryIndex);
+    });
   }
+
+
 }

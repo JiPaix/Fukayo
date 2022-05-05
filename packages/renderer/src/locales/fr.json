@@ -6,41 +6,41 @@
     },
     "description": {
       "desc": "The application description",
-      "value": "A simple electron app to read mangas"
+      "value": "Une simple application electron pour lire des mangas"
     }
   },
   "setup": {
       "message": {
         "desc": "The message to display when the app is not configured",
-        "value": "Before we start a little setup is needed"
+        "value": "Avant de démarrer configurons le server"
       },
       "setPassword" : {
         "desc": "Set the password for the server",
-        "value": "Password"
+        "value": "Mot de passe"
       },
       "passwordHint" : {
         "desc": "Password must be at least 6 characters long",
-        "value": "Password must be at least 6 characters long"
+        "value": "Le mot de passe doit contenir au moins 6 caractères"
       },
       "passwordHintStrong": {
         "desc": "Tell the user that the password is strong",
-        "value": "Strength: <b class=\"text-positive\">STRONG</b>"
+        "value": "Force: <b class=\"text-positive\">FORT</b>"
       },
       "passwordHintAverage": {
         "desc": "Tell the user that the password is average",
-        "value": "Strength: <b class=\"text-warning\">AVERAGE</b>"
+        "value": "Force: <b class=\"text-warning\">MOYEN</b>"
       },
       "passwordHintWeak": {
         "desc": "Tell the user that the password is weak",
-        "value": "Strength: <b class=\"text-negative\">WEAK</b>"
+        "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
       },
       "badPassword": {
         "desc": "Tell the user that the password is wrong",
-        "value": "Wrong Password"
+        "value": "Mot de passe incorrect"
       },
       "retry": {
         "desc": "The retry button text when the password is wrong",
-        "value": "Retry"
+        "value": "Réessayer"
       },
       "setPort": {
         "desc": "Set the port for the server",
@@ -48,60 +48,60 @@
       },
       "portHint": {
         "desc": "Port must be between 1024 and 65535",
-        "value": "Port must be between 1024 and 65535"
+        "value": "Le port doit être compris entre 1024 et 65535"
       },
       "setLogin": {
         "desc": "The login button label",
-        "value": "Login"
+        "value": "Nom d'utilisateur"
       },
       "security": {
         "choose": {
           "desc": "The security question",
-          "value": "Choose a security policy"
+          "value": "Choisissez une politique de sécurité"
         },
         "none" : {
           "desc": "Security Answer: None",
-          "value": "None",
+          "value": "Aucune",
           "description": {
             "desc": "The description of the security answer",
-            "value": "I don't need https and/or intend to use a service such as cloudflare"
+            "value": "Je n'ai pas besoin de https et/ou j'envisage d'utiliser un service tel que cloudflare"
           }
         },
         "app": {
           "desc": "Security Answer: let the app handle the security",
-          "value": "Auto",
+          "value": "Automatique",
           "description": {
             "desc": "The description of the security answer",
-            "value": "I want to use the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access"
+            "value": "Je laisse l'application s'occuper de la sécurité, je comprend aussi qu'à chaque fois que j'accéderais à mon panel depuis un nouveau navigateur celui-ci m'avertira (une fois) de manière erronée que le site n'est pas sécurisé"
           }
         },
         "selfsigned": {
           "desc": "Additionnal info for 'app' security",
-          "value": "self-signed certificate"
+          "value": "certificat auto-signé"
         },
         "provided" : {
           "desc": "Security Answer: I provide the certificate",
-          "value": "Provided",
+          "value": "Manuel",
           "description": {
             "desc": "The description of the security answer",
-            "value": "I want to use my own key and certificate"
+            "value": "Je veux utiliser ma propre clé et mon propre certificat"
           }
         },
         "certificate" : {
           "desc": "The certificate label",
-          "value": "Certificate"
+          "value": "Certificat"
         },
         "privkey" : {
           "desc": "The private key label",
-          "value": "Key"
+          "value": "Clé privée"
         },
         "pastcert" : {
           "desc": "The past certificate label",
-          "value": "Past your certificate"
+          "value": "Coller votre certificat"
         },
         "pastprivkey" : {
           "desc": "The past private key label",
-          "value": "Past your key"
+          "value": "Coller votre clé privée"
         },
         "ok" : {
           "desc": "The ok button label",
@@ -109,42 +109,50 @@
         },
         "cancel" : {
           "desc": "The cancel button label",
-          "value": "Cancel"
+          "value": "Annuler"
         }
       },
       "error": {
         "desc": "Error label",
-        "value": "Error"
+        "value": "Erreur"
       },
       "unexpectedError": {
         "desc": "Unexpected error message",
-        "value": "An unexpected error occured"
+        "value": "Une erreur inattendue est survenue"
       }
   },
   "searchMangas": {
     "tab": {
       "desc": "The tab label",
-      "value": "Search"
+      "value": "Rechercher"
     },
     "placeholder": {
       "desc": "The placeholder text",
-      "value": "Search for a manga"
+      "value": "Rechercher un manga"
     },
     "all": {
       "desc": "The check/uncheck all mirrors/languages button label",
-      "value": "All"
+      "value": "Tous"
+    },
+    "mirrorLabel" : {
+      "desc": "The mirror label",
+      "value": "Mirroir"
+    },
+    "languageLabel" : {
+      "desc": "The language label",
+      "value": "Language"
     }
   },
   "showChapter": {
     "reload": {
       "desc": "The reload broken image button label",
-      "value": "Reload"
+      "value": "Recharger"
     }
   },
   "mangas": {
     "chapter": {
       "desc": "The chapter label",
-      "value": "Chapter | Chapters"
+      "value": "Chapitre | Chapitres"
     },
     "volume": {
       "desc": "The volume label",
@@ -154,7 +162,7 @@
       "desc": "The chapter name Label",
       "value": "Synopsis"
     },
-    "source": {
+    "source" : {
       "desc": "The source label",
       "value": "Source | Sources"
     }
@@ -162,130 +170,130 @@
   "languages" : {
     "language" : {
       "desc": "The language label",
-      "value": "Language | Languages"
+      "value": "Langue | Langues"
     },
     "current" : {
       "desc": "The language the user's browser is using",
-      "value": "English",
-      "flag": "us"
+      "value": "Français",
+      "flag": "fr"
     },
     "en" : {
       "desc": "English",
-      "value": "English",
+      "value": "Anglais",
       "flag": "us",
       "localvalue": "English"
     },
     "fr" : {
       "desc": "French",
-      "value": "French",
+      "value": "Français",
       "flag": "fr",
       "localvalue": "Français"
     },
     "es" : {
       "desc": "Spanish",
-      "value": "Spanish",
+      "value": "Espagnol",
       "flag": "es",
       "localvalue": "Español"
     },
     "de" : {
       "desc": "German",
-      "value": "German",
+      "value": "Allemand",
       "flag": "de",
       "localvalue": "Deutsch"
     },
     "it" : {
       "desc": "Italian",
-      "value": "Italian",
+      "value": "Italien",
       "flag": "it",
       "localvalue": "Italiano"
     },
     "ja" : {
       "desc": "Japanese",
-      "value": "Japanese",
+      "value": "Japonais",
       "flag": "jp",
       "localvalue": "日本語"
     },
     "ko" : {
       "desc": "Korean",
-      "value": "Korean",
+      "value": "Koréen",
       "flag": "kr",
       "localvalue": "한국어"
     },
     "pt" : {
       "desc": "Portuguese",
-      "value": "Portuguese",
+      "value": "Portugais",
       "flag": "pt",
       "localvalue": "Português"
     },
     "ru" : {
       "desc": "Russian",
-      "value": "Russian",
+      "value": "Russe",
       "flag": "ru",
       "localvalue": "Русский"
     },
     "zh" : {
       "desc": "Chinese",
-      "value": "Chinese",
+      "value": "Chinois",
       "flag": "cn",
       "localvalue": "中文"
     },
     "ar" : {
       "desc": "Arabic",
-      "value": "Arabic",
+      "value": "Arabe",
       "flag": "ar",
       "localvalue": "العربية"
     },
     "tr" : {
       "desc": "Turkish",
-      "value": "Turkish",
+      "value": "Turc",
       "flag": "tr",
       "localvalue": "Türkçe"
     },
     "es-la" : {
       "desc": "Spanish (Latin America)",
-      "value": "Spanish (Latin America)",
+      "value": "Espagnol (Amérique Latine)",
       "flag": "es",
       "localvalue": "Español"
     },
     "pt-br" : {
       "desc": "Portuguese (Brazil)",
-      "value": "Portuguese (Brazil)",
+      "value": "Portugais (Brésil)",
       "flag": "br",
       "localvalue": "Português"
     },
     "tw" : {
       "desc": "Chinese (Taiwan)",
-      "value": "Chinese (Taiwan)",
+      "value": "Chinois (Taïwan)",
       "flag": "tw",
       "localvalue": "中文"
     },
     "zh-tw" : {
       "desc": "Chinese (Taiwan)",
-      "value": "Chinese (Taiwan)",
+      "value": "Chinois (Taïwan)",
       "flag": "tw",
       "localvalue": "中文"
     },
     "zh-cn" : {
       "desc": "Chinese (China)",
-      "value": "Chinese (China)",
+      "value": "Chinois (Chine)",
       "flag": "cn",
       "localvalue": "中文"
     },
     "cn" : {
       "desc": "Chinese (China)",
-      "value": "Chinese (China)",
+      "value": "Chinois (Chine)",
       "flag": "cn",
       "localvalue": "中文"
     },
     "zh-hk" : {
       "desc": "Chinese (Hong Kong)",
-      "value": "Chinese (Hong Kong)",
+      "value": "Chinois (Hong Kong)",
       "flag": "hk",
       "localvalue": "中文"
     },
     "hk" : {
       "desc": "Chinese (Hong Kong)",
-      "value": "Chinese (Hong Kong)",
+      "value": "Chinois (Hong Kong)",
       "flag": "hk",
       "localvalue": "中文"
     }
