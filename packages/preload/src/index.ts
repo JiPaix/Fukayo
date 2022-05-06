@@ -3,7 +3,7 @@
  */
 
 import {contextBridge} from 'electron';
-import { configPath } from './config';
+import { getPath } from './config';
 import { startServer, stopServer } from './apiServer';
 
 
@@ -34,5 +34,5 @@ contextBridge.exposeInMainWorld('versions', process.versions);
   * Expose the user data path.
   * intended to be used in a vuex store plugin
   */
-contextBridge.exposeInMainWorld('userData', {configPath});
+contextBridge.exposeInMainWorld('getPath', getPath);
 contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE });

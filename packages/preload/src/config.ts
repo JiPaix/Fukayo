@@ -1,6 +1,8 @@
 import { ipcRenderer } from 'electron';
 
-export async function configPath() {
-  const path = await ipcRenderer.invoke('userData');
-  return path;
+export type Paths =
+  'userData'| 'desktop' | 'documents' | 'downloads' | 'music' | 'pictures' | 'videos'
+
+export async function getPath(path: Paths): Promise<string> {
+  return ipcRenderer.invoke('get-path', path);
 }

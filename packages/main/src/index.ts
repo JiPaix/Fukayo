@@ -1,3 +1,4 @@
+import type { Paths } from './../../preload/src/config';
 import { app, ipcMain } from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
@@ -74,11 +75,12 @@ if (import.meta.env.PROD) {
 const api = new ForkedAPI();
 /** Ignore SSL errors */
 app.commandLine.appendSwitch('ignore-certificate-errors');
-/**
- * Returns the user data path
- */
-ipcMain.handle('userData', () => {
-  return app.getPath('userData');
+
+/** exposed to main world funtions */
+
+// returns user data path
+ipcMain.handle('get-path', (ev, path:Paths) => {
+  return app.getPath(path);
 });
 
 // start the API
