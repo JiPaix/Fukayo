@@ -76,7 +76,7 @@
     "@quasar/extras": "^1.13.6",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.10",
-    "dayjs": "^1.11.1",
+    "dayjs": "^1.11.2",
     "express": "^4.18.1",
     "file-type": "^17.1.1",
     "flag-icons": "^6.3.0",
