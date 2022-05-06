@@ -2,6 +2,7 @@ import { fork } from 'child_process';
 import { app } from 'electron';
 import { resolve } from 'path';
 import type { ChildProcess } from 'child_process';
+import type { ForkResponse, startPayload } from './types/forkedAPI';
 
 const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
@@ -25,16 +26,12 @@ export class ForkedAPI {
   private picturedata = app.getPath('pictures');
   private login = 'admin';
 
-  get defaultPort() {
-    return import.meta.env.DEV && import.meta.env.VITE_DEV_PORT !== undefined
-    ? String(parseInt(import.meta.env.VITE_DEV_PORT)+1) : '3000';
-  }
-
   get running() {
     return !!this.fork;
   }
 
-  get startPayload():startPayloadInternal {
+  private get startPayload():startPayload {
+    if(!this.port || !this.password || !this.ssl) throw new Error('startPayload should be defined in init');
     return {
       login: this.login,
       port: this.port,
@@ -45,7 +42,7 @@ export class ForkedAPI {
     };
   }
 
-  async init(payload: startPayloadInternal) {
+  async init(payload: startPayload) {
     this.login = payload.login;
     this.port = payload.port;
     this.password = payload.password;
@@ -106,7 +103,7 @@ export class ForkedAPI {
 
   }
 
-  public async start(payload: startPayloadInternal):Promise<ForkResponse> {
+  public async start(payload: startPayload):Promise<ForkResponse> {
     // init the fork if it hasn't been already
     if(!this.fork) this.init(payload);
     // if fork is already in the process of being started or stoped, wait for it to finish
@@ -192,30 +189,4 @@ export class ForkedAPI {
     this.startPending = false;
     this.stopPending = false;
   }
-}
-
-
-
-type ForkResponse = {
-  type: 'start' | 'shutdown' | 'pong',
-  success: boolean,
-  message?: string,
-}
-
-export type startPayload = {
-  login:string,
-  password: string,
-  port: number,
-  ssl: 'false' | 'provided' | 'app',
-  cert?: string | null,
-  key?: string | null,
-}
-
-type startPayloadInternal = {
-  login:string,
-  password?: string,
-  port?: number,
-  ssl: 'false' | 'provided' | 'app' | undefined
-  cert?: string | null,
-  key?: string | null,
 }

@@ -1,11 +1,8 @@
 import { app, ipcMain } from 'electron';
 import './security-restrictions';
 import {restoreOrCreateWindow} from '/@/mainWindow';
-import type { startPayload } from './forkedAPI';
 import { ForkedAPI } from './forkedAPI';
-
-const api = new ForkedAPI();
-app.commandLine.appendSwitch('ignore-certificate-errors');
+import type { startPayload } from './types/forkedAPI';
 
 /**
  * Prevent multiple instances
@@ -73,6 +70,10 @@ if (import.meta.env.PROD) {
     .catch((e) => console.error('Failed check updates:', e));
 }
 
+/** Preload the API */
+const api = new ForkedAPI();
+/** Ignore SSL errors */
+app.commandLine.appendSwitch('ignore-certificate-errors');
 /**
  * Returns the user data path
  */
@@ -80,6 +81,7 @@ ipcMain.handle('userData', () => {
   return app.getPath('userData');
 });
 
+// start the API
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
   return api.start(payload);
 });

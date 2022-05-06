@@ -81,7 +81,7 @@ async function startServer () {
   const response = await window.apiServer.startServer(payload);
   starting.value = false;
   // check the response
-  if(response.success) {
+  if(response.success && response.message) {
     settings.server.accessToken = response.message.split('[split]')[0];
     settings.server.refreshToken = response.message.split('[split]')[1];
     emit('done');
