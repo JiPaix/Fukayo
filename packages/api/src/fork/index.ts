@@ -1,12 +1,11 @@
-
-import crypto from 'crypto';
-import { createServer as createHttp } from 'http';
-import { createServer as createHttps } from 'https';
+import crypto from 'node:crypto';
+import { createServer as createHttp } from 'node:http';
+import { createServer as createHttps } from 'node:https';
 import generateKeyPair from '../lib/certificate';
 import IOWrapper from '../routes';
 import type { ForkResponse, Message, StartMessage } from '../types';
-import type { Server } from 'http';
-import type { Server as httpsServer } from 'https';
+import type { Server } from 'node:http';
+import type { Server as httpsServer } from 'node:https';
 import type { Express } from 'express';
 
 

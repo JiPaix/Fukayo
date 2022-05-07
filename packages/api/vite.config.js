@@ -1,36 +1,72 @@
-import { join } from 'path';
-import { defineConfig } from 'vite';
-import { VitePluginNode } from 'vite-plugin-node';
+import {node} from '../../.electron-vendors.cache.json';
+import {join} from 'path';
+
 const PACKAGE_ROOT = __dirname;
 
-export default defineConfig({
-  // ...vite configures
-  server: {
-    // vite server configs, for details see [vite doc](https://vitejs.dev/config/#server-host)
-    port: 3000,
+/**
+ * @type {import('vite').UserConfig}
+ * @see https://vitejs.dev/config/
+ */
+const config = {
+  mode: process.env.MODE,
+  root: PACKAGE_ROOT,
+  envDir: process.cwd(),
+  resolve: {
+    alias: {
+      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+    },
   },
-   plugins: [
-    ...VitePluginNode({
-      // Nodejs native Request adapter
-      // currently this plugin support 'express', 'nest', 'koa' and 'fastify' out of box,
-      // you can also pass a function if you are using other frameworks, see Custom Adapter section
-      adapter: 'express',
+  build: {
+    sourcemap: 'inline',
+    target: `node${node}`,
+    outDir: 'dist',
+    assetsDir: '.',
+    minify: process.env.MODE !== 'development',
+    lib: {
+      entry: 'src/index.ts',
+      name: 'api',
+      fileName: 'index',
+      formats: ['cjs'],
+    },
+    rollupOptions: {
+      external: [
+        'express',
+        'morgan',
+        'socket.io',
+        'node:crypto',
+        'node:fs',
+        'node:http',
+        'node:https',
+        'node-forge',
+        'node:fs',
+        'node:path',
+        'puppeteer',
+        'puppeteer-cluster',
+        'puppeteer-extra',
+        'puppeteer-extra-plugin-stealth',
+        'puppeteer-extra-plugin-adblocker-no-vulnerabilities',
+        'systeminformation',
+        'axios',
+        'cheerio',
+        'file-type',
+      ],
+      output:{
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+              return id.toString().split('node_modules/')[1].split('/')[0].toString();
+          }
 
-      // tell the plugin where is your project entry
-      appPath: join(PACKAGE_ROOT, 'src') + '/index.ts',
+          const chunk = id.split('/');
+          const isMirror = chunk[chunk.length - 2] === 'mirrors';
+          const isMirrorIcon = chunk[chunk.length - 2] === 'icons' && chunk[chunk.length - 3] === 'mirrors';
+          if(isMirror) return chunk[chunk.length - 1].replace(/\.\w+$/, '');
+          if(isMirrorIcon) return chunk[chunk.length - 1].replace(/\.\w+$/, '.icon');
+        },
+      },
+    },
+    emptyOutDir: true,
+    reportCompressedSize: false,
+  },
+};
 
-      // Optional, default: 'viteNodeApp'
-      // the name of named export of you app from the appPath file
-      exportName: 'viteNodeApp',
-
-      // Optional, default: 'esbuild'
-      // The TypeScript compiler you want to use
-      // by default this plugin is using vite default ts compiler which is esbuild
-      // 'swc' compiler is supported to use as well for frameworks
-      // like Nestjs (esbuild dont support 'emitDecoratorMetadata' yet)
-      tsCompiler: 'esbuild',
-
-      swcOptions: {},
-    }),
-  ],
-});
+export default config;

@@ -1,9 +1,7 @@
-import { Fork } from './fork/index';
-
-
+import { join } from 'node:path';
 import express from 'express';
-import { join } from 'path';
 import morgan from 'morgan';
+import { Fork } from './fork/index';
 
 // basic express setup
 const app = express();
@@ -20,12 +18,10 @@ app.use((req, res, next) => {
 });
 
 // enable logging
-if (process.env.MODE === 'development') {
+if (process.env['MODE'] === 'development') {
   app.use(morgan('common'));
 } else {
   app.use(morgan('[api] :method :url :status :response-time ms - :res[content-length]'));
 }
 
-new Fork(process, app);
-
-export const server = app;
+new Fork(app);

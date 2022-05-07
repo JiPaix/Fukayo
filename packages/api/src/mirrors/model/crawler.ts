@@ -54,7 +54,7 @@ async function useCluster() {
     timeout: 1000*60,
     puppeteer,
     puppeteerOptions: {
-      headless: process.env.MODE === 'development' ? false : true,
+      headless: process.env['MODE'] === 'development' ? false : true,
     },
   });
   return cluster;
