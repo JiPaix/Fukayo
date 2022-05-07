@@ -1,5 +1,5 @@
 
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import mirrors from '../mirrors';
 import { Server as ioServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';

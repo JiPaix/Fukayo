@@ -2,6 +2,7 @@
 import forge from 'node-forge';
 import fs from 'node:fs';
 import path from 'node:path';
+import { env } from 'node:process';
 
 type ROOTca = {
   certificate: string,
@@ -60,9 +61,8 @@ const DEFAULT_L = 'Melbourne';
 
 class CertificateGeneration {
 	static CreateRootCA() {
-    if(!process.env['USER_DATA']) throw new Error('"USER_DATA" environment variable is not set');
     try {
-      const ca = fs.readFileSync(path.join(process.env['USER_DATA'], 'root.crt.json'));
+      const ca = fs.readFileSync(path.join(env.USER_DATA, 'root.crt.json'));
       const { certificate, privateKey, validity } = JSON.parse(ca.toString()) as ROOTca;
       return { certificate, privateKey, notBefore: validity.notBefore, notAfter: validity.notAfter };
     } catch {
@@ -114,7 +114,7 @@ class CertificateGeneration {
       const pemKey = forge.pki.privateKeyToPem(privateKey);
 
       // Write the Root CA to disk
-      fs.writeFileSync(path.join(process.env['USER_DATA'], 'root.crt.json'), JSON.stringify({ certificate: pemCert, privateKey: pemKey, validity: { notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter } }));
+      fs.writeFileSync(path.join(env.USER_DATA, 'root.crt.json'), JSON.stringify({ certificate: pemCert, privateKey: pemKey, validity: { notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter } }));
 
       // Return the PEM encoded cert and private key
       return { certificate: pemCert, privateKey: pemKey, notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter };
@@ -122,13 +122,10 @@ class CertificateGeneration {
 	}
 
 	static CreateHostCert(hostCertCN:string, validDomains:string[], rootCAObject: { certificate: string, privateKey: string, notBefore: Date, notAfter: Date }) {
-		if (!hostCertCN.toString().trim()) throw new Error('"hostCertCN" must be a String');
-		if (!Array.isArray(validDomains)) throw new Error('"validDomains" must be an Array of Strings');
 		if (!rootCAObject || !rootCAObject.hasOwnProperty('certificate') || !rootCAObject.hasOwnProperty('privateKey')) throw new Error('"rootCAObject" must be an Object with the properties "certificate" & "privateKey"');
-    if(!process.env['USER_DATA']) throw new Error('"USER_DATA" environment variable is not set');
     try {
-      const key = fs.readFileSync(path.join(process.env['USER_DATA'], 'key.pem'));
-      const cert = fs.readFileSync(path.join(process.env['USER_DATA'], 'cert.pem'));
+      const key = fs.readFileSync(path.join(env.USER_DATA, 'key.pem'));
+      const cert = fs.readFileSync(path.join(env.USER_DATA, 'cert.pem'));
       return { key , cert };
     } catch {
       // Convert the Root CA PEM details, to a forge Object
@@ -197,8 +194,8 @@ class CertificateGeneration {
       const pemHostCert = forge.pki.certificateToPem(newHostCert);
       const pemHostKey = forge.pki.privateKeyToPem(hostKeys.privateKey);
 
-      fs.writeFileSync(path.join(process.env['USER_DATA'], 'key.pem'), pemHostKey);
-      fs.writeFileSync(path.join(process.env['USER_DATA'], 'cert.pem'), pemHostCert);
+      fs.writeFileSync(path.join(env.USER_DATA, 'key.pem'), pemHostKey);
+      fs.writeFileSync(path.join(env.USER_DATA, 'cert.pem'), pemHostCert);
 
       return { key: pemHostKey, cert: pemHostCert };
     }

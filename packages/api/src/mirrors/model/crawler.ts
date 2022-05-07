@@ -1,3 +1,4 @@
+import { env } from 'node:process';
 import { Cluster } from 'puppeteer-cluster';
 import puppeteer from 'puppeteer-extra';
 import si from 'systeminformation';
@@ -54,7 +55,7 @@ async function useCluster() {
     timeout: 1000*60,
     puppeteer,
     puppeteerOptions: {
-      headless: process.env['MODE'] === 'development' ? false : true,
+      headless: env.MODE === 'development' ? false : true,
     },
   });
   return cluster;

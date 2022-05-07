@@ -1,13 +1,15 @@
+import { readFileSync } from 'node:fs';
 import crypto from 'node:crypto';
+import { env, send } from 'node:process';
 import { createServer as createHttp } from 'node:http';
 import { createServer as createHttps } from 'node:https';
 import generateKeyPair from '../lib/certificate';
 import IOWrapper from '../routes';
+import type { Buffer } from 'buffer';
 import type { ForkResponse, Message, StartMessage } from '../types';
 import type { Server } from 'node:http';
 import type { Server as httpsServer } from 'node:https';
 import type { Express } from 'express';
-
 
 const isMessage = (message: unknown): message is Message => {
   if(typeof message !== 'object') return false;
@@ -18,21 +20,19 @@ const isMessage = (message: unknown): message is Message => {
 export class Fork {
   private runner?: Server | httpsServer;
   private pingTimeout?: NodeJS.Timeout | undefined;
-  private process: NodeJS.Process;
   private app: Express;
   private credentials: { login: string, password: string };
 
-  constructor(process: NodeJS.Process, app: Express) {
-    this.process = process;
+  constructor(app: Express) {
     this.app = app;
-    this.credentials = { login: 'admin', password: 'password' }; // temporary
-    this.process.on('message', (m) => {
+    this.credentials = { login: env.LOGIN || 'admin', password: env.PASSWORD || 'password' };
+    process.on('message', (m) => {
       this.redirect(m);
     });
   }
 
   private send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
-    if(this.process.send) this.process.send({type, success, message}, undefined, undefined, (e) => {
+    if(send) send({type, success, message}, undefined, undefined, (e) => {
       if(e) {
         this.killRunner();
       }
@@ -43,68 +43,85 @@ export class Fork {
     if(this.pingTimeout) clearTimeout(this.pingTimeout);
     this.send('pong');
     this.pingTimeout = setTimeout(() => {
-      this.killRunner();
+      this.killRunner(false, 'timeout');
     }, 10000);
   }
 
   private killRunner(expectReturn = false, message?: string) {
-    if(!this.runner || this.process.send) return;
-    if(this.runner.listening) this.runner.close(e => {
-      if(expectReturn) this.send('shutdown', typeof e === 'undefined', e?.message || message);
-      process.exit(0);
-    });
+    if(!this.runner) return;
+    if(expectReturn) this.send('shutdown', true, message);
+    if(this.runner.listening) {
+      this.runner.close();
+    }
+    process.exit(0);
   }
 
   private start(payload:StartMessage['payload']) {
     this.credentials = { login: payload.login, password: payload.password };
     try {
       // create the runner
-      if(payload.ssl === 'false') this.http(payload.port);
-      else if(payload.ssl === 'app') this.https(payload.port, payload.hostname);
-      else if(payload.ssl === 'provided') this.httpsWithProvidedCert(payload.port, payload.cert, payload.key);
-      this.startRunner();
+      if(payload.ssl === 'false') this.runner = this.http();
+      else if(payload.ssl === 'app') this.runner = this.https(payload.hostname);
+      else if(payload.ssl === 'provided') this.runner = this.httpsWithProvidedCert();
+      return this.startRunner(payload.port);
     } catch(e) {
       if(e instanceof Error) this.send('start', false, e.message);
       else if(typeof e === 'string') this.send('start', false, e);
       else this.send('start', false, 'unknown_error');
-      this.killRunner(false);
+      return this.killRunner(false);
     }
   }
 
-  private startRunner() {
-    if(!this.runner) return this.killRunner(false);
+  private startRunner(port:number) {
+    if(!this.runner /** should not happen */) return;
     this.runner
-      .once('listening', () => {
-        const accessToken = crypto.randomBytes(32).toString('hex');
-        const refreshToken = crypto.randomBytes(32).toString('hex');
-
-        this.send('start', true, accessToken+'[split]'+refreshToken);
-        if(this.runner /** should alway be true */) new IOWrapper(this.runner, this.credentials, {accessToken, refreshToken});
-      })
-      .on('error', (e) => this.killRunner(true, e.message));
+      .once('listening', this.event_start_listening.bind(this))
+      .once('error', this.event_start_error.bind(this))
+      .listen(port);
   }
 
-  private http(port: number) {
-    this.runner = createHttp(this.app).listen(port);
+  private event_start_listening() {
+    const accessToken = crypto.randomBytes(32).toString('hex');
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    if(this.runner /** should not happen */) {
+      new IOWrapper(this.runner, this.credentials, {accessToken, refreshToken});
+      this.send('start', true, accessToken+'[split]'+refreshToken);
+      this.runner.off('error', this.event_start_error.bind(this));
+    }
   }
 
-  private https(port: number, url?:string) {
-    if(!url) return this.send('start', false, 'hostname_not_provided');
+  private event_start_error(e:Error) {
+    if(this.runner /** should not happen */) this.runner.off('listening', this.event_start_listening.bind(this));
+    this.send('start', false, e.message);
+    this.killRunner(true, e.message);
+  }
+
+  private http() {
+    return createHttp(this.app);
+  }
+
+  private https(url?:string) {
+    if(!url) throw 'hostname_not_provided';
     const hostname = new URL(url).hostname;
     const pem = generateKeyPair(hostname, ['localhost']);
-    this.runner = createHttps({
+    return createHttps({
       cert: pem.hostCert.cert,
       key: pem.hostCert.key,
-    }, this.app).listen(port);
+    }, this.app);
   }
 
-  private httpsWithProvidedCert(port: number, cert?: string | null, key?: string | null) {
-    if(typeof cert !== 'string') return this.send('start', false, 'certificate_not_provided');
-    if(typeof key !== 'string') return this.send('start', false, 'key_not_provided');
-    this.runner = createHttps({
-      cert: cert,
-      key: key,
-     }, this.app).listen(port);
+  private httpsWithProvidedCert() {
+    if(typeof env.CERT !== 'string') throw 'certificate_not_provided';
+    if(typeof env.KEY !== 'string') throw 'key_not_provided';
+    const keycert = {
+      cert: env.CERT as string | Buffer,
+      key: env.KEY as string | Buffer,
+    };
+    if(!env.ELECTRON_RUN_AS_NODE) {
+      keycert.cert = readFileSync(env.CERT);
+      keycert.key = readFileSync(env.KEY);
+    }
+    return createHttps(keycert, this.app);
   }
 
   private redirect(message: Message | unknown) {

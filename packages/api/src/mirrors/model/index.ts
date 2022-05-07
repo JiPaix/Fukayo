@@ -3,6 +3,7 @@ import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from './crawler';
 import { resolve } from 'node:path';
+import { env } from 'node:process';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { MirrorConstructor } from './types';
 import type { mirrorInfo } from '../types/shared';
@@ -81,7 +82,7 @@ export default class Mirror {
   }
 
   protected logger(...args: unknown[]) {
-    if(process.env['MODE'] === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
+    if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
   }
 
   protected async downloadImage(url:string) {
