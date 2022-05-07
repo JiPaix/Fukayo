@@ -9,7 +9,6 @@ const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
 export class ForkedAPI {
 
-  private fork?: ChildProcess;
   private startPending = false;
   private stopPending = false;
 
@@ -22,6 +21,7 @@ export class ForkedAPI {
     PASSWORD: string,
     PORT: string,
     SSL: startPayload['ssl'],
+    HOSTNAME?: string,
     CERT: string | undefined,
     KEY: string | undefined,
     USER_DATA: string,
@@ -34,6 +34,7 @@ export class ForkedAPI {
       LOGIN: payload.login,
       PASSWORD: payload.password,
       PORT: payload.port.toString(),
+      HOSTNAME: payload.hostname,
       SSL: payload.ssl,
       CERT: typeof payload.cert === 'string' ? payload.cert : undefined,
       KEY: typeof payload.key  === 'string' ? payload.key : undefined,
@@ -51,6 +52,7 @@ export class ForkedAPI {
   get login() { return this.forkEnv.LOGIN; }
   get password() { return this.forkEnv.PASSWORD; }
   get ssl() { return this.forkEnv.SSL; }
+  get hostname() { return this.forkEnv.HOSTNAME; }
   get cert() { return this.forkEnv.CERT; }
   get key() { return this.forkEnv.KEY; }
 
@@ -59,6 +61,7 @@ export class ForkedAPI {
     return {
       login: this.login,
       port: parseInt(this.port),
+      hostname: this.hostname,
       password: this.password,
       ssl: this.ssl,
       cert: this.cert,
