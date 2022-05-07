@@ -9,7 +9,7 @@ import setupPage from '/@/components/setupPage.vue';
 import loginPage from '/@/components/loginPage.vue';
 import mainPage from '/@/components/mainPage.vue';
 import favicon from '../assets/icon.svg';
-import type { authByLogin } from './components/helpers/login';
+import type { authByLogin } from './components/helpers/socket';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
@@ -102,6 +102,9 @@ onBeforeMount(()=> {
   }
   .w-100 {
     width: 100%!important;
+  }
+  .w-50 {
+    width: 50%!important;
   }
   .cursor-pointer {
     cursor: pointer;

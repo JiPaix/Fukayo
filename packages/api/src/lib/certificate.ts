@@ -3,6 +3,17 @@ import forge from 'node-forge';
 import fs from 'fs';
 import path from 'path';
 
+type ROOTca = {
+  certificate: string,
+  privateKey: string,
+    validity: {
+      notBefore: Date,
+      notAfter: Date,
+    }
+}
+
+
+
 const makeNumberPositive = (hexString: string) => {
 	let mostSignificativeHexDigitAsInt = parseInt(hexString[0], 16);
 
@@ -49,55 +60,65 @@ const DEFAULT_L = 'Melbourne';
 
 class CertificateGeneration {
 	static CreateRootCA() {
-		// Create a new Keypair for the Root CA
-		const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(2048);
+    if(!process.env.USER_DATA) throw new Error('"USER_DATA" environment variable is not set');
+    try {
+      const ca = fs.readFileSync(path.join(process.env.USER_DATA, 'root.crt.json'));
+      const { certificate, privateKey, validity } = JSON.parse(ca.toString()) as ROOTca;
+      return { certificate, privateKey, notBefore: validity.notBefore, notAfter: validity.notAfter };
+    } catch {
+      // Create a new Keypair for the Root CA
+      const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(2048);
 
-		// Define the attributes for the new Root CA
-		const attributes = [{
-			shortName: 'C',
-			value: DEFAULT_C,
-		}, {
-			shortName: 'ST',
-			value: DEFAULT_ST,
-		}, {
-			shortName: 'L',
-			value: DEFAULT_L,
-		}, {
-			shortName: 'CN',
-			value: 'My Custom Testing RootCA',
-		}];
+      // Define the attributes for the new Root CA
+      const attributes = [{
+        shortName: 'C',
+        value: DEFAULT_C,
+      }, {
+        shortName: 'ST',
+        value: DEFAULT_ST,
+      }, {
+        shortName: 'L',
+        value: DEFAULT_L,
+      }, {
+        shortName: 'CN',
+        value: 'My Custom Testing RootCA',
+      }];
 
-		const extensions = [{
-			name: 'basicConstraints',
-			cA: true,
-		}, {
-			name: 'keyUsage',
-			keyCertSign: true,
-			cRLSign: true,
-		}];
+      const extensions = [{
+        name: 'basicConstraints',
+        cA: true,
+      }, {
+        name: 'keyUsage',
+        keyCertSign: true,
+        cRLSign: true,
+      }];
 
-		// Create an empty Certificate
-		const cert = forge.pki.createCertificate();
+      // Create an empty Certificate
+      const cert = forge.pki.createCertificate();
 
-		// Set the Certificate attributes for the new Root CA
-		cert.publicKey = publicKey;
-		cert.privateKey = privateKey;
-		cert.serialNumber = randomSerialNumber();
-		cert.validity.notBefore = getCertNotBefore();
-		cert.validity.notAfter = getCANotAfter(cert.validity.notBefore);
-		cert.setSubject(attributes);
-		cert.setIssuer(attributes);
-		cert.setExtensions(extensions);
+      // Set the Certificate attributes for the new Root CA
+      cert.publicKey = publicKey;
+      cert.privateKey = privateKey;
+      cert.serialNumber = randomSerialNumber();
+      cert.validity.notBefore = getCertNotBefore();
+      cert.validity.notAfter = getCANotAfter(cert.validity.notBefore);
+      cert.setSubject(attributes);
+      cert.setIssuer(attributes);
+      cert.setExtensions(extensions);
 
-		// Self-sign the Certificate
-		cert.sign(privateKey, forge.md.sha512.create());
+      // Self-sign the Certificate
+      cert.sign(privateKey, forge.md.sha512.create());
 
-		// Convert to PEM format
-		const pemCert = forge.pki.certificateToPem(cert);
-		const pemKey = forge.pki.privateKeyToPem(privateKey);
+      // Convert to PEM format
+      const pemCert = forge.pki.certificateToPem(cert);
+      const pemKey = forge.pki.privateKeyToPem(privateKey);
 
-		// Return the PEM encoded cert and private key
-		return { certificate: pemCert, privateKey: pemKey, notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter };
+      // Write the Root CA to disk
+      fs.writeFileSync(path.join(process.env.USER_DATA, 'root.crt.json'), JSON.stringify({ certificate: pemCert, privateKey: pemKey, validity: { notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter } }));
+
+      // Return the PEM encoded cert and private key
+      return { certificate: pemCert, privateKey: pemKey, notBefore: cert.validity.notBefore, notAfter: cert.validity.notAfter };
+    }
 	}
 
 	static CreateHostCert(hostCertCN:string, validDomains:string[], rootCAObject: { certificate: string, privateKey: string, notBefore: Date, notAfter: Date }) {
@@ -109,7 +130,7 @@ class CertificateGeneration {
       const key = fs.readFileSync(path.join(process.env.USER_DATA, 'key.pem'));
       const cert = fs.readFileSync(path.join(process.env.USER_DATA, 'cert.pem'));
       return { key , cert };
-    }catch {
+    } catch {
       // Convert the Root CA PEM details, to a forge Object
       const caCert = forge.pki.certificateFromPem(rootCAObject.certificate);
       const caKey = forge.pki.privateKeyFromPem(rootCAObject.privateKey);
@@ -179,18 +200,11 @@ class CertificateGeneration {
       fs.writeFileSync(path.join(process.env.USER_DATA, 'key.pem'), pemHostKey);
       fs.writeFileSync(path.join(process.env.USER_DATA, 'cert.pem'), pemHostCert);
 
-      const key = fs.readFileSync(path.join(process.env.USER_DATA, 'key.pem'));
-      const cert = fs.readFileSync(path.join(process.env.USER_DATA, 'cert.pem'));
-      return { key, cert };
+      return { key: pemHostKey, cert: pemHostCert };
     }
 	}
 }
 
-/* The following certificate:
-	- Will be called 'testing.com'.
-	- Will be valid for 'testing.com' and 'test.com'.
-	- Will be signed by the CA we just created above.
-*/
 export default function generateKeyPair(hostCertCN: string, validDomains: string[]) {
   const CA = CertificateGeneration.CreateRootCA();
   const hostCert = CertificateGeneration.CreateHostCert(hostCertCN, validDomains, CA);

@@ -1,10 +1,9 @@
-import type { Paths } from './../../preload/src/config';
-import { app, ipcMain } from 'electron';
 import './security-restrictions';
-import {restoreOrCreateWindow} from '/@/mainWindow';
+import { app, ipcMain } from 'electron';
+import { restoreOrCreateWindow } from '/@/mainWindow';
 import { ForkedAPI } from './forkedAPI';
-import type { startPayload } from './types/forkedAPI';
-
+import type { startPayload } from '../../api/src/types';
+import type { Paths } from './../../preload/src/config';
 /**
  * Prevent multiple instances
  */
@@ -71,8 +70,6 @@ if (import.meta.env.PROD) {
     .catch((e) => console.error('Failed check updates:', e));
 }
 
-/** Preload the API */
-const api = new ForkedAPI();
 /** Ignore SSL errors */
 app.commandLine.appendSwitch('ignore-certificate-errors');
 
@@ -85,5 +82,5 @@ ipcMain.handle('get-path', (ev, path:Paths) => {
 
 // start the API
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
-  return api.start(payload);
+  return new ForkedAPI().start(payload);
 });

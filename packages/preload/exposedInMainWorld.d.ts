@@ -10,5 +10,5 @@ interface Window {
      * intended to be used in a vuex store plugin
      */
     readonly getPath: (path: import('./src/config').Paths) => Promise<string>;
-    readonly apiServer: { startServer: (payload: import('../main/src/types/forkedAPI').startPayload) => Promise<import('../main/src/types/forkedAPI').ForkResponse>; stopServer: () => Promise<import('../main/src/types/forkedAPI').ForkResponse>; getEnv: string; };
+    readonly apiServer: { startServer: (payload: import('../api/src/types').startPayload) => Promise<import('../api/src/types').ForkResponse>; stopServer: () => Promise<import('../api/src/types').ForkResponse>; getEnv: string; };
 }
