@@ -34,6 +34,7 @@ const config = {
         'morgan',
         'socket.io',
         'node:crypto',
+        'node:process',
         'node:fs',
         'node:http',
         'node:https',
@@ -55,9 +56,8 @@ const config = {
           if (id.includes('node_modules')) {
               return id.toString().split('node_modules/')[1].split('/')[0].toString();
           }
-
           const chunk = id.split('/');
-          const isMirror = chunk[chunk.length - 2] === 'mirrors';
+          const isMirror = chunk[chunk.length - 2] === 'mirrors' && chunk[chunk.length - 1] !== 'index.ts';
           const isMirrorIcon = chunk[chunk.length - 2] === 'icons' && chunk[chunk.length - 3] === 'mirrors';
           if(isMirror) return chunk[chunk.length - 1].replace(/\.\w+$/, '');
           if(isMirrorIcon) return chunk[chunk.length - 1].replace(/\.\w+$/, '.icon');
