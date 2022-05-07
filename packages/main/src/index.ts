@@ -4,6 +4,10 @@ import { restoreOrCreateWindow } from '/@/mainWindow';
 import { ForkedAPI } from './forkedAPI';
 import type { startPayload } from '../../api/src/types';
 import type { Paths } from './../../preload/src/config';
+
+/** API instance */
+let api: ForkedAPI|undefined;
+
 /**
  * Prevent multiple instances
  */
@@ -28,6 +32,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async() => {
+  if(!api) return;
   const stop = await api.stop();
   if(stop.success) console.log('api stopped');
   else console.error('api stop failed');
@@ -82,5 +87,6 @@ ipcMain.handle('get-path', (ev, path:Paths) => {
 
 // start the API
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
-  return new ForkedAPI().start(payload);
+  api = new ForkedAPI(payload);
+  return api.start();
 });
