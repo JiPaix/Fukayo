@@ -15,7 +15,7 @@ export const isPasswordValid = (password:string|null) => {
 export const passwordHint = (password:string|null) => {
   // 8 chars, at least a symbol, a number and with upper and lower case chars
   const regex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-  if(password === null || password.length === 0) return 'setup.passwordHint.value';
+  if(password === null || password.length < 6) return 'setup.passwordHint.value';
   if(regex.test(password)) return 'setup.passwordHintStrong.value';
   if(password.length >= 8) return 'setup.passwordHintAverage.value';
   return 'setup.passwordHintWeak.value';
@@ -23,11 +23,35 @@ export const passwordHint = (password:string|null) => {
 
 /**
  * Check the port validity:
- * a number, between 1024 and 65535
+ *
+ * number between 1024 and 65535
  * @param port port to check
  */
 export const isPortValid = (port:number) => {
   return port >= 1024 && port <= 65535;
+};
+
+/**
+ *  Check the url validity:
+ *
+ * url with protocol and hostname
+ * @param hostname url to check
+ */
+export const isHostNameValid = (hostname:string|null) => {
+  if(hostname === null) return false;
+  if(!hostname.startsWith('https://')) return false;
+  hostname = hostname.replace('https://', '');
+  if(hostname.length < 1) return false;
+  if(hostname.includes(' ')) return false;
+  return true;
+};
+
+export const hostNameHint = (hostname:string|null) => {
+  if(hostname === null || hostname.length < 1) return 'setup.setHostname.errors.length.value';
+  if(!hostname.startsWith('https://')) return 'setup.setHostname.errors.protocol.value';
+  if(hostname.replace('https://', '').length < 1) return 'setup.setHostname.errors.length.value';
+  if(hostname.includes(' ')) return 'setup.setHostname.errors.space.value';
+  return '';
 };
 
 /**
@@ -61,13 +85,3 @@ export const keyColor = (key:string|null) => {
   if(isProvidedKeyValid(key)) return 'positive';
   return 'negative';
 };
-
-export type authByToken = {
-  token: string|null,
-  refreshToken?: string|null,
-}
-
-export type authByLogin = {
-  login: string
-  password: string
-}

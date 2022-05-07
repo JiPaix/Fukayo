@@ -18,6 +18,32 @@
         "desc": "Set the password for the server",
         "value": "Password"
       },
+      "setHostname" : {
+        "desc": "Set the hostname for the server",
+        "value": "URL",
+        "hint": {
+          "desc": "Hint for the hostname",
+          "value": "Exemple: <b>https://monsiteweb.com</b>"
+        },
+        "errors": {
+          "length": {
+            "desc": "URL is null or empty",
+            "value": "Required"
+          },
+          "protocol": {
+            "desc": "URL don't have protocol",
+            "value": "Must start with <b>https://</b>"
+          },
+          "hasparam": {
+            "desc": "URL should not have parameters",
+            "value": "Should not have parameters"
+          },
+          "space": {
+            "desc": "URL should not have spaces",
+            "value": "Should not have spaces"
+          }
+        }
+      },
       "passwordHint" : {
         "desc": "Password must be at least 6 characters long",
         "value": "Password must be at least 6 characters long"

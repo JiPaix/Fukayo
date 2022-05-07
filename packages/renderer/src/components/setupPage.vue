@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import icon from '../../assets/icon.svg';
 import { useI18n } from 'vue-i18n';
-import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from './helpers/login';
+import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isHostNameValid, hostNameHint, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from './helpers/login';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
@@ -59,6 +59,9 @@ function readyToStart() {
     if(!isProvidedCertificateValid(settings.server.cert)) return false;
     if(!isProvidedKeyValid(settings.server.key)) return false;
   }
+  if(settings.server.ssl === 'app') {
+    if(!isHostNameValid(settings.server.hostname)) return false;
+  }
   return true;
 }
 
@@ -73,6 +76,7 @@ async function startServer () {
     login: settings.server.login || 'admin',
     password: password.value as string,
     port: settings.server.port,
+    hostname: settings.server.hostname,
     ssl: settings.server.ssl,
     cert: settings.server.cert,
     key: settings.server.key,
@@ -139,30 +143,31 @@ async function startServer () {
             type="text"
             :label="$t('setup.setLogin.value')"
           />
-
-
           <q-input
             v-model="password"
             name="password"
             filled
             dense
+            :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
             bottom-slots
-            :rules="[isPasswordValid]"
             :type="showPassword ? 'text' : 'password'"
             :label="$t('setup.setPassword.value')"
           >
             <template #hint>
-              <div v-html="$t(passwordHint(password))" />
+              <div
+                :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
+                v-html="$t(passwordHint(password))"
+              />
             </template>
             <template #prepend>
               <q-icon
+                :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
                 :name="showPassword ? 'visibility' : 'visibility_off'"
                 style="cursor:pointer;"
                 @click="showPassword = !showPassword"
               />
             </template>
           </q-input>
-
           <q-input
             v-model.number="settings.server.port"
             name="port"
@@ -254,6 +259,39 @@ async function startServer () {
                       <span>
                         {{ $t('setup.security.app.description.value', { appName: $t('app.name.value') }) }}
                       </span>
+                      <q-slide-transition>
+                        <div
+                          v-if="settings.server.ssl === 'app'"
+                        >
+                          <q-input
+                            v-model="settings.server.hostname"
+                            class="q-mt-sm q-ml-auto "
+                            dense
+                            :autofocus="!isHostNameValid(settings.server.hostname)"
+                            bottom-slots
+                            clearable
+                            no-error-icon
+                            name="hostname"
+                            :error="hostNameHint(settings.server.hostname) !== ''"
+                            :type="'text'"
+                            :label="$t('setup.setHostname.value')"
+                          >
+                            <template
+                              #prepend
+                            >
+                              <q-icon
+                                name="public"
+                              />
+                            </template>
+                            <template #hint>
+                              <div v-html="$t('setup.setHostname.hint.value')" />
+                            </template>
+                            <template #error>
+                              <div v-html="$t(hostNameHint(settings.server.hostname))" />
+                            </template>
+                          </q-input>
+                        </div>
+                      </q-slide-transition>
                     </q-item-label>
                   </q-item-section>
                 </q-item>
