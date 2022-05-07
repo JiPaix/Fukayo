@@ -93,5 +93,4 @@ test('Server start', async () => {
     const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
     button.click();
   });
-  await new Promise(resolve => setTimeout(resolve, 10000));
 });
