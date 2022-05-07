@@ -65,7 +65,7 @@ async function connect(auth?: authByLogin, beforeMount?: boolean) {
  * try to connect non-electron browser to the websocket server using stored credentials
  */
 onBeforeMount(()=> {
-  if(!isElectron) connect(undefined, true);
+  connect(undefined, true);
 });
 </script>
 <template>

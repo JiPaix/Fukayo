@@ -37,10 +37,10 @@ class socket {
     return this.socket;
   }
 
-  private unplugSocket(reason?:string) {
-    if(this.socket) {
+  private unplugSocket(socket:sock, reason?:string) {
+    if(socket) {
       this.removeListeners();
-      if(this.socket.connected) this.socket.disconnect();
+      socket.disconnect();
     }
     return reason;
   }
@@ -67,12 +67,12 @@ class socket {
 
       socket.once('unauthorized', () => {
         const reason = auth ? 'badpassword' : 'expiredtoken';
-        reject(this.unplugSocket(reason));
+        reject(this.unplugSocket(socket, reason));
       });
 
       socket.once('connect_error', (e) => {
         if(e.message === 'xhr poll error') {
-          reject(this.unplugSocket(e.message));
+          reject(this.unplugSocket(socket, e.message));
         }
       });
     });

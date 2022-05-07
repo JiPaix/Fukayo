@@ -15,7 +15,6 @@ const settings = useSettingsStore();
 /** emit */
 const emit = defineEmits<{ (event: 'done'): void }>();
 
-
 /** setup password */
 const password = ref<string | null>(null);
 /** toggler to show the password */
@@ -71,6 +70,7 @@ function readyToStart() {
 async function startServer () {
   // checks
   if(!readyToStart()) return;
+  starting.value = true;
   // define the payload
   const payload = {
     login: settings.server.login || 'admin',
@@ -85,10 +85,14 @@ async function startServer () {
   const response = await window.apiServer.startServer(payload);
   starting.value = false;
   // check the response
-  if(response.success && response.message) {
-    settings.server.accessToken = response.message.split('[split]')[0];
-    settings.server.refreshToken = response.message.split('[split]')[1];
-    emit('done');
+  if(response.message) {
+    if(response.success) {
+      settings.server.accessToken = response.message.split('[split]')[0];
+      settings.server.refreshToken = response.message.split('[split]')[1];
+      emit('done');
+    } else {
+      $q.notify({ message: response.message, type: 'negative' });
+    }
   }
 }
 </script>
@@ -351,7 +355,7 @@ async function startServer () {
               size="xl"
               round
               :loading="starting"
-              :color="!readyToStart() || starting ? 'warning' : 'negative'"
+              :color="!readyToStart() ? 'warning' : 'negative'"
               :disabled="!readyToStart() || starting"
               icon="local_fire_department"
             />

@@ -1,4 +1,4 @@
-import { socketManager } from '/@/socketClient';
+import { socketManager  } from '/@/socketClient';
 import type { SocketStoreSettings } from '/@/socketClient';
 
 export type authByLogin = {
@@ -6,6 +6,8 @@ export type authByLogin = {
   password: string
 }
 
-export  function useSocket(settings:SocketStoreSettings, auth?: authByLogin){
-    return socketManager(settings).connect(auth);
+
+
+export function useSocket(settings:SocketStoreSettings, auth?: authByLogin){
+  return socketManager(settings).connect(auth);
 }
