@@ -75,6 +75,7 @@ test('Preload apiServer', async () => {
 
 test('Server start', async () => {
   const page = await electronApp.firstWindow();
+  if(process.platform === 'win32') await page.waitForEvent('requestfinished');
   await page.evaluate( async () => {
     const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
     login.value = 'test';
