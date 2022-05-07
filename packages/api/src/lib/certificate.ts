@@ -38,21 +38,20 @@ const getCertNotBefore = () => {
 	return new Date(`${year}-${month}-${day} 00:00:00Z`);
 };
 
-// Get Certificate Expiration Date (Valid for 90 Days)
+// Get Certificate Expiration Date (Valid for 99 Years)
 const getCertNotAfter = (notBefore: Date) => {
-	const ninetyDaysLater = new Date(notBefore.getTime() + 60*60*24*90*1000);
-	const year = ninetyDaysLater.getFullYear();
-	const month = (ninetyDaysLater.getMonth() + 1).toString().padStart(2, '0');
-	const day = ninetyDaysLater.getDate();
-	return new Date(`${year}-${month}-${day} 23:59:59Z`);
+  notBefore.setFullYear(notBefore.getFullYear() + 99);
+  notBefore.setMonth(notBefore.getMonth() + 1);
+  notBefore.setHours(23, 59, 59);
+	return notBefore;
 };
 
 // Get CA Expiration Date (Valid for 100 Years)
 const getCANotAfter = (notBefore: Date) => {
-	const year = notBefore.getFullYear() + 100;
-	const month = (notBefore.getMonth() + 1).toString().padStart(2, '0');
-	const day = notBefore.getDate();
-	return new Date(`${year}-${month}-${day} 23:59:59Z`);
+  notBefore.setFullYear(notBefore.getFullYear() + 100);
+  notBefore.setMonth(notBefore.getMonth() + 1);
+  notBefore.setHours(23, 59, 59);
+	return notBefore;
 };
 
 const DEFAULT_C = 'Australia';
