@@ -93,6 +93,7 @@ const supportedTypes = [
   'chore',
   'revert',
   'deps',
+  'release',
   fallbackType,
 ];
 
@@ -306,7 +307,7 @@ function getChangeLog(groups) {
     if (group.isEmpty) {
       continue;
     }
-
+    if(typeId === 'release') continue;
     changelog += `### ${replaceHeader(typeId)}${'\r\n'}`;
 
     for (const [scopeId, scope] of group.scopes) {
