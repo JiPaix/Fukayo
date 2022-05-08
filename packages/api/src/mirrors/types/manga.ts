@@ -60,6 +60,12 @@ export type MangaPage = {
     /** Fetch date */
     date: number
     /**
+     * Has the chapter been read?
+     *
+     * Only required for mangas which are stored in the database
+     */
+    read?: boolean
+    /**
      * Scanlator's name
      *
      * to use if mirror can provide the same chapter from multiple scanlators

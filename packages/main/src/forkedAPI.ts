@@ -2,42 +2,66 @@ import { fork } from 'child_process';
 import { app } from 'electron';
 import { resolve } from 'path';
 import type { ChildProcess } from 'child_process';
+import type { ForkResponse, startPayload } from '../../api/src/types';
 
-const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.js');
+const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.cjs.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
 export class ForkedAPI {
 
-  private fork?: ChildProcess;
   private startPending = false;
   private stopPending = false;
 
   private pingInterval?: NodeJS.Timeout;
   private pongTimeout?: NodeJS.Timeout;
-  private port?: number;
-  private password?: string;
-  private ssl?: startPayload['ssl'];
-  private cert?: string | null;
-  private key?: string | null;
-  private userdata = app.getPath('userData');
-  private appdata = app.getPath('appData');
-  private tempdata = app.getPath('temp');
-  private picturedata = app.getPath('pictures');
-  private login = 'admin';
 
-  get defaultPort() {
-    return import.meta.env.DEV && import.meta.env.VITE_DEV_PORT !== undefined
-    ? String(parseInt(import.meta.env.VITE_DEV_PORT)+1) : '3000';
+  private fork?: ChildProcess;
+  private forkEnv: {
+    LOGIN: string,
+    PASSWORD: string,
+    PORT: string,
+    SSL: startPayload['ssl'],
+    HOSTNAME?: string,
+    CERT: string | undefined,
+    KEY: string | undefined,
+    USER_DATA: string,
+    DOWNLOAD_DATA: string,
+    MODE: string,
+  };
+
+  constructor(payload: startPayload) {
+    this.forkEnv = {
+      LOGIN: payload.login,
+      PASSWORD: payload.password,
+      PORT: payload.port.toString(),
+      HOSTNAME: payload.hostname,
+      SSL: payload.ssl,
+      CERT: typeof payload.cert === 'string' ? payload.cert : undefined,
+      KEY: typeof payload.key  === 'string' ? payload.key : undefined,
+      USER_DATA: app.getPath('userData'),
+      DOWNLOAD_DATA: app.getPath('downloads'),
+      MODE: import.meta.env.MODE,
+    };
   }
 
   get running() {
     return !!this.fork;
   }
 
-  get startPayload():startPayloadInternal {
+  get port() { return this.forkEnv.PORT; }
+  get login() { return this.forkEnv.LOGIN; }
+  get password() { return this.forkEnv.PASSWORD; }
+  get ssl() { return this.forkEnv.SSL; }
+  get hostname() { return this.forkEnv.HOSTNAME; }
+  get cert() { return this.forkEnv.CERT; }
+  get key() { return this.forkEnv.KEY; }
+
+  private get startPayload():startPayload {
+    if(!this.port || !this.password || !this.ssl) throw new Error('startPayload should be defined in init');
     return {
       login: this.login,
-      port: this.port,
+      port: parseInt(this.port),
+      hostname: this.hostname,
       password: this.password,
       ssl: this.ssl,
       cert: this.cert,
@@ -45,23 +69,10 @@ export class ForkedAPI {
     };
   }
 
-  async init(payload: startPayloadInternal) {
-    this.login = payload.login;
-    this.port = payload.port;
-    this.password = payload.password;
-    this.ssl = payload.ssl;
-    this.cert = payload.cert;
-    this.key = payload.key;
+  async init() {
     if(this.stopPending || this.startPending) await wait(10);
     if(this.stopPending || this.startPending) this.forceShutdown();
-    this.fork = fork(apiPath, {env: {
-      ...process.env,
-      USER_DATA: this.userdata,
-      APP_DATA: this.appdata,
-      TEMP_DATA: this.tempdata,
-      PICTURE_DATA: this.picturedata,
-      MODE: import.meta.env.MODE,
-    }});
+    this.fork = fork(apiPath, {env: this.forkEnv});
   }
 
   private ping() {
@@ -74,7 +85,7 @@ export class ForkedAPI {
           console.error(err);
           this.forceShutdown();
           if(!this.password) throw new Error('ping shouldn\'t be called before init');
-          this.start(this.startPayload);
+          this.start();
         }
       });
     }
@@ -88,7 +99,7 @@ export class ForkedAPI {
     this.pongTimeout = setTimeout(() => {
       this.forceShutdown();
       if(!this.password) throw new Error('pong shouldn\'t be called before init');
-      this.start(this.startPayload);
+      this.start();
     }, 10000);
 
     this.fork.on('message', (msg: ForkResponse) => {
@@ -98,22 +109,18 @@ export class ForkedAPI {
       this.pongTimeout = setTimeout(() => {
         this.forceShutdown();
         if(!this.password) throw new Error('pong shouldn\'t be called before init');
-        this.start(this.startPayload);
+        this.start();
       }, 10000);
     });
-
-
-
   }
 
-  public async start(payload: startPayloadInternal):Promise<ForkResponse> {
+  public async start():Promise<ForkResponse> {
     // init the fork if it hasn't been already
-    if(!this.fork) this.init(payload);
+    if(!this.fork) this.init();
     // if fork is already in the process of being started or stoped, wait for it to finish
     if(this.stopPending || this.startPending) await wait(5);
     // if fork is still in the process of being started or stoped after waiting, force shutdown (could happen if process hangs)
     if(this.stopPending || this.startPending) this.forceShutdown();
-
     // starting the fork
     return new Promise(resolve => {
       // setting up a 5 second timeout after which we force shutdown
@@ -192,30 +199,4 @@ export class ForkedAPI {
     this.startPending = false;
     this.stopPending = false;
   }
-}
-
-
-
-type ForkResponse = {
-  type: 'start' | 'shutdown' | 'pong',
-  success: boolean,
-  message?: string,
-}
-
-export type startPayload = {
-  login:string,
-  password: string,
-  port: number,
-  ssl: 'false' | 'provided' | 'app',
-  cert?: string | null,
-  key?: string | null,
-}
-
-type startPayloadInternal = {
-  login:string,
-  password?: string,
-  port?: number,
-  ssl: 'false' | 'provided' | 'app' | undefined
-  cert?: string | null,
-  key?: string | null,
 }

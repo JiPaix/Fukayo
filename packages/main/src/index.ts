@@ -1,11 +1,12 @@
-import { app, ipcMain } from 'electron';
 import './security-restrictions';
-import {restoreOrCreateWindow} from '/@/mainWindow';
-import type { startPayload } from './forkedAPI';
+import { app, ipcMain } from 'electron';
+import { restoreOrCreateWindow } from '/@/mainWindow';
 import { ForkedAPI } from './forkedAPI';
+import type { startPayload } from '../../api/src/types';
+import type { Paths } from './../../preload/src/config';
 
-const api = new ForkedAPI();
-app.commandLine.appendSwitch('ignore-certificate-errors');
+/** API instance */
+let api: ForkedAPI|undefined;
 
 /**
  * Prevent multiple instances
@@ -31,6 +32,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async() => {
+  if(!api) return;
   const stop = await api.stop();
   if(stop.success) console.log('api stopped');
   else console.error('api stop failed');
@@ -73,13 +75,18 @@ if (import.meta.env.PROD) {
     .catch((e) => console.error('Failed check updates:', e));
 }
 
-/**
- * Returns the user data path
- */
-ipcMain.handle('userData', () => {
-  return app.getPath('userData');
+/** Ignore SSL errors */
+app.commandLine.appendSwitch('ignore-certificate-errors');
+
+/** exposed to main world funtions */
+
+// returns user data path
+ipcMain.handle('get-path', (ev, path:Paths) => {
+  return app.getPath(path);
 });
 
+// start the API
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
-  return api.start(payload);
+  api = new ForkedAPI(payload);
+  return api.start();
 });

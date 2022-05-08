@@ -62,7 +62,7 @@ const setupMainPackageWatcher = ({config: {server}}) => {
   const apilogger = createLogger(LOG_LEVEL, {
     prefix: '[api]',
   });
-  /** @type {ChildProcessWithoutNullStreams | null} */
+  /** @type {import('child_process').ChildProcessWithoutNullStreams | null} */
   let spawnProcess = null;
 
   return getWatcher({

@@ -75,6 +75,7 @@ test('Preload apiServer', async () => {
 
 test('Server start', async () => {
   const page = await electronApp.firstWindow();
+  if(process.platform === 'win32') await page.waitForEvent('requestfinished');
   await page.evaluate( async () => {
     const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
     login.value = 'test';
@@ -92,5 +93,4 @@ test('Server start', async () => {
     const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
     button.click();
   });
-  await new Promise(resolve => setTimeout(resolve, 10000));
 });

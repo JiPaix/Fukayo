@@ -27,7 +27,7 @@ const config = {
     lib: {
       entry: 'src/index.ts',
       formats: ['cjs'],
-      name: 'api',
+      name: 'main',
       fileName: 'index',
     },
     rollupOptions: {

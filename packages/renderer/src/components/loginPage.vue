@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import icon from '../../assets/icon.svg';
-import type { authByLogin} from './helpers/login';
+import type { authByLogin } from '../components/helpers/socket';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
