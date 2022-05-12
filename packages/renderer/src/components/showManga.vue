@@ -8,10 +8,10 @@ import { useSocket } from './helpers/socket';
 import { isChapterErrorMessage, isChapterPage, isChapterPageErrorMessage, isManga } from './helpers/typechecker';
 import showChapter from './showChapter.vue';
 import type dayjs from 'dayjs';
-import type { MangaPage } from '../../../api/src/mirrors/types/manga';
-import type { ChapterPageErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
-import type { ChapterPage } from '../../../api/src/mirrors/types/chapter';
-import type { socketClientInstance } from '../../../api/src/socket/types/socketInterface';
+import type { socketClientInstance } from '../../../api/src/client/types';
+import type { ChapterPage } from '../../../api/src/models/types/chapter';
+import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
+import type { MangaPage } from '../../../api/src/models/types/manga';
 
 /** quasar */
 const $q = useQuasar();

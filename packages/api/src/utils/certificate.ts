@@ -201,6 +201,12 @@ class CertificateGeneration {
 	}
 }
 
+/**
+ * Generate a keypair for the CA
+ * @param hostCertCN The Common Name of the Host Certificate
+ * @param validDomains An Array of valid domains for the Host Certificate
+ * @returns
+ */
 export default function generateKeyPair(hostCertCN: string, validDomains: string[]) {
   const CA = CertificateGeneration.CreateRootCA();
   const hostCert = CertificateGeneration.CreateHostCert(hostCertCN, validDomains, CA);

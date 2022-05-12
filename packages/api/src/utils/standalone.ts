@@ -2,11 +2,14 @@ import { env } from 'node:process';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
 
+/**
+ * Function to check if the environment is valid.
+ */
 export function verify() {
   const t = types();
   if(t.length) {
     t.forEach((key) => console.log(`${key.name} ${key.type}`));
-    return process.exit(1);
+    process.exit(1);
   }
 }
 

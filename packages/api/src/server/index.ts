@@ -1,13 +1,13 @@
 import crypto from 'node:crypto';
-import mirrors from '../mirrors';
+import mirrors from '../models/exports';
 import { env } from 'node:process';
 import { resolve } from 'node:path';
 import { Server as ioServer } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-import type { ClientToServerEvents, ServerToClientEvents } from './types/socketEvents';
-import type { socketInstance } from './types/socketInterface';
+import type { ServerToClientEvents, socketInstance } from './types';
+import type { ClientToServerEvents } from '../client/types';
 
 
 type RefreshToken = {
@@ -35,6 +35,9 @@ function isAuthorizedToken(token: RefreshToken | AuthorizedToken): token is Auth
   return (token as AuthorizedToken).parent !== undefined;
 }
 
+/**
+ * Initialize a socket.io server
+ */
 export default class IOWrapper {
 
   io: ioServer<ClientToServerEvents, ServerToClientEvents>;

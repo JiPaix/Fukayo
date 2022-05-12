@@ -14,12 +14,7 @@
     "types" : ["node"],
     "outDir": "dist",
     "baseUrl": ".",
-    "typeRoots": ["./env.d.ts"],
-    "paths": {
-      "/@/*": [
-        "./src/*"
-      ]
-    },
+    "typeRoots": ["./env.d.ts"]
   },
   "include": [
     "src/**/*.ts",

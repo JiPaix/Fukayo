@@ -2,8 +2,8 @@ import './security-restrictions';
 import { app, ipcMain } from 'electron';
 import { restoreOrCreateWindow } from '/@/mainWindow';
 import { forkAPI } from './forkAPI';
-import type { startPayload } from '../../api/src/types';
 import type { Paths } from './../../preload/src/config';
+import type { startPayload } from '../../api/src/app/types';
 
 /** API instance */
 let api: forkAPI|undefined;

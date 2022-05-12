@@ -1,15 +1,19 @@
 import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { crawler } from './crawler';
+import { crawler } from '../utils/crawler';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
-import type { MirrorConstructor } from './types';
-import type { mirrorInfo } from '../types/shared';
-import type { ClusterJob } from './types/crawler';
+import type { mirrorInfo } from './types/shared';
+import type { ClusterJob } from '../utils/types/crawler';
+import type { MirrorConstructor } from './types/constructor';
 
-
+/**
+ * The default mirror class
+ *
+ * All mirror classes should extend this class
+ */
 export default class Mirror {
 
   private concurrency = 0;

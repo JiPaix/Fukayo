@@ -2,7 +2,8 @@ import { fork } from 'child_process';
 import { app } from 'electron';
 import { resolve } from 'path';
 import type { ChildProcess } from 'child_process';
-import type { ForkEnv, ForkResponse, startPayload } from '../../api/src/types';
+import type { ForkResponse, startPayload } from '../../api/src/app/types';
+import type { ForkEnv } from '../../api/src/types';
 
 const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.cjs.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));

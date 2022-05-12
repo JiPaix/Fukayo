@@ -1,8 +1,8 @@
-import type { ChapterPage } from '../../../../api/src/mirrors/types/chapter';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, SearchErrorMessage } from '../../../../api/src/mirrors/types/errorMessages';
-import type { MangaPage } from '../../../../api/src/mirrors/types/manga';
-import type { SearchResult } from '../../../../api/src/mirrors/types/search';
-import type { TaskDone } from '../../../../api/src/mirrors/types/shared';
+import type { ChapterPage } from '../../../../api/src/models/types/chapter';
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, SearchErrorMessage } from '../../../../api/src/models/types/errors';
+import type { MangaPage } from '../../../../api/src/models/types/manga';
+import type { SearchResult } from '../../../../api/src/models/types/search';
+import type { TaskDone } from '../../../../api/src/models/types/shared';
 
 export function isChapterPage(res: ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage): res is ChapterPage {
   return (res as ChapterPage).index !== undefined;

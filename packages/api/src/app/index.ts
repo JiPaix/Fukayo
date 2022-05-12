@@ -4,11 +4,11 @@ import { env, send } from 'node:process';
 import EventEmitter from 'node:events';
 import { createServer as createHttp } from 'node:http';
 import { createServer as createHttps } from 'node:https';
-import generateKeyPair from '../lib/certificate';
-import IOWrapper from '../socket/server';
+import generateKeyPair from '../utils/certificate';
+import IOWrapper from '../server';
 import type TypedEmitter from 'typed-emitter';
 import type { Buffer } from 'buffer';
-import type { ForkResponse, Message, StartMessage } from '../types';
+import type { ForkResponse, Message, StartMessage } from './types';
 import type { Server } from 'node:http';
 import type { Server as httpsServer } from 'node:https';
 import type { Express } from 'express';
@@ -25,6 +25,9 @@ type ForkEvents = {
   pong: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
 }
 
+/**
+ * ForkAPI
+ */
 export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private runner?: Server | httpsServer;
   private pingTimeout?: NodeJS.Timeout | undefined;

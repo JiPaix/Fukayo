@@ -7,8 +7,8 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { isSearchResult, isTaskDone } from './helpers/typechecker';
 import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
-import type { SearchResult } from '../../../api/src/mirrors/types/search';
-import type { socketClientInstance } from '../../../api/src/socket/types/socketInterface';
+import type { socketClientInstance } from '../../../api/src/client/types';
+import type { SearchResult } from '../../../api/src/models/types/search';
 
 /** current route */
 const route = useRoute();
@@ -161,6 +161,7 @@ async function research() {
   rawResults.value = [];
   /** helper to keep track of on going query */
   const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
+
   socket?.emit(
     'searchInMirrors',
     query.value,

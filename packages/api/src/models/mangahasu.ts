@@ -1,9 +1,9 @@
-import Mirror from './model';
+import Mirror from '.';
 import icon from './icons/mangahasu.png';
-import type MirrorInterface from './model/types';
+import type MirrorInterface from './interfaces';
 import type { SearchResult } from './types/search';
 import type { MangaPage } from './types/manga';
-import type { socketInstance } from '../socket/types/socketInterface';
+import type { socketInstance } from '../server/types';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 

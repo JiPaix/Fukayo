@@ -73,3 +73,11 @@ export type MangaPage = {
     group?: string|number
   }[]
 }
+
+export type MangaInDB = MangaPage & {
+  /** Mirror's slug */
+  mirror: string,
+  chapters: MangaPage['chapters'] & {
+    read: boolean
+  }
+}

@@ -1,9 +1,9 @@
 import { env } from 'node:process';
 import express from 'express';
 import morgan from 'morgan';
-import { Fork } from './fork/index';
-import { verify } from './standalone';
-import client from './socket/client';
+import { Fork } from './app';
+import { verify } from './utils/standalone';
+import client from './client';
 import type { ForkEnv } from './types';
 
 export default function useFork(settings: ForkEnv = env):Promise<client> {

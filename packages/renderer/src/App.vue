@@ -9,7 +9,7 @@ import setupPage from '/@/components/setupPage.vue';
 import loginPage from '/@/components/loginPage.vue';
 import mainPage from '/@/components/mainPage.vue';
 import favicon from '../assets/icon.svg';
-import type { LoginAuth } from '../../api/src/socket/types/client';
+import type { LoginAuth } from '../../api/src/client/types';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());

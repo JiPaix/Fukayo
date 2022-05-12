@@ -2,9 +2,11 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { isChapterPage, isChapterPageErrorMessage } from './helpers/typechecker';
-import type { ChapterPage } from '../../../api/src/mirrors/types/chapter';
-import type { ChapterPageErrorMessage } from '../../../api/src/mirrors/types/errorMessages';
-import type { MangaPage } from '../../../api/src/mirrors/types/manga';
+import type { ChapterPage } from '../../../api/src/models/types/chapter';
+import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
+import type { MangaPage } from '../../../api/src/models/types/manga';
+
+
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
