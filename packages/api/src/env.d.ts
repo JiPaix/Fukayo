@@ -50,7 +50,7 @@ declare global {
         USER_DATA: string,
 
         /** Path to the HTML template */
-        VIEW:string
+        VIEW?:string
         /**
          * Path to downloaded manga's chapters
          *

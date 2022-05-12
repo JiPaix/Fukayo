@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import { env } from 'node:process';
 import express from 'express';
 import morgan from 'morgan';
@@ -13,16 +12,14 @@ if(!env.ELECTRON_RUN_AS_NODE) {
 const app = express();
 
 // serve APP
-if(!env.ELECTRON_RUN_AS_NODE && env.VIEW) {
-  app.use('/', express.static(env.VIEW));
-} else {
-  app.use('/', express.static(join(__dirname, '../', '../', 'renderer', 'dist')));
+if(env.VIEW) {
+  app.use(express.static(env.VIEW));
 }
 
 // custom 404 page
 app.use((req, res, next) => {
   if(res.headersSent) return next();
-  res.status(404).json({error: 'not_found'});
+  if(env.VIEW) res.status(404).json({error: 'not_found'});
   next();
 });
 
