@@ -87,6 +87,12 @@ class Mangafox extends Mirror implements MirrorInterface {
             volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
+        } else {
+          last_release = {
+            name: last_chapter,
+            volume: undefined,
+            chapter: undefined,
+          };
         }
 
         // manga id = "mirror_name/lang/link-of-manga-page"
