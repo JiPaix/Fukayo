@@ -7,7 +7,7 @@ import type { ForkResponse, startPayload } from '../../api/src/types';
 const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.cjs.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
-export class ForkedAPI {
+export class forkAPI {
 
   private startPending = false;
   private stopPending = false;
