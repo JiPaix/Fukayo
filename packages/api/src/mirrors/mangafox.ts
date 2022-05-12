@@ -2,7 +2,7 @@ import type { MangaPage } from './types/manga';
 import Mirror from './model';
 import icon from './icons/mangafox.png';
 import type MirrorInterface from './model/types/index';
-import type { socketInstance } from '/@/routes/types/socketInterface';
+import type { socketInstance } from '../socket/types/socketInterface';
 
 class Mangafox extends Mirror implements MirrorInterface {
 

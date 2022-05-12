@@ -3,14 +3,14 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import icon from '../../assets/icon.svg';
-import type { authByLogin } from '../components/helpers/socket';
+import type { LoginAuth } from '../../../api/src/socket/types/client';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */
-const emit = defineEmits<{ (event: 'done', auth: authByLogin): void }>();
+const emit = defineEmits<{ (event: 'done', auth: LoginAuth): void }>();
 
 
 /** props */

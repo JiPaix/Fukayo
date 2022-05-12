@@ -41,6 +41,7 @@ const config = {
         'node-forge',
         'node:fs',
         'node:path',
+        'node:events',
         'puppeteer',
         'puppeteer-cluster',
         'puppeteer-extra',

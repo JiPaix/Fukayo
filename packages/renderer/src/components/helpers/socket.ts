@@ -1,13 +1,6 @@
+import type { LoginAuth, SocketClientConstructor } from '../../../../api/src/socket/types/client';
 import { socketManager  } from '/@/socketClient';
-import type { SocketStoreSettings } from '/@/socketClient';
 
-export type authByLogin = {
-  login: string
-  password: string
-}
-
-
-
-export function useSocket(settings:SocketStoreSettings, auth?: authByLogin){
+export function useSocket(settings:SocketClientConstructor, auth?: LoginAuth){
   return socketManager(settings).connect(auth);
 }

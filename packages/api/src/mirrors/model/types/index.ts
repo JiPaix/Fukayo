@@ -1,5 +1,5 @@
 import type { mirrorInfo } from '/@/mirrors/types/shared';
-import type { socketInstance } from '/@/routes/types/socketInterface';
+import type { socketInstance } from '../../../socket/types/socketInterface';
 
 export type MirrorConstructor = {
   /** slug name */

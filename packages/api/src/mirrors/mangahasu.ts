@@ -3,7 +3,7 @@ import icon from './icons/mangahasu.png';
 import type MirrorInterface from './model/types';
 import type { SearchResult } from './types/search';
 import type { MangaPage } from './types/manga';
-import type { socketInstance } from '/@/routes/types/socketInterface';
+import type { socketInstance } from '../socket/types/socketInterface';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 

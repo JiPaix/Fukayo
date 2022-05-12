@@ -7,8 +7,8 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { isSearchResult, isTaskDone } from './helpers/typechecker';
 import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
-import type { sock } from '../socketClient';
 import type { SearchResult } from '../../../api/src/mirrors/types/search';
+import type { socketClientInstance } from '../../../api/src/socket/types/socketInterface';
 
 /** current route */
 const route = useRoute();
@@ -19,7 +19,7 @@ const $q = useQuasar();
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** socket */
-let socket:sock|undefined;
+let socket:socketClientInstance|undefined;
 
 
 /** template ref for the search input */
