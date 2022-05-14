@@ -65,6 +65,11 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
  * try to connect non-electron browser to the websocket server using stored credentials
  */
 onBeforeMount(()=> {
+  if(!isElectron) {
+    const [host, port] = new URL(window.location.href).host.split(':');
+    settings.server.hostname = host;
+    settings.server.port = parseInt(port);
+  }
   connect(undefined, true);
 });
 </script>
