@@ -96,11 +96,10 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private event_start_listening() {
     const accessToken = crypto.randomBytes(32).toString('hex');
     const refreshToken = crypto.randomBytes(32).toString('hex');
-    if(this.runner /** should not happen */) {
-      new IOWrapper(this.runner, this.credentials, {accessToken, refreshToken});
-      this.send('start', true, accessToken+'[split]'+refreshToken);
-      this.runner.off('error', this.event_start_error.bind(this));
-    }
+    if(!this.runner) throw new Error('runner_not_created, unexpected');
+    new IOWrapper(this.runner, this.credentials, { accessToken, refreshToken });
+    this.send('start', true, accessToken+'[split]'+refreshToken);
+    this.runner.off('error', this.event_start_error.bind(this));
   }
 
   private event_start_error(e:Error) {
