@@ -52,12 +52,13 @@ export default class socket {
 
     const url = window.location.href;
 
-    // Case where the client is running in electron
+    // Electron file:// protocol
     if(url.includes('file://')) {
       if(this.settings.ssl === 'false') return 'http://' + location;
       return 'https://' + location;
     }
 
+    // Electron http(s) protocol
     if(window.apiServer) {
       if(window.apiServer.getEnv === 'development') {
         if(this.settings.ssl === 'false') return 'http://' + location;
@@ -65,16 +66,17 @@ export default class socket {
       }
     }
 
+    // Browser
     const host = url.split('/')[2].replace(/:\d+/g, '');
     const finalLocation = host+':'+this.settings.port;
-    if(this.settings.ssl === 'false') return 'http://' + finalLocation;
-    return 'https://' + finalLocation;
+    if(url.includes('https')) return 'https://' + finalLocation;
+    return 'http://' + finalLocation;
   }
   connect(auth?: LoginAuth): Promise<Socket<ServerToClientEvents, ClientToServerEvents>> {
+
     return new Promise((resolve, reject) => {
 
       if(this.socket && !this.socket.disconnected) {
-        console.log('providing already existing socket');
         return resolve(this.initSocket());
       }
 
