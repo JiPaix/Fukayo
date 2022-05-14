@@ -5,7 +5,12 @@ import { useStore as useSettingsStore } from '/@/store/settings';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useSocket } from './helpers/socket';
-import { isChapterErrorMessage, isChapterPage, isChapterPageErrorMessage, isManga } from './helpers/typechecker';
+import {
+  isChapterErrorMessage,
+  isChapterPage,
+  isChapterPageErrorMessage,
+  isManga,
+} from './helpers/typechecker';
 import showChapter from './showChapter.vue';
 import type dayjs from 'dayjs';
 import type { socketClientInstance } from '../../../api/src/client/types';
@@ -24,8 +29,7 @@ const route = useRoute();
 /** stored settings */
 const settings = useSettingsStore();
 /** web socket */
-let socket:socketClientInstance|undefined;
-
+let socket: socketClientInstance | undefined;
 
 /** manga infos */
 const refs = ref<MangaPage>();
@@ -36,7 +40,7 @@ const coverHeight = ref<number>();
 /** show/hide the chapter images dialog */
 const displayChapter = ref(false);
 /** index of the manga.chapter to show */
-const chapterSelectedIndex = ref<number|null>(null);
+const chapterSelectedIndex = ref<number | null>(null);
 /** number of images to expect from the server */
 const nbOfImagesToExpectFromChapter = ref(0);
 /** images and/or error messages */
@@ -44,14 +48,14 @@ const images = ref<(ChapterPage | ChapterPageErrorMessage)[]>([]);
 
 /** computed manga infos */
 const manga = computed<MangaPage | undefined>(() => {
-  if(refs.value) {
+  if (refs.value) {
     const chapters = refs.value.chapters;
     const sorted = chapters.sort((a, b) => b.number - a.number);
     return {
       id: refs.value.id,
       mirrorInfo: refs.value.mirrorInfo,
-      url:refs.value.url,
-      lang:refs.value.lang,
+      url: refs.value.url,
+      lang: refs.value.lang,
       name: refs.value.name,
       covers: refs.value.covers,
       synopsis: refs.value.synopsis,
@@ -66,7 +70,7 @@ const manga = computed<MangaPage | undefined>(() => {
  * Returns an array of pages and pages error sorted by index
  */
 const sortedImages = computed(() => {
-  if(images.value) {
+  if (images.value) {
     return sortImages(images.value);
   }
   return [];
@@ -85,7 +89,7 @@ function sortImages(images: (ChapterPage | ChapterPageErrorMessage)[]) {
  * @param o Object containing the size of the cover
  * @param o.width the width of the cover
  */
-function onResize(o:{height:number}) {
+function onResize(o: { height: number }) {
   coverHeight.value = o.height;
 }
 
@@ -94,12 +98,13 @@ function onResize(o:{height:number}) {
  * @param chapterIndex index of the manga.chapter to show
  */
 async function showChapterComp(chapterIndex:number) {
+  if(displayChapter.value) cancelChapterFetch();
   if(!manga.value) return; // should not happen
   // prepare the dialog
   images.value = [];
   chapterSelectedIndex.value = chapterIndex;
   displayChapter.value = true;
-
+  nbOfImagesToExpectFromChapter.value = 0;
   startChapterFetch(chapterIndex);
 }
 
@@ -114,66 +119,86 @@ async function hideChapterComp() {
   cancelChapterFetch();
 }
 
-
 /**
  * Request all images for a given chapter
  * @param chapterIndex index of the manga.chapter to show
  * @see {@link MangaPage}
  */
-async function startChapterFetch(chapterIndex:number) {
-  if(!manga.value) return; // should not happen
+async function startChapterFetch(chapterIndex: number) {
+  if (!manga.value) return; // should not happen
   // prepare and send the request
-  if(!socket) socket = await useSocket(settings.server);
+  if (!socket) socket = await useSocket(settings.server);
   const id = Date.now();
-  socket?.emit('showChapter', id, manga.value.mirrorInfo.name, manga.value.lang, manga.value.chapters[chapterIndex].url, (nbOfPagesToExpect) => {
-    // callback returns the number of pages to expect
-    nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
-    socket?.on('showChapter', (id, res) => {
-      if(id !== id) return; // should not happen
-      if(isChapterPage(res) || isChapterPageErrorMessage(res)) {
-        images.value.push(res);
-      } else if(isChapterErrorMessage(res)) {
-        // TODO: show error message
-        // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
-      } else {
-        // unhandled should not happen
-      }
-    });
-  });
+  socket?.emit(
+    'showChapter',
+    id,
+    manga.value.mirrorInfo.name,
+    manga.value.lang,
+    manga.value.chapters[chapterIndex].url,
+    (nbOfPagesToExpect) => {
+      // callback returns the number of pages to expect
+      nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
+      socket?.on('showChapter', (id, res) => {
+        if (id !== id) return; // should not happen
+        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+          images.value.push(res);
+          if(res.lastpage) socket?.off('showChapter');
+        } else if (isChapterErrorMessage(res)) {
+          // TODO: show error message
+          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
+        } else {
+          // unhandled should not happen
+        }
+      });
+    },
+  );
 }
 
-async function reloadChapterImage(chapterIndex:number, pageIndex:number) {
-  if(!manga.value) return; // should not happen
+async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
+  if (!manga.value) return; // should not happen
   // prepare and send the request
-  if(!socket) socket = await useSocket(settings.server);
+  if (!socket) socket = await useSocket(settings.server);
   const id = Date.now();
-  socket?.emit('showChapter', id, manga.value.mirrorInfo.name, manga.value.lang, manga.value.chapters[chapterIndex].url, () => {
-    socket?.on('showChapter', (id, res) => {
-      if(id !== id) return; // should not happen
-      if(isChapterPage(res) || isChapterPageErrorMessage(res)) {
-        images.value[pageIndex] = res;
-      }
-    });
-  }, pageIndex);
+  socket?.emit(
+    'showChapter',
+    id,
+    manga.value.mirrorInfo.name,
+    manga.value.lang,
+    manga.value.chapters[chapterIndex].url,
+    () => {
+      socket?.on('showChapter', (id, res) => {
+        if (id !== id) return; // should not happen
+        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+          images.value[pageIndex] = res;
+        }
+      });
+    },
+    pageIndex,
+  );
 }
 
 /**
  * Cancel chapter fetching
  */
 async function cancelChapterFetch() {
-  if(!socket) socket = await useSocket(settings.server);
+  if (!socket) socket = await useSocket(settings.server);
   socket?.emit('stopShowChapter');
+  socket?.off('showChapter');
 }
 
 /** fetch manga infos before component is mounted */
 onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
-  const {mirror, lang, url} = route.params as {mirror:string, lang:string, url:string};
+  if (!socket) socket = await useSocket(settings.server);
+  const { mirror, lang, url } = route.params as {
+    mirror: string;
+    lang: string;
+    url: string;
+  };
   const reqId = Date.now();
-  socket?.emit('showManga', reqId, mirror, lang , url);
+  socket?.emit('showManga', reqId, mirror, lang, url);
   socket?.on('showManga', (id, mg) => {
-    if(id === reqId && isManga(mg)) {
-      refs.value = {...mg};
+    if (id === reqId && isManga(mg)) {
+      refs.value = { ...mg };
     }
   });
 });
@@ -182,7 +207,7 @@ onBeforeMount(async () => {
  * get the height of the cover when the component is mounted
  */
 onMounted(() => {
-  if(cover.value) coverHeight.value = cover.value.height;
+  if (cover.value) coverHeight.value = cover.value.height;
 });
 
 /**
@@ -199,14 +224,10 @@ onBeforeUnmount(() => {
     v-if="manga"
     class="w-100"
   >
-    <q-card-section
-      class="text-center"
-    >
+    <q-card-section class="text-center">
       <!-- Title -->
       <div>
-        <span
-          class="text-h3"
-        >
+        <span class="text-h3">
           {{ manga.name }}
         </span>
       </div>
@@ -233,20 +254,16 @@ onBeforeUnmount(() => {
       </div>
       <!-- Mirror and Language -->
       <div class="flex items-center">
-        <span class="q-mr-sm">{{ $t('mangas.source.value') }}: </span>
+        <span class="q-mr-sm">{{ $t("mangas.source.value") }}: </span>
         <a
           class="text-weight-medium text-white"
-          style="text-decoration: none;"
-          :href="manga.mirrorInfo.host+manga.url"
+          style="text-decoration: none"
+          :href="manga.mirrorInfo.host + manga.url"
           target="_blank"
         >
           {{ manga.mirrorInfo.displayName }}
 
-
-
           <q-icon name="open_in_new" />
-
-
         </a>
         <img
           :src="manga.mirrorInfo.icon"
@@ -255,11 +272,13 @@ onBeforeUnmount(() => {
         >
       </div>
       <div class="flex items-center">
-        {{ $t('languages.language.value') }}:
-        <span class="text-weight-medium q-ml-sm">{{ $t('languages.'+manga.lang+'.value') }}</span>
+        {{ $t("languages.language.value") }}:
+        <span class="text-weight-medium q-ml-sm">{{
+          $t("languages." + manga.lang + ".value")
+        }}</span>
         <span
           class="fi q-ml-sm"
-          :class="'fi-'+$t('languages.'+manga.lang+'.flag')"
+          :class="'fi-' + $t('languages.' + manga.lang + '.flag')"
         />
       </div>
     </q-card-section>
@@ -273,7 +292,7 @@ onBeforeUnmount(() => {
         v-else
         type="text"
         class="w-100 q-px-xl q-py-lg"
-        style="height:180px"
+        style="height: 180px"
       />
     </q-card-section>
 
@@ -299,7 +318,7 @@ onBeforeUnmount(() => {
         <!-- Chapters list -->
         <q-virtual-scroll
           v-if="manga.chapters"
-          :style="$q.screen.xs ? '': 'height: '+coverHeight+'px'"
+          :style="$q.screen.xs ? '' : 'height: ' + coverHeight + 'px'"
           :items="manga.chapters"
           separator
         >
@@ -311,10 +330,14 @@ onBeforeUnmount(() => {
               <!-- Chapter name, volume, number -->
               <q-item-section>
                 <q-item-label>
-                  <span v-if="item.volume !== undefined">{{ $t('mangas.volume.value') }} {{ item.volume }}</span>
-                  <span v-if="item.volume !== undefined && item.number !== undefined"> - </span>
-                  <span v-if="item.number !== undefined">{{ $t('mangas.chapter.value') }} {{ item.number }}</span>
-                  <span v-if="item.volume === undefined && item.number === undefined">{{ item.name }}</span>
+                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume.value") }} {{ item.volume }}</span>
+                  <span v-if="item.volume !== undefined && item.number !== undefined">
+                    -
+                  </span>
+                  <span v-if="item.number !== undefined">{{ $t("mangas.chapter.value") }} {{ item.number }}</span>
+                  <span v-if="item.volume === undefined && item.number === undefined">{{
+                    item.name
+                  }}</span>
                 </q-item-label>
                 <q-item-label
                   v-if="item.number !== undefined"
@@ -351,7 +374,7 @@ onBeforeUnmount(() => {
           v-else
           :key="i"
           type="text"
-          :height="(coverHeight||0)/20+'px'"
+          :height="(coverHeight || 0) / 20 + 'px'"
           class="q-pa-sm"
         />
       </q-card-section>
@@ -372,6 +395,7 @@ onBeforeUnmount(() => {
         :sorted-images="sortedImages"
         @hide="hideChapterComp"
         @reload="reloadChapterImage"
+        @navigate="showChapterComp($event)"
       />
     </q-dialog>
   </q-card>

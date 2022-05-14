@@ -14,6 +14,7 @@ const $t = useI18n().t.bind(useI18n());
 const emit = defineEmits<{
   (event: 'hide'): void
   (event: 'reload', chapterIndex:number, pageIndex:number): void
+  (event: 'navigate', chapterIndex:number): void
 }>();
 
 /** props */
@@ -27,6 +28,33 @@ const props = defineProps<{
   /** images sorted by index */
   sortedImages: (ChapterPage | ChapterPageErrorMessage)[]
 }>();
+
+/** Display the right drawer */
+const drawerRight = ref(true);
+
+/** Select menu: Current chapter */
+const selectedChap = ref({label: props.manga.chapters[props.chapterSelectedIndex].name || props.manga.chapters[props.chapterSelectedIndex].number, value: props.chapterSelectedIndex });
+
+/** Select menu: Next Chapter */
+const next = computed(() => {
+  const chapterIndex = props.chapterSelectedIndex - 1;
+  if(chapterIndex < 0) return null;
+  return {
+    label: props.manga.chapters[chapterIndex].name || props.manga.chapters[chapterIndex].number,
+    value: chapterIndex,
+  };
+});
+
+/** Select menu: Previous Chapter */
+const previous = computed(() => {
+  const chapterIndex = props.chapterSelectedIndex + 1;
+  if(chapterIndex >= props.manga.chapters.length) return null;
+  return {
+    label: chapterLabel(props.manga.chapters[chapterIndex].number, props.manga.chapters[chapterIndex].name),
+    value: chapterIndex,
+  };
+});
+
 
 /** displays a progress bar while images are loading */
 const showProgressBar = ref(true);
@@ -62,10 +90,16 @@ function reload(pageIndex: number) {
   emit('reload', props.chapterSelectedIndex, pageIndex);
 }
 
+/** Select Menu label */
+function chapterLabel(number:number, name?:string) {
+  if(name) return name;
+  return number;
+}
+
 </script>
 <template>
   <q-layout
-    view="lHh lpr lFf"
+    view="hHh LpR lff"
     container
     class="shadow-2 rounded-borders"
   >
@@ -143,11 +177,76 @@ function reload(pageIndex: number) {
         animation-speed="500"
       />
     </q-footer>
+    <q-drawer
+      v-model="drawerRight"
+      side="right"
+      :width="300"
+      class="bg-grey-9 q-pa-sm"
+    >
+      <q-select
+        v-model="selectedChap"
+        hide-bottom-space
+        item-aligned
+        popup-content-style="width: 300px"
+        :options="manga.chapters.map((chapter, index) => ({
+          label: chapterLabel(chapter.number, chapter.name),
+          value: index,
+        }))"
+        @update:model-value="emit('navigate', $event.value)"
+      >
+        <template #selected-item>
+          <div class="ellipsis">
+            {{ selectedChap.label }}
+          </div>
+        </template>
+        <template #option="scope">
+          <q-item
+            v-bind="scope.itemProps"
+          >
+            <q-item-section>
+              <q-item-label>
+                <div class="ellipsis">
+                  {{ scope.opt.label }}
+                </div>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+      <div class="flex flex-center">
+        <q-btn-group>
+          <q-btn>
+            <q-icon name="fast_rewind" />
+          </q-btn>
+          <q-btn
+            :disable="!previous"
+            @click="previous ? emit('navigate', previous.value): null"
+          >
+            <q-icon name="navigate_before" />
+            <q-tooltip v-if="previous">
+              {{ previous.label }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn
+            :disable="!next"
+            @click="next ? emit('navigate', next.value): null"
+          >
+            <q-icon name="navigate_next" />
+            <q-tooltip v-if="next">
+              {{ next.label }}
+            </q-tooltip>
+          </q-btn>
+          <q-btn>
+            <q-icon name="fast_forward" />
+          </q-btn>
+        </q-btn-group>
+      </div>
+    </q-drawer>
     <q-page-container>
       <q-page>
         <div
-          v-for="img in images"
-          :key="img.index"
+          v-for="(img, i) in images"
+          :key="i"
         >
           <q-img
             :src="img && !isChapterPageErrorMessage(img) && isChapterPage(img) ? (img).src : 'undefined'"
