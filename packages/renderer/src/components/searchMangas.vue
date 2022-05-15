@@ -272,7 +272,7 @@ onBeforeUnmount(async () => {
                 <q-checkbox
                   v-model="includedAllMirrors"
                   size="32px"
-                  color="orange"
+                  color="primary"
                   toggle-indeterminate
                   class="q-ma-none q-pa-none"
                   @click="toggleAllMirrors"
@@ -335,15 +335,21 @@ onBeforeUnmount(async () => {
                   v-model="includedAllLanguage"
                   size="32px"
                   color="primary"
+                  class="q-ma-none q-pa-none"
                   toggle-indeterminate
                   @click="toggleAllLanguages"
                 />
-                <q-item-section class="q-ml-sm">
-                  <q-icon
-                    name="language"
-                    size="16px"
-                    color="primary"
+                <q-item-section
+                  avatar
+                >
+                  <q-avatar
+                    size="36px"
+                    text-color="primary"
+                    icon="o_language"
                   />
+                </q-item-section>
+                <q-item-section class="text-uppercase text-bold">
+                  {{ $t('search.all.value') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -360,12 +366,17 @@ onBeforeUnmount(async () => {
                   :val="lang"
                   class="q-ma-none q-pa-none"
                 />
-                <q-item-section class="q-ml-sm">
+                <q-item-section
+                  avatar
+                >
                   <div
                     class="fi"
                     :class="'fi-'+$t('languages.'+lang+'.flag')"
-                    style="width:16px;"
+                    style="width:36px;"
                   />
+                </q-item-section>
+                <q-item-section class="q-ma-none q-pa-none">
+                  {{ $t('languages.'+lang+'.value') }}
                 </q-item-section>
               </q-item>
             </q-list>
