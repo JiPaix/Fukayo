@@ -276,10 +276,6 @@ onBeforeUnmount(() => {
         <span class="text-weight-medium q-ml-sm">{{
           $t("languages." + manga.lang + ".value")
         }}</span>
-        <span
-          class="fi q-ml-sm"
-          :class="'fi-' + $t('languages.' + manga.lang + '.flag')"
-        />
       </div>
     </q-card-section>
     <q-card-section>

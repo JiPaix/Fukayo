@@ -87,8 +87,5 @@ const lang = findLocales(navigator.language);
 myApp.use(setupI18n({ locale: lang }));
 myApp.provide('dayJS', dayjs);
 
-// flags
-import('flag-icons/css/flag-icons.css');
-
 // init
 myApp.mount('#app');

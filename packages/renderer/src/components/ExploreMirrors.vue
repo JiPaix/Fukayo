@@ -64,13 +64,15 @@ onBeforeMount(async () => {
             {{ mirror.host }}
           </div>
           <div class="flex q-mt-xs">
-            <div
+            <q-chip
               v-for="lang in mirror.langs"
               :key="lang"
-              class="fi"
-              :class="'fi-'+$t('languages.'+lang+'.flag')"
-              style="width:16px;"
-            />
+              dense
+              size="sm"
+              color="orange"
+            >
+              {{ $t(`languages.${lang}.value`) }}
+            </q-chip>
           </div>
         </q-item-label>
       </q-item-section>

@@ -117,7 +117,7 @@
       },
       "privkey": {
         "desc": "The private key label",
-        "value": "Key"
+        "value": "Private key"
       },
       "pastcert": {
         "desc": "The past certificate label",
