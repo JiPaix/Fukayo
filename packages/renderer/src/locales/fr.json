@@ -10,140 +10,140 @@
     }
   },
   "setup": {
-      "message": {
-        "desc": "The message to display when the app is not configured",
-        "value": "Avant de démarrer configurons le server"
-      },
-      "password" : {
-        "desc": "Set the password for the server",
-        "value": "Mot de passe",
-        "hints": {
-          "default" : {
-            "desc": "Password must be at least 6 characters long",
-            "value": "Le mot de passe doit contenir au moins 6 caractères"
-          },
-          "strong": {
-            "desc": "Tell the user that the password is strong",
-            "value": "Force: <b class=\"text-positive\">FORT</b>"
-          },
-          "average": {
-            "desc": "Tell the user that the password is average",
-            "value": "Force: <b class=\"text-warning\">MOYEN</b>"
-          },
-          "weak": {
-            "desc": "Tell the user that the password is weak",
-            "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
-          },
-          "bad": {
-            "desc": "Tell the user that the password is wrong",
-            "value": "Mot de passe incorrect"
-          }
+    "message": {
+      "desc": "The message to display when the app is not configured",
+      "value": "Avant de démarrer configurons le server"
+    },
+    "password": {
+      "desc": "Set the password for the server",
+      "value": "Mot de passe",
+      "hints": {
+        "default": {
+          "desc": "Password must be at least 6 characters long",
+          "value": "Le mot de passe doit contenir au moins 6 caractères"
+        },
+        "strong": {
+          "desc": "Tell the user that the password is strong",
+          "value": "Force: <b class=\"text-positive\">FORT</b>"
+        },
+        "average": {
+          "desc": "Tell the user that the password is average",
+          "value": "Force: <b class=\"text-warning\">MOYEN</b>"
+        },
+        "weak": {
+          "desc": "Tell the user that the password is weak",
+          "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
+        },
+        "bad": {
+          "desc": "Tell the user that the password is wrong",
+          "value": "Mot de passe incorrect"
         }
-      },
-      "hostname" : {
-        "desc": "Set the hostname for the server",
-        "value": "Domaine",
-        "hint": {
-          "desc": "Hint for the hostname",
-          "value": "Exemple : https://mywebsite.com"
-        },
-        "errors": {
-          "length": {
-            "desc": "Hostname is null or empty",
-            "value": "Requis"
-          },
-          "protocol": {
-            "desc": "Hostname don't have protocol",
-            "value": "Doit commencer par <b>https://</b>"
-          },
-          "hasparam": {
-            "desc": "URL should not have parameters",
-            "value": "Ne doit pas contenir de paramètres"
-          },
-          "space": {
-            "desc": "URL should not have spaces",
-            "value": "Ne doit pas contenir d'espaces"
-          }
-        }
-      },
-      "retry": {
-        "desc": "The retry button text when the password is wrong",
-        "value": "Réessayer"
-      },
-      "port": {
-        "desc": "Set the port for the server",
-        "value": "Port"
-      },
-      "login": {
-        "desc": "The login button label",
-        "value": "Nom d'utilisateur"
-      },
-      "security": {
-        "choose": {
-          "desc": "The security question",
-          "value": "Choisissez une politique de sécurité"
-        },
-        "none" : {
-          "desc": "Security Answer: None",
-          "value": "Aucune",
-          "description": {
-            "desc": "The description of the security answer",
-            "value": "Je n'ai pas besoin de https et/ou j'envisage d'utiliser un service tel que cloudflare"
-          }
-        },
-        "app": {
-          "desc": "Security Answer: let the app handle the security",
-          "value": "Automatique",
-          "description": {
-            "desc": "The description of the security answer",
-            "value": "Je laisse l'application s'occuper de la sécurité, je comprend aussi qu'à chaque fois que j'accéderais à mon panel depuis un nouveau navigateur celui-ci m'avertira (une fois) de manière erronée que le site n'est pas sécurisé"
-          }
-        },
-        "selfsigned": {
-          "desc": "Additionnal info for 'app' security",
-          "value": "certificat auto-signé"
-        },
-        "provided" : {
-          "desc": "Security Answer: I provide the certificate",
-          "value": "Manuel",
-          "description": {
-            "desc": "The description of the security answer",
-            "value": "Je veux utiliser ma propre clé et mon propre certificat"
-          }
-        },
-        "certificate" : {
-          "desc": "The certificate label",
-          "value": "Certificat"
-        },
-        "privkey" : {
-          "desc": "The private key label",
-          "value": "Clé privée"
-        },
-        "pastcert" : {
-          "desc": "The past certificate label",
-          "value": "Coller votre certificat"
-        },
-        "pastprivkey" : {
-          "desc": "The past private key label",
-          "value": "Coller votre clé privée"
-        },
-        "ok" : {
-          "desc": "The ok button label",
-          "value": "Ok"
-        },
-        "cancel" : {
-          "desc": "The cancel button label",
-          "value": "Annuler"
-        }
-      },
-      "error": {
-        "desc": "Error label",
-        "value": "Erreur"
-      },
-      "unexpectederror": {
-        "desc": "Unexpected error message",
-        "value": "Une erreur inattendue est survenue"
       }
+    },
+    "hostname": {
+      "desc": "Set the hostname for the server",
+      "value": "Domaine",
+      "hint": {
+        "desc": "Hint for the hostname",
+        "value": "Exemple : https://mywebsite.com"
+      },
+      "errors": {
+        "length": {
+          "desc": "Hostname is null or empty",
+          "value": "Requis"
+        },
+        "protocol": {
+          "desc": "Hostname don't have protocol",
+          "value": "Doit commencer par <b>https://</b>"
+        },
+        "hasparam": {
+          "desc": "URL should not have parameters",
+          "value": "Ne doit pas contenir de paramètres"
+        },
+        "space": {
+          "desc": "URL should not have spaces",
+          "value": "Ne doit pas contenir d'espaces"
+        }
+      }
+    },
+    "retry": {
+      "desc": "The retry button text when the password is wrong",
+      "value": "Réessayer"
+    },
+    "port": {
+      "desc": "Set the port for the server",
+      "value": "Port"
+    },
+    "login": {
+      "desc": "The login button label",
+      "value": "Nom d'utilisateur"
+    },
+    "security": {
+      "choose": {
+        "desc": "The security question",
+        "value": "Choisissez une politique de sécurité"
+      },
+      "none": {
+        "desc": "Security Answer: None",
+        "value": "Aucune",
+        "description": {
+          "desc": "The description of the security answer",
+          "value": "Je n'ai pas besoin de https et/ou j'envisage d'utiliser un service tel que cloudflare"
+        }
+      },
+      "app": {
+        "desc": "Security Answer: let the app handle the security",
+        "value": "Automatique",
+        "description": {
+          "desc": "The description of the security answer",
+          "value": "Je laisse l'application s'occuper de la sécurité, je comprend aussi qu'à chaque fois que j'accéderais à mon panel depuis un nouveau navigateur celui-ci m'avertira (une fois) de manière erronée que le site n'est pas sécurisé"
+        }
+      },
+      "selfsigned": {
+        "desc": "Additionnal info for 'app' security",
+        "value": "certificat auto-signé"
+      },
+      "provided": {
+        "desc": "Security Answer: I provide the certificate",
+        "value": "Manuel",
+        "description": {
+          "desc": "The description of the security answer",
+          "value": "Je veux utiliser ma propre clé et mon propre certificat"
+        }
+      },
+      "certificate": {
+        "desc": "The certificate label",
+        "value": "Certificat"
+      },
+      "privkey": {
+        "desc": "The private key label",
+        "value": "Clé privée"
+      },
+      "pastcert": {
+        "desc": "The past certificate label",
+        "value": "Coller votre certificat"
+      },
+      "pastprivkey": {
+        "desc": "The past private key label",
+        "value": "Coller votre clé privée"
+      },
+      "ok": {
+        "desc": "The ok button label",
+        "value": "Ok"
+      },
+      "cancel": {
+        "desc": "The cancel button label",
+        "value": "Annuler"
+      }
+    },
+    "error": {
+      "desc": "Error label",
+      "value": "Erreur"
+    },
+    "unexpectederror": {
+      "desc": "Unexpected error message",
+      "value": "Une erreur inattendue s'est produite"
+    }
   },
   "library": {
     "tab": {
@@ -194,7 +194,7 @@
     }
   },
   "explore": {
-    "tab" : {
+    "tab": {
       "desc": "The tab label",
       "value": "Explorer"
     }
@@ -212,136 +212,136 @@
       "desc": "The chapter name Label",
       "value": "Synopsis"
     },
-    "source" : {
+    "source": {
       "desc": "The source label",
       "value": "Source | Sources"
     }
   },
-  "languages" : {
-    "language" : {
+  "languages": {
+    "language": {
       "desc": "The language label",
       "value": "Langue | Langues"
     },
-    "current" : {
+    "current": {
       "desc": "The language the user's browser is using",
       "value": "Français",
       "flag": "fr"
     },
-    "en" : {
+    "en": {
       "desc": "English",
       "value": "Anglais",
       "flag": "us",
       "localvalue": "English"
     },
-    "fr" : {
+    "fr": {
       "desc": "French",
       "value": "Français",
       "flag": "fr",
       "localvalue": "Français"
     },
-    "es" : {
+    "es": {
       "desc": "Spanish",
       "value": "Espagnol",
       "flag": "es",
       "localvalue": "Español"
     },
-    "de" : {
+    "de": {
       "desc": "German",
       "value": "Allemand",
       "flag": "de",
       "localvalue": "Deutsch"
     },
-    "it" : {
+    "it": {
       "desc": "Italian",
       "value": "Italien",
       "flag": "it",
       "localvalue": "Italiano"
     },
-    "ja" : {
+    "ja": {
       "desc": "Japanese",
       "value": "Japonais",
       "flag": "jp",
       "localvalue": "日本語"
     },
-    "ko" : {
+    "ko": {
       "desc": "Korean",
       "value": "Koréen",
       "flag": "kr",
       "localvalue": "한국어"
     },
-    "pt" : {
+    "pt": {
       "desc": "Portuguese",
       "value": "Portugais",
       "flag": "pt",
       "localvalue": "Português"
     },
-    "ru" : {
+    "ru": {
       "desc": "Russian",
       "value": "Russe",
       "flag": "ru",
       "localvalue": "Русский"
     },
-    "zh" : {
+    "zh": {
       "desc": "Chinese",
       "value": "Chinois",
       "flag": "cn",
       "localvalue": "中文"
     },
-    "ar" : {
+    "ar": {
       "desc": "Arabic",
       "value": "Arabe",
       "flag": "ar",
       "localvalue": "العربية"
     },
-    "tr" : {
+    "tr": {
       "desc": "Turkish",
       "value": "Turc",
       "flag": "tr",
       "localvalue": "Türkçe"
     },
-    "es-la" : {
+    "es-la": {
       "desc": "Spanish (Latin America)",
       "value": "Espagnol (Amérique Latine)",
       "flag": "es",
       "localvalue": "Español"
     },
-    "pt-br" : {
+    "pt-br": {
       "desc": "Portuguese (Brazil)",
       "value": "Portugais (Brésil)",
       "flag": "br",
       "localvalue": "Português"
     },
-    "tw" : {
+    "tw": {
       "desc": "Chinese (Taiwan)",
       "value": "Chinois (Taïwan)",
       "flag": "tw",
       "localvalue": "中文"
     },
-    "zh-tw" : {
+    "zh-tw": {
       "desc": "Chinese (Taiwan)",
       "value": "Chinois (Taïwan)",
       "flag": "tw",
       "localvalue": "中文"
     },
-    "zh-cn" : {
+    "zh-cn": {
       "desc": "Chinese (China)",
       "value": "Chinois (Chine)",
       "flag": "cn",
       "localvalue": "中文"
     },
-    "cn" : {
+    "cn": {
       "desc": "Chinese (China)",
       "value": "Chinois (Chine)",
       "flag": "cn",
       "localvalue": "中文"
     },
-    "zh-hk" : {
+    "zh-hk": {
       "desc": "Chinese (Hong Kong)",
       "value": "Chinois (Hong Kong)",
       "flag": "hk",
       "localvalue": "中文"
     },
-    "hk" : {
+    "hk": {
       "desc": "Chinese (Hong Kong)",
       "value": "Chinois (Hong Kong)",
       "flag": "hk",
