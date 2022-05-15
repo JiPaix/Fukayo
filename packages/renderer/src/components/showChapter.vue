@@ -31,6 +31,7 @@ const props = defineProps<{
 
 /** Display the right drawer */
 const drawerRight = ref(true);
+const drawerRightReveal = ref(false);
 
 /** Select menu: Current chapter */
 const selectedChap = ref({label: props.manga.chapters[props.chapterSelectedIndex].name || props.manga.chapters[props.chapterSelectedIndex].number, value: props.chapterSelectedIndex });
@@ -118,15 +119,15 @@ function chapterLabel(number:number, name?:string) {
 </script>
 <template>
   <q-layout
-    view="lHh lpr lFf"
+    view="lHh lpR lFf"
     container
     class="shadow-2 rounded-borders"
   >
     <q-header
-      reveal
-      :reveal-offset="10"
       elevated
       class="bg-dark"
+      reveal
+      @reveal="drawerRightReveal = !drawerRightReveal"
     >
       <q-toolbar>
         <q-btn
@@ -145,7 +146,7 @@ function chapterLabel(number:number, name?:string) {
           type="QAvatar"
         />
         <q-toolbar-title>
-          <span class="text-subtitle1">{{ manga.name }}</span>
+          <span class="text-subtitle1">{{ manga.displayName || manga.name }}</span>
           <q-tooltip>
             {{ manga.name }}
           </q-tooltip>
@@ -156,6 +157,7 @@ function chapterLabel(number:number, name?:string) {
           dense
           icon="menu"
           class="q-mx-sm"
+          @click="drawerRight = !drawerRight"
         />
       </q-toolbar>
       <q-bar>
@@ -200,8 +202,23 @@ function chapterLabel(number:number, name?:string) {
       v-model="drawerRight"
       side="right"
       :width="300"
-      class="bg-grey-9 q-pa-sm"
+      class="bg-grey-9"
     >
+      <q-bar
+        v-if="drawerRightReveal"
+        class="w-100 flex bg-grey-10 items-center justify-between cursor-pointer"
+        @click="drawerRight = !drawerRight"
+      >
+        <span class="ellipsis q-pr-sm"> {{ manga.displayName || manga.name }} </span>
+        <q-tooltip>
+          {{ manga.name }}
+        </q-tooltip>
+        <q-icon
+          flat
+          dense
+          name="close"
+        />
+      </q-bar>
       <q-select
         v-model="selectedChap"
         hide-bottom-space
