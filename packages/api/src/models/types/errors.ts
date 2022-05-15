@@ -27,6 +27,12 @@ export type ChapterPageErrorMessage = {
     lastpage: boolean
 }
 
+export type RecommendErrorMessage = {
+  mirror: string;
+  error:'recommend_error'|'recommend_error_unknown'
+  trace?:string
+}
+
 export function isErrorMessage(x: unknown): x is ErrorMessage {
     if(!x) return false;
     if(typeof x === 'object') {

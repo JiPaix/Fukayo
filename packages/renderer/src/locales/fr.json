@@ -145,6 +145,18 @@
         "value": "Une erreur inattendue est survenue"
       }
   },
+  "library": {
+    "tab": {
+      "desc": "The library tab name",
+      "value": "Bibliothèque"
+    }
+  },
+  "settings": {
+    "tab": {
+      "desc": "The settings tab name",
+      "value": "Paramètres"
+    }
+  },
   "search": {
     "tab": {
       "desc": "The tab label",
@@ -163,6 +175,28 @@
     "reload": {
       "desc": "The reload broken image button label",
       "value": "Recharger"
+    },
+    "next": {
+      "desc": "The next chapter button label",
+      "value": "Chapitre suivant :"
+    },
+    "previous": {
+      "desc": "The previous chapter button label",
+      "value": "Chapitre précédent :"
+    },
+    "first": {
+      "desc": "The first chapter button label",
+      "value": "Aller au premier chapitre :"
+    },
+    "last": {
+      "desc": "The last chapter button label",
+      "value": "Aller au dernier chapitre :"
+    }
+  },
+  "explore": {
+    "tab" : {
+      "desc": "The tab label",
+      "value": "Explorer"
     }
   },
   "mangas": {

@@ -147,6 +147,10 @@ export default class IOWrapper {
     socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => {
       mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback, retryIndex);
     });
+
+    socket.on('showRecommend', (id, mirror) => {
+      mirrors.find(m=>m.name === mirror)?.recommend(socket, id);
+    });
   }
 
 

@@ -1,5 +1,5 @@
 import type { ChapterPage } from '../../../../api/src/models/types/chapter';
-import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, SearchErrorMessage } from '../../../../api/src/models/types/errors';
+import type { ChapterErrorMessage, ChapterPageErrorMessage, MangaErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaPage } from '../../../../api/src/models/types/manga';
 import type { SearchResult } from '../../../../api/src/models/types/search';
 import type { TaskDone } from '../../../../api/src/models/types/shared';
@@ -16,11 +16,11 @@ export function isChapterPageErrorMessage(res: ChapterPage | ChapterPageErrorMes
   return (res as ChapterPage).src === undefined;
 }
 
-export function isSearchResult(res: SearchResult | SearchErrorMessage | TaskDone): res is SearchResult {
+export function isSearchResult(res: SearchResult | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is SearchResult {
   return (res as SearchResult).url !== undefined;
 }
 
-export function isTaskDone(res: SearchResult | SearchErrorMessage | TaskDone): res is TaskDone {
+export function isTaskDone(res: SearchResult | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is TaskDone {
   return (res as TaskDone).done !== undefined;
 }
 

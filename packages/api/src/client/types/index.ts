@@ -18,8 +18,10 @@ export interface ClientToServerEvents {
   stopSearchInMirrors: () => void;
   stopShowManga: () => void;
   stopShowChapter: () => void;
+  stopShowRecommend: () => void;
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
+  showRecommend: (id:number, mirror:string) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

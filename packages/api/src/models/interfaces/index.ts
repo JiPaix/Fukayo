@@ -81,5 +81,12 @@ export default interface MirrorInterface {
    * @param retryIndex If you don't need the whole chapter, you can pass the index of the page you want to start from (0-based)
    */
   chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
+
+  /**
+   *
+   * @param socket the request initiator
+   * @param id arbitrary id
+   */
+  recommend(socket:socketInstance, id:number): void;
 // eslint-disable-next-line semi
 }

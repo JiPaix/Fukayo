@@ -232,6 +232,72 @@ class MangaHasu extends Mirror implements MirrorInterface {
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
   }
+
+  async recommend(socket: socketInstance, id: number) {
+    try {
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      socket.once('stopShowRecommend', () => {
+        this.logger('fetching recommendations canceled');
+        cancel = true;
+      });
+
+      const url = `${this.host}/popular-dw.html`;
+      const $ = await this.fetch({
+        url,
+        waitForSelector: '.r_content',
+      }, false);
+
+      for(const el of $('.list-rank li')) {
+        if(cancel) break;
+        const link = $('.info-manga > a', el).first().attr('href')?.replace(this.host, '');
+        const name = $('.info-manga .name-manga', el).text().trim();
+        if((!name || !link) || (link && !this.isMangaPage(link))) continue;
+        // mangahasu images needs to be downloaded.
+        const covers:string[] = [];
+        const coverLink = $('.wrapper_imgage img', el).attr('src');
+        if(coverLink) {
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
+        }
+        let last_release: SearchResult['last_release'];
+        const last_chapter = $('a.name-chapter > span', el).text().replace('Read online ', '').trim();
+        const match = this.getChapterInfoFromString(last_chapter);
+
+        if(!match) last_release = {name: last_chapter.replace(/Chapter/gi, '').trim()};
+
+        if(match && typeof match === 'object') {
+          const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
+          last_release = {
+            name: chapterName ? chapterName.trim() : undefined,
+            volume: volumeNumber ? parseInt(volumeNumber) : undefined,
+            chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
+          };
+        }
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
+        socket.emit('showRecommend', id, {
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
+          name,
+          url:link,
+          covers,
+          last_release,
+          lang: this.langs[0],
+        });
+      }
+      if(cancel) return;
+      socket.emit('showRecommend', id, { done: true });
+    } catch(e) {
+      this.logger('error while searching mangas', e);
+      if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
+      else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
+      socket.emit('showRecommend', id, { done: true });
+    }
+
+  }
 }
 
 

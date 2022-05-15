@@ -146,6 +146,18 @@
         "value": "An unexpected error occured"
       }
   },
+  "library": {
+    "tab": {
+      "desc": "The library tab name",
+      "value": "Library"
+    }
+  },
+  "settings": {
+    "tab": {
+      "desc": "The settings tab name",
+      "value": "Settings"
+    }
+  },
   "search": {
     "tab": {
       "desc": "The tab label",
