@@ -42,7 +42,7 @@
     },
     "hostname": {
       "desc": "Set the hostname for the server",
-      "value": "Domaine",
+      "value": "URL",
       "hint": {
         "desc": "Hint for the hostname",
         "value": "Exemple : https://mywebsite.com"
