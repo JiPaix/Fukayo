@@ -89,7 +89,7 @@ function connect() {
               dense
               bottoms-slots
               type="text"
-              :label="$t('setup.setLogin.value')"
+              :label="$t('setup.login.value')"
             />
             <q-input
               v-model="password"
@@ -97,7 +97,7 @@ function connect() {
               dense
               bottom-slots
               :type="showPassword ? 'text' : 'password'"
-              :label="$t('setup.setPassword.value')"
+              :label="$t('setup.password.value')"
             >
               <template #prepend>
                 <q-icon

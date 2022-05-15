@@ -264,7 +264,7 @@ function chapterLabel(number:number, name?:string) {
                     text-color="black"
                     @click="reload(img.index)"
                   >
-                    {{ $t('showChapter.reload.value') }}
+                    {{ $t('reader.reload.value') }}
                   </q-btn>
                   <div
                     v-if="isChapterPageErrorMessage(img)"

@@ -145,7 +145,7 @@ async function startServer () {
             :rules="[isLoginValid]"
             bottoms-slots
             type="text"
-            :label="$t('setup.setLogin.value')"
+            :label="$t('setup.login.value')"
           />
           <q-input
             v-model="password"
@@ -155,7 +155,7 @@ async function startServer () {
             :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
             bottom-slots
             :type="showPassword ? 'text' : 'password'"
-            :label="$t('setup.setPassword.value')"
+            :label="$t('setup.password.value')"
           >
             <template #hint>
               <div
@@ -180,7 +180,7 @@ async function startServer () {
             type="number"
             :rules="[isPortValid]"
             bottom-slots
-            :label="$t('setup.setPort.value')"
+            :label="$t('setup.port.value')"
           >
             <template #append>
               <div
@@ -278,7 +278,7 @@ async function startServer () {
                             name="hostname"
                             :error="hostNameHint(settings.server.hostname) !== ''"
                             :type="'text'"
-                            :label="$t('setup.setHostname.value')"
+                            :label="$t('setup.hostname.value')"
                           >
                             <template
                               #prepend
@@ -288,7 +288,7 @@ async function startServer () {
                               />
                             </template>
                             <template #hint>
-                              <div v-html="$t('setup.setHostname.hint.value')" />
+                              <div v-html="$t('setup.hostname.hint.value')" />
                             </template>
                             <template #error>
                               <div v-html="$t(hostNameHint(settings.server.hostname))" />

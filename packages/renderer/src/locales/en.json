@@ -14,11 +14,33 @@
         "desc": "The message to display when the app is not configured",
         "value": "Before we start a little setup is needed"
       },
-      "setPassword" : {
+      "password" : {
         "desc": "Set the password for the server",
-        "value": "Password"
+        "value": "Password",
+        "hints" : {
+          "default" : {
+            "desc": "Password must be at least 6 characters long",
+            "value": "Password must be at least 6 characters long"
+          },
+          "strong": {
+            "desc": "Tell the user that the password is strong",
+            "value": "Strength: <b class=\"text-positive\">STRONG</b>"
+          },
+          "average": {
+            "desc": "Tell the user that the password is average",
+            "value": "Strength: <b class=\"text-warning\">AVERAGE</b>"
+          },
+          "weak": {
+            "desc": "Tell the user that the password is weak",
+            "value": "Strength: <b class=\"text-negative\">WEAK</b>"
+          },
+          "bad": {
+            "desc": "Tell the user that the password is wrong",
+            "value": "Wrong Password"
+          }
+        }
       },
-      "setHostname" : {
+      "hostname" : {
         "desc": "Set the hostname for the server",
         "value": "URL",
         "hint": {
@@ -44,39 +66,16 @@
           }
         }
       },
-      "passwordHint" : {
-        "desc": "Password must be at least 6 characters long",
-        "value": "Password must be at least 6 characters long"
-      },
-      "passwordHintStrong": {
-        "desc": "Tell the user that the password is strong",
-        "value": "Strength: <b class=\"text-positive\">STRONG</b>"
-      },
-      "passwordHintAverage": {
-        "desc": "Tell the user that the password is average",
-        "value": "Strength: <b class=\"text-warning\">AVERAGE</b>"
-      },
-      "passwordHintWeak": {
-        "desc": "Tell the user that the password is weak",
-        "value": "Strength: <b class=\"text-negative\">WEAK</b>"
-      },
-      "badPassword": {
-        "desc": "Tell the user that the password is wrong",
-        "value": "Wrong Password"
-      },
+
       "retry": {
         "desc": "The retry button text when the password is wrong",
         "value": "Retry"
       },
-      "setPort": {
+      "port": {
         "desc": "Set the port for the server",
         "value": "Port"
       },
-      "portHint": {
-        "desc": "Port must be between 1024 and 65535",
-        "value": "Port must be between 1024 and 65535"
-      },
-      "setLogin": {
+      "login": {
         "desc": "The login button label",
         "value": "Login"
       },
@@ -142,12 +141,12 @@
         "desc": "Error label",
         "value": "Error"
       },
-      "unexpectedError": {
+      "unexpectederror": {
         "desc": "Unexpected error message",
         "value": "An unexpected error occured"
       }
   },
-  "searchMangas": {
+  "search": {
     "tab": {
       "desc": "The tab label",
       "value": "Search"
@@ -161,7 +160,7 @@
       "value": "All"
     }
   },
-  "showChapter": {
+  "reader": {
     "reload": {
       "desc": "The reload broken image button label",
       "value": "Reload"

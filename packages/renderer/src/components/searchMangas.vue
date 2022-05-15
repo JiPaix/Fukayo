@@ -223,7 +223,7 @@ onBeforeUnmount(async () => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :placeholder="$t('searchMangas.placeholder.value')"
+          :placeholder="$t('search.placeholder.value')"
           outlined
           clearable
           autofocus
@@ -287,7 +287,7 @@ onBeforeUnmount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('searchMangas.all.value') }}
+                  {{ $t('search.all.value') }}
                 </q-item-section>
               </q-item>
               <q-separator />

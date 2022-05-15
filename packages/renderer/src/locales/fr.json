@@ -14,11 +14,33 @@
         "desc": "The message to display when the app is not configured",
         "value": "Avant de démarrer configurons le server"
       },
-      "setPassword" : {
+      "password" : {
         "desc": "Set the password for the server",
-        "value": "Mot de passe"
+        "value": "Mot de passe",
+        "hints": {
+          "default" : {
+            "desc": "Password must be at least 6 characters long",
+            "value": "Le mot de passe doit contenir au moins 6 caractères"
+          },
+          "strong": {
+            "desc": "Tell the user that the password is strong",
+            "value": "Force: <b class=\"text-positive\">FORT</b>"
+          },
+          "average": {
+            "desc": "Tell the user that the password is average",
+            "value": "Force: <b class=\"text-warning\">MOYEN</b>"
+          },
+          "weak": {
+            "desc": "Tell the user that the password is weak",
+            "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
+          },
+          "bad": {
+            "desc": "Tell the user that the password is wrong",
+            "value": "Mot de passe incorrect"
+          }
+        }
       },
-      "setHostname" : {
+      "hostname" : {
         "desc": "Set the hostname for the server",
         "value": "Domaine",
         "hint": {
@@ -44,39 +66,15 @@
           }
         }
       },
-      "passwordHint" : {
-        "desc": "Password must be at least 6 characters long",
-        "value": "Le mot de passe doit contenir au moins 6 caractères"
-      },
-      "passwordHintStrong": {
-        "desc": "Tell the user that the password is strong",
-        "value": "Force: <b class=\"text-positive\">FORT</b>"
-      },
-      "passwordHintAverage": {
-        "desc": "Tell the user that the password is average",
-        "value": "Force: <b class=\"text-warning\">MOYEN</b>"
-      },
-      "passwordHintWeak": {
-        "desc": "Tell the user that the password is weak",
-        "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
-      },
-      "badPassword": {
-        "desc": "Tell the user that the password is wrong",
-        "value": "Mot de passe incorrect"
-      },
       "retry": {
         "desc": "The retry button text when the password is wrong",
         "value": "Réessayer"
       },
-      "setPort": {
+      "port": {
         "desc": "Set the port for the server",
         "value": "Port"
       },
-      "portHint": {
-        "desc": "Port must be between 1024 and 65535",
-        "value": "Le port doit être compris entre 1024 et 65535"
-      },
-      "setLogin": {
+      "login": {
         "desc": "The login button label",
         "value": "Nom d'utilisateur"
       },
@@ -142,12 +140,12 @@
         "desc": "Error label",
         "value": "Erreur"
       },
-      "unexpectedError": {
+      "unexpectederror": {
         "desc": "Unexpected error message",
         "value": "Une erreur inattendue est survenue"
       }
   },
-  "searchMangas": {
+  "search": {
     "tab": {
       "desc": "The tab label",
       "value": "Rechercher"
@@ -159,17 +157,9 @@
     "all": {
       "desc": "The check/uncheck all mirrors/languages button label",
       "value": "Tous"
-    },
-    "mirrorLabel" : {
-      "desc": "The mirror label",
-      "value": "Mirroir"
-    },
-    "languageLabel" : {
-      "desc": "The language label",
-      "value": "Language"
     }
   },
-  "showChapter": {
+  "reader": {
     "reload": {
       "desc": "The reload broken image button label",
       "value": "Recharger"

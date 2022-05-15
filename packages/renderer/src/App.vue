@@ -54,7 +54,7 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
       if(beforeMount) return;
       $q.notify({
         message: $t('setup.error.value'),
-        caption: typeof e === 'string' ? e : $t('setup.error.unexpectedError.value'),
+        caption: typeof e === 'string' ? e : $t('setup.error.unexpectederror.value'),
         color: 'negative',
       });
     }
