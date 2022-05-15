@@ -118,7 +118,7 @@ function chapterLabel(number:number, name?:string) {
 </script>
 <template>
   <q-layout
-    view="hHh LpR lff"
+    view="lHh lpr lFf"
     container
     class="shadow-2 rounded-borders"
   >
@@ -185,12 +185,12 @@ function chapterLabel(number:number, name?:string) {
         </span>
       </q-bar>
     </q-header>
-    <q-footer
-      elevated
-      class="bg-transparent"
-    >
+    <q-footer>
       <q-linear-progress
         v-if="showProgressBar"
+        class="absolute absolute-bottom"
+        style="margin-left: 0"
+        size="4px"
         :color="progressBarColor"
         :value="sortedImages.length/nbOfImagesToExpectFromChapter"
         animation-speed="500"
