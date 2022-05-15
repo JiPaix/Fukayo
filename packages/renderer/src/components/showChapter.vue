@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { isChapterPage, isChapterPageErrorMessage } from './helpers/typechecker';
 import type { ChapterPage } from '../../../api/src/models/types/chapter';
@@ -75,22 +75,18 @@ const first = computed(() => {
 
 
 /** displays a progress bar while images are loading */
-const showProgressBar = ref(true);
+const showProgressBar = computed(() => {
+  return props.sortedImages.length < props.nbOfImagesToExpectFromChapter;
+});
 
 /** color of the progress bar, orange = loading, red = has erroneous page */
-const progressBarColor = ref<'orange'|'negative'>('orange');
-
-/** hide the progress bar once all images are loaded */
-watch(props.sortedImages, (newValue) => {
-  if (newValue.length === props.nbOfImagesToExpectFromChapter) {
-    setTimeout(() => {
-      if(newValue.some(isChapterPageErrorMessage)) {
-        progressBarColor.value = 'negative';
-      } else {
-        showProgressBar.value = false;
-      }
-    }, 500); // matches q-linear-progress animation-speed
+const progressBarColor = computed(() => {
+  if(props.sortedImages.length === props.nbOfImagesToExpectFromChapter) {
+    if(props.sortedImages.some(isChapterPageErrorMessage)) {
+      return 'negative';
+    }
   }
+  return 'orange';
 });
 
 /** Array that acts as a buffer for props.sortedImages */
@@ -194,7 +190,7 @@ function chapterLabel(number:number, name?:string) {
       class="bg-transparent"
     >
       <q-linear-progress
-        v-if="sortedImages.length && showProgressBar"
+        v-if="showProgressBar"
         :color="progressBarColor"
         :value="sortedImages.length/nbOfImagesToExpectFromChapter"
         animation-speed="500"
