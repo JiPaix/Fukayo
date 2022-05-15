@@ -118,21 +118,22 @@ export default class Mirror {
 
     this.concurrency++;
     await this.wait();
-    const response = await axios(config);
     this.concurrency--;
-    if(noCrawl) return response.data;
-    let $ = this.loadHTML(response.data);
-    if(!config.waitForSelector) return $;
-    else if($(config.waitForSelector).length) return $;
-    else {
+    try {
+      const response = await axios(config);
+      if(noCrawl) return response.data;
+      const $ = this.loadHTML(response.data);
+      if(!config.waitForSelector) return $;
+      else if($(config.waitForSelector).length > 0) return $;
+      else throw Error('crawler');
+    } catch {
       const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
       if(typeof res === 'string') {
-        $ = this.loadHTML(res);
+        const $ = this.loadHTML(res);
         if($(config.waitForSelector).length) return $;
       }
       else throw new Error(res?.message || 'cloudflare');
     }
-    throw new Error('cloudflare');
   }
 
   /**

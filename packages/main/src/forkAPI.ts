@@ -63,7 +63,10 @@ export class forkAPI {
   async init() {
     if(this.stopPending || this.startPending) await wait(10);
     if(this.stopPending || this.startPending) this.forceShutdown();
-    this.fork = fork(apiPath, {env: this.forkEnv});
+    const forkenv = { ...process.env, ...this.forkEnv };
+    this.fork = fork(apiPath, {
+      env: forkenv,
+    });
   }
 
   private ping() {

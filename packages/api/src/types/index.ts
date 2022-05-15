@@ -1,4 +1,4 @@
-export type ForkEnv = {
+export type ForkEnv = NodeJS.ProcessEnv & {
   ELECTRON_RUN_AS_NODE?: string;
   /** Server's login */
   LOGIN:string,

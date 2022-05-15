@@ -1,4 +1,3 @@
-import { env } from 'node:process';
 import { Cluster } from 'puppeteer-cluster';
 import puppeteer from 'puppeteer-extra';
 import si from 'systeminformation';
@@ -52,10 +51,10 @@ async function useCluster() {
   cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: nbOfChromeTabs,
-    timeout: 1000*60,
+    timeout: 1000*20,
     puppeteer,
     puppeteerOptions: {
-      headless: env.MODE === 'development' ? false : true,
+      headless: true,
     },
   });
   return cluster;
