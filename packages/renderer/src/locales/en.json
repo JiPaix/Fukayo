@@ -164,6 +164,28 @@
     "reload": {
       "desc": "The reload broken image button label",
       "value": "Reload"
+    },
+    "next": {
+      "desc": "The next chapter button label",
+      "value": "Next chapter:"
+    },
+    "previous": {
+      "desc": "The previous chapter button label",
+      "value": "Previous chapter:"
+    },
+    "first": {
+      "desc": "The first chapter button label",
+      "value": "Go to first chapter:"
+    },
+    "last": {
+      "desc": "The last chapter button label",
+      "value": "Go to last chapter:"
+    }
+  },
+  "explore": {
+    "tab" : {
+      "desc": "The tab label",
+      "value": "Explore"
     }
   },
   "mangas": {

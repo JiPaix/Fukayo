@@ -55,6 +55,24 @@ const previous = computed(() => {
   };
 });
 
+const last = computed(() => {
+  const chapterIndex = 0;
+  if(!next.value) return null;
+  return {
+    label: chapterLabel(props.manga.chapters[chapterIndex].number, props.manga.chapters[chapterIndex].name),
+    value: chapterIndex,
+  };
+});
+
+const first = computed(() => {
+  const chapterIndex = props.manga.chapters.length - 1;
+  if(!previous.value || chapterIndex < 0) return null;
+  return {
+    label: chapterLabel(props.manga.chapters[chapterIndex].number, props.manga.chapters[chapterIndex].name),
+    value: chapterIndex,
+  };
+});
+
 
 /** displays a progress bar while images are loading */
 const showProgressBar = ref(true);
@@ -88,6 +106,11 @@ const reloaders = ref(Array.from({length: props.nbOfImagesToExpectFromChapter}, 
 function reload(pageIndex: number) {
   reloaders.value[pageIndex] = true;
   emit('reload', props.chapterSelectedIndex, pageIndex);
+}
+
+function navigate(label: {label: string|number, value: number}) {
+  selectedChap.value = label;
+  emit('navigate', label.value);
 }
 
 /** Select Menu label */
@@ -215,29 +238,50 @@ function chapterLabel(number:number, name?:string) {
       </q-select>
       <div class="flex flex-center">
         <q-btn-group>
-          <q-btn>
-            <q-icon name="fast_rewind" />
+          <q-btn
+            :disable="!first"
+            @click="first ? navigate(first) : null"
+          >
+            <q-icon name="first_page" />
+            <q-tooltip v-if="first">
+              <span>{{ $t('reader.first.value') }}</span>
+              <br>
+              <span>{{ first.label }}</span>
+            </q-tooltip>
           </q-btn>
           <q-btn
             :disable="!previous"
-            @click="previous ? emit('navigate', previous.value): null"
+            @click="previous ? navigate(previous): null"
           >
             <q-icon name="navigate_before" />
             <q-tooltip v-if="previous">
-              {{ previous.label }}
+              <span>{{ $t('reader.previous.value') }}</span>
+              <br>
+              <span>{{ previous.label }}</span>
             </q-tooltip>
           </q-btn>
           <q-btn
             :disable="!next"
-            @click="next ? emit('navigate', next.value): null"
+            @click="next ? navigate(next): null"
           >
             <q-icon name="navigate_next" />
             <q-tooltip v-if="next">
-              {{ next.label }}
+              <span>{{ $t('reader.next.value') }}</span>
+              <br>
+              <span>{{ next.label }}</span>
             </q-tooltip>
           </q-btn>
-          <q-btn>
-            <q-icon name="fast_forward" />
+
+          <q-btn
+            :disable="!last"
+            @click="last ? navigate(last) : null"
+          >
+            <q-icon name="last_page" />
+            <q-tooltip v-if="last">
+              <span>{{ $t('reader.last.value') }}</span>
+              <br>
+              <span>{{ last.label }}</span>
+            </q-tooltip>
           </q-btn>
         </q-btn-group>
       </div>
