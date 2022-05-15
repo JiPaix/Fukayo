@@ -54,6 +54,8 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const name = $('a.name-manga > h3', el).text().trim();
         const link = $('a.name-manga', el).attr('href');
 
+        if((!name || !link) || (link && !this.isMangaPage(link))) continue;
+
         // mangahasu images needs to be downloaded.
         const covers:string[] = [];
         const coverLink = $('.wrapper_imgage img', el).attr('src');
@@ -61,8 +63,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
           const img = await this.downloadImage(coverLink).catch(() => undefined);
           if(img) covers.push(img);
         }
-
-        if(!name || !link) continue;
 
         let last_release: SearchResult['last_release'];
         const last_chapter = $('a.name-chapter > span', el).text().trim();
