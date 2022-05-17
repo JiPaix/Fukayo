@@ -125,14 +125,14 @@ export default class Mirror {
       const $ = this.loadHTML(response.data);
       if(!config.waitForSelector) return $;
       else if($(config.waitForSelector).length > 0) return $;
-      else throw Error('crawler');
+      throw Error('crawler');
     } catch {
       const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
       if(typeof res === 'string') {
         const $ = this.loadHTML(res);
         if($(config.waitForSelector).length) return $;
       }
-      else throw new Error(res?.message || 'cloudflare');
+      throw new Error(res?.message || 'cloudflare');
     }
   }
 
