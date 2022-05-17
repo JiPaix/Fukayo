@@ -389,7 +389,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       }
       if(cancel) return; // 3rd obligatory check
     } catch(e) {
-        this.logger('error while searching mangas', e);
+        this.logger('error while recommending mangas', e);
         // we catch any errors because the client needs to be able to handle them
         if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
         else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});

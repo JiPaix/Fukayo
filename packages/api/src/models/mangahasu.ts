@@ -290,7 +290,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(cancel) return;
       socket.emit('showRecommend', id, { done: true });
     } catch(e) {
-      this.logger('error while searching mangas', e);
+      this.logger('error while recommending mangas', e);
       if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
       else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
