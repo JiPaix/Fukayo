@@ -52,7 +52,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       for(const el of $('div.div_item')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('a.name-manga > h3', el).text().trim();
-        const link = $('a.name-manga', el).attr('href');
+        const link = $('a.name-manga', el).attr('href')?.replace(this.host, '');
 
         if((!name || !link) || (link && !this.isMangaPage(link))) continue;
 
@@ -119,7 +119,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         waitForSelector: 'td.name > a',
       }, 'html');
       const name = $('.info-title > h1').text().trim();
@@ -202,7 +202,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         waitForSelector: '.img-chapter',
       }, 'html');
 

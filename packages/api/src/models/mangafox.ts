@@ -60,7 +60,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       for(const el of $('ul.manga-list-4-list > li')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('p.manga-list-4-item-title', el).text().trim();
-        const link = $('p.manga-list-4-item-title > a', el).attr('href');
+        const link = $('p.manga-list-4-item-title > a', el).attr('href')?.replace(this.host, '');
         const isMangaLink = this.isMangaPage(link||'');
         // safeguard
         if(!link || !isMangaLink || !name) continue;
@@ -130,10 +130,6 @@ class Mangafox extends Mirror implements MirrorInterface {
       cancel = true;
     });
 
-    // link = relative url
-    // url = full url (hostname+path)
-    const url = `${this.host}${link}`;
-
     // safeguard, we return an error if the link is not a manga page
     const isLinkaPage = this.isMangaPage(link);
     if(!isLinkaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
@@ -143,7 +139,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.detail-main-list > li > a',
       }, 'html');
@@ -182,7 +178,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       $('ul.detail-main-list > li > a').each((i, el) => {
         if(cancel) return;
         // making sure the link match the pattern we're expecting
-        const chapterHref = $(el).attr('href');
+        const chapterHref = $(el).attr('href')?.replace(this.host, '');
         if(!chapterHref || !this.isChapterPage(chapterHref)) return;
 
         // a regex that help us get the volume, chapter number and chapter name
@@ -236,9 +232,6 @@ class Mangafox extends Mirror implements MirrorInterface {
       this.logger('fetching chapter canceled');
       cancel = true;
     });
-    // link = relative url
-    // url = full url (hostname+path)
-    const url = `${this.host}${link}`;
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);
@@ -247,14 +240,16 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '#xf-new',
       }, 'html');
 
       // we gather every parameters needed to build the request to the actual image
       const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
-      const chapfunurl = url.substring(0, url.lastIndexOf('/') + 1) + 'chapterfun.ashx';
+      let chapterurl = `${this.host}${link}`;
+      if(!chapterurl.endsWith('/')) chapterurl += '/';
+      const chapfunurl = chapterurl.substring(0, chapterurl.lastIndexOf('/') + 1) + 'chapterfun.ashx';
       const cid = this.getVariableFromScript<number>('chapterid', $.html());
       let mkey: unknown = '';
       if ($('#dm5_key', $.html()).length > 0) {
@@ -340,7 +335,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const subel = $('.manga-list-1-item-title > a', el);
         const name = subel.text().trim();
-        const link = subel.attr('href');
+        const link = subel.attr('href')?.replace(this.host, '');
         const isMangaLink = this.isMangaPage(link||'');
         // safeguard
         if(!link || !isMangaLink || !name) continue;
