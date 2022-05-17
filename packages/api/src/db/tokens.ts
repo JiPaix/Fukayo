@@ -61,14 +61,13 @@ export class TokenDatabase extends Database<Tokens> {
     return this.data.refreshTokens.find(t => t.token === token);
   }
 
-  spliceAccessToken(start: number, deleteCount: number) {
-    this.data.authorizedTokens.splice(start, deleteCount);
-    this.write();
+  removeAccessToken(access: AuthorizedToken) {
+    this.data.authorizedTokens = this.data.authorizedTokens.filter(t => t.token !== access.token);
   }
 
-  spliceRefreshToken(start: number, deleteCount: number) {
-    this.data.refreshTokens.splice(start, deleteCount);
-    this.write();
+  removeRefreshToken(refresh: RefreshToken) {
+    this.data.authorizedTokens = this.data.authorizedTokens.filter(t => t.parent !== refresh.token);
+    this.data.refreshTokens = this.data.refreshTokens.filter(t => t.token !== refresh.token);
   }
 
   addAccessToken(token: AuthorizedToken) {

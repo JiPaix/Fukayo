@@ -48,46 +48,37 @@ export default class IOWrapper {
     this.io.use((socket, next) => {
       // use token to authenticate
       if(socket.handshake.auth.token) {
-        const findAccess = this.db.findAccessToken(socket.handshake.auth.token);
-        // if there's an access token and it's not expired
-        if(findAccess) {
-          if(!this.db.isExpired(findAccess)) {
-            return this.authorize({socket, next});
-          }
-        }
-        // if there's no refresh token
-        if(!socket.handshake.auth.refreshToken) return next(new Error('no_refresh_token'));
 
+        // connect if the token is valid
+        const findAccess = this.db.findAccessToken(socket.handshake.auth.token);
+        if(!findAccess) return this.unauthorize({socket, next});
+        if(!this.db.isExpired(findAccess)) return this.authorize({socket, next});
+
+        // if not, check refresh token validity
+        if(!socket.handshake.auth.refreshToken) return this.unauthorize({socket, next});
         const findRefresh = this.db.findRefreshToken(socket.handshake.auth.refreshToken);
-        // if there's a refresh token
-        if(findRefresh) {
-          // and it's not expired
-          if(!this.db.isExpired(findRefresh)) {
-            // if an access token exists and it's parent is the same as the refresh token
-            if(findAccess && this.db.areParent(findRefresh, findAccess)) {
-              // remove the old access token
-              this.db.spliceAccessToken(this.db.data.authorizedTokens.indexOf(findAccess), 1);
-              // generate a new access token
-              const authorized = this.db.generateAccess(findRefresh);
-              return this.authorize({
-                socket,
-                next,
-                emit:[ {event:'token', payload:authorized.token} ],
-              });
-            }
-          }
-          // but if the refresh token is expired
-          // remove all authorizedTokens where parent is the refreshToken
-          this.db.spliceAccessToken(this.db.data.authorizedTokens.findIndex(t => t.parent === findRefresh.token), 1);
+        if(!findRefresh) {
+          this.db.removeAccessToken(findAccess);
+          return this.unauthorize({socket, next});
         }
-        // if there's no refresh token or it is expired, but there's an access token
-        if(findAccess) {
-          // remove the refresh token matching the access token parent
-          this.db.spliceRefreshToken(this.db.data.refreshTokens.findIndex(t => t.token === findAccess.parent), 1);
-          // remove all access tokens with the same parent
-          this.db.spliceAccessToken(this.db.data.authorizedTokens.findIndex(t => t.parent === findAccess.parent), 1);
+        if(this.db.isExpired(findRefresh)) {
+          this.db.removeRefreshToken(findRefresh);
+          return this.unauthorize({socket, next});
         }
-        return this.unauthorize({socket, next});
+        if(!this.db.areParent(findRefresh, findAccess)) {
+          this.db.removeAccessToken(findAccess);
+          this.db.removeRefreshToken(findRefresh);
+          return this.unauthorize({socket, next});
+        }
+
+        // if the refresh token is valid, we can update the access token
+        this.db.removeAccessToken(findAccess);
+        const authorized = this.db.generateAccess(findRefresh);
+        return this.authorize({
+          socket,
+          next,
+          emit:[ {event:'token', payload:authorized.token} ],
+        });
       }
       else if(socket.handshake.auth.login && socket.handshake.auth.password) {
         if(socket.handshake.auth.login === this.login && socket.handshake.auth.password === this.password) {
