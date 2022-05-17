@@ -53,7 +53,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.manga-list-4-list > li',
-      }, false);
+      }, 'html');
 
 
       // we loop through the search results
@@ -146,7 +146,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.detail-main-list > li > a',
-      }, false);
+      }, 'html');
 
       // title of manga
       const name = $('span.detail-info-right-title-font').text().trim();
@@ -250,7 +250,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '#xf-new',
-      }, false);
+      }, 'html');
 
       // we gather every parameters needed to build the request to the actual image
       const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
@@ -277,7 +277,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           key: mkey,
         };
 
-        const data = await this.fetch<string>({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, true);
+        const data = await this.fetch({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, 'string');
 
         // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
         const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g;
@@ -331,7 +331,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '.container.dayrank.ranking',
-      }, false);
+      }, 'html');
 
 
       // we loop through the search results
