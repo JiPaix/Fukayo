@@ -1,13 +1,16 @@
+import { env } from 'node:process';
 import { Cluster } from 'puppeteer-cluster';
 import puppeteer from 'puppeteer-extra';
 import si from 'systeminformation';
-
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
-
+import UserAgent from 'user-agents';
 import type { Page } from 'puppeteer';
 import type { ClusterJob } from './types/crawler';
 
+puppeteer.use(StealthPlugin());
+puppeteer.use(AdblockerPlugin());
+const userAgent = new UserAgent(/Chrome/);
 
 /**
  * Pseudo Benchmark
@@ -26,12 +29,6 @@ function benchmark(CPU_cores_count:number, CPU_max_speed_inGhz:number, MEM_avail
   // returns median betwen CPU_max_speed_with_cores and MEM_available_500s
   return Math.floor((CPU_max_speed_with_cores + MEM_available_500s) / 2);
 }
-
-puppeteer.use(AdblockerPlugin());
-puppeteer.use(StealthPlugin());
-
-
-
 
 // instance watchers
 let cluster:Cluster<ClusterJob> | null = null;
@@ -54,7 +51,18 @@ async function useCluster() {
     timeout: 1000*20,
     puppeteer,
     puppeteerOptions: {
-      headless: true,
+      // userDataDir: resolve(env.USER_DATA, 'puppeteer'),
+      headless: env.MODE === 'development' ? false : true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-infobars',
+        '--window-position=0,0',
+        '--ignore-certifcate-errors',
+        '--ignore-certifcate-errors-spki-list',
+        '--disable-gpu',
+        `--user-agent="${userAgent.random().toString()}"`,
+      ],
     },
   });
   return cluster;
@@ -76,14 +84,13 @@ async function useCluster() {
 
 async function task({page, data}: { page: Page, data: ClusterJob }) {
   try {
-    await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0');
+    await page.setUserAgent(userAgent.random().toString());
     if(data.cookies) data.cookies.forEach(c => page.setCookie(c));
 
     // block: 'stylesheet', 'font', 'image', 'media'
     await page.setRequestInterception(true);
     page.on('request', async (req) => {
       if (req.isInterceptResolutionHandled()) return;
-      if(['stylesheet', 'font', 'image', 'media'].includes(req.resourceType())) req.abort();
     });
 
     // get the content
