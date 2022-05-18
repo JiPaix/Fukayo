@@ -15,7 +15,7 @@ concurrency:
 
 defaults:
   run:
-    shell: 'bash'
+    shell: 'powershell'
 
 jobs:
   e2e:
