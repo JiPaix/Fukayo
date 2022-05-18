@@ -5,7 +5,7 @@
   "homepage": "https://homepage.com",
   "repository": "github:JiPaix/AMR",
   "license": "MIT",
-  "version": "0.5.7",
+  "version": "0.5.18",
   "private": false,
   "engines": {
     "node": ">=v16.13",
