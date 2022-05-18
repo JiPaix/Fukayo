@@ -2,12 +2,13 @@ import { fork } from 'child_process';
 import { app } from 'electron';
 import { resolve } from 'path';
 import type { ChildProcess } from 'child_process';
-import type { ForkResponse, startPayload } from '../../api/src/types';
+import type { ForkResponse, startPayload } from '../../api/src/app/types';
+import type { ForkEnv } from '../../api/src/types';
 
 const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.cjs.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
-export class ForkedAPI {
+export class forkAPI {
 
   private startPending = false;
   private stopPending = false;
@@ -16,18 +17,7 @@ export class ForkedAPI {
   private pongTimeout?: NodeJS.Timeout;
 
   private fork?: ChildProcess;
-  private forkEnv: {
-    LOGIN: string,
-    PASSWORD: string,
-    PORT: string,
-    SSL: startPayload['ssl'],
-    HOSTNAME?: string,
-    CERT: string | undefined,
-    KEY: string | undefined,
-    USER_DATA: string,
-    DOWNLOAD_DATA: string,
-    MODE: string,
-  };
+  private forkEnv: ForkEnv;
 
   constructor(payload: startPayload) {
     this.forkEnv = {
@@ -36,6 +26,7 @@ export class ForkedAPI {
       PORT: payload.port.toString(),
       HOSTNAME: payload.hostname,
       SSL: payload.ssl,
+      VIEW: resolve('./packages', 'renderer', 'dist'),
       CERT: typeof payload.cert === 'string' ? payload.cert : undefined,
       KEY: typeof payload.key  === 'string' ? payload.key : undefined,
       USER_DATA: app.getPath('userData'),
@@ -72,7 +63,10 @@ export class ForkedAPI {
   async init() {
     if(this.stopPending || this.startPending) await wait(10);
     if(this.stopPending || this.startPending) this.forceShutdown();
-    this.fork = fork(apiPath, {env: this.forkEnv});
+    const forkenv = { ...process.env, ...this.forkEnv };
+    this.fork = fork(apiPath, {
+      env: forkenv,
+    });
   }
 
   private ping() {
@@ -123,11 +117,11 @@ export class ForkedAPI {
     if(this.stopPending || this.startPending) this.forceShutdown();
     // starting the fork
     return new Promise(resolve => {
-      // setting up a 5 second timeout after which we force shutdown
+      // setting up a 60 seconds timeout after which we force shutdown
       const timeout = setTimeout(() => {
         this.forceShutdown();
         resolve({ type: 'start', success: false, message: 'timeout' });
-      }, 5000);
+      }, 60*1000);
       // sending start message to fork and setting up a watch to see if it responds
       this.fork?.send({type: 'start', payload: this.startPayload});
       this.startPending = true;

@@ -1,12 +1,14 @@
 import { readFileSync } from 'node:fs';
 import crypto from 'node:crypto';
 import { env, send } from 'node:process';
+import EventEmitter from 'node:events';
 import { createServer as createHttp } from 'node:http';
 import { createServer as createHttps } from 'node:https';
-import generateKeyPair from '../lib/certificate';
-import IOWrapper from '../routes';
+import generateKeyPair from '../utils/certificate';
+import IOWrapper from '../server';
+import type TypedEmitter from 'typed-emitter';
 import type { Buffer } from 'buffer';
-import type { ForkResponse, Message, StartMessage } from '../types';
+import type { ForkResponse, Message, StartMessage } from './types';
 import type { Server } from 'node:http';
 import type { Server as httpsServer } from 'node:https';
 import type { Express } from 'express';
@@ -17,13 +19,23 @@ const isMessage = (message: unknown): message is Message => {
   return true;
 };
 
-export class Fork {
+type ForkEvents = {
+  start: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
+  shutdown: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
+  pong: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
+}
+
+/**
+ * ForkAPI
+ */
+export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private runner?: Server | httpsServer;
   private pingTimeout?: NodeJS.Timeout | undefined;
   private app: Express;
   private credentials: { login: string, password: string };
 
   constructor(app: Express) {
+    super();
     this.app = app;
     this.credentials = { login: env.LOGIN || 'admin', password: env.PASSWORD || 'password' };
     process.on('message', (m) => {
@@ -32,6 +44,7 @@ export class Fork {
   }
 
   private send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
+    this.emit(type, { success, message });
     if(send) send({type, success, message}, undefined, undefined, (e) => {
       if(e) {
         this.killRunner();
@@ -39,7 +52,7 @@ export class Fork {
     });
   }
 
-  private restartPingTimeout() {
+  restartPingTimeout() {
     if(this.pingTimeout) clearTimeout(this.pingTimeout);
     this.send('pong');
     this.pingTimeout = setTimeout(() => {
@@ -56,7 +69,7 @@ export class Fork {
     process.exit(0);
   }
 
-  private start(payload:StartMessage['payload']) {
+  start(payload:StartMessage['payload']) {
     this.credentials = { login: payload.login, password: payload.password };
     try {
       // create the runner
@@ -83,11 +96,10 @@ export class Fork {
   private event_start_listening() {
     const accessToken = crypto.randomBytes(32).toString('hex');
     const refreshToken = crypto.randomBytes(32).toString('hex');
-    if(this.runner /** should not happen */) {
-      new IOWrapper(this.runner, this.credentials, {accessToken, refreshToken});
-      this.send('start', true, accessToken+'[split]'+refreshToken);
-      this.runner.off('error', this.event_start_error.bind(this));
-    }
+    if(!this.runner) throw new Error('runner_not_created, unexpected');
+    new IOWrapper(this.runner, this.credentials, { accessToken, refreshToken });
+    this.send('start', true, accessToken+'[split]'+refreshToken);
+    this.runner.off('error', this.event_start_error.bind(this));
   }
 
   private event_start_error(e:Error) {

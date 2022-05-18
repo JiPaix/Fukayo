@@ -7,8 +7,8 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { isSearchResult, isTaskDone } from './helpers/typechecker';
 import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
-import type { sock } from '../socketClient';
-import type { SearchResult } from '../../../api/src/mirrors/types/search';
+import type { socketClientInstance } from '../../../api/src/client/types';
+import type { SearchResult } from '../../../api/src/models/types/search';
 
 /** current route */
 const route = useRoute();
@@ -19,7 +19,7 @@ const $q = useQuasar();
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** socket */
-let socket:sock|undefined;
+let socket:socketClientInstance|undefined;
 
 
 /** template ref for the search input */
@@ -39,7 +39,7 @@ const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
 /** list of languages available from mirrors */
 const allLangs = ref<string[]>([]);
 /** language(s) to include in the query and/or results */
-const includedLangs = ref<string[]>([]);
+const includedLangsRAW = ref<string[]>([]);
 /** list of available mirrors */
 const mirrorsList = ref([] as {
   name: string;
@@ -63,11 +63,16 @@ const results = computed(() => {
       };
   })
   .filter(r => includedMirrors.value.includes(r.mirrorinfo.name))
-  .filter(r => includedLangs.value.some(l => r.mirrorinfo.langs.includes(l)))
+  .filter(r => includedLangsRAW.value.some(l => r.mirrorinfo.langs.includes(l)))
   .sort((a,b) => {
     if(sortAZ.value) return a.name.localeCompare(b.name);
     return b.name.localeCompare(a.name);
   });
+});
+
+/** return the ordered list of includedLangsRAW */
+const includedLangs = computed(() => {
+  return sortLangs(includedLangsRAW.value);
 });
 
 /** returns true if all available mirror are included in the filter */
@@ -81,12 +86,17 @@ const includedAllMirrors = computed(() => {
 
 /** returns true if all available languages are included in the filter */
 const includedAllLanguage = computed(() => {
-  if(includedLangs.value.length < allLangs.value.length) {
-    if(includedLangs.value.length === 0) return false;
+  if(includedLangsRAW.value.length < allLangs.value.length) {
+    if(includedLangsRAW.value.length === 0) return false;
     return null;
   }
   return true;
 });
+
+/** sort langs by their i18n-translated value */
+function sortLangs(langs:string[]) {
+  return langs.sort((a, b) => $t(`languages.${a}.value`).localeCompare($t(`languages.${b}.value`)));
+}
 
 /** include/exclude a mirror from the filter, also affects the language filter */
 function toggleMirror(mirror:string) {
@@ -96,7 +106,7 @@ function toggleMirror(mirror:string) {
     includedMirrors.value.push(mirror);
   }
   const mirrors = mirrorsList.value.filter(m => includedMirrors.value.includes(m.name));
-  includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
+  includedLangsRAW.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
 }
 
 /** include/exclude all mirrors from the filter */
@@ -114,13 +124,13 @@ function toggleAllMirrors() {
 
 /** include/exclude a language from the filter, also affects the mirror filter */
 function toggleLang(lang:string) {
-  if(includedLangs.value.some(m => m === lang)) {
-    includedLangs.value = includedLangs.value.filter(m => m !== lang);
+  if(includedLangsRAW.value.some(m => m === lang)) {
+    includedLangsRAW.value = includedLangsRAW.value.filter(m => m !== lang);
   } else {
-    includedLangs.value.push(lang);
+    includedLangsRAW.value.push(lang);
   }
   includedMirrors.value = mirrorsList.value.filter(m => {
-    return includedLangs.value.some(l => m.langs.includes(l));
+    return includedLangsRAW.value.some(l => m.langs.includes(l));
   }).map(m => m.name);
 }
 
@@ -128,11 +138,11 @@ function toggleLang(lang:string) {
 function toggleAllLanguages() {
   if(includedAllLanguage.value) {
     allLangs.value.forEach(l => {
-      if(includedLangs.value.includes(l)) toggleLang(l);
+      if(includedLangsRAW.value.includes(l)) toggleLang(l);
     });
   } else {
     allLangs.value.forEach(l => {
-      if(!includedLangs.value.includes(l)) toggleLang(l);
+      if(!includedLangsRAW.value.includes(l)) toggleLang(l);
     });
   }
 }
@@ -161,12 +171,13 @@ async function research() {
   rawResults.value = [];
   /** helper to keep track of on going query */
   const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
+
   socket?.emit(
     'searchInMirrors',
     query.value,
     task.id,
     includedMirrors.value,
-    includedLangs.value,
+    includedLangsRAW.value,
     (
       /** how many mirrors will respond */
       nbOfDonesToExpect,
@@ -200,8 +211,8 @@ onBeforeMount(async () => {
   socket?.emit('getMirrors', (mirrors) => {
     mirrorsList.value = mirrors;
     includedMirrors.value = mirrors.map(m => m.name);
-    includedLangs.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
-    allLangs.value = includedLangs.value;
+    includedLangsRAW.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
+    allLangs.value = includedLangsRAW.value;
     if(queryParam) {
       query.value = queryParam;
       research();
@@ -222,7 +233,7 @@ onBeforeUnmount(async () => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :placeholder="$t('searchMangas.placeholder.value')"
+          :placeholder="$t('search.placeholder.value')"
           outlined
           clearable
           autofocus
@@ -271,13 +282,15 @@ onBeforeUnmount(async () => {
                 <q-checkbox
                   v-model="includedAllMirrors"
                   size="32px"
-                  color="orange"
+                  color="primary"
                   toggle-indeterminate
                   class="q-ma-none q-pa-none"
                   @click="toggleAllMirrors"
                 />
                 <q-item-section
                   avatar
+                  class="q-ma-none q-pa-none"
+                  style="min-width:36px!important;"
                 >
                   <q-avatar
                     size="36px"
@@ -286,7 +299,7 @@ onBeforeUnmount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('searchMangas.all.value') }}
+                  {{ $t('search.all.value') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -305,13 +318,15 @@ onBeforeUnmount(async () => {
                 />
                 <q-item-section
                   avatar
+                  class="q-ma-none q-pa-none"
+                  style="min-width: 32px!important;"
                 >
                   <q-avatar
                     size="32px"
                     :icon="'img:'+mirror.icon"
                   />
                 </q-item-section>
-                <q-item-section class="q-ma-none q-pa-none">
+                <q-item-section>
                   {{ mirror.displayName }} {{
                     rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length ?
                       '('+rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length+')' : ''
@@ -334,15 +349,23 @@ onBeforeUnmount(async () => {
                   v-model="includedAllLanguage"
                   size="32px"
                   color="primary"
+                  class="q-ma-none q-pa-none"
                   toggle-indeterminate
                   @click="toggleAllLanguages"
                 />
-                <q-item-section class="q-ml-sm">
-                  <q-icon
-                    name="language"
-                    size="16px"
-                    color="primary"
+                <q-item-section
+                  avatar
+                  class="q-ma-none q-pa-none"
+                  style="min-width:36px!important;"
+                >
+                  <q-avatar
+                    size="36px"
+                    text-color="primary"
+                    icon="o_language"
                   />
+                </q-item-section>
+                <q-item-section class="text-uppercase text-bold">
+                  {{ $t('search.all.value') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -359,12 +382,8 @@ onBeforeUnmount(async () => {
                   :val="lang"
                   class="q-ma-none q-pa-none"
                 />
-                <q-item-section class="q-ml-sm">
-                  <div
-                    class="fi"
-                    :class="'fi-'+$t('languages.'+lang+'.flag')"
-                    style="width:16px;"
-                  />
+                <q-item-section class="q-ma-none">
+                  {{ $t('languages.'+lang+'.value') }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -372,7 +391,6 @@ onBeforeUnmount(async () => {
         </q-btn-group>
       </div>
     </q-card-section>
-
     <q-card-section v-if="results.length">
       <searchMangasInfiniteScroll
         :results="results"

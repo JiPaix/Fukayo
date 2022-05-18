@@ -29,6 +29,9 @@ const config = {
       formats: ['cjs'],
     },
     rollupOptions: {
+      onwarn: (warning) => {
+        if(warning.code === 'EVAL') return;
+      },
       external: [
         'express',
         'morgan',
@@ -41,6 +44,7 @@ const config = {
         'node-forge',
         'node:fs',
         'node:path',
+        'node:events',
         'puppeteer',
         'puppeteer-cluster',
         'puppeteer-extra',
@@ -50,17 +54,15 @@ const config = {
         'axios',
         'cheerio',
         'file-type',
+        'socket.io-client',
+        'socket.io',
       ],
       output:{
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-              return id.toString().split('node_modules/')[1].split('/')[0].toString();
+          const split = id.split('/');
+          if(split[split.length -2] === 'icons') {
+            return 'icon.'+[split[split.length -1]];
           }
-          const chunk = id.split('/');
-          const isMirror = chunk[chunk.length - 2] === 'mirrors' && chunk[chunk.length - 1] !== 'index.ts';
-          const isMirrorIcon = chunk[chunk.length - 2] === 'icons' && chunk[chunk.length - 3] === 'mirrors';
-          if(isMirror) return chunk[chunk.length - 1].replace(/\.\w+$/, '');
-          if(isMirrorIcon) return chunk[chunk.length - 1].replace(/\.\w+$/, '.icon');
         },
       },
     },

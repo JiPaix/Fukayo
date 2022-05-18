@@ -13,15 +13,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: 'bash'
-
 jobs:
   e2e:
     strategy:
       matrix:
-        os: [ windows-latest ]
+        os: [ self-windows, self-ubuntu ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2

@@ -9,7 +9,7 @@ import setupPage from '/@/components/setupPage.vue';
 import loginPage from '/@/components/loginPage.vue';
 import mainPage from '/@/components/mainPage.vue';
 import favicon from '../assets/icon.svg';
-import type { authByLogin } from './components/helpers/socket';
+import type { LoginAuth } from '../../api/src/client/types';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
@@ -35,7 +35,7 @@ const connected = ref(false);
  * @param {authByLogin} auth user login and password
  * @param beforeMount weither or not the function was called by vue itself
  */
-async function connect(auth?: authByLogin, beforeMount?: boolean) {
+async function connect(auth?: LoginAuth, beforeMount?: boolean) {
   $q.loading.show();
   loading.value = true;
   try {
@@ -54,7 +54,7 @@ async function connect(auth?: authByLogin, beforeMount?: boolean) {
       if(beforeMount) return;
       $q.notify({
         message: $t('setup.error.value'),
-        caption: typeof e === 'string' ? e : $t('setup.error.unexpectedError.value'),
+        caption: typeof e === 'string' ? e : $t('setup.unexpectederror.value'),
         color: 'negative',
       });
     }
@@ -65,6 +65,11 @@ async function connect(auth?: authByLogin, beforeMount?: boolean) {
  * try to connect non-electron browser to the websocket server using stored credentials
  */
 onBeforeMount(()=> {
+  if(!isElectron) {
+    const [host, port] = new URL(window.location.href).host.split(':');
+    settings.server.hostname = host;
+    settings.server.port = parseInt(port);
+  }
   connect(undefined, true);
 });
 </script>

@@ -4,7 +4,7 @@ import App from './App.vue';
 
 const myApp = createApp(App);
 
-// pinia stores
+// LocalStorage
 import { createPinia } from 'pinia';
 import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
@@ -12,10 +12,12 @@ pinia.use(piniaLocalStorage);
 
 myApp.use(pinia);
 
-// router
+// Router
 const Search = () => import('./components/searchMangas.vue');
 const Library = () => import('./components/MangaLibrary.vue');
 const Manga = () => import('./components/showManga.vue');
+const Explore = () => import('./components/ExploreMirrors.vue');
+const ExploreMirror = () => import('./components/ExploreSelectedMirror.vue');
 const router = createRouter({
   history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
   routes: [
@@ -35,37 +37,22 @@ const router = createRouter({
         path: '/manga/:mirror/:lang/:url',
         component: Manga,
       },
+      {
+        name: 'explore',
+        path: '/explore',
+        component: Explore,
+      },
+      {
+        name: 'explore_mirror',
+        path: '/explore/:mirror',
+        component: ExploreMirror,
+      },
     ],
 });
 
 myApp.use(router);
 
-// localization
-import { findLocales } from './locales/lib';
-import { setupI18n } from './locales/lib';
-import dayjs from 'dayjs';
-import dayjsrelative from 'dayjs/plugin/relativeTime';
-import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
-import type { availableLanguages } from './locales/lib/index';
-
-const lang = findLocales(navigator.language) as typeof availableLanguages[0];
-
-/**
- * DayJS doesn't support locales lazy loading.
- * for consistency sake, imported locales must be part of the i18n global localization.
- * @see availableLanguages
- */
-import 'dayjs/locale/en';
-import 'dayjs/locale/fr';
-
-dayjs.extend(dayjsrelative);
-dayjs.extend(dayjslocalizedformat);
-dayjs.locale(lang);
-
-myApp.provide('dayJS', dayjs);
-myApp.use(setupI18n({ locale: lang }));
-
-// quasar
+// Quasar
 import { Quasar, Dialog, Notify, Loading } from 'quasar';
 import('@quasar/extras/roboto-font/roboto-font.css');
 import('@quasar/extras/material-icons/material-icons.css');
@@ -91,11 +78,14 @@ myApp.use(Quasar, {
   },
 });
 
+// localization
+import { findLocales } from './locales/lib';
+import { setupI18n } from './locales/lib';
+import dayjs from 'dayjs';
 
-
-// flags
-import('flag-icons/css/flag-icons.css');
-
+const lang = findLocales(navigator.language);
+myApp.use(setupI18n({ locale: lang }));
+myApp.provide('dayJS', dayjs);
 
 // init
 myApp.mount('#app');

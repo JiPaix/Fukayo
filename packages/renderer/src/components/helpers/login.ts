@@ -15,10 +15,10 @@ export const isPasswordValid = (password:string|null) => {
 export const passwordHint = (password:string|null) => {
   // 8 chars, at least a symbol, a number and with upper and lower case chars
   const regex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-  if(password === null || password.length < 6) return 'setup.passwordHint.value';
-  if(regex.test(password)) return 'setup.passwordHintStrong.value';
-  if(password.length >= 8) return 'setup.passwordHintAverage.value';
-  return 'setup.passwordHintWeak.value';
+  if(password === null || password.length < 6) return 'setup.password.hints.default.value';
+  if(regex.test(password)) return 'setup.password.hints.strong.value';
+  if(password.length >= 8) return 'setup.password.hints.average.value';
+  return 'setup.password.hints.weak.value';
 };
 
 /**

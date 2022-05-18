@@ -1,15 +1,18 @@
-import type { AxiosResponse } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
-import { crawler } from './crawler';
+import { crawler } from '../utils/crawler';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
-import type { MirrorConstructor } from './types';
-import type { mirrorInfo } from '../types/shared';
-import type { ClusterJob } from './types/crawler';
+import type { mirrorInfo } from './types/shared';
+import type { ClusterJob } from '../utils/types/crawler';
+import type { MirrorConstructor } from './types/constructor';
 
-
+/**
+ * The default mirror class
+ *
+ * All mirror classes should extend this class
+ */
 export default class Mirror {
 
   private concurrency = 0;
@@ -96,39 +99,94 @@ export default class Mirror {
     return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
   }
 
-  /**
-   *
-   * @param config request options
-   * @param noCrawl simplify the request (no headless browser, no html parsing)
-   */
-  protected async fetch<T = unknown>(config: ClusterJob, noCrawl:true):Promise<T>;
-  protected async fetch(config: ClusterJob, noCrawl:false):Promise<CheerioAPI>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async fetch(config: ClusterJob, noCrawl = false):Promise<CheerioAPI|AxiosResponse> {
+  protected async fetch(config: ClusterJob, type:'html'):Promise<CheerioAPI>
+  protected async fetch<T>(config: ClusterJob, type:'json'):Promise<T>
+  protected async fetch(config: ClusterJob, type:'string'):Promise<string>
+  protected async fetch<T>(config: ClusterJob, type: 'html'|'json'|'string'): Promise<T|CheerioAPI|string> {
+
+    // in case the concurrency counter is messed up (shouldn't happen)
+    if(this.concurrency < 0) this.concurrency = 0;
+
+    // wait for the previous request to finish (this.waitTime * this.concurrency)
+    this.concurrency++;
+    await this.wait();
+
+    // fetch the data (try to use axios first, then puppeteer)
+    const res = await this.internalFetch<T>(config);
+
+    // throw an error if both axios and puppeteer failed
+    if(typeof res === 'undefined' || res instanceof Error) {
+      this.concurrency--;
+      throw res || new Error('no_response');
+    }
+    // parse the data into the requested type
+    else if(typeof res === 'string') {
+      if(type === 'string') return this.returnFetch(res);
+      if(type === 'html') return this.returnFetch(this.loadHTML(res));
+      if(type === 'json') {
+        try {
+          return this.returnFetch<T>(JSON.parse(res));
+        } catch {
+          this.concurrency--;
+          throw new Error('invalid_json');
+        }
+      }
+      this.concurrency--;
+      throw new Error(`unknown_type: ${type}`);
+    }
+    // if the data is a JSON object, parse it into the requested type
+    else if(typeof res === 'object') {
+      if(type === 'json') return this.returnFetch(res);
+      if(type === 'string') return this.returnFetch(JSON.stringify(res));
+      this.concurrency--;
+      if(type === 'html') {
+        throw new Error('cant_parse_json_to_html');
+      }
+      throw new Error(`unknown_type: ${type}`);
+    }
+    else {
+      this.concurrency--;
+      throw new Error('unknown_fetch_error');
+    }
+  }
+
+  private async internalFetch<T>(config: ClusterJob) {
+    // prepare the config for both Axios and Puppeteer
     config.headers = {
       referer: this.host.replace(/http(s?):\/\//g, ''),
       'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
       ...config.headers,
     };
 
+    try {
+      // try to use axios first
+      const response = await axios.get<string|T>(config.url, config);
 
-    this.concurrency++;
-    await this.wait();
-    const response = await axios(config);
-    this.concurrency--;
-    if(noCrawl) return response.data;
-    let $ = this.loadHTML(response.data);
-    if(!config.waitForSelector) return $;
-    else if($(config.waitForSelector).length) return $;
-    else {
-      const res = await this.crawler({url: config.url, waitForSelector: config.waitForSelector });
-      if(typeof res === 'string') {
-        $ = this.loadHTML(res);
-        if($(config.waitForSelector).length) return $;
+      if(typeof response.data === 'string') {
+        if(config.waitForSelector) {
+          const $ = this.loadHTML(response.data);
+          if($(config.waitForSelector).length) return response.data;
+          else throw new Error('selector_not_found');
+        }
+        return response.data;
+      } else {
+        if(config.waitForSelector) throw new Error('no_selector_in_'+typeof response.data);
+        return response.data;
       }
-      else throw new Error(res?.message || 'cloudflare');
+    } catch(e) {
+      if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
+      // if axios fails or the selector is not found, try puppeteer
+      return this.usePuppeteer(config);
     }
-    throw new Error('cloudflare');
+  }
+
+  private usePuppeteer(config: ClusterJob) {
+    return this.crawler({url: config.url, waitForSelector: config.waitForSelector });
+  }
+
+  private returnFetch<T>(data : T) {
+    this.concurrency--;
+    return data;
   }
 
   /**

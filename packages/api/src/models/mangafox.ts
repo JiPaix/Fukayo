@@ -1,8 +1,8 @@
 import type { MangaPage } from './types/manga';
-import Mirror from './model';
+import Mirror from '.';
 import icon from './icons/mangafox.png';
-import type MirrorInterface from './model/types/index';
-import type { socketInstance } from '/@/routes/types/socketInterface';
+import type MirrorInterface from './interfaces/index';
+import type { socketInstance } from '../server/types';
 
 class Mangafox extends Mirror implements MirrorInterface {
 
@@ -53,14 +53,14 @@ class Mangafox extends Mirror implements MirrorInterface {
         url,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.manga-list-4-list > li',
-      }, false);
+      }, 'html');
 
 
       // we loop through the search results
       for(const el of $('ul.manga-list-4-list > li')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('p.manga-list-4-item-title', el).text().trim();
-        const link = $('p.manga-list-4-item-title > a', el).attr('href');
+        const link = $('p.manga-list-4-item-title > a', el).attr('href')?.replace(this.host, '');
         const isMangaLink = this.isMangaPage(link||'');
         // safeguard
         if(!link || !isMangaLink || !name) continue;
@@ -86,6 +86,12 @@ class Mangafox extends Mirror implements MirrorInterface {
             name: chapterName ? chapterName.trim() : undefined,
             volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
+          };
+        } else {
+          last_release = {
+            name: last_chapter,
+            volume: undefined,
+            chapter: undefined,
           };
         }
 
@@ -124,10 +130,6 @@ class Mangafox extends Mirror implements MirrorInterface {
       cancel = true;
     });
 
-    // link = relative url
-    // url = full url (hostname+path)
-    const url = `${this.host}${link}`;
-
     // safeguard, we return an error if the link is not a manga page
     const isLinkaPage = this.isMangaPage(link);
     if(!isLinkaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
@@ -137,10 +139,10 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.detail-main-list > li > a',
-      }, false);
+      }, 'html');
 
       // title of manga
       const name = $('span.detail-info-right-title-font').text().trim();
@@ -176,7 +178,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       $('ul.detail-main-list > li > a').each((i, el) => {
         if(cancel) return;
         // making sure the link match the pattern we're expecting
-        const chapterHref = $(el).attr('href');
+        const chapterHref = $(el).attr('href')?.replace(this.host, '');
         if(!chapterHref || !this.isChapterPage(chapterHref)) return;
 
         // a regex that help us get the volume, chapter number and chapter name
@@ -230,9 +232,6 @@ class Mangafox extends Mirror implements MirrorInterface {
       this.logger('fetching chapter canceled');
       cancel = true;
     });
-    // link = relative url
-    // url = full url (hostname+path)
-    const url = `${this.host}${link}`;
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);
@@ -241,14 +240,16 @@ class Mangafox extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '#xf-new',
-      }, false);
+      }, 'html');
 
       // we gather every parameters needed to build the request to the actual image
       const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
-      const chapfunurl = url.substring(0, url.lastIndexOf('/') + 1) + 'chapterfun.ashx';
+      let chapterurl = `${this.host}${link}`;
+      if(!chapterurl.endsWith('/')) chapterurl += '/';
+      const chapfunurl = chapterurl.substring(0, chapterurl.lastIndexOf('/') + 1) + 'chapterfun.ashx';
       const cid = this.getVariableFromScript<number>('chapterid', $.html());
       let mkey: unknown = '';
       if ($('#dm5_key', $.html()).length > 0) {
@@ -271,7 +272,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           key: mkey,
         };
 
-        const data = await this.fetch<string>({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, true);
+        const data = await this.fetch({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, 'string');
 
         // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
         const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g;
@@ -307,6 +308,89 @@ class Mangafox extends Mirror implements MirrorInterface {
       if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
+  }
+
+  async recommend(socket: socketInstance, id: number) {
+    this.logger('fetching recommendations');
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    socket.once('stopShowRecommend', () => {
+      this.logger('fetching recommendations canceled');
+      cancel = true;
+    });
+
+    const url = `${this.host}/ranking/`;
+    if(cancel) return; //=> 1st cancel check before request
+    try {
+      const $ = await this.fetch({
+        url,
+        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        waitForSelector: '.container.dayrank.ranking',
+      }, 'html');
+
+
+      // we loop through the search results
+      for(const el of $('ul.manga-list-1-list.line > li')) {
+
+        if(cancel) break; //=> 2nd cancel check, break out of loop
+        const subel = $('.manga-list-1-item-title > a', el);
+        const name = subel.text().trim();
+        const link = subel.attr('href')?.replace(this.host, '');
+        const isMangaLink = this.isMangaPage(link||'');
+        // safeguard
+        if(!link || !isMangaLink || !name) continue;
+
+        // mangafox images needs to be downloaded.
+        const covers:string[] = [];
+        const coverLink =  $('img.manga-list-1-cover', el).attr('src');
+        if(coverLink) {
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
+        }
+
+        const last_chapter = $('.manga-list-1-item-subtitle > a', el).text().trim();
+
+        // check if we can get any info regarding the last chapter
+        const match = this.getChapterInfoFromString(last_chapter);
+        let last_release;
+        if(match && typeof match === 'object') {
+          const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
+          last_release = {
+            name: chapterName ? chapterName.trim() : undefined,
+            volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
+            chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
+          };
+        } else {
+          last_release = {
+            name: last_chapter,
+            volume: undefined,
+            chapter: undefined,
+          };
+        }
+
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
+        // we return the results based on SearchResult model
+        socket.emit('showRecommend', id, {
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
+          name,
+          url:link,
+          covers,
+          last_release,
+          lang: this.langs[0],
+        });
+      }
+      if(cancel) return; // 3rd obligatory check
+    } catch(e) {
+        this.logger('error while recommending mangas', e);
+        // we catch any errors because the client needs to be able to handle them
+        if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
+        else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
+        else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
+    }
+    socket.emit('showRecommend', id, { done: true });
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment

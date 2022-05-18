@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import type { SearchResult } from '../../../api/src/mirrors/types/search';
+import type { SearchResult } from '../../../api/src/models/types/search';
 
 /** router */
 const router = useRouter();
@@ -23,18 +23,6 @@ const sizes = computed(() => {
   if($q.screen.gt.sm) classes.push('q-gutter-x-xl');
   return classes.join(' ');
 });
-
-/**
- * Display a dialog containing the manga's synopsis
- * @param title manga name
- * @param synopsis manga synopsis
- */
-function showSynopsis (title:string, synopsis: string) {
-  $q.dialog({
-    title: title,
-    message: synopsis,
-  });
-}
 
 /**
  * Redirect to the manga's page
@@ -74,8 +62,8 @@ function showManga (item:SearchResult) {
           @click="showManga(item)"
         >
           <div
-            class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
-            style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
+            class="text-center text-white text-body-1 text-weight-medium text-uppercase self-end w-100 ellipsis-3-lines q-px-md"
+            style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 90%)!important;"
             rounded
             dense
           >
@@ -104,12 +92,46 @@ function showManga (item:SearchResult) {
           </div>
         </q-skeleton>
         <div
-          class="col-xs-12 col-sm-6"
+          class="flex column justify-between"
+          :class="$q.screen.xs ? 'w-100' : 'w-50'"
         >
+          <div class="flex column q-pa-sm">
+            <div
+              class="row q-ma-sm shadow-1"
+            >
+              <div
+                class="col-lg-4 col-xs-2 bg-white text-black text-center"
+                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
+              >
+                <q-icon name="translate" />
+              </div>
+              <div
+                class="col-lg-8 col-xs-9 text-center text-uppercase text-caption ellipsis"
+                style="border-top-right-radius:3px;border-bottom-right-radius: 3px;"
+              >
+                {{ $t('languages.'+item.lang+'.value') }}
+              </div>
+            </div>
+            <div
+              class="row q-ma-sm shadow-1"
+            >
+              <div
+                class="col-lg-4 col-xs-2 bg-white text-black text-center"
+                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
+              >
+                <q-icon :name="'img:'+item.mirrorinfo.icon" />
+              </div>
+              <div
+                class="col-lg-8 col-xs-9 text-center text-uppercase text-caption ellipsis"
+                style="border-top-right-radius:3px;border-bottom-right-radius: 3px;"
+              >
+                {{ item.mirrorinfo.displayName }}
+              </div>
+            </div>
+          </div>
           <div
             v-if="item.last_release"
-            class="q-pa-sm flex column"
-            :class="$q.screen.gt.xs ? 'h-lg':''"
+            class="q-pa-sm flex column bottom"
           >
             <div
               v-if="(item.last_release.name !== undefined && item.last_release.chapter === undefined) || $q.screen.lt.sm"
@@ -121,7 +143,10 @@ function showManga (item:SearchResult) {
               <span v-if="item.last_release.chapter !== undefined && item.last_release.name !== undefined">
                 -
               </span>
-              <span v-if="item.last_release.name !== undefined">
+              <span
+                v-if="item.last_release.name !== undefined"
+                class="ellipsis"
+              >
                 {{ item.last_release.name }}
               </span>
             </div>
@@ -135,8 +160,8 @@ function showManga (item:SearchResult) {
               >
                 {{ item.last_release.volume }}
               </div>
-              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
-                {{ $t('mangas.volume.value') }}
+              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
+                {{ $t('mangas.volume.value', item.last_release.volume) }}
               </div>
             </div>
 
@@ -150,63 +175,10 @@ function showManga (item:SearchResult) {
               >
                 {{ item.last_release.chapter }}
               </div>
-              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
-                {{ $t('mangas.chapter.value') }}
+              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
+                {{ $t('mangas.chapter.value', item.last_release.chapter === 0 ? 1 : item.last_release.chapter) }}
               </div>
             </div>
-
-            <div
-              v-if="item.synopsis !== undefined && ($q.screen.sm || $q.screen.gt.sm)"
-              v-ripple
-              class="row q-ma-sm shadow-1 cursor-pointer"
-              @click="showSynopsis(item.name, item.synopsis!)"
-            >
-              <div
-                class="col-4 q-py-sm bg-info text-center"
-                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
-              >
-                <q-icon
-                  name="o_feed"
-                  size="1.5em"
-                />
-              </div>
-              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium">
-                {{ $t('mangas.synopsis.value') }}
-              </div>
-            </div>
-            <div
-              v-if="$q.screen.gt.sm || $q.screen.sm"
-              class="text-center q-mt-auto q-mb-xl"
-            >
-              <q-btn
-                round
-                :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
-                :size="$q.screen.lt.sm ? 'lg' : 'md'"
-                icon="add"
-                text-color="white"
-                color="orange"
-              />
-              <q-btn
-                round
-                color="primary"
-                text-color="white"
-                :class="$q.screen.lt.sm ? 'q-mx-lg' : 'q-mx-sm'"
-                :size="$q.screen.lt.sm ? 'lg' : 'md'"
-                icon="visibility"
-                @click="showManga(item)"
-              />
-            </div>
-          </div>
-          <div class="absolute-bottom-right flex items-center">
-            <img
-              width="16"
-              height="16"
-              :src="item.mirrorinfo.icon"
-            >
-            <div
-              style="height:16px;width:22px;"
-              :class="'glow q-ma-sm fi fi-'+$t('languages.'+item.lang+'.flag')"
-            />
           </div>
         </div>
       </div>
@@ -223,7 +195,7 @@ function showManga (item:SearchResult) {
   height: 300px!important;
 }
 .h-xs {
-  height: 530px!important;
+  height: 560px!important;
 }
 .xs-cover {
   height:400px!important;

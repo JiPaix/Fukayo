@@ -62,7 +62,7 @@ const args = process.argv.slice(2);
     const {stderr} = await exec('npm install');
     if(stderr) return console.log(stderr);
     await git.add(['./package.json', './package-lock.json']);
-    await git.commit(`beta ${newVersion}`, ['./package.json', './package-lock.json']);
+    await git.commit(`release: beta ${newVersion}`, ['./package.json', './package-lock.json']);
     await git.push();
   } catch(e) {
     console.error(e);

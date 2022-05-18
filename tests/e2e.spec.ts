@@ -12,6 +12,8 @@ afterAll(async () => {
   await electronApp.close();
 });
 
+const pause = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
+
 test('Main window state', async () => {
   const windowState: { isVisible: boolean; isDevToolsOpened: boolean; isCrashed: boolean }
     = await electronApp.evaluate(({BrowserWindow}) => {
@@ -38,6 +40,9 @@ test('Main window state', async () => {
 
 test('Main window web content', async () => {
   const page = await electronApp.firstWindow();
+  // on startup the app tries to directly connect the user to the server
+  await page.waitForLoadState('networkidle'); // we wait for the connection to fail
+  await pause(1000); // add an extra second in-case vue runs at potato speed
   const element = await page.$('#app', {strict: true});
   expect(element, 'Can\'t find root element').toBeDefined();
   expect((await element.innerHTML()).trim(), 'Window content was empty').not.equal('');
@@ -75,7 +80,6 @@ test('Preload apiServer', async () => {
 
 test('Server start', async () => {
   const page = await electronApp.firstWindow();
-  if(process.platform === 'win32') await page.waitForEvent('requestfinished');
   await page.evaluate( async () => {
     const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
     login.value = 'test';
@@ -89,7 +93,6 @@ test('Server start', async () => {
     const ssl = globalThis.document.querySelector<HTMLInputElement>('#no-ssl');
     ssl.click();
     ssl.dispatchEvent(new Event('change'));
-    await new Promise(resolve => setTimeout(resolve, 1000));
     const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
     button.click();
   });

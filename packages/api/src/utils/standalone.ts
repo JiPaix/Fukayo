@@ -2,11 +2,14 @@ import { env } from 'node:process';
 import fs from 'node:fs';
 import { resolve } from 'node:path';
 
+/**
+ * Function to check if the environment is valid.
+ */
 export function verify() {
   const t = types();
   if(t.length) {
     t.forEach((key) => console.log(`${key.name} ${key.type}`));
-    return process.exit(1);
+    process.exit(1);
   }
 }
 
@@ -28,11 +31,11 @@ function types() {
     else if(port < 1024 || port > 65535) types.push({ name: 'PORT', type: 'is out of range (1024-65535)' });
   }
 
-  if(!env.VIEW) types.push({ name: 'VIEW', type: 'is missing' });
-  else if(typeof env.VIEW !== 'string') types.push({ name: 'VIEW', type: 'is not a string' });
-  else if(!fs.existsSync(resolve(env.VIEW))) types.push({ name: 'VIEW', type: 'is not a valid path' });
-  else if(!fs.statSync(resolve(env.VIEW)).isDirectory()) types.push({ name: 'VIEW', type: 'is not a directory' });
-  else if(!fs.existsSync(resolve(env.VIEW, 'index.html'))) types.push({ name: 'VIEW', type: 'is not a valid directory (no index.html)' });
+  if(env.VIEW) {
+    if(typeof env.VIEW !== 'string') types.push({ name: 'VIEW', type: 'is not a string' });
+    else if(!fs.existsSync(resolve(env.VIEW))) types.push({ name: 'VIEW', type: 'is not a valid path' });
+    else if(!fs.statSync(resolve(env.VIEW)).isDirectory()) types.push({ name: 'VIEW', type: 'is not a directory' });
+  }
 
   if(!env.USER_DATA) {
     const newPath = resolve(__dirname, 'user_data');

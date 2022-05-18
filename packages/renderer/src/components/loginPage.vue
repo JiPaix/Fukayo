@@ -3,14 +3,14 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import icon from '../../assets/icon.svg';
-import type { authByLogin } from '../components/helpers/socket';
+import type { LoginAuth } from '../../../api/src/client/types';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */
-const emit = defineEmits<{ (event: 'done', auth: authByLogin): void }>();
+const emit = defineEmits<{ (event: 'done', auth: LoginAuth): void }>();
 
 
 /** props */
@@ -89,7 +89,7 @@ function connect() {
               dense
               bottoms-slots
               type="text"
-              :label="$t('setup.setLogin.value')"
+              :label="$t('setup.login.value')"
             />
             <q-input
               v-model="password"
@@ -97,7 +97,7 @@ function connect() {
               dense
               bottom-slots
               :type="showPassword ? 'text' : 'password'"
-              :label="$t('setup.setPassword.value')"
+              :label="$t('setup.password.value')"
             >
               <template #prepend>
                 <q-icon

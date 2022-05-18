@@ -1,9 +1,9 @@
-import Mirror from './model';
+import Mirror from '.';
 import icon from './icons/mangahasu.png';
-import type MirrorInterface from './model/types';
+import type MirrorInterface from './interfaces';
 import type { SearchResult } from './types/search';
 import type { MangaPage } from './types/manga';
-import type { socketInstance } from '/@/routes/types/socketInterface';
+import type { socketInstance } from '../server/types';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
@@ -47,12 +47,14 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const $ = await this.fetch({
         url,
         waitForSelector: 'ul.list_manga',
-      }, false);
+      }, 'html');
 
       for(const el of $('div.div_item')) {
         if(cancel) break; //=> 2nd cancel check, break out of loop
         const name = $('a.name-manga > h3', el).text().trim();
-        const link = $('a.name-manga', el).attr('href');
+        const link = $('a.name-manga', el).attr('href')?.replace(this.host, '');
+
+        if((!name || !link) || (link && !this.isMangaPage(link))) continue;
 
         // mangahasu images needs to be downloaded.
         const covers:string[] = [];
@@ -61,8 +63,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
           const img = await this.downloadImage(coverLink).catch(() => undefined);
           if(img) covers.push(img);
         }
-
-        if(!name || !link) continue;
 
         let last_release: SearchResult['last_release'];
         const last_chapter = $('a.name-chapter > span', el).text().trim();
@@ -119,9 +119,9 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         waitForSelector: 'td.name > a',
-      }, false);
+      }, 'html');
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers = [];
@@ -202,9 +202,9 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(cancel) return;
     try {
       const $ = await this.fetch({
-        url,
+        url: `${this.host}${link}`,
         waitForSelector: '.img-chapter',
-      }, false);
+      }, 'html');
 
       // return the number of pages to expect (1-based)
       const nbOfPages = $('.img-chapter img').length;
@@ -231,6 +231,72 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
+  }
+
+  async recommend(socket: socketInstance, id: number) {
+    try {
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      socket.once('stopShowRecommend', () => {
+        this.logger('fetching recommendations canceled');
+        cancel = true;
+      });
+
+      const url = `${this.host}/popular-dw.html`;
+      const $ = await this.fetch({
+        url,
+        waitForSelector: '.r_content',
+      }, 'html');
+
+      for(const el of $('.list-rank li')) {
+        if(cancel) break;
+        const link = $('.info-manga > a', el).first().attr('href')?.replace(this.host, '');
+        const name = $('.info-manga .name-manga', el).text().trim();
+        if((!name || !link) || (link && !this.isMangaPage(link))) continue;
+        // mangahasu images needs to be downloaded.
+        const covers:string[] = [];
+        const coverLink = $('.wrapper_imgage img', el).attr('src');
+        if(coverLink) {
+          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          if(img) covers.push(img);
+        }
+        let last_release: SearchResult['last_release'];
+        const last_chapter = $('a.name-chapter > span', el).text().replace('Read online ', '').trim();
+        const match = this.getChapterInfoFromString(last_chapter);
+
+        if(!match) last_release = {name: last_chapter.replace(/Chapter/gi, '').trim()};
+
+        if(match && typeof match === 'object') {
+          const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
+          last_release = {
+            name: chapterName ? chapterName.trim() : undefined,
+            volume: volumeNumber ? parseInt(volumeNumber) : undefined,
+            chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
+          };
+        }
+        // manga id = "mirror_name/lang/link-of-manga-page"
+        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
+        socket.emit('showRecommend', id, {
+          id: mangaId,
+          mirrorinfo: this.mirrorInfo,
+          name,
+          url:link,
+          covers,
+          last_release,
+          lang: this.langs[0],
+        });
+      }
+      if(cancel) return;
+      socket.emit('showRecommend', id, { done: true });
+    } catch(e) {
+      this.logger('error while recommending mangas', e);
+      if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
+      else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
+      socket.emit('showRecommend', id, { done: true });
+    }
+
   }
 }
 

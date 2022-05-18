@@ -1,12 +1,12 @@
 import './security-restrictions';
 import { app, ipcMain } from 'electron';
 import { restoreOrCreateWindow } from '/@/mainWindow';
-import { ForkedAPI } from './forkedAPI';
-import type { startPayload } from '../../api/src/types';
+import { forkAPI } from './forkAPI';
 import type { Paths } from './../../preload/src/config';
+import type { startPayload } from '../../api/src/app/types';
 
 /** API instance */
-let api: ForkedAPI|undefined;
+let api: forkAPI|undefined;
 
 /**
  * Prevent multiple instances
@@ -87,6 +87,6 @@ ipcMain.handle('get-path', (ev, path:Paths) => {
 
 // start the API
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
-  api = new ForkedAPI(payload);
+  api = new forkAPI(payload);
   return api.start();
 });
