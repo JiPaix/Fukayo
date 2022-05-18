@@ -117,11 +117,11 @@ export class forkAPI {
     if(this.stopPending || this.startPending) this.forceShutdown();
     // starting the fork
     return new Promise(resolve => {
-      // setting up a 5 second timeout after which we force shutdown
+      // setting up a 60 seconds timeout after which we force shutdown
       const timeout = setTimeout(() => {
         this.forceShutdown();
         resolve({ type: 'start', success: false, message: 'timeout' });
-      }, 5000);
+      }, 60*1000);
       // sending start message to fork and setting up a watch to see if it responds
       this.fork?.send({type: 'start', payload: this.startPayload});
       this.startPending = true;
