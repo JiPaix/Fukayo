@@ -5,7 +5,7 @@ import axios from 'axios';
 import { load } from 'cheerio';
 
 import { crawler } from '../utils/crawler';
-import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
+import type { CheerioAPI, CheerioOptions, AnyNode} from 'cheerio';
 import type { mirrorInfo } from './types/shared';
 import type { ClusterJob } from '../utils/types/crawler';
 import type { MirrorConstructor } from './types/constructor';
@@ -266,12 +266,12 @@ export default class Mirror {
 
   /**
    * Cheerio.load() wrapper
-   * @param {string | Buffer | Node | Node[]} content
+   * @param {string | Buffer | AnyNode | AnyNode[]} content
    * @param {CheerioOptions | null | undefined} options
    * @param {boolean | undefined} isDocument
    * @returns {CheerioAPI}
    */
-  protected loadHTML(content: string | Buffer | Node | Node[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
+  protected loadHTML(content: string | Buffer | AnyNode | AnyNode[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
     return load(content, options, isDocument);
   }
 
