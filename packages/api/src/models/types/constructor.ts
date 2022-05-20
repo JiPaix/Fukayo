@@ -34,4 +34,8 @@ export type MirrorConstructor = {
    * @example { adult: true, lowres: false }
    */
   options?: Record<string, unknown>
+  /**
+   * Enable/disable cache
+   */
+  cache: boolean
 }

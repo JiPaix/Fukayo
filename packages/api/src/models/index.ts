@@ -1,8 +1,10 @@
-import axios from 'axios';
-import { load } from 'cheerio';
-import { crawler } from '../utils/crawler';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
+import axios from 'axios';
+import { load } from 'cheerio';
+
+import { crawler } from '../utils/crawler';
 import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
 import type { mirrorInfo } from './types/shared';
 import type { ClusterJob } from '../utils/types/crawler';
@@ -14,7 +16,6 @@ import type { MirrorConstructor } from './types/constructor';
  * All mirror classes should extend this class
  */
 export default class Mirror {
-
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
@@ -47,6 +48,13 @@ export default class Mirror {
    */
   options: Record<string, unknown> | undefined;
 
+  /** weither the mirror has cache enabled or not */
+  private cache: {
+    status: boolean,
+    dir: string
+  };
+
+
   constructor(opts: MirrorConstructor) {
     this.name = opts.name;
     this.displayName = opts.displayName;
@@ -56,6 +64,13 @@ export default class Mirror {
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
     this.options = opts.options;
+    this.cache = {
+      status: opts.cache,
+      dir: resolve(env.USER_DATA, '.cache', this.name),
+    };
+    if(opts.cache) {
+      if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir);
+    }
   }
   /**
    * Returns the mirror icon
@@ -88,15 +103,79 @@ export default class Mirror {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
   }
 
-  protected async downloadImage(url:string) {
-    // https://github.com/sindresorhus/file-type/issues/535#issuecomment-1065952695
+  /**
+   *
+   * @param url the url to fetch
+   * @param referer the referer to use
+   * @param dependsOnParams whether the data depends on the query parameters
+   * @example
+   * // dependsOnParams: true
+   * const url = 'https://www.example.com/images?id=1';
+   * downloadImage(url, true)
+   * // dependsOnParams: false
+   * const url = 'https://www.example.com/images/some-image.jpg?token=123';
+   * downloadImage(url, false)
+   */
+  protected async downloadImage(url:string, referer?:string, dependsOnParams = false) {
+    this.concurrency++;
+    const uri = new URL(url);
+    const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
+    const filename = await this.filenamify(identifier);
+
+    // try to get the file from cache if it's enabled
+    if(this.cache.status) {
+      let cacheResult:{mime: string, buffer:Buffer} | undefined;
+      try {
+        const buffer = readFileSync(resolve(this.cache.dir, filename));
+        const mime = await this.getFileMime(buffer);
+        cacheResult = { mime, buffer };
+      } catch {
+        cacheResult = undefined;
+      }
+      if(cacheResult) {
+        this.logger('cache hit', identifier);
+        return this.returnFetch(`data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`);
+      }
+    }
+
+    // fetch the image using axios, or use puppeteer as fallback
+    let buffer:Buffer|undefined;
+    try {
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer||this.host } });
+      buffer = Buffer.from(ab.data);
+    } catch {
+      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
+      if(res instanceof Buffer) buffer = res;
+    }
+
+    // if none of the methods worked, return undefined
+    if(!buffer) return this.returnFetch(undefined);
+
+    // check if the file is an image, if not return undefined
+    const mime = await this.getFileMime(buffer);
+    if(!mime) return this.returnFetch(undefined);
+    if(!mime.startsWith('image')) return this.returnFetch(undefined);
+
+    // if the file is an image, save it to the cache
+    if(this.cache.status) writeFileSync(resolve(this.cache.dir, filename), buffer);
+
+    // return the image
+    return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
+  }
+
+  private async getFileMime(buffer:Buffer, fallback = 'image/jpeg') {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
-
-    const ab = await axios({ method: 'GET' , url, responseType: 'arraybuffer', headers: { referer: this.host } });
-    const buffer = Buffer.from(ab.data, 'binary');
     const fT = await fileTypeFromBuffer(buffer);
-    return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
+    if(fT) return fT.mime;
+    return fallback;
+  }
+
+  private async filenamify(string:string) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
+    const filenamify = imp.default;
+    return filenamify(string);
   }
 
   protected async fetch(config: ClusterJob, type:'html'):Promise<CheerioAPI>

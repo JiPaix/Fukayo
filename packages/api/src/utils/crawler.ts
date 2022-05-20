@@ -110,10 +110,39 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
   }
 }
 
+async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
+  try {
+    await page.setUserAgent(userAgent.random().toString());
+    if(data.cookies) data.cookies.forEach(c => page.setCookie(c));
+
+    await page.setRequestInterception(true);
+    page.on('request', async (req) => {
+      if (req.isInterceptResolutionHandled()) return;
+    });
+
+    // get the content
+    const res = await page.goto(data.url, { referer: data.referer });
+    if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, {timeout: 1000*20});
+    // remove task from task list then close cluster if needed
+    runningTask = runningTask-1;
+    closeClusterIfAllDone();
+    return res.buffer();
+  } catch(e) {
+    // in most cases happens because waitForSelector timeout is reached (cloudflare?)
+    runningTask = runningTask-1;
+    if(e instanceof Error) return e;
+  }
+}
+
 /**
  * execute a task with headless browser
  */
-export async function crawler(data: ClusterJob): Promise<string | Error | undefined> {
+export async function crawler(data: ClusterJob, isFile: false): Promise<string | Error | undefined>
+export async function crawler(data: ClusterJob, isFile: true): Promise<Buffer | Error | undefined>
+export async function crawler(data: ClusterJob, isFile: boolean) {
   const instance = await useCluster();
-  return instance.execute(data, task);
+  if(isFile) {
+    return instance.execute(data, taskFile) as Promise<Buffer | Error | undefined>;
+  }
+  return instance.execute(data, task) as Promise<string | Error | undefined>;
 }

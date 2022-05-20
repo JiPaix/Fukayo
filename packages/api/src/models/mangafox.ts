@@ -16,6 +16,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       enabled: true,
       langs: ['en'],
       icon,
+      cache: true,
     });
 
     this.options = { adult: true };
