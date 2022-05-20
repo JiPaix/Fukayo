@@ -313,7 +313,7 @@ export default class Mirror {
                 let toparse = sc.substring(start - 1 + varchar.length - 1, curpos);
                 if (toparse.match(/atob\s*\(/g)) { // if data to parse is encoded using btoa
                     const m = /(?:'|").*(?:'|")/g.exec(toparse);
-                    if (m) toparse = atob(m[0].substring(1, m[0].length - 1));
+                    if (m) toparse = Buffer.from(m[0].substring(1, m[0].length - 1)).toString('base64');
                 }
                 res = JSON.parse(toparse);
             }
