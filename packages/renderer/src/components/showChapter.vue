@@ -6,8 +6,6 @@ import type { ChapterPage } from '../../../api/src/models/types/chapter';
 import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
 import type { MangaPage } from '../../../api/src/models/types/manga';
 
-
-
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** emit */
@@ -306,11 +304,11 @@ function chapterLabel(number:number, name?:string) {
           :key="i"
         >
           <q-img
-            :src="img && !isChapterPageErrorMessage(img) && isChapterPage(img) ? (img).src : 'undefined'"
+            :src="img && !isChapterPageErrorMessage(img) && isChapterPage(img) ? img.src : 'undefined'"
           >
             <template #error>
               <div
-                v-if="isChapterPage(img)"
+                v-if="isChapterPageErrorMessage(img)"
                 class="absolute-full flex flex-center bg-negative text-white"
               >
                 <div>
@@ -324,7 +322,6 @@ function chapterLabel(number:number, name?:string) {
                     {{ $t('reader.reload.value') }}
                   </q-btn>
                   <div
-                    v-if="isChapterPageErrorMessage(img)"
                     class="text-center"
                   >
                     {{ img.error }}
