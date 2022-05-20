@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { isChapterPage, isChapterPageErrorMessage } from './helpers/typechecker';
-import { ChapterPage } from '../../../api/src/models/types/chapter';
+import type { ChapterPage } from '../../../api/src/models/types/chapter';
 import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
 import type { MangaPage } from '../../../api/src/models/types/manga';
 
@@ -310,7 +310,7 @@ function chapterLabel(number:number, name?:string) {
           >
             <template #error>
               <div
-                v-if="(img as ChapterPage).src !== undefined"
+                v-if="isChapterPage(img)"
                 class="absolute-full flex flex-center bg-negative text-white"
               >
                 <div>
