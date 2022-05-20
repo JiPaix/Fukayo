@@ -58,7 +58,7 @@
     "electron-updater": "5.0.1",
     "eslint": "^8.15.0",
     "eslint-plugin-vue": "9.0.1",
-    "happy-dom": "4.0.0",
+    "happy-dom": "4.0.1",
     "nano-staged": "0.8.0",
     "nock": "^13.2.4",
     "playwright": "^1.22.1",
