@@ -153,7 +153,7 @@ export default class Mirror {
   private async internalFetch<T>(config: ClusterJob) {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
-      referer: this.host.replace(/http(s?):\/\//g, ''),
+      referer: config.referer || this.host.replace(/http(s?):\/\//g, ''),
       'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
       ...config.headers,
     };
@@ -176,12 +176,8 @@ export default class Mirror {
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.usePuppeteer(config);
+      return this.crawler({url: config.url, waitForSelector: config.waitForSelector }, false);
     }
-  }
-
-  private usePuppeteer(config: ClusterJob) {
-    return this.crawler({url: config.url, waitForSelector: config.waitForSelector });
   }
 
   private returnFetch<T>(data : T) {
