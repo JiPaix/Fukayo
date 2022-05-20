@@ -1,5 +1,5 @@
 export type MirrorConstructor = {
-  /** slug name */
+  /** slug name: `az-_` */
   name: string,
   /** full name */
   displayName: string,
