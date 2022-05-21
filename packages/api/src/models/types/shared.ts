@@ -33,7 +33,7 @@ export type mirrorInfo = {
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
-  options?: Record<string, unknown>
+  options: Record<string, unknown> & { enabled: boolean },
     /** Meta information */
     meta: {
       /**

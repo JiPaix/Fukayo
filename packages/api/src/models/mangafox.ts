@@ -6,14 +6,11 @@ import type { socketInstance } from '../server/types';
 
 class Mangafox extends Mirror implements MirrorInterface {
 
-  options: { adult: boolean };
-
   constructor() {
     super({
       host: 'https://fanfox.net',
       name: 'mangafox',
       displayName: 'Mangafox',
-      enabled: true,
       langs: ['en'],
       icon,
       cache: true,
@@ -22,9 +19,8 @@ class Mangafox extends Mirror implements MirrorInterface {
         quality: 0.3,
         popularity: 0.6,
       },
+      options: { enabled: true, adult: true },
     });
-
-    this.options = { adult: true };
   }
 
   isMangaPage(str:string) {
@@ -57,7 +53,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     try {
       const $ = await this.fetch({
         url,
-        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.manga-list-4-list > li',
       }, 'html');
 
@@ -146,7 +142,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     try {
       const $ = await this.fetch({
         url: `${this.host}${link}`,
-        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
         waitForSelector: 'ul.detail-main-list > li > a',
       }, 'html');
 
@@ -247,7 +243,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     try {
       const $ = await this.fetch({
         url: `${this.host}${link}`,
-        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '#xf-new',
       }, 'html');
 
@@ -278,7 +274,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           key: mkey,
         };
 
-        const data = await this.fetch({url: chapfunurl, params, cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}]}, 'string');
+        const data = await this.fetch({url: chapfunurl, params, cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}]}, 'string');
 
         // regexp to parse the arguments to pass to the unpack function, just parse the 4 first arguments
         const regexpargs = /'(([^\\']|\\')*)',([0-9]+),([0-9]+),'(([^\\']|\\')*)'/g;
@@ -331,7 +327,7 @@ class Mangafox extends Mirror implements MirrorInterface {
     try {
       const $ = await this.fetch({
         url,
-        cookies: [{name: 'isAdult', value: '1', path: '/', domain: 'fanfox.net'}],
+        cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
         waitForSelector: '.container.dayrank.ranking',
       }, 'html');
 

@@ -169,7 +169,7 @@ async function research() {
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   const queryParam = route.query.q as string;
-  socket?.emit('getMirrors', (mirrors) => {
+  socket?.emit('getMirrors', false, (mirrors) => {
     setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors);
     if(queryParam) {
       query.value = queryParam;

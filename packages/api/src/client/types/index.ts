@@ -13,7 +13,7 @@ export type LoginAuth = { login: string, password:string }
 
 
 export interface ClientToServerEvents {
-  getMirrors: (callback: (m: mirrorInfo[]) => void) => void;
+  getMirrors: (showdisabled:boolean, callback: (m: mirrorInfo[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
   stopShowManga: () => void;
@@ -22,6 +22,9 @@ export interface ClientToServerEvents {
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
   showRecommend: (id:number, mirror:string) => void;
+  changeSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
+  getCacheSize: (callback: (size: number, files:string[]) => void) => void;
+  emptyCache: (files?:string[]) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

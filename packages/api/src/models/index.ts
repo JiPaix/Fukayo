@@ -1,3 +1,4 @@
+import { Database } from './../db/index';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync,readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
@@ -13,8 +14,13 @@ import type { MirrorConstructor } from './types/constructor';
  * The default mirror class
  *
  * All mirror classes should extend this class
+ * @template T Mirror specific options
+ * @example
+ * class myMirror extends Mirror<{ lowres: boolean }> {}
+ * // if mirror has no options use undefined
+ * class myMirror extends Mirror<undefined> {}
  */
-export default class Mirror {
+export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
@@ -27,10 +33,6 @@ export default class Mirror {
    * @example 'https://www.mirror.com'
    */
   host: string;
-  /**
-   * Whether the mirror is enabled
-   */
-  enabled: boolean;
   /**
    * Languages supported by the mirror
    *
@@ -62,11 +64,6 @@ export default class Mirror {
    * Time to wait in ms between requests
    */
   waitTime: number;
-  /**
-   * Mirror specific option
-   * @example { adult: true, lowres: false }
-   */
-  options: Record<string, unknown> | undefined;
 
   /** weither the mirror has cache enabled or not */
   private cache: {
@@ -75,15 +72,18 @@ export default class Mirror {
     maxAge:number,
   };
 
-  constructor(opts: MirrorConstructor) {
+  /**
+   * mirror specific options
+   */
+  private db: Database<Record<string, unknown> & { enabled: boolean; }>;
+
+  constructor(opts: MirrorConstructor<T>) {
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
-    this.enabled = opts.enabled;
     this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
-    this.options = opts.options;
     this.meta = opts.meta;
     this.cache = {
       status: opts.cache,
@@ -98,6 +98,26 @@ export default class Mirror {
         this.emptyOldCache();
       }, 1000*60*60*24);
     }
+    this.db = new Database<Record<string, unknown> & { enabled: boolean; }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+  }
+
+  public get enabled() {
+    return this.db.data.enabled;
+  }
+
+  public set enabled(val:boolean) {
+    this.options.enabled = val;
+    this.db.write();
+  }
+
+  public get options() {
+    return this.db.data;
+  }
+
+  public set options(opts: Record<string, unknown> & { enabled: boolean }) {
+    this.db.data = opts;
+    this.logger('options changed', opts);
+    this.db.write();
   }
   /**
    * Returns the mirror icon
@@ -121,14 +141,20 @@ export default class Mirror {
       icon: this.icon,
       langs: this.langs,
       meta: this.meta,
+      options: this.options,
     };
   }
+
   private async wait() {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }
 
   protected logger(...args: unknown[]) {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
+  }
+
+  changeSettings(opts: Record<string, unknown>) {
+    this.options = { ...this.options, ...opts };
   }
 
   /**

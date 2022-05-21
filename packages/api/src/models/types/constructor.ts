@@ -1,4 +1,4 @@
-export type MirrorConstructor = {
+export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean}> = {
   /** slug name: `az-_` */
   name: string,
   /** full name */
@@ -8,10 +8,6 @@ export type MirrorConstructor = {
    * @example 'https://www.mirror.com'
    */
   host: string,
-  /**
-   * Whether the mirror is enabled
-   */
-  enabled: boolean,
   /**
    * mirror icon (import)
    * @example
@@ -54,7 +50,7 @@ export type MirrorConstructor = {
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
-  options?: Record<string, unknown>
+  options: T
   /**
    * Enable/disable cache
    */

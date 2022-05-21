@@ -12,7 +12,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
       host: 'https://mangahasu.se',
       name: 'mangahasu',
       displayName: 'MangaHasu',
-      enabled: true,
       langs: ['en'],
       icon,
       cache: true,
@@ -20,6 +19,9 @@ class MangaHasu extends Mirror implements MirrorInterface {
         speed: 0.5,
         quality: 0.7,
         popularity: 0.7,
+      },
+      options: {
+        enabled: true,
       },
     });
   }

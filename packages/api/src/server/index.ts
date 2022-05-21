@@ -8,6 +8,7 @@ import type { Server as HttpsServer } from 'https';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 import type { ServerToClientEvents, socketInstance } from './types';
 import type { ClientToServerEvents } from '../client/types';
+import { getAllCacheFilesAndSize, removeAllCacheFiles } from './helpers';
 
 /**
  * Initialize a socket.io server
@@ -107,8 +108,9 @@ export default class IOWrapper {
     /**
      * Get all mirrors (enabled or not)
      */
-    socket.on('getMirrors', callback => {
-      callback(mirrors.map(m => m.mirrorInfo));
+    socket.on('getMirrors', (showdisabled, callback) => {
+      if(showdisabled) return callback(mirrors.map(m => m.mirrorInfo));
+      return callback(mirrors.map(m => m.mirrorInfo).filter(m => m.enabled));
     });
 
     /**
@@ -142,7 +144,19 @@ export default class IOWrapper {
     socket.on('showRecommend', (id, mirror) => {
       mirrors.find(m=>m.name === mirror)?.recommend(socket, id);
     });
+
+    socket.on('changeSettings', (mirror, opts, callback) => {
+      mirrors.find(m=>m.name === mirror)?.changeSettings(opts);
+      callback(mirrors.map(m => m.mirrorInfo));
+    });
+
+    socket.on('getCacheSize', callback => {
+      const { size, files } = getAllCacheFilesAndSize();
+      callback(size, files);
+    });
+
+    socket.on('emptyCache', files => removeAllCacheFiles(files));
+
   }
-
-
 }
+

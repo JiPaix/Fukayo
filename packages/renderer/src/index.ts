@@ -42,6 +42,11 @@ const router = createRouter({
         path: '/explore/:mirror',
         component: () => import('./components/ExploreSelectedMirror.vue'),
       },
+      {
+        name: 'settings',
+        path: '/settings',
+        component: () => import('./components/settings/settingsPage.vue'),
+      },
     ],
 });
 

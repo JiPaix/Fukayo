@@ -155,6 +155,38 @@
     "tab": {
       "desc": "The settings tab name",
       "value": "Paramètres"
+    },
+    "general": {
+      "desc": "General settings",
+      "value": "Général"
+    },
+    "sources": {
+      "desc": "Source settings",
+      "value": "Sources"
+    },
+    "files": {
+      "desc": "File settings",
+      "value": "Utilisation du disque"
+    },
+    "enable": {
+      "desc": "prefix for boolean settings",
+      "value": "Activer"
+    },
+    "disable": {
+      "desc": "prefix for boolean settings",
+      "value": "Désactiver"
+    },
+    "change": {
+      "desc": "prefix for string/number settings",
+      "value": "Changer"
+    },
+    "adult": {
+      "desc": "The adult setting label",
+      "value": "le contenu pour adult"
+    },
+    "enabled": {
+      "desc": "The mirror enabled setting label",
+      "value": "cette source"
     }
   },
   "search": {

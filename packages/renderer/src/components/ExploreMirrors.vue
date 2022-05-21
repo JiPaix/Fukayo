@@ -5,6 +5,7 @@ import { useSocket } from './helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
+import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from './helpers/mirrorFilters';
 import type { socketClientInstance } from '../../../api/src/client/types';
 import type { mirrorInfo } from '../../../api/src/models/types/shared';
 
@@ -30,13 +31,12 @@ const includedLangsRAW = ref<string[]>([]);
 const mirrorsRAW = ref<mirrorInfo[]>([]);
 
 const mirrors = computed(() => {
-  const enabled = mirrorsRAW.value.filter(mirror => mirror.enabled);
-  return sort(applyFilters(enabled));
+  return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value);
 });
 
 /** return the ordered list of includedLangsRAW */
 const includedLangs = computed(() => {
-  return sortLangs(includedLangsRAW.value);
+  return sortLangs(includedLangsRAW.value, $t);
 });
 
 /** returns true if all available languages are included in the filter */
@@ -48,63 +48,21 @@ const includedAllLanguage = computed(() => {
   return true;
 });
 
-/** sort langs by their i18n-translated value */
-function sortLangs(langs:string[]) {
-  return langs.sort((a, b) => $t(`languages.${a}.value`).localeCompare($t(`languages.${b}.value`)));
-}
-
-function sort(mirrors:mirrorInfo[]) {
-  return mirrors.sort((a, b) => {
-    if (sortAZ.value) {
-      return a.displayName.localeCompare(b.displayName);
-    }
-    return b.displayName.localeCompare(a.displayName);
-  });
-}
-
-function applyFilters(mirrors:mirrorInfo[]) {
-  const q = query.value ? query.value.toLowerCase() : '';
-  return mirrors.filter(mirror => {
-    return (
-      (
-        mirror.name.toLowerCase().includes(q) ||
-        mirror.displayName.toLowerCase().includes(q) ||
-        mirror.host.toLowerCase().includes(q)
-      ) && mirror.langs.some(m => includedLangsRAW.value.includes(m))
-    );
-  });
-}
-
-/** include/exclude all languages from the filter */
-function toggleAllLanguages() {
-  if(includedAllLanguage.value) {
-    allLangs.value.forEach(l => {
-      if(includedLangsRAW.value.includes(l)) toggleLang(l);
-    });
-  } else {
-    allLangs.value.forEach(l => {
-      if(!includedLangsRAW.value.includes(l)) toggleLang(l);
-    });
-  }
+function pickall() {
+  return toggleAllLanguages(includedAllLanguage.value, allLangs.value, includedLangsRAW);
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
-function toggleLang(lang:string) {
-  if(includedLangsRAW.value.some(m => m === lang)) {
-    includedLangsRAW.value = includedLangsRAW.value.filter(m => m !== lang);
-  } else {
-    includedLangsRAW.value.push(lang);
-  }
+function pick(lang:string) {
+  return toggleLang(lang, includedLangsRAW);
 }
 
 
 // get available mirrors before rendering and start the search if params are present
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
-  socket.emit('getMirrors', (m) => {
-    mirrorsRAW.value = m.sort((a, b) => a.name.localeCompare(b.name));
-    includedLangsRAW.value = Array.from(new Set(m.map(m => m.langs).flat()));
-    allLangs.value = includedLangsRAW.value;
+  socket.emit('getMirrors', false, (m) => {
+    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs);
   });
 });
 
@@ -157,7 +115,7 @@ onBeforeMount(async () => {
               <q-item
                 dense
                 clickable
-                @click="toggleAllLanguages"
+                @click="pickall"
               >
                 <q-checkbox
                   v-model="includedAllLanguage"
@@ -165,7 +123,7 @@ onBeforeMount(async () => {
                   color="primary"
                   class="q-ma-none q-pa-none"
                   toggle-indeterminate
-                  @click="toggleAllLanguages"
+                  @click="pickall"
                 />
                 <q-item-section
                   avatar
@@ -187,7 +145,7 @@ onBeforeMount(async () => {
                 v-for="lang in allLangs"
                 :key="lang"
                 clickable
-                @click="toggleLang(lang)"
+                @click="pick(lang)"
               >
                 <q-checkbox
                   v-model="includedLangs"
