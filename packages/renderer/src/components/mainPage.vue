@@ -15,7 +15,7 @@ const drawer = ref(false),
 </script>
 
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh LpR fFf">
     <q-header
       elevated
       class="bg-grey-10 text-white"
