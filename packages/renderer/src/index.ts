@@ -13,39 +13,46 @@ pinia.use(piniaLocalStorage);
 myApp.use(pinia);
 
 // Router
+import MangaLibrary from './components/MangaLibrary.vue';
+import searchManga from './components/searchMangas.vue';
+import showManga from './components/showManga.vue';
+import explorePage from './components/ExploreMirrors.vue';
+import exploreMirror from './components/ExploreSelectedMirror.vue';
+import settingsPage from './components/settings/settingsPage.vue';
+
 const router = createRouter({
   history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
   routes: [
       {
         name: 'home',
         path: '/',
-        component: () => import('./components/MangaLibrary.vue'),
+        component: MangaLibrary,
       },
       {
         name: 'search',
         path: '/search',
-        component: () => import('./components/searchMangas.vue'),
+        component: searchManga,
         props: route => ({ query: route.query.q }),
       },
       {
         name: 'manga',
         path: '/manga/:mirror/:lang/:url',
-        component: () => import('./components/showManga.vue'),
+        component: showManga,
       },
       {
         name: 'explore',
         path: '/explore',
-        component: () => import('./components/ExploreMirrors.vue'),
+        component: explorePage,
       },
       {
         name: 'explore_mirror',
         path: '/explore/:mirror',
-        component: () => import('./components/ExploreSelectedMirror.vue'),
+        component: exploreMirror,
       },
       {
         name: 'settings',
         path: '/settings',
-        component: () => import('./components/settings/settingsPage.vue'),
+        component: settingsPage,
       },
     ],
 });
