@@ -13,39 +13,34 @@ pinia.use(piniaLocalStorage);
 myApp.use(pinia);
 
 // Router
-const Search = () => import('./components/searchMangas.vue');
-const Library = () => import('./components/MangaLibrary.vue');
-const Manga = () => import('./components/showManga.vue');
-const Explore = () => import('./components/ExploreMirrors.vue');
-const ExploreMirror = () => import('./components/ExploreSelectedMirror.vue');
 const router = createRouter({
   history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
   routes: [
       {
         name: 'home',
         path: '/',
-        component: Library,
+        component: () => import('./components/MangaLibrary.vue'),
       },
       {
         name: 'search',
         path: '/search',
-        component: Search,
+        component: () => import('./components/searchMangas.vue'),
         props: route => ({ query: route.query.q }),
       },
       {
         name: 'manga',
         path: '/manga/:mirror/:lang/:url',
-        component: Manga,
+        component: () => import('./components/showManga.vue'),
       },
       {
         name: 'explore',
         path: '/explore',
-        component: Explore,
+        component: () => import('./components/ExploreMirrors.vue'),
       },
       {
         name: 'explore_mirror',
         path: '/explore/:mirror',
-        component: ExploreMirror,
+        component: () => import('./components/ExploreSelectedMirror.vue'),
       },
     ],
 });
