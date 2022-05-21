@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync,readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
 import axios from 'axios';
@@ -71,10 +71,9 @@ export default class Mirror {
   /** weither the mirror has cache enabled or not */
   private cache: {
     status: boolean,
-    dir: string
+    dir: string,
+    maxAge:number,
   };
-
-
 
   constructor(opts: MirrorConstructor) {
     this.name = opts.name;
@@ -89,9 +88,15 @@ export default class Mirror {
     this.cache = {
       status: opts.cache,
       dir: resolve(env.USER_DATA, '.cache', this.name),
+      maxAge: opts.cacheMaxAge || 1000*60*60*24*7,
     };
     if(opts.cache) {
       if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir);
+      else this.emptyOldCache();
+      // cleanup cache every day
+      setInterval(() => {
+        this.emptyOldCache();
+      }, 1000*60*60*24);
     }
   }
   /**
@@ -141,32 +146,18 @@ export default class Mirror {
    */
   protected async downloadImage(url:string, referer?:string, dependsOnParams = false) {
     this.concurrency++;
-    const uri = new URL(url);
-    const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
-    const filename = await this.filenamify(identifier);
+    const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
 
-    // try to get the file from cache if it's enabled
-    if(this.cache.status) {
-      let cacheResult:{mime: string, buffer:Buffer} | undefined;
-      try {
-        const buffer = readFileSync(resolve(this.cache.dir, filename));
-        const mime = await this.getFileMime(buffer);
-        cacheResult = { mime, buffer };
-      } catch {
-        cacheResult = undefined;
-      }
-      if(cacheResult) {
-        this.logger('cache hit', identifier);
-        return this.returnFetch(`data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`);
-      }
-    }
+    const cache = await this.loadFromCache({identifier, filename});
+    if(cache) return cache;
 
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
-      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer||this.host } });
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host } });
       buffer = Buffer.from(ab.data);
     } catch {
+
       const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
       if(res instanceof Buffer) buffer = res;
     }
@@ -174,16 +165,11 @@ export default class Mirror {
     // if none of the methods worked, return undefined
     if(!buffer) return this.returnFetch(undefined);
 
-    // check if the file is an image, if not return undefined
     const mime = await this.getFileMime(buffer);
-    if(!mime) return this.returnFetch(undefined);
-    if(!mime.startsWith('image')) return this.returnFetch(undefined);
-
-    // if the file is an image, save it to the cache
-    if(this.cache.status) writeFileSync(resolve(this.cache.dir, filename), buffer);
-
-    // return the image
-    return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
+    if(mime && mime.startsWith('image/')) {
+      this.saveToCache(filename, buffer);
+      return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
+    }
   }
 
   private async getFileMime(buffer:Buffer, fallback = 'image/jpeg') {
@@ -343,6 +329,49 @@ export default class Mirror {
         }
     }
     return res;
+  }
+
+  private async saveToCache(filename:string, buffer:Buffer) {
+    if(this.cache.status) {
+      writeFileSync(resolve(this.cache.dir, filename), buffer);
+    }
+  }
+
+  private async loadFromCache(id:{ identifier: string, filename:string }) {
+    if(this.cache.status) {
+      let cacheResult:{mime: string, buffer:Buffer} | undefined;
+      try {
+        const buffer = readFileSync(resolve(this.cache.dir, id.filename));
+        const mime = await this.getFileMime(buffer);
+        cacheResult = { mime, buffer };
+      } catch {
+        cacheResult = undefined;
+      }
+      if(cacheResult) {
+        this.logger('cache hit', id.identifier);
+        return this.returnFetch(`data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`);
+      }
+    }
+  }
+
+  private async generateCacheFilename(url:string, dependsOnParams:boolean) {
+    const uri = new URL(url);
+    const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
+    const filename = await this.filenamify(identifier);
+    return {filename, identifier};
+  }
+
+  private emptyOldCache() {
+    if(this.cache.status) {
+      const files = readdirSync(this.cache.dir);
+      files.forEach(file => {
+        const stats = statSync(resolve(this.cache.dir, file));
+        // delete files older than 7 day
+        if(stats.mtime.getTime() < Date.now() - this.cache.maxAge) {
+          unlinkSync(resolve(this.cache.dir, file));
+        }
+      });
+    }
   }
 
 }

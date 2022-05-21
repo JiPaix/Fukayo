@@ -59,4 +59,6 @@ export type MirrorConstructor = {
    * Enable/disable cache
    */
   cache: boolean
+  /** Cache Max Age */
+  cacheMaxAge?: number
 }
