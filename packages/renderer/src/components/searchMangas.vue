@@ -263,7 +263,7 @@ onBeforeUnmount(async () => {
             style="cursor:default!important;"
           />
           <q-btn
-            :icon="sortAZ ? 'text_rotation_angleup' : 'text_rotation_angledown'"
+            :icon="sortAZ ? 'text_rotation_angledown' : 'text_rotation_angleup'"
             size="1em"
             @click="sortAZ = !sortAZ"
           />
