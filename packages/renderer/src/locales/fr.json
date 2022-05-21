@@ -197,6 +197,24 @@
     "tab": {
       "desc": "The tab label",
       "value": "Explorer"
+    },
+    "placeholder": {
+      "desc": "The input placeholder text",
+      "value": "Filtrer les miroirs par nom"
+    },
+    "meta": {
+      "quality": {
+        "desc": "the quality label",
+        "value": "qualité"
+      },
+      "speed": {
+        "desc": "the speed label",
+        "value": "vitesse"
+      },
+      "popularity": {
+        "desc": "the popularity label",
+        "value": "popularité"
+      }
     }
   },
   "mangas": {

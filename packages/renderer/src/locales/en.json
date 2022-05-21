@@ -197,6 +197,24 @@
     "tab": {
       "desc": "The tab label",
       "value": "Explore"
+    },
+    "placeholder": {
+      "desc": "The input placeholder text",
+      "value": "Filter mirrors by name"
+    },
+    "meta": {
+      "quality": {
+        "desc": "The quality label",
+        "value": "quality"
+      },
+      "speed": {
+        "desc": "The speed label",
+        "value": "speed"
+      },
+      "popularity": {
+        "desc": "The popularity label",
+        "value": "popularity"
+      }
     }
   },
   "mangas": {
