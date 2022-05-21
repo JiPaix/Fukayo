@@ -25,6 +25,27 @@ export type MirrorConstructor = {
    * ISO 639-1 codes
    */
   langs: string[],
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  }
   /**
    * Time to wait in ms between requests
    */

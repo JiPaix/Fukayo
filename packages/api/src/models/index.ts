@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { env } from 'node:process';
 import axios from 'axios';
 import { load } from 'cheerio';
-
 import { crawler } from '../utils/crawler';
 import type { CheerioAPI, CheerioOptions, AnyNode} from 'cheerio';
 import type { mirrorInfo } from './types/shared';
@@ -38,6 +37,27 @@ export default class Mirror {
    * ISO 639-1 codes
    */
   langs: string[];
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  };
   /**
    * Time to wait in ms between requests
    */
@@ -55,6 +75,7 @@ export default class Mirror {
   };
 
 
+
   constructor(opts: MirrorConstructor) {
     this.name = opts.name;
     this.displayName = opts.displayName;
@@ -64,6 +85,7 @@ export default class Mirror {
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
     this.options = opts.options;
+    this.meta = opts.meta;
     this.cache = {
       status: opts.cache,
       dir: resolve(env.USER_DATA, '.cache', this.name),
@@ -93,6 +115,7 @@ export default class Mirror {
       enabled: this.enabled,
       icon: this.icon,
       langs: this.langs,
+      meta: this.meta,
     };
   }
   private async wait() {

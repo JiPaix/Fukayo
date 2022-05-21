@@ -27,6 +27,27 @@ export default interface MirrorInterface {
    * @example { adult: true, lowres: false }
    */
   options?: { [key:string]: unknown };
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  }
   /**
    * Time to wait in ms between requests
    */

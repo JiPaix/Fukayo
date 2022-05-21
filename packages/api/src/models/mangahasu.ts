@@ -16,6 +16,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
       langs: ['en'],
       icon,
       cache: true,
+      meta: {
+        speed: 0.5,
+        quality: 0.7,
+        popularity: 0.7,
+      },
     });
   }
 
