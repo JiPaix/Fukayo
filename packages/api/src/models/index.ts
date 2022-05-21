@@ -1,9 +1,11 @@
+import { Database } from './../db/index';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync,readdirSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { env } from 'node:process';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from '../utils/crawler';
-import { resolve } from 'node:path';
-import { env } from 'node:process';
-import type { CheerioAPI, CheerioOptions, Node } from 'cheerio';
+import type { CheerioAPI, CheerioOptions, AnyNode} from 'cheerio';
 import type { mirrorInfo } from './types/shared';
 import type { ClusterJob } from '../utils/types/crawler';
 import type { MirrorConstructor } from './types/constructor';
@@ -12,9 +14,13 @@ import type { MirrorConstructor } from './types/constructor';
  * The default mirror class
  *
  * All mirror classes should extend this class
+ * @template T Mirror specific options
+ * @example
+ * class myMirror extends Mirror<{ lowres: boolean }> {}
+ * // if mirror has no options use undefined
+ * class myMirror extends Mirror<undefined> {}
  */
-export default class Mirror {
-
+export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
@@ -28,34 +34,90 @@ export default class Mirror {
    */
   host: string;
   /**
-   * Whether the mirror is enabled
-   */
-  enabled: boolean;
-  /**
    * Languages supported by the mirror
    *
    * ISO 639-1 codes
    */
   langs: string[];
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  };
   /**
    * Time to wait in ms between requests
    */
   waitTime: number;
-  /**
-   * Mirror specific option
-   * @example { adult: true, lowres: false }
-   */
-  options: Record<string, unknown> | undefined;
 
-  constructor(opts: MirrorConstructor) {
+  /** weither the mirror has cache enabled or not */
+  private cache: {
+    status: boolean,
+    dir: string,
+    maxAge:number,
+  };
+
+  /**
+   * mirror specific options
+   */
+  private db: Database<Record<string, unknown> & { enabled: boolean; }>;
+
+  constructor(opts: MirrorConstructor<T>) {
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
-    this.enabled = opts.enabled;
     this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
-    this.options = opts.options;
+    this.meta = opts.meta;
+    this.cache = {
+      status: opts.cache,
+      dir: resolve(env.USER_DATA, '.cache', this.name),
+      maxAge: opts.cacheMaxAge || 1000*60*60*24*7,
+    };
+    if(opts.cache) {
+      if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir);
+      else this.emptyOldCache();
+      // cleanup cache every day
+      setInterval(() => {
+        this.emptyOldCache();
+      }, 1000*60*60*24);
+    }
+    this.db = new Database<Record<string, unknown> & { enabled: boolean; }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+  }
+
+  public get enabled() {
+    return this.db.data.enabled;
+  }
+
+  public set enabled(val:boolean) {
+    this.options.enabled = val;
+    this.db.write();
+  }
+
+  public get options() {
+    return this.db.data;
+  }
+
+  public set options(opts: Record<string, unknown> & { enabled: boolean }) {
+    this.db.data = opts;
+    this.logger('options changed', opts);
+    this.db.write();
   }
   /**
    * Returns the mirror icon
@@ -78,8 +140,11 @@ export default class Mirror {
       enabled: this.enabled,
       icon: this.icon,
       langs: this.langs,
+      meta: this.meta,
+      options: this.options,
     };
   }
+
   private async wait() {
     return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
   }
@@ -88,15 +153,64 @@ export default class Mirror {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
   }
 
-  protected async downloadImage(url:string) {
-    // https://github.com/sindresorhus/file-type/issues/535#issuecomment-1065952695
+  changeSettings(opts: Record<string, unknown>) {
+    this.options = { ...this.options, ...opts };
+  }
+
+  /**
+   *
+   * @param url the url to fetch
+   * @param referer the referer to use
+   * @param dependsOnParams whether the data depends on the query parameters
+   * @example
+   * // dependsOnParams: true
+   * const url = 'https://www.example.com/images?id=1';
+   * downloadImage(url, true)
+   * // dependsOnParams: false
+   * const url = 'https://www.example.com/images/some-image.jpg?token=123';
+   * downloadImage(url, false)
+   */
+  protected async downloadImage(url:string, referer?:string, dependsOnParams = false) {
+    this.concurrency++;
+    const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
+
+    const cache = await this.loadFromCache({identifier, filename});
+    if(cache) return cache;
+
+    // fetch the image using axios, or use puppeteer as fallback
+    let buffer:Buffer|undefined;
+    try {
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host } });
+      buffer = Buffer.from(ab.data);
+    } catch {
+
+      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
+      if(res instanceof Buffer) buffer = res;
+    }
+
+    // if none of the methods worked, return undefined
+    if(!buffer) return this.returnFetch(undefined);
+
+    const mime = await this.getFileMime(buffer);
+    if(mime && mime.startsWith('image/')) {
+      this.saveToCache(filename, buffer);
+      return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
+    }
+  }
+
+  private async getFileMime(buffer:Buffer, fallback = 'image/jpeg') {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
-
-    const ab = await axios({ method: 'GET' , url, responseType: 'arraybuffer', headers: { referer: this.host } });
-    const buffer = Buffer.from(ab.data, 'binary');
     const fT = await fileTypeFromBuffer(buffer);
-    return `data:${fT?.mime || 'image/jpeg'};charset=utf-8;base64,`+buffer.toString('base64');
+    if(fT) return fT.mime;
+    return fallback;
+  }
+
+  private async filenamify(string:string) {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
+    const filenamify = imp.default;
+    return filenamify(string);
   }
 
   protected async fetch(config: ClusterJob, type:'html'):Promise<CheerioAPI>
@@ -153,7 +267,7 @@ export default class Mirror {
   private async internalFetch<T>(config: ClusterJob) {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
-      referer: this.host.replace(/http(s?):\/\//g, ''),
+      referer: config.referer || this.host.replace(/http(s?):\/\//g, ''),
       'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
       ...config.headers,
     };
@@ -176,12 +290,8 @@ export default class Mirror {
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.usePuppeteer(config);
+      return this.crawler({url: config.url, waitForSelector: config.waitForSelector }, false);
     }
-  }
-
-  private usePuppeteer(config: ClusterJob) {
-    return this.crawler({url: config.url, waitForSelector: config.waitForSelector });
   }
 
   private returnFetch<T>(data : T) {
@@ -191,12 +301,12 @@ export default class Mirror {
 
   /**
    * Cheerio.load() wrapper
-   * @param {string | Buffer | Node | Node[]} content
+   * @param {string | Buffer | AnyNode | AnyNode[]} content
    * @param {CheerioOptions | null | undefined} options
    * @param {boolean | undefined} isDocument
    * @returns {CheerioAPI}
    */
-  protected loadHTML(content: string | Buffer | Node | Node[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
+  protected loadHTML(content: string | Buffer | AnyNode | AnyNode[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
     return load(content, options, isDocument);
   }
 
@@ -238,13 +348,56 @@ export default class Mirror {
                 let toparse = sc.substring(start - 1 + varchar.length - 1, curpos);
                 if (toparse.match(/atob\s*\(/g)) { // if data to parse is encoded using btoa
                     const m = /(?:'|").*(?:'|")/g.exec(toparse);
-                    if (m) toparse = atob(m[0].substring(1, m[0].length - 1));
+                    if (m) toparse = Buffer.from(m[0].substring(1, m[0].length - 1)).toString('base64');
                 }
                 res = JSON.parse(toparse);
             }
         }
     }
     return res;
+  }
+
+  private async saveToCache(filename:string, buffer:Buffer) {
+    if(this.cache.status) {
+      writeFileSync(resolve(this.cache.dir, filename), buffer);
+    }
+  }
+
+  private async loadFromCache(id:{ identifier: string, filename:string }) {
+    if(this.cache.status) {
+      let cacheResult:{mime: string, buffer:Buffer} | undefined;
+      try {
+        const buffer = readFileSync(resolve(this.cache.dir, id.filename));
+        const mime = await this.getFileMime(buffer);
+        cacheResult = { mime, buffer };
+      } catch {
+        cacheResult = undefined;
+      }
+      if(cacheResult) {
+        this.logger('cache hit', id.identifier);
+        return this.returnFetch(`data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`);
+      }
+    }
+  }
+
+  private async generateCacheFilename(url:string, dependsOnParams:boolean) {
+    const uri = new URL(url);
+    const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
+    const filename = await this.filenamify(identifier);
+    return {filename, identifier};
+  }
+
+  private emptyOldCache() {
+    if(this.cache.status) {
+      const files = readdirSync(this.cache.dir);
+      files.forEach(file => {
+        const stats = statSync(resolve(this.cache.dir, file));
+        // delete files older than 7 day
+        if(stats.mtime.getTime() < Date.now() - this.cache.maxAge) {
+          unlinkSync(resolve(this.cache.dir, file));
+        }
+      });
+    }
   }
 
 }

@@ -12,9 +12,17 @@ class MangaHasu extends Mirror implements MirrorInterface {
       host: 'https://mangahasu.se',
       name: 'mangahasu',
       displayName: 'MangaHasu',
-      enabled: true,
       langs: ['en'],
       icon,
+      cache: true,
+      meta: {
+        speed: 0.5,
+        quality: 0.7,
+        popularity: 0.7,
+      },
+      options: {
+        enabled: true,
+      },
     });
   }
 
@@ -218,11 +226,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
         const imgLink = $(el).attr('src');
         if(imgLink) {
-          const img = await this.downloadImage(imgLink);
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
-        } else {
-          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+          const img = await this.downloadImage(imgLink, `${this.host}${link}`);
+          if(img) {
+            socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+            continue;
+          }
         }
+        socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
       }
     } catch(e) {
       this.logger('error while fetching chapter', e);

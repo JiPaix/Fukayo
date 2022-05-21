@@ -6,7 +6,7 @@ export default interface MirrorInterface {
   /**
    * Whether the mirror is enabled
    */
-  enabled: boolean;
+  get enabled(): boolean;
   /** full name */
   displayName: string;
   /** slug name */
@@ -22,11 +22,27 @@ export default interface MirrorInterface {
    * ISO 639-1 codes
    */
   langs: string[];
-  /**
-   * Mirror specific option
-   * @example { adult: true, lowres: false }
-   */
-  options?: { [key:string]: unknown };
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  }
   /**
    * Time to wait in ms between requests
    */
@@ -41,6 +57,8 @@ export default interface MirrorInterface {
    * Mirror informations
    */
   get mirrorInfo(): mirrorInfo;
+  /** Change the mirror settings */
+  changeSettings(options: Record<string, unknown>): void;
   /**
    * Test if url is a manga page
    */

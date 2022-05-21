@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onBeforeMount } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 defineProps<{
@@ -12,10 +12,14 @@ const drawer = ref(false),
       $q = useQuasar(),
       route = useRoute(),
       router = useRouter();
+
+onBeforeMount(() => {
+  router.push({name: 'home'});
+});
 </script>
 
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh LpR fFf">
     <q-header
       elevated
       class="bg-grey-10 text-white"

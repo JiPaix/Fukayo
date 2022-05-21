@@ -27,7 +27,7 @@ const loading = ref(true);
 
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
-  socket.emit('getMirrors', (m) => {
+  socket.emit('getMirrors', false, (m) => {
     const found = m.find((mirror) => mirror.name === route.params.mirror);
     if(found) mirror.value = found;
   });

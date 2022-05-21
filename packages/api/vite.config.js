@@ -56,6 +56,8 @@ const config = {
         'file-type',
         'socket.io-client',
         'socket.io',
+        'filenamify',
+        'user-agents',
       ],
       output:{
         manualChunks(id) {

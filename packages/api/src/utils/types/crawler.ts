@@ -6,4 +6,6 @@ export interface ClusterJob extends AxiosRequestConfig {
   waitForSelector?: string;
   /** Cookies */
   cookies?: { name: string, value: string, domain: string, path: string }[]
+  /** referer */
+  referer?: string;
 }

@@ -1,0 +1,67 @@
+<script lang="ts" setup>
+import { ref, computed, onBeforeMount } from 'vue';
+import { useSocket } from '../helpers/socket';
+import { useStore as useSettingsStore } from '/@/store/settings';
+import filesize from 'filesize';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+
+const settings = useSettingsStore();
+let socket:socketClientInstance|undefined;
+const size = ref(0);
+const files = ref<string[]>([]);
+
+const humanreadable = computed(() => {
+  return filesize(size.value);
+});
+
+function emptyCache() {
+  socket?.emit('emptyCache', files.value);
+  files.value = [];
+  size.value = 0;
+}
+
+// get available mirrors before rendering and start the search if params are present
+onBeforeMount(async () => {
+  if(!socket) socket = await useSocket(settings.server);
+  socket.emit('getCacheSize', (length, f) => {
+    size.value = length;
+    files.value = f;
+  });
+});
+</script>
+
+<template>
+  <q-list separator>
+    <q-item
+      v-ripple
+      clickable
+      @click="emptyCache"
+    >
+      <q-item-section avatar>
+        <q-icon
+          color="primary"
+          name="cached"
+        />
+      </q-item-section>
+
+      <q-item-section>
+        <q-item-label>Cache</q-item-label>
+        <q-item-label
+          caption
+          lines="2"
+        >
+          <div>{{ humanreadable }}</div>
+          <div class="text-grey">
+            {{ files.length }} Files
+          </div>
+        </q-item-label>
+      </q-item-section>
+      <q-item-section side>
+        <q-icon
+          color="negative"
+          name="delete"
+        />
+      </q-item-section>
+    </q-item>
+  </q-list>
+</template>

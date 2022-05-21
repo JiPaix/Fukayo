@@ -33,5 +33,26 @@ export type mirrorInfo = {
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
-  options?: Record<string, unknown>
+  options: Record<string, unknown> & { enabled: boolean },
+    /** Meta information */
+    meta: {
+      /**
+       * quality of scans
+       *
+       * Number between 0 and 1
+       */
+      quality: number,
+      /**
+       * Speed of releases
+       *
+       * Number between 0 and 1
+       */
+      speed: number,
+      /**
+       * Mirror's popularity
+       *
+       * Number between 0 and 1
+       */
+      popularity: number,
+    };
 }

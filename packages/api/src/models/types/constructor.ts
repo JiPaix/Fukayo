@@ -1,5 +1,5 @@
-export type MirrorConstructor = {
-  /** slug name */
+export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean}> = {
+  /** slug name: `az-_` */
   name: string,
   /** full name */
   displayName: string,
@@ -8,10 +8,6 @@ export type MirrorConstructor = {
    * @example 'https://www.mirror.com'
    */
   host: string,
-  /**
-   * Whether the mirror is enabled
-   */
-  enabled: boolean,
   /**
    * mirror icon (import)
    * @example
@@ -25,6 +21,27 @@ export type MirrorConstructor = {
    * ISO 639-1 codes
    */
   langs: string[],
+  /** Meta information */
+  meta: {
+    /**
+     * quality of scans
+     *
+     * Number between 0 and 1
+     */
+    quality: number,
+    /**
+     * Speed of releases
+     *
+     * Number between 0 and 1
+     */
+    speed: number,
+    /**
+     * Mirror's popularity
+     *
+     * Number between 0 and 1
+     */
+    popularity: number,
+  }
   /**
    * Time to wait in ms between requests
    */
@@ -33,5 +50,11 @@ export type MirrorConstructor = {
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
-  options?: Record<string, unknown>
+  options: T
+  /**
+   * Enable/disable cache
+   */
+  cache: boolean
+  /** Cache Max Age */
+  cacheMaxAge?: number
 }

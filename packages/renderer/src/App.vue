@@ -93,7 +93,7 @@ onBeforeMount(()=> {
           </div>
           <!-- Main page once client is connected -->
           <mainPage
-            v-else-if="connected"
+            v-else
             :logo="favicon"
           />
         </div>

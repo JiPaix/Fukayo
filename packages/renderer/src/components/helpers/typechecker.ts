@@ -5,15 +5,15 @@ import type { SearchResult } from '../../../../api/src/models/types/search';
 import type { TaskDone } from '../../../../api/src/models/types/shared';
 
 export function isChapterPage(res: ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage): res is ChapterPage {
-  return (res as ChapterPage).index !== undefined;
+  return (res as ChapterPage).index !== undefined && (res as ChapterPage).src !== undefined && (res as ChapterPage).lastpage !== undefined;
 }
 
 export function isChapterErrorMessage(res: ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage): res is ChapterErrorMessage {
-  return (res as ChapterPage).index !== undefined;
+  return (res as ChapterPage).index === undefined && (res as ChapterPageErrorMessage).error !== undefined;
 }
 
 export function isChapterPageErrorMessage(res: ChapterPage | ChapterPageErrorMessage | ChapterErrorMessage): res is ChapterPageErrorMessage {
-  return (res as ChapterPage).src === undefined;
+  return (res as ChapterPage).src === undefined && (res as ChapterPageErrorMessage).error !== undefined && (res as ChapterPageErrorMessage).index !== undefined;
 }
 
 export function isSearchResult(res: SearchResult | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is SearchResult {
