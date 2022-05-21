@@ -47,8 +47,10 @@ const config = {
         output:{
             manualChunks(id) {
               if (id.includes('node_modules')) {
-                  return id.toString().split('node_modules/')[1].split('/')[0].toString();
+                  return id.split('node_modules/')[1];
               }
+              if(id.includes('renderer/src')) return id.split('renderer/src/')[1];
+              if(id.includes('api/src')) return id.split('api/src/')[1];
           },
         },
     },
