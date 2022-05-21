@@ -1,5 +1,6 @@
 import { env } from 'node:process';
 import { Cluster } from 'puppeteer-cluster';
+import { resolve } from 'node:path';
 import puppeteer from 'puppeteer-extra';
 import si from 'systeminformation';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -51,7 +52,7 @@ async function useCluster() {
     timeout: 1000*20,
     puppeteer,
     puppeteerOptions: {
-      // userDataDir: resolve(env.USER_DATA, 'puppeteer'),
+      userDataDir: resolve(env.USER_DATA, '.cache', 'puppeteer'),
       headless: env.MODE === 'development' ? false : true,
       args: [
         '--no-sandbox',
