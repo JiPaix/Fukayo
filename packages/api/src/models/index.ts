@@ -91,7 +91,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
       maxAge: opts.cacheMaxAge || 1000*60*60*24*7,
     };
     if(opts.cache) {
-      if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir);
+      if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir, { recursive: true });
       else this.emptyOldCache();
       // cleanup cache every day
       setInterval(() => {
