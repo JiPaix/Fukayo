@@ -47,7 +47,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
   }
 
   getChapterInfoFromString(str:string) {
-    const res = /(\d+(\.\d+)?)$/gmi.exec(str);
+    const res = /(\d+(\.|-|_)(\d+)?)$$/gmi.exec(str);
     if(!res) this.logger('not a chapter string', str);
     return res;
   }
@@ -259,10 +259,12 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
 
         if(match && typeof match === 'object') {
           const [ ,chapterNumber] = match;
-          current_chapter = current_chapter.replace(chapterNumber, '').trim();
-
-          let chapter:number = parseFloat(chapterNumber);
-          if(isNaN(chapter)) chapter = i+1;
+          let chapter:number = parseFloat(chapterNumber.replace(/(-|_)/, '.'));
+          if(isNaN(chapter)) {
+            chapter = i+1;
+          } else {
+            current_chapter = current_chapter.replace(chapterNumber, '').trim();
+          }
           release = {
             name: current_chapter,
             number: chapter,
