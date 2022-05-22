@@ -47,7 +47,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
   }
 
   getChapterInfoFromString(str:string) {
-    const res = /(\d+(\.|-|_)(\d+)?)$$/gmi.exec(str);
+    const res = /(\d+(\.|-|_)?(\d+)?)$$/gmi.exec(str);
     if(!res) this.logger('not a chapter string', str);
     return res;
   }
