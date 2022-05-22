@@ -351,26 +351,6 @@ class Mangafox extends Mirror implements MirrorInterface {
           if(img) covers.push(img);
         }
 
-        const last_chapter = $('.manga-list-1-item-subtitle > a', el).text().trim();
-
-        // check if we can get any info regarding the last chapter
-        const match = this.getChapterInfoFromString(last_chapter);
-        let last_release;
-        if(match && typeof match === 'object') {
-          const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
-          last_release = {
-            name: chapterName ? chapterName.trim() : undefined,
-            volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
-            chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
-          };
-        } else {
-          last_release = {
-            name: last_chapter,
-            volume: undefined,
-            chapter: undefined,
-          };
-        }
-
         // manga id = "mirror_name/lang/link-of-manga-page"
         const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
 
@@ -381,7 +361,6 @@ class Mangafox extends Mirror implements MirrorInterface {
           name,
           url:link,
           covers,
-          last_release,
           lang: this.langs[0],
         });
       }

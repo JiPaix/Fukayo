@@ -270,20 +270,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
           const img = await this.downloadImage(coverLink).catch(() => undefined);
           if(img) covers.push(img);
         }
-        let last_release: SearchResult['last_release'];
-        const last_chapter = $('a.name-chapter > span', el).text().replace('Read online ', '').trim();
-        const match = this.getChapterInfoFromString(last_chapter);
-
-        if(!match) last_release = {name: last_chapter.replace(/Chapter/gi, '').trim()};
-
-        if(match && typeof match === 'object') {
-          const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
-          last_release = {
-            name: chapterName ? chapterName.trim() : undefined,
-            volume: volumeNumber ? parseInt(volumeNumber) : undefined,
-            chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
-          };
-        }
         // manga id = "mirror_name/lang/link-of-manga-page"
         const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
 
@@ -293,7 +279,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
           name,
           url:link,
           covers,
-          last_release,
           lang: this.langs[0],
         });
       }
