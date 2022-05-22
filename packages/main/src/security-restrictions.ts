@@ -26,7 +26,8 @@ const ALLOWED_EXTERNAL_ORIGINS = new Set<`${string}`>([
   'localhost',
   'fanfox.net',
   'mangahasu.se',
-  'www.scan-fr.org',
+  'scan-fr.org',
+  'manga.fascans.com',
 ]);
 
 
