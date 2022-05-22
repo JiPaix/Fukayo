@@ -85,8 +85,9 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
         const link = obj.url.replace(this.host, '');
 
         const covers: string[] = [];
-        const coverLink = $('img.img-responsive').attr('src');
+        let coverLink = $('img.img-responsive').attr('src');
         if(coverLink) {
+          if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
           const img = await this.downloadImage(coverLink).catch(() => undefined);
           if(img) covers.push(img);
         }
@@ -162,8 +163,9 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
         }
 
         const covers = [];
-        const coverLink = $('img', el).attr('src');
+        let coverLink = $('img', el).attr('src');
         if(coverLink) {
+          if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
           const img = await this.downloadImage(coverLink).catch(() => undefined);
           if(img) covers.push(img);
         }
@@ -216,9 +218,10 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
       const covers = [];
 
       if(cancel) return;
-      // mangahasu images needs to be downloaded.
-      const coverLink = $('.boxed img').attr('src');
+
+      let coverLink = $('.boxed img').attr('src');
       if(coverLink) {
+        if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
         const img = await this.downloadImage(coverLink).catch(() => undefined);
         if(img) covers.push(img);
       }
