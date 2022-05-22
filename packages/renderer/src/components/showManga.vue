@@ -440,15 +440,17 @@ onBeforeUnmount(() => {
     </div>
     <!-- show Chapter Dialog -->
     <q-dialog
-      v-if="chapterSelectedIndex !== null"
       ref="dialogRef"
       v-model="displayChapter"
       maximized
       class="bg-dark"
+      transition-show="flip-left"
+      transition-hide="flip-right"
+      transition-duration="300"
       @hide="hideChapterComp"
     >
       <showChapter
-        v-if="manga && manga.chapters && manga.chapters.length"
+        v-if="manga && manga.chapters && manga.chapters.length && chapterSelectedIndex !== null"
         :manga="manga"
         :chapter-selected-index="chapterSelectedIndex"
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
