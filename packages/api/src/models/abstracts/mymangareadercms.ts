@@ -18,14 +18,14 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
 
   constructor(opts: MirrorConstructor<T> & {
     /** ul css selector */
-    chapter_selector: string,
+    chapter_selector?: string,
     /** regexp to recognize chapter urls */
     chapter_url?: RegExp,
     /** on the chapter page they sometimes add a prefix to the manga name */
     manga_page_appended_string?: string,
   }) {
     super(opts);
-    this.chapter_selector = opts.chapter_selector;
+    this.chapter_selector = opts.chapter_selector || 'ul.chapters a[href*=manga]';
     this.chapter_url = opts.chapter_url || /\/manga\/.+\/\d+$/gmi;
     this.manga_page_appended_string = opts.manga_page_appended_string;
   }
