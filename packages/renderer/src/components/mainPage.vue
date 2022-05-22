@@ -14,7 +14,7 @@ const drawer = ref(false),
       router = useRouter();
 
 onBeforeMount(() => {
-  router.push({name: 'home'});
+  if(!route.name) router.push({ name: 'home' });
 });
 </script>
 
