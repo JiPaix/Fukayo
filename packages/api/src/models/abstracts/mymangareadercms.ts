@@ -143,8 +143,8 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
   async recommend(socket: socketInstance, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopSearchInMirrors', () => {
-      this.logger('search canceled');
+    socket.once('stopShowRecommend', () => {
+      this.logger('fetching recommendations canceled');
       cancel = true;
     });
     try {
