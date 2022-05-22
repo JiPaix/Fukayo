@@ -314,7 +314,6 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   async recommend(socket: socketInstance, id: number) {
-    this.logger('fetching recommendations');
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     socket.once('stopShowRecommend', () => {
