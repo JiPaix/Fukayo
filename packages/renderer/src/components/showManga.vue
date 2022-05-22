@@ -36,7 +36,9 @@ const refs = ref<MangaPage>();
 /** manga cover template ref */
 const cover = ref<HTMLImageElement | null>(null);
 /** height of the cover */
-const coverHeight = ref<number>();
+const coverHeight = ref<number>(0);
+/** width of the cover */
+const coverWidth = ref<number>(0);
 /** show/hide the chapter images dialog */
 const displayChapter = ref(false);
 /** index of the manga.chapter to show */
@@ -60,6 +62,7 @@ const manga = computed<MangaPage | undefined>(() => {
       covers: refs.value.covers,
       synopsis: refs.value.synopsis,
       tags: refs.value.tags,
+      authors: refs.value.authors,
       chapters: sorted,
     };
   }
@@ -76,6 +79,13 @@ const sortedImages = computed(() => {
   return [];
 });
 
+
+const chapterSkeletonWidth = computed(() => {
+  if($q.screen.xs) return coverWidth.value + 'px';
+  if($q.screen.sm) return coverWidth.value*1.2 + 'px';
+  if($q.screen.gt.sm) return coverWidth.value*2 + 'px';
+  return '1px';
+});
 /**
  * Sort the chapters pages and pages errors by their index
  * @param images array including images and error messages
@@ -89,8 +99,9 @@ function sortImages(images: (ChapterPage | ChapterPageErrorMessage)[]) {
  * @param o Object containing the size of the cover
  * @param o.width the width of the cover
  */
-function onResize(o: { height: number }) {
+function onResize(o: { height: number, width: number }) {
   coverHeight.value = o.height;
+  coverWidth.value = o.width;
 }
 
 /**
@@ -207,7 +218,10 @@ onBeforeMount(async () => {
  * get the height of the cover when the component is mounted
  */
 onMounted(() => {
-  if (cover.value) coverHeight.value = cover.value.height;
+  if (cover.value) {
+    coverHeight.value = cover.value.height;
+    coverWidth.value = cover.value.width;
+  }
 });
 
 /**
@@ -221,18 +235,27 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <q-card
-    v-if="manga"
     class="w-100"
   >
-    <q-card-section class="text-center">
-      <!-- Title -->
-      <div>
+    <q-card-section
+      class="text-center"
+    >
+      <div v-if="manga">
         <span class="text-h3">
           {{ manga.name }}
         </span>
       </div>
+      <div v-else>
+        <span class="text-h3">
+          <q-skeleton
+            type="rect"
+            height="57px"
+            class="q-mb-sm"
+          />
+        </span>
+      </div>
       <!-- Tags -->
-      <div v-if="manga.tags">
+      <div v-if="manga">
         <q-chip
           v-for="(tag, i) in manga.tags"
           :key="i"
@@ -241,13 +264,12 @@ onBeforeUnmount(() => {
           {{ tag }}
         </q-chip>
       </div>
-      <!-- Tags Skeleton -->
       <div
         v-else
         class="flex justify-center"
       >
         <q-skeleton
-          v-for="i in 3"
+          v-for="i in 4"
           :key="i"
           type="QChip"
         />
@@ -256,6 +278,7 @@ onBeforeUnmount(() => {
       <div class="flex items-center">
         <span class="q-mr-sm">{{ $t("mangas.source.value") }}: </span>
         <a
+          v-if="manga"
           class="text-weight-medium text-white"
           style="text-decoration: none"
           :href="manga.mirrorInfo.host + manga.url"
@@ -265,36 +288,61 @@ onBeforeUnmount(() => {
 
           <q-icon name="open_in_new" />
         </a>
+        <q-skeleton
+          v-else
+          type="text"
+          width="50px"
+        />
         <img
+          v-if="manga"
           :src="manga.mirrorInfo.icon"
           :alt="manga.mirrorInfo.displayName"
           class="q-ml-sm"
         >
+        <q-skeleton
+          v-else
+          height="16px"
+          width="16px"
+          type="rect"
+          class="q-ml-sm"
+        />
       </div>
-      <div class="flex items-center">
+      <div
+        class="flex items-center"
+      >
         {{ $t("languages.language.value") }}:
-        <span class="text-weight-medium q-ml-sm">{{
-          $t("languages." + manga.lang + ".value")
-        }}</span>
+        <span
+          v-if="manga"
+          class="text-weight-medium q-ml-sm"
+        >
+          {{ $t("languages." + manga.lang + ".value") }}
+        </span>
+        <q-skeleton
+          v-else
+          type="text"
+          class="text-weight-medium q-ml-sm"
+          width="50px"
+        />
       </div>
     </q-card-section>
-    <q-card-section>
+    <q-card-section v-if="manga">
       <!-- Synopsis -->
       <div v-if="manga.synopsis">
         {{ manga.synopsis }}
       </div>
-      <!-- Synopsis Skeleton -->
+    </q-card-section>
+    <q-card-section v-else>
+      <!-- Synopsis Skeleton (42px = 2 lines) -->
       <q-skeleton
-        v-else
-        type="text"
-        class="w-100 q-px-xl q-py-lg"
-        style="height: 180px"
+        type="rect"
+        style="height: 42px"
       />
     </q-card-section>
-
-    <div class="row">
+    <div
+      class="row"
+    >
       <q-card-section class="col-xs-12 col-sm-5 col-md-4 col-lg-2">
-        <div>
+        <div v-if="manga">
           <!-- Cover -->
           <img
             v-if="manga.covers && manga.covers.length > 0"
@@ -305,15 +353,24 @@ onBeforeUnmount(() => {
           <!-- Cover Skeleton -->
           <q-skeleton
             v-else
-            height="400px"
+            :height="coverHeight + 'px'"
+          />
+          <q-resize-observer @resize="onResize" />
+        </div>
+        <div v-else>
+          <!-- Cover Skeleton -->
+          <q-skeleton
+            :height="coverHeight + 'px'"
           />
           <q-resize-observer @resize="onResize" />
         </div>
       </q-card-section>
-      <q-card-section class="col-lg-10 col-sm-7 col-md-8 col-xs-12">
+      <q-card-section
+        v-if="manga && manga.chapters && manga.chapters.length"
+        class="col-lg-10 col-sm-7 col-md-8 col-xs-12"
+      >
         <!-- Chapters list -->
         <q-virtual-scroll
-          v-if="manga.chapters"
           :style="$q.screen.xs ? '' : 'height: ' + coverHeight + 'px'"
           :items="manga.chapters"
           separator
@@ -365,14 +422,20 @@ onBeforeUnmount(() => {
           </template>
         </q-virtual-scroll>
         <!-- Chapters list Skeleton -->
-        <q-skeleton
-          v-for="i in 20"
-          v-else
-          :key="i"
-          type="text"
-          :height="(coverHeight || 0) / 20 + 'px'"
-          class="q-pa-sm"
-        />
+      </q-card-section>
+      <q-card-section v-else>
+        <div
+          class="flex column"
+          :style="'max-height: ' + coverHeight + 'px'"
+          style="overflow: hidden"
+        >
+          <q-skeleton
+            v-for="i in 60"
+            :key="i"
+            type="text"
+            :width="chapterSkeletonWidth"
+          />
+        </div>
       </q-card-section>
     </div>
     <!-- show Chapter Dialog -->
@@ -385,6 +448,7 @@ onBeforeUnmount(() => {
       @hide="hideChapterComp"
     >
       <showChapter
+        v-if="manga && manga.chapters && manga.chapters.length"
         :manga="manga"
         :chapter-selected-index="chapterSelectedIndex"
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
