@@ -154,7 +154,7 @@ function setCommitTypeAndScope(commit) {
     type = 'revert';
   }
 
-  if (type === undefined && commit.subject.startsWith('Merge branch')) {
+  if (type === undefined && commit.subject.startsWith('Merge')) {
     type = 'merge';
   }
 
