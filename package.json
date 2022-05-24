@@ -90,7 +90,7 @@
     "puppeteer-extra": "^3.2.3",
     "puppeteer-extra-plugin-adblocker-no-vulnerabilities": "^2.12.3",
     "puppeteer-extra-plugin-stealth": "^2.9.0",
-    "quasar": "^2.7.0",
+    "quasar": "^2.7.1",
     "socket.io": "^4.5.1",
     "socket.io-client": "^4.5.1",
     "systeminformation": "^5.11.15",
