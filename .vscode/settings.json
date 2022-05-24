@@ -2,5 +2,10 @@
   "i18n-ally.localesPaths": [
     "packages/renderer/src/locales"
   ],
-  "i18n-ally.keystyle": "nested"
+  "i18n-ally.keystyle": "nested",
+  "auto-close-tag.disableOnLanguage": [
+  "js",
+  "ts",
+  "json",
+  ]
 }
