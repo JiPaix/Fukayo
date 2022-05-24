@@ -12,7 +12,7 @@
 name: "CodeQL"
 
 on:
-  pull_request:
+  push:
     # The branches below must be a subset of the branches above
     branches:
       - main
@@ -29,7 +29,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: self-ubuntu
+    runs-on: ubuntuvm
     permissions:
       actions: read
       contents: read

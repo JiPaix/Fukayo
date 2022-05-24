@@ -1,6 +1,6 @@
 name: Typechecking
 on:
-  pull_request:
+  push:
     branches:
       - main
       - beta
@@ -21,7 +21,7 @@ defaults:
 
 jobs:
   typescript:
-    runs-on: self-ubuntu
+    runs-on: ubuntuvm
 
     steps:
       - uses: actions/checkout@v2

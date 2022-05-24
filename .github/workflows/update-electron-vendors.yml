@@ -20,7 +20,7 @@ defaults:
 
 jobs:
   node-chrome:
-    runs-on: ubuntu-latest
+    runs-on: ubuntuvm
 
     steps:
       - uses: actions/checkout@v2
