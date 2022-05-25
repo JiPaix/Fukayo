@@ -10,6 +10,7 @@ import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isHostNameVal
 const $t = useI18n().t.bind(useI18n());
 /** quasar */
 const $q = useQuasar();
+defineExpose({ $q });
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */

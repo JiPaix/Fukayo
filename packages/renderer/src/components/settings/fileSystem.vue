@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import { ref, computed, onBeforeMount } from 'vue';
+import { useQuasar } from 'quasar';
 import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import filesize from 'filesize';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 
+const $q = useQuasar();
+defineExpose({ $q });
 const settings = useSettingsStore();
 let socket:socketClientInstance|undefined;
 const size = ref(0);

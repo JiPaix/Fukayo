@@ -18,6 +18,7 @@ let socket:socketClientInstance|undefined;
 const $t = useI18n().t.bind(useI18n());
 /** quasar */
 const $q = useQuasar();
+defineExpose({ $q });
 
 /** search filter */
 const query = ref<string|null>('');

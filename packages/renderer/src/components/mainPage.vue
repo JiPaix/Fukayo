@@ -13,6 +13,8 @@ const drawer = ref(false),
       route = useRoute(),
       router = useRouter();
 
+defineExpose({ $q });
+
 onBeforeMount(() => {
   if(!route.name) router.push({ name: 'home' });
 });
