@@ -223,6 +223,10 @@
     "last": {
       "desc": "The last chapter button label",
       "value": "Aller au dernier chapitre :"
+    },
+    "longstrip": {
+      "desc": "The long strip button label",
+      "value": "Afficher le chapitre en entier"
     }
   },
   "explore": {

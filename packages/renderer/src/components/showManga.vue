@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { watch, nextTick } from 'vue';
 import { onBeforeMount, onMounted, onBeforeUnmount, ref, computed, inject } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore as useSettingsStore } from '/@/store/settings';
@@ -11,8 +12,9 @@ import {
   isChapterPageErrorMessage,
   isManga,
 } from './helpers/typechecker';
-import showChapter from './showChapter.vue';
+import showChapter from './reader/App.vue';
 import type dayjs from 'dayjs';
+import type { ComponentPublicInstance} from 'vue';
 import type { socketClientInstance } from '../../../api/src/client/types';
 import type { ChapterPage } from '../../../api/src/models/types/chapter';
 import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
@@ -47,6 +49,8 @@ const chapterSelectedIndex = ref<number | null>(null);
 const nbOfImagesToExpectFromChapter = ref(0);
 /** images and/or error messages */
 const images = ref<(ChapterPage | ChapterPageErrorMessage)[]>([]);
+/** show-chapter template ref */
+const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 
 /** computed manga infos */
 const manga = computed<MangaPage | undefined>(() => {
@@ -67,6 +71,15 @@ const manga = computed<MangaPage | undefined>(() => {
     };
   }
   return undefined;
+});
+
+/** autofocus chapterRef */
+watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
+  if(newManga && newManga.chapters && newManga.chapters.length && newIndex !== null) {
+    nextTick(() =>  {
+    chapterRef.value?.$el.focus({ preventScroll: true });
+    });
+  }
 });
 
 /**
@@ -449,8 +462,10 @@ onBeforeUnmount(() => {
       transition-duration="300"
       @hide="hideChapterComp"
     >
-      <showChapter
+      <show-chapter
         v-if="manga && manga.chapters && manga.chapters.length && chapterSelectedIndex !== null"
+        ref="chapterRef"
+        tabindex="0"
         :manga="manga"
         :chapter-selected-index="chapterSelectedIndex"
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"

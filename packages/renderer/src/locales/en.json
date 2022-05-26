@@ -164,27 +164,27 @@
       "desc": "Source settings",
       "value": "Sources"
     },
-    "files" : {
+    "files": {
       "desc": "File settings",
       "value": "Disk usage"
     },
-    "enable" : {
+    "enable": {
       "desc": "prefix for boolean settings",
       "value": "Enable"
     },
-    "disable" : {
+    "disable": {
       "desc": "prefix for boolean settings",
       "value": "Disable"
     },
-    "change" : {
+    "change": {
       "desc": "prefix for string/number settings",
       "value": "Change"
     },
-    "adult" : {
+    "adult": {
       "desc": "The adult setting label",
       "value": "adult content"
     },
-    "enabled" : {
+    "enabled": {
       "desc": "The mirror enabled setting label",
       "value": "this source"
     }
@@ -223,6 +223,10 @@
     "last": {
       "desc": "The last chapter button label",
       "value": "Go to last chapter:"
+    },
+    "longstrip": {
+      "desc": "The long strip button label",
+      "value": "Display the whole chapter as a long strip"
     }
   },
   "explore": {

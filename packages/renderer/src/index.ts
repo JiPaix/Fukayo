@@ -18,7 +18,7 @@ import searchManga from './components/searchMangas.vue';
 import showManga from './components/showManga.vue';
 import explorePage from './components/ExploreMirrors.vue';
 import exploreMirror from './components/ExploreSelectedMirror.vue';
-import settingsPage from './components/settings/settingsPage.vue';
+import settingsPage from './components/settings/App.vue';
 
 const router = createRouter({
   history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
