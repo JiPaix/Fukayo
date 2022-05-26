@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import mirrorsPage from './mirrorsOptions.vue';
+import mirrorsOptions from './mirrorsOptions.vue';
 import fileSystem from './fileSystem.vue';
+import mainOptions from './mainOptions.vue';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
@@ -34,7 +35,8 @@ const tab = ref<string>('general');
         :label="$t('settings.files.value')"
       />
     </q-tabs>
-    <mirrorsPage v-if="tab === 'sources'" />
-    <fileSystem v-if="tab === 'files'" />
+    <main-options v-if="tab === 'general'" />
+    <mirrors-options v-if="tab === 'sources'" />
+    <file-system v-if="tab === 'files'" />
   </div>
 </template>

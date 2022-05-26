@@ -230,12 +230,11 @@ onBeforeMount(async () => {
             group="sources"
             :icon="'img:'+mirror.icon"
             :label="mirror.displayName"
-            class="bg-grey-7"
+            class="shadow-2"
             :dark="settings.theme === 'dark'"
           >
             <q-list
               separator
-              class="bg-grey-9 q-pa-md"
             >
               <q-item
                 v-for="(value, propertyName) in mirror.options"
@@ -243,6 +242,7 @@ onBeforeMount(async () => {
                 class="flex items-center"
                 :clickable="typeof value === 'boolean'"
                 :dark="settings.theme === 'dark'"
+                style="background:rgba(255, 255, 255, 0.05)"
                 @click="typeof value === 'boolean' ? changeOption(mirror.name, propertyName, !value) : null"
               >
                 <q-item-section>

@@ -49,6 +49,8 @@ const chapterSelectedIndex = ref<number | null>(null);
 const nbOfImagesToExpectFromChapter = ref(0);
 /** images and/or error messages */
 const images = ref<(ChapterPage | ChapterPageErrorMessage)[]>([]);
+/** next chapter buffer */
+const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterPage | ChapterPageErrorMessage)[] } | undefined>();
 /** show-chapter template ref */
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 
@@ -92,13 +94,14 @@ const sortedImages = computed(() => {
   return [];
 });
 
-
+/** width of the chapter list q-skeleton */
 const chapterSkeletonWidth = computed(() => {
   if($q.screen.xs) return coverWidth.value + 'px';
   if($q.screen.sm) return coverWidth.value*1.2 + 'px';
   if($q.screen.gt.sm) return coverWidth.value*2 + 'px';
   return '1px';
 });
+
 /**
  * Sort the chapters pages and pages errors by their index
  * @param images array including images and error messages
@@ -115,6 +118,83 @@ function sortImages(images: (ChapterPage | ChapterPageErrorMessage)[]) {
 function onResize(o: { height: number, width: number }) {
   coverHeight.value = o.height;
   coverWidth.value = o.width;
+}
+/**
+ * Fetch the chapter images:
+ *
+ * put them in `images` array and update `nbOfImagesToExpectFromChapter`
+ */
+async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
+  if(!manga.value) return;
+  if(!socket) socket = await useSocket(settings.server);
+  const id = Date.now();
+  socket?.emit(
+    'showChapter',
+    id,
+    manga.value.mirrorInfo.name,
+    manga.value.lang,
+    manga.value.chapters[chapterIndex].url,
+    (nbOfPagesToExpect) => {
+      // callback returns the number of pages to expect
+      nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
+      socket?.on('showChapter', (id, res) => {
+        if (id !== id) return; // should not happen
+        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+          images.value.push(res);
+          if(res.lastpage) {
+            socket?.off('showChapter');
+            if(manga.value && manga.value.chapters[chapterIndex-1]) {
+              fetchNextChapter(chapterIndex-1);
+            }
+          }
+        } else if (isChapterErrorMessage(res)) {
+          // TODO: show error message
+          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
+        } else {
+          // unhandled should not happen
+        }
+      });
+    },
+  );
+}
+
+/**
+ * Fetch the next chapter:
+ *
+ * put it in `nextChapterBuffer.images`, updates `nextChapterBuffer.nbOfImagesToExpectFromChapter` and `nextChapterBuffer.index`
+ */
+async function fetchNextChapter(/** index of the next chapter */ nextIndex:number) {
+  if(!settings.reader.preloadNext) return;
+  if(!manga.value) return;
+  if(!socket) socket = await useSocket(settings.server);
+  const id = Date.now();
+  nextChapterBuffer.value = {
+    nbOfImagesToExpectFromChapter: undefined,
+    index: nextIndex,
+    images: [],
+  };
+  socket?.emit(
+    'showChapter',
+    id,
+    manga.value.mirrorInfo.name,
+    manga.value.lang,
+    manga.value.chapters[nextIndex].url,
+    (nbOfImagesToExpectFromChapter) => {
+      if(nextChapterBuffer.value) nextChapterBuffer.value.nbOfImagesToExpectFromChapter = nbOfImagesToExpectFromChapter;
+      socket?.on('showChapter', (id, res) => {
+        if (id !== id) return; // should not happen
+        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+          nextChapterBuffer.value?.images.push(res);
+          if(res.lastpage) socket?.off('showChapter');
+        } else if (isChapterErrorMessage(res)) {
+          // TODO: show error message
+          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
+        } else {
+          // unhandled should not happen
+        }
+      });
+    },
+  );
 }
 
 /**
@@ -149,35 +229,28 @@ async function hideChapterComp() {
  * @see {@link MangaPage}
  */
 async function startChapterFetch(chapterIndex: number) {
-  if (!manga.value) return; // should not happen
-  // prepare and send the request
-  if (!socket) socket = await useSocket(settings.server);
-  const id = Date.now();
-  socket?.emit(
-    'showChapter',
-    id,
-    manga.value.mirrorInfo.name,
-    manga.value.lang,
-    manga.value.chapters[chapterIndex].url,
-    (nbOfPagesToExpect) => {
-      // callback returns the number of pages to expect
-      nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
-      socket?.on('showChapter', (id, res) => {
-        if (id !== id) return; // should not happen
-        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
-          images.value.push(res);
-          if(res.lastpage) socket?.off('showChapter');
-        } else if (isChapterErrorMessage(res)) {
-          // TODO: show error message
-          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
-        } else {
-          // unhandled should not happen
-        }
-      });
-    },
-  );
+  if(!nextChapterBuffer.value) fetchChapter(chapterIndex);
+  else if(nextChapterBuffer.value.index !== chapterIndex) fetchChapter(chapterIndex);
+  else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === undefined) fetchChapter(chapterIndex);
+  else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === nextChapterBuffer.value.images.length) {
+    nbOfImagesToExpectFromChapter.value = nextChapterBuffer.value.nbOfImagesToExpectFromChapter;
+    const res:(ChapterPage | ChapterPageErrorMessage)[] = [];
+    nextChapterBuffer.value.images.forEach((c) => {
+      if(isChapterPage(c) || isChapterPageErrorMessage(c)) res.push(c);
+    });
+    nextChapterBuffer.value = undefined;
+    images.value = res;
+    fetchNextChapter(chapterIndex+1);
+  }
+  else fetchChapter(chapterIndex);
 }
 
+
+
+
+/**
+ * Request a specific image for a given chapter
+ */
 async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
   if (!manga.value) return; // should not happen
   // prepare and send the request

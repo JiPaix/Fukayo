@@ -5,6 +5,7 @@ import { chapterLabel } from './helpers';
 import { isChapterPageErrorMessage } from '../helpers/typechecker';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
+import { useStore as useStoreSettings } from '/@/store/settings';
 import type { ReaderSettings } from './@types';
 import type { ChapterPage } from '../../../../api/src/models/types/chapter';
 import type { ChapterPageErrorMessage } from '../../../../api/src/models/types/errors';
@@ -30,6 +31,9 @@ const props = defineProps<{
   /** images sorted by index */
   sortedImages: (ChapterPage | ChapterPageErrorMessage)[]
 }>();
+
+/** settings */
+const settings = useStoreSettings();
 
 /** displays a progress bar while images are loading */
 const showProgressBar = computed(() => {
@@ -59,11 +63,11 @@ const drawerRightReveal = ref(false);
 
 /** Reader settings */
 const localSettings = ref<ReaderSettings>({
-  webtoon: false, // this.manga.settings.webtoon || this.$store.state.settings.webtoon,
-  showPageNumber: true,
-  zoomMode: 'auto',
-  zoomValue: 100,
-  longStrip: false,
+  webtoon: settings.reader.webtoon, // this.manga.settings.webtoon || this.$store.state.settings.webtoon,
+  showPageNumber:  settings.reader.showPageNumber,
+  zoomMode: settings.reader.zoomMode,
+  zoomValue: settings.reader.zoomValue,
+  longStrip: settings.reader.longStrip,
 });
 
 /**

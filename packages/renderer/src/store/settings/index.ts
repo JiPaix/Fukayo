@@ -15,6 +15,14 @@ export const useStore = defineStore('settings', {
         accessToken: null as string | null,
         refreshToken: null as string | null,
       },
+      reader : {
+        webtoon: false,
+        showPageNumber: true,
+        zoomMode: 'auto' as 'auto' | 'fit-width' | 'fit-height' | 'custom',
+        zoomValue: 100,
+        longStrip: true,
+        preloadNext: true,
+      },
     };
   },
 });
