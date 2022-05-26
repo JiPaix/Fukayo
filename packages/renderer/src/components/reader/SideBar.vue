@@ -182,12 +182,12 @@ function navigate(o: {label: string|number, value: number}) {
       />
       <q-toggle
         v-model="localSettings.webtoon"
-        label="Webtoon mode"
+        :label="$t('reader.webtoon.value')"
         color="orange"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
-        label="Display page number"
+        :label="$t('reader.showpagenumber.value')"
         color="orange"
       />
       <q-btn-group class="q-ml-auto q-mr-auto q-mt-lg">
@@ -197,7 +197,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'auto'"
         >
           <q-tooltip>
-            wide screen (auto)
+            {{ $t('reader.displaymode.auto.value') }}
           </q-tooltip>
         </q-btn>
         <q-btn
@@ -206,7 +206,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'fit-width'"
         >
           <q-tooltip>
-            fit width
+            {{ $t('reader.displaymode.fit-width.value') }}
           </q-tooltip>
         </q-btn>
 
@@ -218,7 +218,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'fit-height'"
         >
           <q-tooltip>
-            fit height
+            {{ $t('reader.displaymode.fit-height.value') }}
           </q-tooltip>
         </q-btn>
         <q-btn
@@ -227,7 +227,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'custom'"
         >
           <q-tooltip>
-            custom
+            {{ $t('reader.displaymode.fit-custom.value') }}
           </q-tooltip>
         </q-btn>
       </q-btn-group>

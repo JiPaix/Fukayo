@@ -187,6 +187,17 @@
     "enabled": {
       "desc": "The mirror enabled setting label",
       "value": "cette source"
+    },
+    "reader": {
+      "preload": {
+        "value": "Précharger le chapitre suivant pendant la lecture"
+      },
+      "info": {
+        "value": "Ces paramètres sont appliqués globalement et utilisés par défaut. \nTout changement survenant lors de la lecture d'un manga ne s'appliquera qu'à celui-ci."
+      },
+      "displaymode": {
+        "value": "Mode d'affichage"
+      }
     }
   },
   "search": {
@@ -227,6 +238,27 @@
     "longstrip": {
       "desc": "The long strip button label",
       "value": "Afficher le chapitre en entier"
+    },
+    "webtoon": {
+      "desc": "The webtoon button label",
+      "value": "Webtoon (pas d'espace entre les images)"
+    },
+    "showpagenumber": {
+      "value": "Afficher le numéro de page"
+    },
+    "displaymode": {
+      "auto": {
+        "value": "Auto"
+      },
+      "fit-width": {
+        "value": "Adapter la largeur de l'écran"
+      },
+      "fit-height": {
+        "value": "Ajuster à la hauteur de l'écran"
+      },
+      "fit-custom": {
+        "value": "Manuel"
+      }
     }
   },
   "explore": {

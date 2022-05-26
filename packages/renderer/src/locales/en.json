@@ -187,6 +187,17 @@
     "enabled": {
       "desc": "The mirror enabled setting label",
       "value": "this source"
+    },
+    "reader": {
+      "preload": {
+        "value": "Preload the next chapter while reading"
+      },
+      "info": {
+        "value": "These settings are applied globally and use as default. Any changes occuring while reading a manga will only applies to it."
+      },
+      "displaymode": {
+        "value": "Display mode"
+      }
     }
   },
   "search": {
@@ -227,6 +238,27 @@
     "longstrip": {
       "desc": "The long strip button label",
       "value": "Display the whole chapter as a long strip"
+    },
+    "webtoon": {
+      "desc": "The webtoon button label",
+      "value": "Webtoon (no spaces between images)"
+    },
+    "showpagenumber": {
+      "value": "Show page number"
+    },
+    "displaymode": {
+      "auto": {
+        "value": "Auto"
+      },
+      "fit-width": {
+        "value": "Fit to screen's width"
+      },
+      "fit-height": {
+        "value": "Fit to screen's height"
+      },
+      "fit-custom": {
+        "value": "Manual"
+      }
     }
   },
   "explore": {
