@@ -1,4 +1,4 @@
-import { readdirSync, statSync, unlinkSync } from 'node:fs';
+import { readdirSync, statSync, unlinkSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { join } from 'node:path';
 import { env } from 'node:process';
@@ -9,11 +9,14 @@ function getAllCacheFiles(dirPath?:string, arrayOfFiles?:string[]): string[] {
   let res = arrayOfFiles || [];
 
   files.forEach(function(file) {
-    if (statSync(path + '/' + file).isDirectory()) {
-      res = getAllCacheFiles(path + '/' + file, res);
-    } else {
-      const filePath = join(path, file);
-      res.push(filePath);
+    if(existsSync(join(path, file))) {
+      const stat = statSync(path + '/' + file);
+      if (stat.isDirectory() && !stat.isSymbolicLink()) {
+        res = getAllCacheFiles(path + '/' + file, res);
+      } else if(!stat.isSymbolicLink()) {
+        const filePath = join(path, file);
+        res.push(filePath);
+      }
     }
   });
   return res;
