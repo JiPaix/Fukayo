@@ -8,6 +8,14 @@ on:
       - 'tests/**'
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
+  pull_request:
+    branches:
+      - main
+      - beta
+    paths:
+      - 'tests/**'
+      - 'package-lock.json'
+      - '.github/workflows/tests.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}

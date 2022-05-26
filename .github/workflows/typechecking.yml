@@ -10,6 +10,16 @@ on:
       - '**/tsconfig.json'
       - 'package-lock.json'
       - '.github/workflows/typechecking.yml'
+  pull_request:
+    branches:
+      - main
+      - beta
+    paths:
+      - '**.ts'
+      - '**.vue'
+      - '**/tsconfig.json'
+      - 'package-lock.json'
+      - '.github/workflows/typechecking.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
