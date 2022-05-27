@@ -102,6 +102,7 @@ const showPageNumberIcon = computed(() => {
               >
                 <q-toggle
                   v-model="settings.reader.webtoon"
+                  :disable="settings.reader.zoomMode === 'fit-height'"
                   :icon="webtoonIcon"
                   size="lg"
                 />
@@ -134,7 +135,6 @@ const showPageNumberIcon = computed(() => {
               class="flex items-center"
               :dark="settings.theme === 'dark'"
               clickable
-              @click="settings.reader.webtoon = !settings.reader.webtoon"
             >
               <q-item-section>
                 <q-item-label>
@@ -164,17 +164,18 @@ const showPageNumberIcon = computed(() => {
                     </q-tooltip>
                   </q-btn>
 
-                  <q-btn
-                    icon="height"
-                    :text-color="settings.reader.webtoon ? 'negative' : undefined"
-                    :color="settings.reader.zoomMode === 'fit-height' ? 'orange' : undefined"
-                    :disable="settings.reader.webtoon"
-                    @click="settings.reader.zoomMode = 'fit-height'"
-                  >
+                  <div class="q-pa-none q-ma-none no-box-shadows">
+                    <q-btn
+                      icon="height"
+                      :text-color="settings.reader.webtoon ? 'negative' : undefined"
+                      :color="settings.reader.zoomMode === 'fit-height' ? 'orange' : undefined"
+                      :disable="settings.reader.webtoon"
+                      @click="settings.reader.zoomMode = 'fit-height';settings.reader.webtoon = false"
+                    />
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-height.value') }}
+                      {{ $t('reader.displaymode.fit-height.value') }} ({{ settings.reader.webtoon ? $t('reader.compatiblity.value') : '' }})
                     </q-tooltip>
-                  </q-btn>
+                  </div>
                   <q-btn
                     icon="pageview"
                     :color="settings.reader.zoomMode === 'custom' ? 'orange' : undefined"
@@ -193,3 +194,8 @@ const showPageNumberIcon = computed(() => {
     </q-card-section>
   </q-card>
 </template>
+<style lang="css" scoped>
+ .no-box-shadows > .q-btn:before {
+    box-shadow: none!important;
+ }
+</style>
