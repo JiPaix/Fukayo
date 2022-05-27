@@ -1,27 +1,46 @@
 # Contributing
 
-First and foremost, thank you! We appreciate that you want to contribute to vite-electron-builder, your time is valuable, and your contributions mean a lot to us.
+First and foremost, thank you! We appreciate that you want to contribute to Electron Mangas Reader, your time is valuable, and your contributions mean a lot to us.
 
-## Issues
+## Contribution Guidelines
+- Your contribution(s) must comply with our [Code of Conduct](CODE_OF_CONDUCT.md)
+- Simple and descriptive commit message, as they appear in the changelog _anybody_* should be able to understand what it's about.
+  - Treat commits as PRs, 1 commit = 1 feature/fix 
+- Do not submit PRs to the main branch
+- Before submitting a PR test your changes
+  - Changes on packages `main` and `renderer` must be tested on both windows and linux
+  - Changes to package renderer must be tested in and outside the electron environment
 
-Do not create issues about bumping dependencies unless a bug has been identified, and you can demonstrate that it effects this library.
-
-**Help us to help you**
-
-Remember that we’re here to help, but not to make guesses about what you need help with:
-
-- Whatever bug or issue you're experiencing, assume that it will not be as obvious to the maintainers as it is to you.
-- Spell it out completely. Keep in mind that maintainers need to think about _all potential use cases_ of a library. It's important that you explain how you're using a library so that maintainers can make that connection and solve the issue.
-
-_It can't be understated how frustrating and draining it can be to maintainers to have to ask clarifying questions on the most basic things, before it's even possible to start debugging. Please try to make the best use of everyone's time involved, including yourself, by providing this information up front._
-
+*developers and end users
 
 ## Repo Setup
-The package manager used to install and link dependencies must be npm v7 or later.
 
 1. Clone repo
+1. `npm install` install dependencies
 1. `npm run watch` start electron app in watch mode.
 1. `npm run compile` build app but for local debugging only.
 1. `npm run lint` lint your code.
 1. `npm run typecheck` Run typescript check.
 1. `npm run test` Run app test.
+
+## Tree
+The root folder contains config files, build ressources/scripts and tests,  
+the main part code is located at `/AMR/packages`
+- `/AMR/packages/main/src`
+  - `index.ts` electron startup
+  - `mainWindow.ts` create main window
+  - `forkAPI.ts` api to communicate with fork process 
+- `/AMR/packages/api/src`
+  - `/app` api starter
+  - `/client` a client to communicate with the api via socket.io
+  - `/server` server handling socket.io commands
+  - `/models` source/mirrors implementations
+  - `/db` databases used by the server and the models
+  - `/utils`
+    - `certificate.ts` SSL certificate generator
+    - `crawler.ts` headless browser to fetch data
+    - `standalone.ts` check the env if the api is used outside electron
+  - `/AMR/packages/renderer/src`
+    - `/store` pinia stores
+    - `/locales` internationalization files
+    - `/components` Vue components
