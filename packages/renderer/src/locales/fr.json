@@ -1,437 +1,223 @@
 {
   "app": {
-    "name": {
-      "desc": "The application name",
-      "value": "Electron mangas reader"
-    },
-    "description": {
-      "desc": "The application description",
-      "value": "Une simple application electron pour lire des mangas"
-    }
-  },
-  "setup": {
-    "message": {
-      "desc": "The message to display when the app is not configured",
-      "value": "Avant de démarrer configurons le server"
-    },
-    "password": {
-      "desc": "Set the password for the server",
-      "value": "Mot de passe",
-      "hints": {
-        "default": {
-          "desc": "Password must be at least 6 characters long",
-          "value": "Le mot de passe doit contenir au moins 6 caractères"
-        },
-        "strong": {
-          "desc": "Tell the user that the password is strong",
-          "value": "Force: <b class=\"text-positive\">FORT</b>"
-        },
-        "average": {
-          "desc": "Tell the user that the password is average",
-          "value": "Force: <b class=\"text-warning\">MOYEN</b>"
-        },
-        "weak": {
-          "desc": "Tell the user that the password is weak",
-          "value": "Force: <b class=\"text-negative\">FAIBLE</b>"
-        },
-        "bad": {
-          "desc": "Tell the user that the password is wrong",
-          "value": "Mot de passe incorrect"
-        }
-      }
-    },
-    "hostname": {
-      "desc": "Set the hostname for the server",
-      "value": "URL",
-      "hint": {
-        "desc": "Hint for the hostname",
-        "value": "Exemple : https://mywebsite.com"
-      },
-      "errors": {
-        "length": {
-          "desc": "Hostname is null or empty",
-          "value": "Requis"
-        },
-        "protocol": {
-          "desc": "Hostname don't have protocol",
-          "value": "Doit commencer par <b>https://</b>"
-        },
-        "hasparam": {
-          "desc": "URL should not have parameters",
-          "value": "Ne doit pas contenir de paramètres"
-        },
-        "space": {
-          "desc": "URL should not have spaces",
-          "value": "Ne doit pas contenir d'espaces"
-        }
-      }
-    },
-    "retry": {
-      "desc": "The retry button text when the password is wrong",
-      "value": "Réessayer"
-    },
-    "port": {
-      "desc": "Set the port for the server",
-      "value": "Port"
-    },
-    "login": {
-      "desc": "The login button label",
-      "value": "Nom d'utilisateur"
-    },
-    "security": {
-      "choose": {
-        "desc": "The security question",
-        "value": "Choisissez une politique de sécurité"
-      },
-      "none": {
-        "desc": "Security Answer: None",
-        "value": "Aucune",
-        "description": {
-          "desc": "The description of the security answer",
-          "value": "Je n'ai pas besoin de https et/ou j'envisage d'utiliser un service tel que cloudflare"
-        }
-      },
-      "app": {
-        "desc": "Security Answer: let the app handle the security",
-        "value": "Automatique",
-        "description": {
-          "desc": "The description of the security answer",
-          "value": "Je laisse l'application s'occuper de la sécurité, je comprend aussi qu'à chaque fois que j'accéderais à mon panel depuis un nouveau navigateur celui-ci m'avertira (une fois) de manière erronée que le site n'est pas sécurisé"
-        }
-      },
-      "selfsigned": {
-        "desc": "Additionnal info for 'app' security",
-        "value": "certificat auto-signé"
-      },
-      "provided": {
-        "desc": "Security Answer: I provide the certificate",
-        "value": "Manuel",
-        "description": {
-          "desc": "The description of the security answer",
-          "value": "Je veux utiliser ma propre clé et mon propre certificat"
-        }
-      },
-      "certificate": {
-        "desc": "The certificate label",
-        "value": "Certificat"
-      },
-      "privkey": {
-        "desc": "The private key label",
-        "value": "Clé privée"
-      },
-      "pastcert": {
-        "desc": "The past certificate label",
-        "value": "Coller votre certificat"
-      },
-      "pastprivkey": {
-        "desc": "The past private key label",
-        "value": "Coller votre clé privée"
-      },
-      "ok": {
-        "desc": "The ok button label",
-        "value": "Ok"
-      },
-      "cancel": {
-        "desc": "The cancel button label",
-        "value": "Annuler"
-      }
-    },
-    "error": {
-      "desc": "Error label",
-      "value": "Erreur"
-    },
-    "unexpectederror": {
-      "desc": "Unexpected error message",
-      "value": "Une erreur inattendue s'est produite"
-    }
-  },
-  "library": {
-    "tab": {
-      "desc": "The library tab name",
-      "value": "Bibliothèque"
-    }
-  },
-  "settings": {
-    "tab": {
-      "desc": "The settings tab name",
-      "value": "Paramètres"
-    },
-    "general": {
-      "desc": "General settings",
-      "value": "Général"
-    },
-    "sources": {
-      "desc": "Source settings",
-      "value": "Sources"
-    },
-    "files": {
-      "desc": "File settings",
-      "value": "Utilisation du disque"
-    },
-    "enable": {
-      "desc": "prefix for boolean settings",
-      "value": "Activer"
-    },
-    "disable": {
-      "desc": "prefix for boolean settings",
-      "value": "Désactiver"
-    },
-    "change": {
-      "desc": "prefix for string/number settings",
-      "value": "Changer"
-    },
-    "adult": {
-      "desc": "The adult setting label",
-      "value": "le contenu pour adult"
-    },
-    "enabled": {
-      "desc": "The mirror enabled setting label",
-      "value": "cette source"
-    },
-    "reader": {
-      "preload": {
-        "value": "Précharger le chapitre suivant pendant la lecture"
-      },
-      "info": {
-        "value": "Ces paramètres sont appliqués globalement et utilisés par défaut. \nTout changement survenant lors de la lecture d'un manga ne s'appliquera qu'à celui-ci."
-      },
-      "displaymode": {
-        "value": "Mode d'affichage"
-      }
-    }
-  },
-  "search": {
-    "tab": {
-      "desc": "The tab label",
-      "value": "Rechercher"
-    },
-    "placeholder": {
-      "desc": "The placeholder text",
-      "value": "Rechercher un manga"
-    },
-    "all": {
-      "desc": "The check/uncheck all mirrors/languages button label",
-      "value": "Tous"
-    }
-  },
-  "reader": {
-    "reload": {
-      "desc": "The reload broken image button label",
-      "value": "Recharger"
-    },
-    "next": {
-      "desc": "The next chapter button label",
-      "value": "Chapitre suivant :"
-    },
-    "previous": {
-      "desc": "The previous chapter button label",
-      "value": "Chapitre précédent :"
-    },
-    "first": {
-      "desc": "The first chapter button label",
-      "value": "Aller au premier chapitre :"
-    },
-    "last": {
-      "desc": "The last chapter button label",
-      "value": "Aller au dernier chapitre :"
-    },
-    "longstrip": {
-      "desc": "The long strip button label",
-      "value": "Afficher le chapitre en entier"
-    },
-    "webtoon": {
-      "desc": "The webtoon button label",
-      "value": "Webtoon (pas d'espace entre les images)"
-    },
-    "showpagenumber": {
-      "value": "Afficher le numéro de page"
-    },
-    "displaymode": {
-      "auto": {
-        "value": "Auto"
-      },
-      "fit-width": {
-        "value": "Adapter la largeur de l'écran"
-      },
-      "fit-height": {
-        "value": "Ajuster à la hauteur de l'écran"
-      },
-      "fit-custom": {
-        "value": "Manuel"
-      }
-    }
+    "description": "Une application simple pour lire des mangas",
+    "name": "Electron Mangas Reader"
   },
   "explore": {
-    "tab": {
-      "desc": "The tab label",
-      "value": "Explorer"
-    },
-    "placeholder": {
-      "desc": "The input placeholder text",
-      "value": "Filtrer les miroirs par nom"
-    },
+    "inlibrary": "Suivi",
     "meta": {
-      "quality": {
-        "desc": "the quality label",
-        "value": "qualité"
-      },
-      "speed": {
-        "desc": "the speed label",
-        "value": "vitesse"
-      },
-      "popularity": {
-        "desc": "the popularity label",
-        "value": "popularité"
-      }
-    }
-  },
-  "mangas": {
-    "chapter": {
-      "desc": "The chapter label",
-      "value": "Chapitre | Chapitres"
+      "popularity": "Popularité",
+      "quality": "Qualité",
+      "speed": "Vitesse"
     },
-    "volume": {
-      "desc": "The volume label",
-      "value": "Volume | Volumes"
-    },
-    "synopsis": {
-      "desc": "The chapter name Label",
-      "value": "Synopsis"
-    },
-    "source": {
-      "desc": "The source label",
-      "value": "Source | Sources"
-    }
+    "placeholder": "Filtrer les sources par nom",
+    "tab": "Explorer"
   },
   "languages": {
+    "ar": {
+      "desc": "Arabic",
+      "flag": "ar",
+      "localvalue": "العربية",
+      "value": "Arabe"
+    },
+    "cn": {
+      "desc": "Chinese (China)",
+      "flag": "cn",
+      "localvalue": "中文",
+      "value": "Chinois (Chine)"
+    },
+    "current": {
+      "desc": "The language the user's browser is using",
+      "flag": "fr",
+      "value": "Français"
+    },
+    "de": {
+      "desc": "German",
+      "flag": "de",
+      "localvalue": "Deutsch",
+      "value": "Allemand"
+    },
+    "en": {
+      "desc": "English",
+      "flag": "us",
+      "localvalue": "English",
+      "value": "Anglais"
+    },
+    "es": {
+      "desc": "Spanish",
+      "flag": "es",
+      "localvalue": "Español",
+      "value": "Espagnol"
+    },
+    "es-la": {
+      "desc": "Spanish (Latin America)",
+      "flag": "es",
+      "localvalue": "Español",
+      "value": "Espagnol (Amérique Latine)"
+    },
+    "fr": {
+      "desc": "French",
+      "flag": "fr",
+      "localvalue": "Français",
+      "value": "Français"
+    },
+    "hk": {
+      "desc": "Chinese (Hong Kong)",
+      "flag": "hk",
+      "localvalue": "中文",
+      "value": "Chinois (Hong Kong)"
+    },
+    "it": {
+      "desc": "Italian",
+      "flag": "it",
+      "localvalue": "Italiano",
+      "value": "Italien"
+    },
+    "ja": {
+      "desc": "Japanese",
+      "flag": "jp",
+      "localvalue": "日本語",
+      "value": "Japonais"
+    },
+    "ko": {
+      "desc": "Korean",
+      "flag": "kr",
+      "localvalue": "한국어",
+      "value": "Koréen"
+    },
     "language": {
       "desc": "The language label",
       "value": "Langue | Langues"
     },
-    "current": {
-      "desc": "The language the user's browser is using",
-      "value": "Français",
-      "flag": "fr"
-    },
-    "en": {
-      "desc": "English",
-      "value": "Anglais",
-      "flag": "us",
-      "localvalue": "English"
-    },
-    "fr": {
-      "desc": "French",
-      "value": "Français",
-      "flag": "fr",
-      "localvalue": "Français"
-    },
-    "es": {
-      "desc": "Spanish",
-      "value": "Espagnol",
-      "flag": "es",
-      "localvalue": "Español"
-    },
-    "de": {
-      "desc": "German",
-      "value": "Allemand",
-      "flag": "de",
-      "localvalue": "Deutsch"
-    },
-    "it": {
-      "desc": "Italian",
-      "value": "Italien",
-      "flag": "it",
-      "localvalue": "Italiano"
-    },
-    "ja": {
-      "desc": "Japanese",
-      "value": "Japonais",
-      "flag": "jp",
-      "localvalue": "日本語"
-    },
-    "ko": {
-      "desc": "Korean",
-      "value": "Koréen",
-      "flag": "kr",
-      "localvalue": "한국어"
-    },
     "pt": {
       "desc": "Portuguese",
-      "value": "Portugais",
       "flag": "pt",
-      "localvalue": "Português"
-    },
-    "ru": {
-      "desc": "Russian",
-      "value": "Russe",
-      "flag": "ru",
-      "localvalue": "Русский"
-    },
-    "zh": {
-      "desc": "Chinese",
-      "value": "Chinois",
-      "flag": "cn",
-      "localvalue": "中文"
-    },
-    "ar": {
-      "desc": "Arabic",
-      "value": "Arabe",
-      "flag": "ar",
-      "localvalue": "العربية"
-    },
-    "tr": {
-      "desc": "Turkish",
-      "value": "Turc",
-      "flag": "tr",
-      "localvalue": "Türkçe"
-    },
-    "es-la": {
-      "desc": "Spanish (Latin America)",
-      "value": "Espagnol (Amérique Latine)",
-      "flag": "es",
-      "localvalue": "Español"
+      "localvalue": "Português",
+      "value": "Portugais"
     },
     "pt-br": {
       "desc": "Portuguese (Brazil)",
-      "value": "Portugais (Brésil)",
       "flag": "br",
-      "localvalue": "Português"
+      "localvalue": "Português",
+      "value": "Portugais (Brésil)"
+    },
+    "ru": {
+      "desc": "Russian",
+      "flag": "ru",
+      "localvalue": "Русский",
+      "value": "Russe"
+    },
+    "tr": {
+      "desc": "Turkish",
+      "flag": "tr",
+      "localvalue": "Türkçe",
+      "value": "Turc"
     },
     "tw": {
       "desc": "Chinese (Taiwan)",
-      "value": "Chinois (Taïwan)",
       "flag": "tw",
-      "localvalue": "中文"
+      "localvalue": "中文",
+      "value": "Chinois (Taïwan)"
     },
-    "zh-tw": {
-      "desc": "Chinese (Taiwan)",
-      "value": "Chinois (Taïwan)",
-      "flag": "tw",
-      "localvalue": "中文"
+    "zh": {
+      "desc": "Chinese",
+      "flag": "cn",
+      "localvalue": "中文",
+      "value": "Chinois"
     },
     "zh-cn": {
       "desc": "Chinese (China)",
-      "value": "Chinois (Chine)",
       "flag": "cn",
-      "localvalue": "中文"
-    },
-    "cn": {
-      "desc": "Chinese (China)",
-      "value": "Chinois (Chine)",
-      "flag": "cn",
-      "localvalue": "中文"
+      "localvalue": "中文",
+      "value": "Chinois (Chine)"
     },
     "zh-hk": {
       "desc": "Chinese (Hong Kong)",
-      "value": "Chinois (Hong Kong)",
       "flag": "hk",
-      "localvalue": "中文"
+      "localvalue": "中文",
+      "value": "Chinois (Hong Kong)"
     },
-    "hk": {
-      "desc": "Chinese (Hong Kong)",
-      "value": "Chinois (Hong Kong)",
-      "flag": "hk",
-      "localvalue": "中文"
+    "zh-tw": {
+      "desc": "Chinese (Taiwan)",
+      "flag": "tw",
+      "localvalue": "中文",
+      "value": "Chinois (Taïwan)"
     }
+  },
+  "library": {
+    "tab": "Bibliothèque"
+  },
+  "mangas": {
+    "chapter": "Chapitre | Chapitres",
+    "source": "Source | Sources",
+    "volume": "Volume | Volumes"
+  },
+  "reader": {
+    "displaymode": {
+      "auto": "Auto",
+      "fit-custom": "Manuel",
+      "fit-height": "Ajuster à la hauteur de l'écran",
+      "fit-width": "Ajuster à la largeur de l'écran"
+    },
+    "first": "Retourner au premier chapitre :",
+    "last": "Aller au dernier chapitre :",
+    "longstrip": "Afficher tout le chapitre sous la forme d'une longue bande",
+    "manga": {
+      "add": "Ajouter à la bibliothèque",
+      "remove": "Supprimer de la bibliothèque"
+    },
+    "next": "Passer au chapitre suivant :",
+    "previous": "Revenir au chapitre précédent :",
+    "reload": "Recharger cette page",
+    "showpagenumber": "Afficher le numéro de page",
+    "webtoon": "Mode Webtoon"
+  },
+  "search": {
+    "all": "Tous",
+    "placeholder": "Rechercher des mangas",
+    "tab": "Rechercher"
+  },
+  "settings": {
+    "tab": "Configuration"
+  },
+  "setup": {
+    "address": "Adresse",
+    "address_errors": {
+      "length": "Requis",
+      "protocol": "L'URL doit commencer par <b>https://</b>",
+      "hasparam": "L'URL ne doit contenir aucun paramètre",
+      "space": "L'URL ne doit pas contenir d'espace"
+    },
+    "address_hint": "Exemple : <b>https://monsiteweb.com</b>",
+    "badpassword": "Mauvais mot de passe",
+    "error": "Erreur",
+    "login": "Login",
+    "message": "Avant de commencer une petite configuration est nécessaire",
+    "password": "Mot de passe",
+    "password_hints": {
+      "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",
+      "default": "Password must be at least 6 characters long",
+      "strong": "Strength: <b class=\"text-positive\">STRONG</b>",
+      "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
+    },
+    "port": "Port",
+    "retry": "Reesayer",
+    "security": {
+      "app": "Auto",
+      "app_description": "Je veux que l'application gère la sécurité, mais je comprends que lorsque j'accède à mon panneau depuis l'extérieur de l'application, mon navigateur donnera un faux avertissement de sécurité lors du premier accès",
+      "cancel": "Annuler",
+      "certificate": "Certificat",
+      "choose": "Choisissez une politique de sécurité",
+      "none": "Aucune",
+      "none_description": "Je n'ai pas besoin de https et/ou j'ai l'intention d'utiliser un service tel que cloudflare",
+      "ok": "OK",
+      "pastcert": "Collez votre certificat",
+      "pastprivkey": "Collez votre clé",
+      "privkey": "Clé privée",
+      "provided": "Fourni",
+      "provided_description": "Je veux utiliser ma propre clé et mon propre certificat",
+      "selfsigned": "Certificat auto-signé"
+    },
+    "unexpectederror": "Erreur inattendue"
   }
 }

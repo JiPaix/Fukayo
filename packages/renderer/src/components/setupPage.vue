@@ -33,11 +33,11 @@ function prompt (title:string, kind:'cert'|'key', model?:string|null) {
       type: 'textarea', // optional
     },
     cancel: {
-      label: $t('setup.security.cancel.value'),
+      label: $t('setup.security.cancel'),
       color: 'dark',
     },
     ok: {
-      label: $t('setup.security.ok.value'),
+      label: $t('setup.security.ok'),
       color: 'orange',
     },
     persistent: true,
@@ -117,9 +117,9 @@ async function startServer () {
             >
           </q-avatar>
           <div class="text-h6">
-            {{ $t('app.name.value') }}
+            {{ $t('app.name') }}
             <div class="text-body2 text-grey-7">
-              {{ $t('app.description.value') }}
+              {{ $t('app.description') }}
             </div>
           </div>
         </q-card-section>
@@ -131,7 +131,7 @@ async function startServer () {
         />
         <q-card-section>
           <div class="text-h6">
-            {{ $t('setup.message.value') }} :
+            {{ $t('setup.message') }} :
           </div>
         </q-card-section>
         <q-form
@@ -146,7 +146,7 @@ async function startServer () {
             :rules="[isLoginValid]"
             bottoms-slots
             type="text"
-            :label="$t('setup.login.value')"
+            :label="$t('setup.login')"
           />
           <q-input
             v-model="password"
@@ -156,7 +156,7 @@ async function startServer () {
             :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
             bottom-slots
             :type="showPassword ? 'text' : 'password'"
-            :label="$t('setup.password.value')"
+            :label="$t('setup.password')"
           >
             <template #hint>
               <div
@@ -181,7 +181,7 @@ async function startServer () {
             type="number"
             :rules="[isPortValid]"
             bottom-slots
-            :label="$t('setup.port.value')"
+            :label="$t('setup.port')"
           >
             <template #append>
               <div
@@ -217,7 +217,7 @@ async function startServer () {
           </q-input>
           <q-card>
             <q-card-section>
-              {{ $t('setup.security.choose.value') }}
+              {{ $t('setup.security.choose') }}
             </q-card-section>
             <q-card-section>
               <q-list>
@@ -234,9 +234,9 @@ async function startServer () {
                     />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label>{{ $t('setup.security.none.value') }}</q-item-label>
+                    <q-item-label>{{ $t('setup.security.none') }}</q-item-label>
                     <q-item-label caption>
-                      {{ $t('setup.security.none.description.value') }}
+                      {{ $t('setup.security.none_description') }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -255,14 +255,14 @@ async function startServer () {
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>
-                      {{ $t('setup.security.app.value') }} <small>({{ $t('setup.security.selfsigned.value') }})</small>
+                      {{ $t('setup.security.app') }} <small>({{ $t('setup.security.selfsigned') }})</small>
                     </q-item-label>
                     <q-item-label
                       caption
                       class="flex"
                     >
                       <span>
-                        {{ $t('setup.security.app.description.value', { appName: $t('app.name.value') }) }}
+                        {{ $t('setup.security.app_description', { appName: $t('app.name') }) }}
                       </span>
                       <q-slide-transition>
                         <div
@@ -279,7 +279,7 @@ async function startServer () {
                             name="hostname"
                             :error="hostNameHint(settings.server.hostname) !== ''"
                             :type="'text'"
-                            :label="$t('setup.hostname.value')"
+                            :label="$t('setup.address')"
                           >
                             <template
                               #prepend
@@ -289,7 +289,7 @@ async function startServer () {
                               />
                             </template>
                             <template #hint>
-                              <div v-html="$t('setup.hostname.hint.value')" />
+                              <div v-html="$t('setup.address_hint')" />
                             </template>
                             <template #error>
                               <div v-html="$t(hostNameHint(settings.server.hostname))" />
@@ -317,9 +317,9 @@ async function startServer () {
                     />
                   </q-item-section>
                   <q-item-section>
-                    <q-item-label>{{ $t('setup.security.provided.value') }}</q-item-label>
+                    <q-item-label>{{ $t('setup.security.provided') }}</q-item-label>
                     <q-item-label caption>
-                      {{ $t('setup.security.provided.description.value') }}
+                      {{ $t('setup.security.provided_description') }}
                     </q-item-label>
                     <q-slide-transition>
                       <div
@@ -328,10 +328,10 @@ async function startServer () {
                       >
                         <q-btn
                           dense
-                          @click="prompt($t('setup.security.pastcert.value'), 'cert', settings.server.cert)"
+                          @click="prompt($t('setup.security.pastcert'), 'cert', settings.server.cert)"
                         >
                           <template #default>
-                            <span>{{ $t('setup.security.certificate.value') }}</span>
+                            <span>{{ $t('setup.security.certificate') }}</span>
                             <q-icon
                               right
                               name="lock"
@@ -341,10 +341,10 @@ async function startServer () {
                         </q-btn>
                         <q-btn
                           dense
-                          @click="prompt($t('setup.security.pastprivkey.value'), 'key', settings.server.key)"
+                          @click="prompt($t('setup.security.pastprivkey'), 'key', settings.server.key)"
                         >
                           <template #default>
-                            <span>{{ $t('setup.security.privkey.value') }}</span>
+                            <span>{{ $t('setup.security.privkey') }}</span>
                             <q-icon
                               right
                               name="key"

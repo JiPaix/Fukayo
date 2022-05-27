@@ -53,8 +53,8 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
       // do not show error if we connect wasn't explicitly called by the user
       if(beforeMount) return;
       $q.notify({
-        message: $t('setup.error.value'),
-        caption: typeof e === 'string' ? e : $t('setup.unexpectederror.value'),
+        message: $t('setup.error'),
+        caption: typeof e === 'string' ? e : $t('setup.unexpectederror'),
         color: 'negative',
       });
     }

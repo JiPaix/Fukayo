@@ -109,7 +109,7 @@ function showManga (item:SearchResult) {
                 class="col-lg-8 col-xs-9 text-center text-uppercase text-caption ellipsis"
                 style="border-top-right-radius:3px;border-bottom-right-radius: 3px;"
               >
-                {{ $t('languages.'+item.lang+'.value') }}
+                {{ $t('languages.'+item.lang+'') }}
               </div>
             </div>
             <div
@@ -138,7 +138,7 @@ function showManga (item:SearchResult) {
               class="bg-orange text-white text-center q-pa-md rounded-borders w-100 text-weight-medium"
             >
               <span v-if="item.last_release.chapter !== undefined">
-                {{ $t('mangas.chapter.value').toLocaleUpperCase() }} {{ item.last_release.chapter }}
+                {{ $t('mangas.chapter').toLocaleUpperCase() }} {{ item.last_release.chapter }}
               </span>
               <span v-if="item.last_release.chapter !== undefined && item.last_release.name !== undefined">
                 -
@@ -161,7 +161,7 @@ function showManga (item:SearchResult) {
                 {{ item.last_release.volume }}
               </div>
               <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
-                {{ $t('mangas.volume.value', item.last_release.volume) }}
+                {{ $t('mangas.volume', item.last_release.volume) }}
               </div>
             </div>
 
@@ -176,7 +176,7 @@ function showManga (item:SearchResult) {
                 {{ item.last_release.chapter }}
               </div>
               <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
-                {{ $t('mangas.chapter.value', item.last_release.chapter === 0 ? 1 : item.last_release.chapter) }}
+                {{ $t('mangas.chapter', item.last_release.chapter === 0 ? 1 : item.last_release.chapter) }}
               </div>
             </div>
           </div>

@@ -66,9 +66,9 @@ function connect() {
             >
           </q-avatar>
           <div class="text-h6">
-            {{ $t('app.name.value') }}
+            {{ $t('app.name') }}
             <div class="text-body2 text-grey-7">
-              {{ $t('app.description.value') }}
+              {{ $t('app.description') }}
             </div>
           </div>
         </q-card-section>
@@ -89,7 +89,7 @@ function connect() {
               dense
               bottoms-slots
               type="text"
-              :label="$t('setup.login.value')"
+              :label="$t('setup.login')"
             />
             <q-input
               v-model="password"
@@ -97,7 +97,7 @@ function connect() {
               dense
               bottom-slots
               :type="showPassword ? 'text' : 'password'"
-              :label="$t('setup.password.value')"
+              :label="$t('setup.password')"
             >
               <template #prepend>
                 <q-icon
@@ -114,12 +114,12 @@ function connect() {
                 inline-actions
                 class="text-white bg-negative"
               >
-                {{ $t('setup.badPassword.value') }}
+                {{ $t('setup.badpassword') }}
                 <template #action>
                   <q-btn
                     flat
                     color="white"
-                    :label="$t('setup.retry.value')"
+                    :label="$t('setup.retry')"
                     :disabled="!readyToStart()"
                     type="submit"
                   />

@@ -133,7 +133,7 @@ function navigate(o: {label: string|number, value: number}) {
         >
           <q-icon name="first_page" />
           <q-tooltip v-if="first">
-            <span>{{ $t('reader.first.value') }}</span>
+            <span>{{ $t('reader.first') }}</span>
             <br>
             <span>{{ first.label }}</span>
           </q-tooltip>
@@ -144,7 +144,7 @@ function navigate(o: {label: string|number, value: number}) {
         >
           <q-icon name="navigate_before" />
           <q-tooltip v-if="previous">
-            <span>{{ $t('reader.previous.value') }}</span>
+            <span>{{ $t('reader.previous') }}</span>
             <br>
             <span>{{ previous.label }}</span>
           </q-tooltip>
@@ -155,7 +155,7 @@ function navigate(o: {label: string|number, value: number}) {
         >
           <q-icon name="navigate_next" />
           <q-tooltip v-if="next">
-            <span>{{ $t('reader.next.value') }}</span>
+            <span>{{ $t('reader.next') }}</span>
             <br>
             <span>{{ next.label }}</span>
           </q-tooltip>
@@ -167,7 +167,7 @@ function navigate(o: {label: string|number, value: number}) {
         >
           <q-icon name="last_page" />
           <q-tooltip v-if="last">
-            <span>{{ $t('reader.last.value') }}</span>
+            <span>{{ $t('reader.last') }}</span>
             <br>
             <span>{{ last.label }}</span>
           </q-tooltip>
@@ -177,17 +177,17 @@ function navigate(o: {label: string|number, value: number}) {
     <div class="q-mt-lg flex">
       <q-toggle
         v-model="localSettings.longStrip"
-        :label="$t('reader.longstrip.value')"
+        :label="$t('reader.longstrip')"
         color="orange"
       />
       <q-toggle
         v-model="localSettings.webtoon"
-        :label="$t('reader.webtoon.value')"
+        :label="$t('reader.webtoon')"
         color="orange"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
-        :label="$t('reader.showpagenumber.value')"
+        :label="$t('reader.showpagenumber')"
         color="orange"
       />
       <q-btn-group class="q-ml-auto q-mr-auto q-mt-lg">
@@ -197,7 +197,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'auto'"
         >
           <q-tooltip>
-            {{ $t('reader.displaymode.auto.value') }}
+            {{ $t('reader.displaymode.auto') }}
           </q-tooltip>
         </q-btn>
         <q-btn
@@ -206,7 +206,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'fit-width'"
         >
           <q-tooltip>
-            {{ $t('reader.displaymode.fit-width.value') }}
+            {{ $t('reader.displaymode.fit-width') }}
           </q-tooltip>
         </q-btn>
 
@@ -218,7 +218,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'fit-height'"
         >
           <q-tooltip>
-            {{ $t('reader.displaymode.fit-height.value') }}
+            {{ $t('reader.displaymode.fit-height') }}
           </q-tooltip>
         </q-btn>
         <q-btn
@@ -227,7 +227,7 @@ function navigate(o: {label: string|number, value: number}) {
           @click="localSettings.zoomMode = 'custom'"
         >
           <q-tooltip>
-            {{ $t('reader.displaymode.fit-custom.value') }}
+            {{ $t('reader.displaymode.fit-custom') }}
           </q-tooltip>
         </q-btn>
       </q-btn-group>

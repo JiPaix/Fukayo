@@ -72,7 +72,7 @@ onBeforeMount(() => {
             </q-item-section>
 
             <q-item-section>
-              {{ $t('library.tab.value') }}
+              {{ $t('library.tab') }}
             </q-item-section>
           </q-item>
 
@@ -87,7 +87,7 @@ onBeforeMount(() => {
             </q-item-section>
 
             <q-item-section>
-              {{ $t('explore.tab.value') }}
+              {{ $t('explore.tab') }}
             </q-item-section>
           </q-item>
 
@@ -102,7 +102,7 @@ onBeforeMount(() => {
             </q-item-section>
 
             <q-item-section>
-              {{ $t('search.tab.value') }}
+              {{ $t('search.tab') }}
             </q-item-section>
           </q-item>
 
@@ -119,7 +119,7 @@ onBeforeMount(() => {
             </q-item-section>
 
             <q-item-section>
-              {{ $t('settings.tab.value') }}
+              {{ $t('settings.tab') }}
             </q-item-section>
           </q-item>
         </q-list>

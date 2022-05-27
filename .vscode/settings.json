@@ -3,9 +3,20 @@
     "packages/renderer/src/locales"
   ],
   "i18n-ally.keystyle": "nested",
+  "i18n-ally.sortKeys": true,
+  "i18n-ally.keepFulfilled": true,
+  "i18n-ally.editor.preferEditor": true,
   "auto-close-tag.disableOnLanguage": [
   "js",
   "ts",
   "json",
-  ]
+  ],
+  "i18n-ally.enabledFrameworks": [
+    "vue",
+    "general"
+  ],
+  "i18n-ally.enabledParsers": [
+    "json"
+  ],
+  "i18n-ally.extract.autoDetect": true,
 }

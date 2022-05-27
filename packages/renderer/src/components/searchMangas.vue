@@ -191,7 +191,7 @@ onBeforeUnmount(async () => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :placeholder="$t('search.placeholder.value')"
+          :placeholder="$t('search.placeholder')"
           outlined
           clearable
           autofocus
@@ -257,7 +257,7 @@ onBeforeUnmount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all.value') }}
+                  {{ $t('search.all') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -323,7 +323,7 @@ onBeforeUnmount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all.value') }}
+                  {{ $t('search.all') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -341,7 +341,7 @@ onBeforeUnmount(async () => {
                   class="q-ma-none q-pa-none"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'.value') }}
+                  {{ $t('languages.'+lang+'') }}
                 </q-item-section>
               </q-item>
             </q-list>

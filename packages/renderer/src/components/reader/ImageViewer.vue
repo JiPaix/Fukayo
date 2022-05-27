@@ -137,7 +137,7 @@ watch(() => props.currentPage, (nval, oldval) => {
                 text-color="black"
                 @click="reload(img.index)"
               >
-                {{ $t('reader.reload.value') }}
+                {{ $t('reader.reload') }}
               </q-btn>
               <div
                 class="text-center"

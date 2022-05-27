@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
     <q-card-section>
       <!-- Mirror and Language -->
       <div class="flex items-center q-mt-md">
-        <span class="q-mr-sm">{{ $t("mangas.source.value") }}: </span>
+        <span class="q-mr-sm">{{ $t("mangas.source") }}: </span>
         <a
           v-if="manga && mirrorinfo"
           class="text-weight-medium text-white"
@@ -446,7 +446,7 @@ onBeforeUnmount(() => {
           :color="isMangaInDb(manga) ? 'negative' : 'accent'"
           @click="toggleInLibrary"
         >
-          {{ isMangaInDb(manga) ? $t('reader.manga.remove.value') : $t('reader.manga.add.value') }}
+          {{ isMangaInDb(manga) ? $t('reader.manga.remove') : $t('reader.manga.add') }}
         </q-btn>
       </div>
     </q-card-section>
@@ -508,11 +508,11 @@ onBeforeUnmount(() => {
               <!-- Chapter name, volume, number -->
               <q-item-section>
                 <q-item-label>
-                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume.value") }} {{ item.volume }}</span>
+                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }}</span>
                   <span v-if="item.volume !== undefined && item.number !== undefined">
                     -
                   </span>
-                  <span v-if="item.number !== undefined">{{ $t("mangas.chapter.value") }} {{ item.number }}</span>
+                  <span v-if="item.number !== undefined">{{ $t("mangas.chapter") }} {{ item.number }}</span>
                   <span v-if="item.volume === undefined && item.number === undefined">{{
                     item.name
                   }}</span>

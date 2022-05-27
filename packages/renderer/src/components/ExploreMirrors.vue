@@ -76,7 +76,7 @@ onBeforeMount(async () => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :placeholder="$t('explore.placeholder.value')"
+          :placeholder="$t('explore.placeholder')"
           outlined
           clearable
           autofocus
@@ -138,7 +138,7 @@ onBeforeMount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all.value') }}
+                  {{ $t('search.all') }}
                 </q-item-section>
               </q-item>
               <q-separator />
@@ -156,7 +156,7 @@ onBeforeMount(async () => {
                   class="q-ma-none q-pa-none"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'.value') }}
+                  {{ $t('languages.'+lang+'') }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -220,7 +220,7 @@ onBeforeMount(async () => {
               class="row items-center"
             >
               <div class="col q-px-md text-caption">
-                {{ $t('explore.meta.quality.value') }}
+                {{ $t('explore.meta.quality') }}
               </div>
               <div class="col">
                 <q-linear-progress
@@ -236,7 +236,7 @@ onBeforeMount(async () => {
               class="row items-center"
             >
               <div class="col q-px-md text-caption">
-                {{ $t('explore.meta.speed.value') }}
+                {{ $t('explore.meta.speed') }}
               </div>
               <q-linear-progress
                 :value="mirror.meta.speed"
@@ -248,7 +248,7 @@ onBeforeMount(async () => {
             </div>
             <div class="row items-center">
               <div class="col q-px-md text-caption">
-                {{ $t('explore.meta.popularity.value') }}
+                {{ $t('explore.meta.popularity') }}
               </div>
               <q-linear-progress
                 :value="mirror.meta.popularity"

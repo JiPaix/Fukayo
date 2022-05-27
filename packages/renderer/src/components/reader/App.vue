@@ -255,7 +255,7 @@ function navigation(index:number) {
           v-if="manga.chapters[chapterSelectedIndex].volume !== undefined"
           class="text-caption"
         >
-          {{ $t('mangas.volume.value') }} {{ manga.chapters[chapterSelectedIndex].volume }}
+          {{ $t('mangas.volume') }} {{ manga.chapters[chapterSelectedIndex].volume }}
         </span>
         <span
           v-if="manga.chapters[chapterSelectedIndex].volume !== undefined && manga.chapters[chapterSelectedIndex].number !== undefined"
@@ -267,7 +267,7 @@ function navigation(index:number) {
           v-if="manga.chapters[chapterSelectedIndex].number !== undefined"
           class="text-caption"
         >
-          {{ $t('mangas.chapter.value') }} {{ manga.chapters[chapterSelectedIndex].number }}
+          {{ $t('mangas.chapter') }} {{ manga.chapters[chapterSelectedIndex].number }}
         </span>
         <span
           v-if="manga.chapters[chapterSelectedIndex].volume === undefined && manga.chapters[chapterSelectedIndex].number === undefined"
