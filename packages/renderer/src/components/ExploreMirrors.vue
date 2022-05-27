@@ -156,7 +156,7 @@ onBeforeMount(async () => {
                   class="q-ma-none q-pa-none"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'') }}
+                  {{ $t('languages.'+lang+'.value') }}
                 </q-item-section>
               </q-item>
             </q-list>

@@ -334,14 +334,15 @@ onBeforeUnmount(async () => {
                 @click="pickLang(lang)"
               >
                 <q-checkbox
-                  v-model="includedLangs"
+                  :model-value="includedLangs"
                   size="32px"
                   color="orange"
                   :val="lang"
                   class="q-ma-none q-pa-none"
+                  @update:model-value="pickLang(lang)"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'') }}
+                  {{ $t('languages.'+lang+'.value') }}
                 </q-item-section>
               </q-item>
             </q-list>
