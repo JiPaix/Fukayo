@@ -62,6 +62,12 @@ function showManga (item:SearchResult) {
           @click="showManga(item)"
         >
           <div
+            v-if="item.inLibrary"
+            class="absolute-top-right bg-accent q-ma-lg"
+          >
+            {{ $t('explore.inlibrary') }}
+          </div>
+          <div
             class="text-center text-white text-body-1 text-weight-medium text-uppercase self-end w-100 ellipsis-3-lines q-px-md"
             style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 90%)!important;"
             rounded
