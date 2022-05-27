@@ -114,7 +114,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     return this.db.data;
   }
 
-  public set options(opts: Record<string, unknown> & { enabled: boolean }) {
+  public set options(opts: Record<string, unknown> & { enabled: boolean, version: string }) {
     this.db.data = opts;
     this.logger('options changed', opts);
     this.db.write();

@@ -4,6 +4,7 @@
     "target": "esnext",
     "sourceMap": false,
     "moduleResolution": "Node",
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "isolatedModules": false,
