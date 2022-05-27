@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io';
-import type { ChapterPage } from '../../models/types/chapter';
-import type { SearchErrorMessage, RecommendErrorMessage, MangaErrorMessage, ChapterPageErrorMessage, ChapterErrorMessage } from '../../models/types/errors';
+import type { ChapterImage } from '../../models/types/chapter';
+import type { SearchErrorMessage, RecommendErrorMessage, MangaErrorMessage, ChapterImageErrorMessage, ChapterErrorMessage } from '../../models/types/errors';
 import type { MangaPage } from '../../models/types/manga';
 import type { SearchResult } from '../../models/types/search';
 import type { TaskDone } from '../../models/types/shared';
@@ -13,7 +13,7 @@ export interface ServerToClientEvents {
   refreshToken: (acessToken: string) => void;
   searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
   showManga: (id:number, manga:MangaPage|MangaErrorMessage) =>void
-  showChapter: (id:number, chapter:ChapterPage|ChapterPageErrorMessage|ChapterErrorMessage) => void;
+  showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult|RecommendErrorMessage|TaskDone) => void;
 }
 

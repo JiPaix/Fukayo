@@ -19,7 +19,7 @@ export type ChapterErrorMessage = {
     trace?: string
     url?: string
 }
-export type ChapterPageErrorMessage = {
+export type ChapterImageErrorMessage = {
     error:'chapter_error'|'chapter_error_unknown'|'chapter_error_invalid_link'|'chapter_error_fetch'|'chapter_error_no_image'
     trace?: string
     url?: string

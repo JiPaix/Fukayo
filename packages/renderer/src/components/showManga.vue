@@ -8,16 +8,16 @@ import { useI18n } from 'vue-i18n';
 import { useSocket } from './helpers/socket';
 import {
   isChapterErrorMessage,
-  isChapterPage,
-  isChapterPageErrorMessage,
+  isChapterImage,
+  isChapterImageErrorMessage,
   isManga,
 } from './helpers/typechecker';
 import showChapter from './reader/App.vue';
 import type dayjs from 'dayjs';
 import type { ComponentPublicInstance} from 'vue';
 import type { socketClientInstance } from '../../../api/src/client/types';
-import type { ChapterPage } from '../../../api/src/models/types/chapter';
-import type { ChapterPageErrorMessage } from '../../../api/src/models/types/errors';
+import type { ChapterImage } from '../../../api/src/models/types/chapter';
+import type { ChapterImageErrorMessage } from '../../../api/src/models/types/errors';
 import type { MangaPage } from '../../../api/src/models/types/manga';
 
 /** quasar */
@@ -48,9 +48,9 @@ const chapterSelectedIndex = ref<number | null>(null);
 /** number of images to expect from the server */
 const nbOfImagesToExpectFromChapter = ref(0);
 /** images and/or error messages */
-const images = ref<(ChapterPage | ChapterPageErrorMessage)[]>([]);
+const images = ref<(ChapterImage | ChapterImageErrorMessage)[]>([]);
 /** next chapter buffer */
-const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterPage | ChapterPageErrorMessage)[] } | undefined>();
+const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterImage | ChapterImageErrorMessage)[] } | undefined>();
 /** show-chapter template ref */
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 
@@ -106,7 +106,7 @@ const chapterSkeletonWidth = computed(() => {
  * Sort the chapters pages and pages errors by their index
  * @param images array including images and error messages
  */
-function sortImages(images: (ChapterPage | ChapterPageErrorMessage)[]) {
+function sortImages(images: (ChapterImage | ChapterImageErrorMessage)[]) {
   return images.sort((a, b) => a.index - b.index);
 }
 
@@ -139,7 +139,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
       nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
-        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+        if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
           images.value.push(res);
           if(res.lastpage) {
             socket?.off('showChapter');
@@ -183,7 +183,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
       if(nextChapterBuffer.value) nextChapterBuffer.value.nbOfImagesToExpectFromChapter = nbOfImagesToExpectFromChapter;
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
-        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+        if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
           nextChapterBuffer.value?.images.push(res);
           if(res.lastpage) socket?.off('showChapter');
         } else if (isChapterErrorMessage(res)) {
@@ -234,9 +234,9 @@ async function startChapterFetch(chapterIndex: number) {
   else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === undefined) fetchChapter(chapterIndex);
   else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === nextChapterBuffer.value.images.length) {
     nbOfImagesToExpectFromChapter.value = nextChapterBuffer.value.nbOfImagesToExpectFromChapter;
-    const res:(ChapterPage | ChapterPageErrorMessage)[] = [];
+    const res:(ChapterImage | ChapterImageErrorMessage)[] = [];
     nextChapterBuffer.value.images.forEach((c) => {
-      if(isChapterPage(c) || isChapterPageErrorMessage(c)) res.push(c);
+      if(isChapterImage(c) || isChapterImageErrorMessage(c)) res.push(c);
     });
     nextChapterBuffer.value = undefined;
     images.value = res;
@@ -265,7 +265,7 @@ async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
     () => {
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
-        if (isChapterPage(res) || isChapterPageErrorMessage(res)) {
+        if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
           images.value[pageIndex] = res;
         }
       });

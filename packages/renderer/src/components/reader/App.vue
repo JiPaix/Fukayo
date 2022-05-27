@@ -2,13 +2,13 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { chapterLabel } from './helpers';
-import { isChapterPageErrorMessage } from '../helpers/typechecker';
+import { isChapterImageErrorMessage } from '../helpers/typechecker';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
 import { useStore as useStoreSettings } from '/@/store/settings';
 import type { ReaderSettings } from './@types';
-import type { ChapterPage } from '../../../../api/src/models/types/chapter';
-import type { ChapterPageErrorMessage } from '../../../../api/src/models/types/errors';
+import type { ChapterImage } from '../../../../api/src/models/types/chapter';
+import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 
 /** vue-i18n */
@@ -29,7 +29,7 @@ const props = defineProps<{
   /** the number of pages expected to receive (1-based) */
   nbOfImagesToExpectFromChapter: number
   /** images sorted by index */
-  sortedImages: (ChapterPage | ChapterPageErrorMessage)[]
+  sortedImages: (ChapterImage | ChapterImageErrorMessage)[]
 }>();
 
 /** settings */
@@ -43,7 +43,7 @@ const showProgressBar = computed(() => {
 /** color of the progress bar, orange = loading, red = has erroneous page */
 const progressBarColor = computed(() => {
   if(props.sortedImages.length === props.nbOfImagesToExpectFromChapter) {
-    if(props.sortedImages.some(isChapterPageErrorMessage)) {
+    if(props.sortedImages.some(isChapterImageErrorMessage)) {
       return 'negative';
     }
   }
