@@ -34,7 +34,7 @@ const settings = useSettingsStore();
 let socket: socketClientInstance | undefined;
 
 /** manga infos */
-const refs = ref<MangaPage>();
+const manga = ref<MangaPage>();
 /** manga cover template ref */
 const cover = ref<HTMLImageElement | null>(null);
 /** height of the cover */
@@ -53,27 +53,6 @@ const images = ref<(ChapterImage | ChapterImageErrorMessage)[]>([]);
 const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterImage | ChapterImageErrorMessage)[] } | undefined>();
 /** show-chapter template ref */
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
-
-/** computed manga infos */
-const manga = computed<MangaPage | undefined>(() => {
-  if (refs.value) {
-    const chapters = refs.value.chapters;
-    const sorted = chapters.sort((a, b) => b.number - a.number);
-    return {
-      id: refs.value.id,
-      mirrorInfo: refs.value.mirrorInfo,
-      url: refs.value.url,
-      lang: refs.value.lang,
-      name: refs.value.name,
-      covers: refs.value.covers,
-      synopsis: refs.value.synopsis,
-      tags: refs.value.tags,
-      authors: refs.value.authors,
-      chapters: sorted,
-    };
-  }
-  return undefined;
-});
 
 /** autofocus chapterRef */
 watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
@@ -245,9 +224,6 @@ async function startChapterFetch(chapterIndex: number) {
   else fetchChapter(chapterIndex);
 }
 
-
-
-
 /**
  * Request a specific image for a given chapter
  */
@@ -295,7 +271,7 @@ onBeforeMount(async () => {
   socket?.emit('showManga', reqId, mirror, lang, url);
   socket?.on('showManga', (id, mg) => {
     if (id === reqId && isManga(mg)) {
-      refs.value = { ...mg };
+      manga.value = { ...mg, chapters: mg.chapters.sort((a,b) => b.number - a.number ) };
     }
   });
 });
