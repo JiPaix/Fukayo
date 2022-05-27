@@ -1,6 +1,4 @@
 import mirrors from '../models/exports';
-import { env } from 'node:process';
-import { resolve } from 'node:path';
 import { Server as ioServer } from 'socket.io';
 import { TokenDatabase } from '../db/tokens';
 import type { Server as HttpServer } from 'http';
@@ -23,7 +21,7 @@ export default class IOWrapper {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
     this.io = new ioServer(runner, {cors: { origin: '*'}});
-    this.db = new TokenDatabase(resolve(env.USER_DATA, 'access_db.json'), { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    this.db = new TokenDatabase({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     this.use();
     this.io.on('connection', this.routes.bind(this));
   }

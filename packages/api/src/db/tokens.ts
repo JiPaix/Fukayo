@@ -1,4 +1,6 @@
 import { Database } from './';
+import { resolve } from 'node:path';
+import { env } from 'node:process';
 import crypto from 'node:crypto';
 
 type RefreshToken = {
@@ -20,8 +22,8 @@ type Tokens = {
 
 export class TokenDatabase extends Database<Tokens> {
 
-  constructor(filePath: string, tokens: { accessToken: string, refreshToken: string }) {
-    super(filePath, { authorizedTokens: [], refreshTokens: [] });
+  constructor(tokens: { accessToken: string, refreshToken: string }) {
+    super(resolve(env.USER_DATA, 'access_db.json'), { authorizedTokens: [], refreshTokens: [] });
     // remove expired or master tokens
     this.data.authorizedTokens = this.data.authorizedTokens.filter(t => t.expire > Date.now() && !t.master);
     this.data.refreshTokens = this.data.refreshTokens.filter(t => t.expire > Date.now() && !t.master);
