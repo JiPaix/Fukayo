@@ -35,7 +35,7 @@ onBeforeMount(() => {
             height="40px"
             fit="scale-down"
           />
-          {{ $t("app.name.value") }}
+          {{ $t('app.name') }}
         </q-toolbar-title>
         <q-btn
           v-if="$q.screen.lt.md"

@@ -127,6 +127,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
           synopsis,
           last_release,
           lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -179,6 +180,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
           url:link,
           covers,
           lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -266,6 +268,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
             current_chapter = current_chapter.replace(chapterNumber, '').trim();
           }
           release = {
+            id: `${mangaId}@${chaplink}`,
             name: current_chapter,
             number: chapter,
             date,
@@ -273,6 +276,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
           };
         } else {
           release = {
+            id: `${mangaId}@${chaplink}`,
             name: current_chapter,
             number: i+1,
             date,
@@ -282,7 +286,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
         if(release) chapters.push(release);
       }
       if(cancel) return;
-      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirror: this.name, inLibrary: false, name, synopsis, covers, authors, tags, chapters });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them

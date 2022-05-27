@@ -109,7 +109,8 @@ class Mangafox extends Mirror implements MirrorInterface {
           covers,
           synopsis,
           last_release,
-          lang: 'en',
+          lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return; // 3rd obligatory check
@@ -204,6 +205,7 @@ class Mangafox extends Mirror implements MirrorInterface {
 
         // pushing the chapter to the chapters array
         chapters.push({
+          id: `${mangaId}@${chapterUrl}`,
           name: chapterNameTrim,
           number: chapterNumberFloat,
           // we test if the volume is a number, sometimes volume number is TBE/TBA or other weird stuff
@@ -215,7 +217,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       });
       if(cancel) return;
       // returning the manga page based on MangaPage model
-      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters, inLibrary: false, mirror: this.name});
 
     } catch(e) {
       this.logger('error while fetching manga', e);
@@ -361,6 +363,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           url:link,
           covers,
           lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return; // 3rd obligatory check

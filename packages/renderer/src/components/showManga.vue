@@ -11,6 +11,7 @@ import {
   isChapterImage,
   isChapterImageErrorMessage,
   isManga,
+  isMangaInDb,
 } from './helpers/typechecker';
 import showChapter from './reader/App.vue';
 import type dayjs from 'dayjs';
@@ -18,7 +19,8 @@ import type { ComponentPublicInstance} from 'vue';
 import type { socketClientInstance } from '../../../api/src/client/types';
 import type { ChapterImage } from '../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../api/src/models/types/errors';
-import type { MangaPage } from '../../../api/src/models/types/manga';
+import type { MangaInDB, MangaPage } from '../../../api/src/models/types/manga';
+import type { mirrorInfo } from '../../../api/src/models/types/shared';
 
 /** quasar */
 const $q = useQuasar();
@@ -34,7 +36,9 @@ const settings = useSettingsStore();
 let socket: socketClientInstance | undefined;
 
 /** manga infos */
-const manga = ref<MangaPage>();
+const manga = ref<MangaPage|MangaInDB>();
+/** mirror info */
+const mirrorinfo = ref<mirrorInfo|undefined>();
 /** manga cover template ref */
 const cover = ref<HTMLImageElement | null>(null);
 /** height of the cover */
@@ -110,7 +114,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
   socket?.emit(
     'showChapter',
     id,
-    manga.value.mirrorInfo.name,
+    manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
     (nbOfPagesToExpect) => {
@@ -155,7 +159,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
   socket?.emit(
     'showChapter',
     id,
-    manga.value.mirrorInfo.name,
+    manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[nextIndex].url,
     (nbOfImagesToExpectFromChapter) => {
@@ -235,7 +239,7 @@ async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
   socket?.emit(
     'showChapter',
     id,
-    manga.value.mirrorInfo.name,
+    manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
     () => {
@@ -244,6 +248,7 @@ async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
           images.value[pageIndex] = res;
         }
+        socket?.off('showChapter');
       });
     },
     pageIndex,
@@ -259,6 +264,38 @@ async function cancelChapterFetch() {
   socket?.off('showChapter');
 }
 
+function toggleInLibrary() {
+  if(!manga.value) return;
+  if(isManga(manga.value) && !isMangaInDb(manga.value)) {
+    const toDb:MangaInDB = {
+      ...manga.value,
+      inLibrary: true,
+      chapters: manga.value.chapters.map((c) => { return {...c, read: false}; }),
+      meta: {
+        lastUpdate: Date.now(),
+        notify: true,
+        update: true,
+      },
+    };
+    manga.value = toDb;
+    add(toDb);
+  }
+  else if(isManga(manga.value) && isMangaInDb(manga.value)) {
+    manga.value.inLibrary = false;
+    remove(manga.value);
+  }
+}
+
+async function add(manga:MangaInDB) {
+  if (!socket) socket = await useSocket(settings.server);
+  socket?.emit('addManga', manga);
+}
+
+async function remove(manga:MangaInDB) {
+  if (!socket) socket = await useSocket(settings.server);
+  socket?.emit('removeManga', manga);
+}
+
 /** fetch manga infos before component is mounted */
 onBeforeMount(async () => {
   if (!socket) socket = await useSocket(settings.server);
@@ -268,12 +305,20 @@ onBeforeMount(async () => {
     url: string;
   };
   const reqId = Date.now();
-  socket?.emit('showManga', reqId, mirror, lang, url);
+
   socket?.on('showManga', (id, mg) => {
     if (id === reqId && isManga(mg)) {
-      manga.value = { ...mg, chapters: mg.chapters.sort((a,b) => b.number - a.number ) };
+      manga.value = mg;
     }
+    socket?.off('showManga');
   });
+
+  socket.emit('getMirrors', true, (mirrors) => {
+    const m = mirrors.find((m) => m.name === mirror);
+    if(m) mirrorinfo.value = m;
+    socket?.emit('showManga', reqId, mirror, lang, url);
+  });
+
 });
 
 /**
@@ -294,6 +339,7 @@ onBeforeUnmount(() => {
   socket?.off('showChapter');
   socket?.off('showManga');
 });
+
 </script>
 <template>
   <q-card
@@ -336,17 +382,19 @@ onBeforeUnmount(() => {
           type="QChip"
         />
       </div>
+    </q-card-section>
+    <q-card-section>
       <!-- Mirror and Language -->
-      <div class="flex items-center">
+      <div class="flex items-center q-mt-md">
         <span class="q-mr-sm">{{ $t("mangas.source.value") }}: </span>
         <a
-          v-if="manga"
+          v-if="manga && mirrorinfo"
           class="text-weight-medium text-white"
           style="text-decoration: none"
-          :href="manga.mirrorInfo.host + manga.url"
+          :href="mirrorinfo.host + manga.url"
           target="_blank"
         >
-          {{ manga.mirrorInfo.displayName }}
+          {{ mirrorinfo.displayName }}
 
           <q-icon name="open_in_new" />
         </a>
@@ -356,9 +404,9 @@ onBeforeUnmount(() => {
           width="50px"
         />
         <img
-          v-if="manga"
-          :src="manga.mirrorInfo.icon"
-          :alt="manga.mirrorInfo.displayName"
+          v-if="manga && mirrorinfo"
+          :src="mirrorinfo.icon"
+          :alt="mirrorinfo.displayName"
           class="q-ml-sm"
         >
         <q-skeleton
@@ -385,6 +433,21 @@ onBeforeUnmount(() => {
           class="text-weight-medium q-ml-sm"
           width="50px"
         />
+      </div>
+      <div
+        v-if="manga"
+        class="flex items-center"
+      >
+        <q-btn
+          v-if="manga"
+          :icon-right="isMangaInDb(manga) ? 'delete_forever': 'library_add'"
+          dense
+          size="sm"
+          :color="isMangaInDb(manga) ? 'negative' : 'accent'"
+          @click="toggleInLibrary"
+        >
+          {{ isMangaInDb(manga) ? $t('reader.manga.remove.value') : $t('reader.manga.add.value') }}
+        </q-btn>
       </div>
     </q-card-section>
     <q-card-section v-if="manga">

@@ -31,6 +31,8 @@ export type SearchResult = {
   synopsis?: string,
   /** Mirror's information */
   mirrorinfo:mirrorInfo,
+  /** is the manga in the library */
+  inLibrary: boolean,
   /** Latest release */
   last_release?: {
     /** Chapter's name */

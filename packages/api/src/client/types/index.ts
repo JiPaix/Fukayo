@@ -1,3 +1,4 @@
+import type { MangaInDB } from './../../models/types/manga';
 import type { mirrorInfo } from '../../models/types/shared';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents } from '../../server/types';
@@ -19,12 +20,16 @@ export interface ClientToServerEvents {
   stopShowManga: () => void;
   stopShowChapter: () => void;
   stopShowRecommend: () => void;
+  stopShowLibrary: () => void;
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:string[]) => void) => void;
   emptyCache: (files?:string[]) => void;
+  addManga: (manga:MangaInDB) => void;
+  removeManga: (manga:MangaInDB) => void;
+  showLibrary:(id:number) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

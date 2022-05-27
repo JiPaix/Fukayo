@@ -1,4 +1,5 @@
 import { Database } from './../db/index';
+import { MangasDB } from '../db/mangas';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync,readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
@@ -9,6 +10,7 @@ import type { CheerioAPI, CheerioOptions, AnyNode} from 'cheerio';
 import type { mirrorInfo } from './types/shared';
 import type { ClusterJob } from '../utils/types/crawler';
 import type { MirrorConstructor } from './types/constructor';
+
 
 /**
  * The default mirror class
@@ -77,7 +79,11 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
    */
   private db: Database<Record<string, unknown> & { enabled: boolean; }>;
 
+  /** access to the library db */
+  private library: MangasDB;
+
   constructor(opts: MirrorConstructor<T>) {
+    this.library = new MangasDB();
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
@@ -114,7 +120,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     return this.db.data;
   }
 
-  public set options(opts: Record<string, unknown> & { enabled: boolean, version: string }) {
+  public set options(opts: Record<string, unknown> & { enabled: boolean, _v: string }) {
     this.db.data = opts;
     this.logger('options changed', opts);
     this.db.write();
@@ -153,6 +159,11 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
   }
 
+  isInLibrary(mirror:string, lang:string, url:string) {
+    return this.library.has(mirror, lang, url);
+  }
+
+  /** change the mirror settings */
   changeSettings(opts: Record<string, unknown>) {
     this.options = { ...this.options, ...opts };
   }

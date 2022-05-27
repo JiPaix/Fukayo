@@ -1,12 +1,14 @@
 import mirrors from '../models/exports';
 import { Server as ioServer } from 'socket.io';
 import { TokenDatabase } from '../db/tokens';
+import { MangasDB } from '../db/mangas';
+import { getAllCacheFilesAndSize, removeAllCacheFiles } from './helpers';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 import type { ServerToClientEvents, socketInstance } from './types';
 import type { ClientToServerEvents } from '../client/types';
-import { getAllCacheFilesAndSize, removeAllCacheFiles } from './helpers';
+
 
 /**
  * Initialize a socket.io server
@@ -17,11 +19,13 @@ export default class IOWrapper {
   login:string;
   password:string;
   db:TokenDatabase;
+  mangadb:MangasDB;
   constructor(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}) {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
     this.io = new ioServer(runner, {cors: { origin: '*'}});
     this.db = new TokenDatabase({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    this.mangadb = new MangasDB();
     this.use();
     this.io.on('connection', this.routes.bind(this));
   }
@@ -111,6 +115,10 @@ export default class IOWrapper {
       return callback(mirrors.map(m => m.mirrorInfo).filter(m => m.enabled));
     });
 
+    socket.on('showLibrary', (id) => {
+      this.mangadb.getAll(id, socket);
+    });
+
     /**
      * Search mangas in enabled mirrors
      */
@@ -127,9 +135,12 @@ export default class IOWrapper {
      * Show a manga page
      */
     socket.on('showManga', (id, mirror, lang, url) => {
-      // before that we should check if the manga is in database
-      // TODO
-      mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+      const indb = this.mangadb.get(mirror, lang, url);
+      if(indb) {
+        socket.emit('showManga', id, indb);
+      } else {
+        mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+      }
     });
 
     /**
@@ -141,6 +152,10 @@ export default class IOWrapper {
 
     socket.on('showRecommend', (id, mirror) => {
       mirrors.find(m=>m.name === mirror)?.recommend(socket, id);
+    });
+
+    socket.on('addManga', async manga => {
+      await this.mangadb.add(manga);
     });
 
     socket.on('changeSettings', (mirror, opts, callback) => {

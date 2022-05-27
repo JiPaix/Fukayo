@@ -140,6 +140,12 @@ onBeforeUnmount(async () => {
                 @click="showManga(item)"
               >
                 <div
+                  v-if="item.inLibrary"
+                  class="absolute-top-right bg-accent q-ma-lg"
+                >
+                  {{ $t('explore.inlibrary') }}
+                </div>
+                <div
                   class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
                   style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
                   rounded

@@ -5,7 +5,7 @@ import packageJson from '../../../../package.json';
  * In memory database which can be saved to disk
  */
 export class Database<T> {
-  data: T & { version: string };
+  data: T & { _v: string };
   private file:string;
   constructor(filePath: string, defaultData: T) {
     // check if path exists
@@ -17,7 +17,7 @@ export class Database<T> {
     const pathToFile = resolve(filePath);
     if (!existsSync(pathToFile)) {
       writeFileSync(pathToFile, JSON.stringify(defaultData));
-      this.data = { ...defaultData, version: packageJson.version };
+      this.data = { ...defaultData, _v: packageJson.version };
     } else {
       this.data = JSON.parse(readFileSync(pathToFile, 'utf8'));
     }
@@ -47,15 +47,14 @@ export class DatabaseIO<T> {
     // check if file exists
     const pathToFile = resolve(filePath);
     if (!existsSync(pathToFile)) {
-      writeFileSync(pathToFile, JSON.stringify({ ...defaultData, version: packageJson.version }));
-
+      writeFileSync(pathToFile, JSON.stringify({ ...defaultData, _v: packageJson.version }));
     }
     this.file = pathToFile;
   }
-  read():T & { version: string } {
+  read():T & { _v: string } {
     return JSON.parse(readFileSync(this.file, 'utf8'));
   }
   write(data: T) {
-    writeFileSync(this.file, JSON.stringify({ data }));
+    writeFileSync(this.file, JSON.stringify(data));
   }
 }

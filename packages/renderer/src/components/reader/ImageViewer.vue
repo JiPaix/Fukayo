@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { useQuasar, scroll } from 'quasar';
-import { isChapterPage, isChapterPageErrorMessage } from '../helpers/typechecker';
-import type { ChapterPage } from '../../../../api/src/models/types/chapter';
-import type { ChapterPageErrorMessage } from '../../../../api/src/models/types/errors';
+import { isChapterImage, isChapterImageErrorMessage } from '../helpers/typechecker';
+import type { ChapterImage } from '../../../../api/src/models/types/chapter';
+import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 import type { ReaderSettings } from './@types';
 
@@ -13,7 +13,7 @@ const { getScrollTarget, setVerticalScrollPosition } = scroll;
 
 /** props */
 const props = defineProps<{
-  images: (ChapterPage | ChapterPageErrorMessage)[]
+  images: (ChapterImage | ChapterImageErrorMessage)[]
   nbOfImagesToExpectFromChapter: number,
   chapterSelectedIndex: number,
   readerSettings: ReaderSettings,
@@ -119,14 +119,14 @@ watch(() => props.currentPage, (nval, oldval) => {
       <q-img
         v-show="props.readerSettings.longStrip ? true : i === props.currentPage.index"
         v-intersection="{ handler: onIntersection, cfg: { threshold: 0.6 } }"
-        :src="img && !isChapterPageErrorMessage(img) && isChapterPage(img) ? img.src : 'undefined'"
+        :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) ? img.src : 'undefined'"
         :style="props.readerSettings.zoomMode === 'fit-height' ? undefined : imageStyle"
         :height="imageHeight ? imageHeight + 'px': undefined"
         :fit="props.readerSettings.zoomMode === 'fit-height' ? 'scale-down' : undefined"
       >
         <template #error>
           <div
-            v-if="isChapterPageErrorMessage(img)"
+            v-if="isChapterImageErrorMessage(img)"
             class="absolute-full flex flex-center bg-negative text-white"
           >
             <div>

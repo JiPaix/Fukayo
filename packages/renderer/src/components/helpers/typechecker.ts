@@ -1,6 +1,6 @@
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '../../../../api/src/models/types/errors';
-import type { MangaPage } from '../../../../api/src/models/types/manga';
+import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 import type { SearchResult } from '../../../../api/src/models/types/search';
 import type { TaskDone } from '../../../../api/src/models/types/shared';
 
@@ -25,5 +25,9 @@ export function isTaskDone(res: SearchResult | SearchErrorMessage | RecommendErr
 }
 
 export function isManga(res: MangaPage | MangaErrorMessage): res is MangaPage {
-  return (res as MangaPage).name !== undefined;
+  return (res as MangaPage).inLibrary !== undefined;
+}
+
+export function isMangaInDb(res: MangaPage | MangaInDB | MangaErrorMessage ): res is MangaInDB {
+  return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
 }

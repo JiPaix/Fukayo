@@ -236,43 +236,58 @@ onBeforeMount(async () => {
             <q-list
               separator
             >
-              <q-item
+              <div
                 v-for="(value, propertyName) in mirror.options"
                 :key="propertyName"
-                class="flex items-center"
-                :clickable="typeof value === 'boolean'"
-                :dark="settings.theme === 'dark'"
-                style="background:rgba(255, 255, 255, 0.05)"
-                @click="typeof value === 'boolean' ? changeOption(mirror.name, propertyName, !value) : null"
               >
-                <q-item-section>
-                  <q-item-label>
-                    {{ optionLabel(propertyName, value) }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section
-                  v-if="typeof value === 'boolean'"
-                  side
+                <q-item
+                  v-if="propertyName !== 'version'"
+                  class="flex items-center"
+                  :clickable="typeof value === 'boolean'"
+                  :dark="settings.theme === 'dark'"
+                  style="background:rgba(255, 255, 255, 0.05)"
+                  @click="typeof value === 'boolean' ? changeOption(mirror.name, propertyName, !value) : null"
                 >
-                  <q-toggle
-                    :color="toggleButtonColor(propertyName)"
-                    :checked-icon="toggleButtonIconChecked(propertyName)"
-                    :unchecked-icon="toggleButtonIconUnchecked(propertyName)"
-                    :model-value="value"
-                    size="lg"
-                    @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
-                  />
-                </q-item-section>
-                <q-item-section
-                  v-if="typeof value === 'string'"
-                >
-                  <q-input
-                    type="text"
-                    dense
-                    :model-value="value"
-                  />
-                </q-item-section>
-              </q-item>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel(propertyName, value) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    v-if="typeof value === 'boolean'"
+                    side
+                  >
+                    <q-toggle
+                      :color="toggleButtonColor(propertyName)"
+                      :checked-icon="toggleButtonIconChecked(propertyName)"
+                      :unchecked-icon="toggleButtonIconUnchecked(propertyName)"
+                      :model-value="value"
+                      size="lg"
+                      @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
+                    />
+                  </q-item-section>
+                  <q-item-section
+                    v-if="typeof value === 'string' || typeof value === 'number'"
+                    side
+                  >
+                    <q-input
+                      :type="typeof value === 'number' ? 'number' : 'text'"
+                      dense
+                      :model-value="value"
+                      @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
+                    >
+                      <template #after>
+                        <q-btn
+                          class="q-mr-sm q-ml-lg"
+                          round
+                          dense
+                          icon="save"
+                        />
+                      </template>
+                    </q-input>
+                  </q-item-section>
+                </q-item>
+              </div>
             </q-list>
           </q-expansion-item>
         </q-list>

@@ -98,6 +98,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           covers,
           last_release,
           lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return; // 3rd obligatory check
@@ -163,19 +164,27 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const current_chapter = $(el).text().trim();
         const chaplink = $(el).attr('href');
         if(!chaplink) continue;
-        const match = this.getChapterInfoFromString(current_chapter);
+
         let release: MangaPage['chapters'][0] | undefined;
-
         const date = Date.now(); // dates in manga pages aren't reliable so we use the fetch date instead
-
-        if(!match) release = {name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(), number: i+1, volume: undefined, url: chaplink, date};
+        const match = this.getChapterInfoFromString(current_chapter);
 
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
+            id: `${mangaId}@${chaplink}`,
             name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
             volume: undefined,
             number: i+1,
+            url: chaplink,
+            date,
+          };
+        } else {
+          release = {
+            id: `${mangaId}@${chaplink}`,
+            name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
+            number: i+1,
+            volume: undefined,
             url: chaplink,
             date,
           };
@@ -183,7 +192,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(release) chapters.push(release);
       }
       if(cancel) return;
-      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirrorInfo: this.mirrorInfo, name, synopsis, covers, authors, tags, chapters });
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters, inLibrary: false, mirror: this.name });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -280,6 +289,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           url:link,
           covers,
           lang: this.langs[0],
+          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;
