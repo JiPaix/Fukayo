@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useSocket } from './helpers/socket';
+import { useSocket } from '../helpers/socket';
 import { useQuasar } from 'quasar';
 import { useStore as useSettingsStore } from '/@/store/settings';
-import { isSearchResult, isTaskDone } from './helpers/typechecker';
-import type { socketClientInstance } from '../../../api/src/client/types';
-import type { SearchResult } from '../../../api/src/models/types/search';
-import type { mirrorInfo } from '../../../api/src/models/types/shared';
+import { isSearchResult, isTaskDone } from '../helpers/typechecker';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { SearchResult } from '../../../../api/src/models/types/search';
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 
 const router = useRouter();
 const route = useRoute();

@@ -2,9 +2,9 @@
 import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import { useStore as useSettingsStore } from '/@/store/settings';
-import icon from '../../assets/icon.svg';
+import icon from '../../../assets/icon.svg';
 import { useI18n } from 'vue-i18n';
-import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isHostNameValid, hostNameHint, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from './helpers/login';
+import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isHostNameValid, hostNameHint, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from '../helpers/login';
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());

@@ -1,16 +1,16 @@
 <script lang="ts" setup>
 import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
-import { useSocket } from './helpers/socket';
+import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { isSearchResult, isTaskDone } from './helpers/typechecker';
-import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from './helpers/mirrorFilters';
-import searchMangasInfiniteScroll from './searchMangasInfiniteScroll.vue';
-import type { socketClientInstance } from '../../../api/src/client/types';
-import type { SearchResult } from '../../../api/src/models/types/search';
-import type { mirrorInfo } from '../../../api/src/models/types/shared';
+import { isSearchResult, isTaskDone } from '../helpers/typechecker';
+import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '../helpers/mirrorFilters';
+import SearchResults from './SearchResults.vue';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { SearchResult } from '../../../../api/src/models/types/search';
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 
 /** current route */
 const route = useRoute();
@@ -351,7 +351,7 @@ onBeforeUnmount(async () => {
       </div>
     </q-card-section>
     <q-card-section v-if="results.length">
-      <searchMangasInfiniteScroll
+      <search-results
         :results="results"
       />
     </q-card-section>

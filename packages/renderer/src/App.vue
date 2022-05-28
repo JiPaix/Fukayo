@@ -5,9 +5,9 @@ import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
 import { useSocket } from './components/helpers/socket';
 import { useFavicon } from '@vueuse/core';
-import setupPage from '/@/components/setupPage.vue';
-import loginPage from '/@/components/loginPage.vue';
-import mainPage from '/@/components/mainPage.vue';
+import Setup from '/@/components/setup/App.vue';
+import Login from '/@/components/login/App.vue';
+import AppLayout from '/@/components/appLayout.vue';
 import favicon from '../assets/icon.svg';
 import type { LoginAuth } from '../../api/src/client/types';
 
@@ -80,19 +80,19 @@ onBeforeMount(()=> {
         <div v-if="!loading">
           <div v-if="!connected">
             <!-- Setup page if client is electron -->
-            <setupPage
+            <setup
               v-if="isElectron"
               @done="connect"
             />
             <!-- Login page if client is not electron -->
-            <loginPage
+            <login
               v-else
               :bad-password="badPassword"
               @done="connect"
             />
           </div>
           <!-- Main page once client is connected -->
-          <mainPage
+          <app-layout
             v-else
             :logo="favicon"
           />

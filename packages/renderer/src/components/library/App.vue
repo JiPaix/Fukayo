@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { ref, onBeforeMount, onBeforeUnmount } from 'vue';
-import { useSocket } from './helpers/socket';
-import { useStore as useSettingsStore } from '../store/settings';
+import { useSocket } from '../helpers/socket';
+import { useStore as useSettingsStore } from '../../store/settings';
 import { useRouter } from 'vue-router';
-import type { socketClientInstance } from '../../../api/src/client/types';
-import type { MangaInDB } from '../../../api/src/models/types/manga';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { MangaInDB } from '../../../../api/src/models/types/manga';
 
 /** router */
 const router = useRouter();

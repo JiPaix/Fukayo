@@ -5,22 +5,22 @@ import { useRoute } from 'vue-router';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
-import { useSocket } from './helpers/socket';
+import { useSocket } from '../helpers/socket';
 import {
   isChapterErrorMessage,
   isChapterImage,
   isChapterImageErrorMessage,
   isManga,
   isMangaInDb,
-} from './helpers/typechecker';
+} from '../helpers/typechecker';
 import showChapter from './reader/App.vue';
 import type dayjs from 'dayjs';
 import type { ComponentPublicInstance} from 'vue';
-import type { socketClientInstance } from '../../../api/src/client/types';
-import type { ChapterImage } from '../../../api/src/models/types/chapter';
-import type { ChapterImageErrorMessage } from '../../../api/src/models/types/errors';
-import type { MangaInDB, MangaPage } from '../../../api/src/models/types/manga';
-import type { mirrorInfo } from '../../../api/src/models/types/shared';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { ChapterImage } from '../../../../api/src/models/types/chapter';
+import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
+import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 
 /** quasar */
 const $q = useQuasar();

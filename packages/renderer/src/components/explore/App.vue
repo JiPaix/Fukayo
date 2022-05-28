@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import { ref, computed, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSocket } from './helpers/socket';
+import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
 import { useQuasar } from 'quasar';
-import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from './helpers/mirrorFilters';
-import type { socketClientInstance } from '../../../api/src/client/types';
-import type { mirrorInfo } from '../../../api/src/models/types/shared';
+import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '../helpers/mirrorFilters';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 
 const router = useRouter();
 /** stored settings */
