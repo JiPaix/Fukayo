@@ -15,6 +15,11 @@ type Mangas = {
   }[]
 }
 
+function isMangaInDB(res: MangaPage | MangaInDB ): res is MangaInDB {
+  return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
+}
+
+
 export class MangasDB extends DatabaseIO<Mangas> {
   private path: string;
   constructor() {
@@ -22,15 +27,27 @@ export class MangasDB extends DatabaseIO<Mangas> {
     this.path = resolve(env.USER_DATA, '.mangasdb');
   }
 
-  async add(manga: MangaPage) {
+  async add(manga: MangaPage|MangaInDB) {
     const db = this.read();
     const alreadyInDB = db.mangas.find(m => m.id === manga.id);
     const filename = await this.filenamify(manga.id);
-    if(alreadyInDB) return this.patch(manga, filename);
+    if(alreadyInDB && isMangaInDB(manga)) return this.patch(manga, filename, alreadyInDB !== undefined);
     db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, lang: manga.lang, file: filename });
     this.write(db);
     const chapters:MangaInDB['chapters'] = manga.chapters.map(c => ({ ...c, read: false }));
-    return this.patch({...manga, inLibrary: true, chapters: chapters, meta: { lastUpdate: Date.now(), notify: true, update: true }}, filename);
+    const meta:MangaInDB['meta'] = {
+      lastUpdate: Date.now(),
+      notify: true,
+      update: true,
+      options : {
+        webtoon: false,
+        showPageNumber: true,
+        zoomMode: 'auto',
+        zoomValue: 100,
+        longStrip: false,
+      },
+    };
+    return this.patch({...manga, inLibrary: true, chapters: chapters, meta}, filename);
   }
 
   remove(manga: MangaInDB) {
@@ -74,7 +91,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   has(mirror:string, lang:string, url:string): boolean {
     const db = this.read();
-    return db.mangas.find(m => m.mirror === mirror && m.lang === lang && m.url === url) !== undefined;
+    return db.mangas.some(m => m.mirror === mirror && m.lang === lang && m.url === url);
   }
 
   get(mirror:string, lang:string, url:string):MangaInDB|undefined {
@@ -102,14 +119,50 @@ export class MangasDB extends DatabaseIO<Mangas> {
     }
   }
 
-  private patch(manga:MangaInDB|MangaPage, filename:string) {
-    const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
-    let data = mangadb.read();
-    data = {...manga, covers: this.saveCovers(manga.covers, filename), _v: data._v };
-    mangadb.write(data);
-    return data as MangaInDB;
+  getAllSync():MangaInDB[] {
+    return this.read()
+      .mangas.reduce((acc, m) => {
+        const mg = this.get(m.mirror, m.lang, m.url);
+        if(mg) acc.push(mg);
+        return acc;
+      }, [] as MangaInDB[]);
   }
 
+  private patch(manga:MangaInDB, filename:string, alreadyInDB?:boolean):MangaInDB {
+    manga.covers = this.saveCovers(manga.covers, filename);
+    // then we create the file by instanciating a DatabaseIO
+    const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
+
+    // if the manga is already in the db we read the file using the DatabaseIO
+    if(alreadyInDB) {
+      let data = mangadb.read();
+      // we check differences between the manga in the db and the manga we want to save
+      let hasNewStuff = false;
+      let k: keyof typeof manga.meta.options;
+      // check if the manga has new options
+      for (k in manga.meta.options) {  // const k: string
+        if(data.meta.options[k] !== manga.meta.options[k]) hasNewStuff = true;
+      }
+      // we also check if the manga has new chapters, or if the chapters have been read/unread
+      manga.chapters.forEach(c => {
+        const chapter = data.chapters.find(c2 => c2.id === c.id);
+        // new chapter, we change the lastUpdate
+        if(!chapter) return manga.meta.lastUpdate = Date.now();
+        // new read status, no need to update lastUpdate
+        if(chapter.read !== c.read) hasNewStuff = true;
+      });
+
+      // we check if the manga has been updated
+      if((manga.meta.lastUpdate > data.meta.lastUpdate) || hasNewStuff) {
+        data = {...manga, covers: data.covers, _v: data._v };
+        mangadb.write(data);
+        return data;
+      }
+    }
+    return manga;
+  }
+
+  /** turn strings in to files and returns their filenames */
   private saveCovers(covers:string[], filename:string) {
     return covers.map((c, i) => {
       const coverFileName = `${i}_cover_${filename}`;
@@ -122,6 +175,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     });
   }
 
+  /** reads files and return their content into an array */
   private getCovers(filenames: string[]) {
     const res:string[] = [];
     filenames.forEach(f => {

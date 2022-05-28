@@ -278,7 +278,10 @@ async function add() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
   socket?.emit('addManga', manga.value, (res) => {
-    manga.value = res;
+    manga.value = {
+      ...res,
+      covers: manga.value?.covers || [],
+    };
   });
 }
 
@@ -290,7 +293,15 @@ async function remove() {
       manga.value = res;
     });
   }
+}
 
+async function updateManga(updatedManga:MangaInDB) {
+  if(!manga.value) return;
+  if(!socket) socket = await useSocket(settings.server);
+  socket.emit('addManga', updatedManga, (res) => {
+    manga.value = {...res, covers: manga.value?.covers||[] };
+    console.log('updated', res.meta.options);
+  });
 }
 
 /** fetch manga infos before component is mounted */
@@ -503,13 +514,15 @@ onBeforeUnmount(() => {
               @click="showChapterComp(index)"
             >
               <!-- Chapter name, volume, number -->
-              <q-item-section>
+              <q-item-section :class="item.read ? 'text-grey-9' : ''">
                 <q-item-label>
                   <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }}</span>
                   <span v-if="item.volume !== undefined && item.number !== undefined">
                     -
                   </span>
-                  <span v-if="item.number !== undefined">{{ $t("mangas.chapter") }} {{ item.number }}</span>
+                  <span
+                    v-if="item.number !== undefined"
+                  >{{ $t("mangas.chapter") }} {{ item.number }}</span>
                   <span v-if="item.volume === undefined && item.number === undefined">{{
                     item.name
                   }}</span>
@@ -582,6 +595,7 @@ onBeforeUnmount(() => {
         @hide="hideChapterComp"
         @reload="reloadChapterImage"
         @navigate="showChapterComp($event)"
+        @update-manga="updateManga"
       />
     </q-dialog>
   </q-card>

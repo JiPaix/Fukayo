@@ -2,14 +2,14 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { chapterLabel } from './helpers';
-import { isChapterImageErrorMessage } from '../helpers/typechecker';
+import { isChapterImageErrorMessage, isMangaInDb } from '../helpers/typechecker';
+import { useStore as useStoreSettings } from '/@/store/settings';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
-import { useStore as useStoreSettings } from '/@/store/settings';
-import type { ReaderSettings } from './@types';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
+
 
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
@@ -18,6 +18,7 @@ const emit = defineEmits<{
   (event: 'hide'): void
   (event: 'reload', chapterIndex:number, pageIndex:number): void
   (event: 'navigate', chapterIndex:number): void
+  (event: 'update-manga', manga:MangaInDB): void
 }>();
 
 /** props */
@@ -62,8 +63,8 @@ const drawerRight = ref(true);
 const drawerRightReveal = ref(false);
 
 /** Reader settings */
-const localSettings = ref<ReaderSettings>({
-  webtoon: settings.reader.webtoon, // this.manga.settings.webtoon || this.$store.state.settings.webtoon,
+const localSettings = ref<MangaInDB['meta']['options']>({
+  webtoon: settings.reader.webtoon,
   showPageNumber:  settings.reader.showPageNumber,
   zoomMode: settings.reader.zoomMode,
   zoomValue: settings.reader.zoomValue,
@@ -73,8 +74,18 @@ const localSettings = ref<ReaderSettings>({
 /**
  * Listen to @update-settings from side-bar and update local settings
  */
-function updateSettings(settings: ReaderSettings) {
-  localSettings.value = settings;
+async function updateSettings(opts: MangaInDB['meta']['options']) {
+  localSettings.value = opts;
+  if(isMangaInDb(props.manga)) {
+    const toUpdate:MangaInDB = {
+      ...props.manga,
+      meta: {
+        ...props.manga.meta,
+        options: opts,
+      },
+    };
+    emit('update-manga', toUpdate);
+  }
 }
 
 /** Previous Chapter */
@@ -126,7 +137,6 @@ const last = computed(() => {
  * `{ from : 'child' }` => the page component observed a scroll to the next/previous page
  */
 const currentPageIndex = ref<{index: number, from: 'child'|'parent'}>({ index: 0, from: 'parent' });
-
 /** how many times the user triggerd a "next-page" event */
 const forwardNavCount = ref<0|1|2>(0);
 /** when occured the last "next-page" event */
@@ -135,7 +145,6 @@ const lastNavForward = ref(Date.now());
 const backNavCount = ref(Date.now());
 /** when occured the last "previous-page" event */
 const lastNavBack = ref(0);
-
 /** is the last page of the chapter on screen? */
 const lastPageNav = computed(() => currentPageIndex.value.index === images.value.length - 1);
 /** is the first page of the chapter on screen? */
@@ -205,6 +214,26 @@ function navigation(index:number) {
   //=> move to the next chapter
   emit('navigate', index);
 }
+
+async function markAsRead() {
+  if(lastPageNav.value && isMangaInDb(props.manga)) {
+    const chapter = props.manga.chapters[props.chapterSelectedIndex];
+    const toUpdate:MangaInDB = {
+      ...props.manga,
+      chapters : props.manga.chapters.map(c => {
+        if(c.id === chapter.id) {
+          return {
+            ...c,
+            read: true,
+          };
+        }
+        return c;
+      }),
+    };
+    emit('update-manga', toUpdate);
+  }
+}
+
 </script>
 <template>
   <q-layout
@@ -293,7 +322,7 @@ function navigation(index:number) {
       :drawer-reveal="drawerRightReveal"
       :manga="manga"
       :chapter-selected-index="chapterSelectedIndex"
-      :reader-settings="localSettings"
+      :reader-settings="isMangaInDb(manga) ? manga.meta.options : localSettings"
       :first="first"
       :previous="previous"
       :next="next"
@@ -308,10 +337,10 @@ function navigation(index:number) {
           :images="images"
           :nb-of-images-to-expect-from-chapter="props.nbOfImagesToExpectFromChapter"
           :chapter-selected-index="chapterSelectedIndex"
-          :reader-settings="localSettings"
+          :reader-settings="isMangaInDb(manga) ? manga.meta.options : localSettings"
           :manga="manga"
           :current-page="currentPageIndex"
-          @page-change="currentPageIndex = $event"
+          @page-change="currentPageIndex = $event; markAsRead()"
           @reload="(chapterIndex, pageIndex) => emit('reload', chapterIndex, pageIndex)"
           @navigate="navigation"
         />

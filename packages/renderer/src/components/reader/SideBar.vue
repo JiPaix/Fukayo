@@ -2,7 +2,6 @@
 import { ref, watch, onUpdated } from 'vue';
 import { chapterLabel } from './helpers';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
-import type { ReaderSettings } from './@types';
 
 /** props */
 const props = defineProps<{
@@ -10,7 +9,7 @@ const props = defineProps<{
   drawerReveal:boolean,
   chapterSelectedIndex: number,
   manga: MangaPage|MangaInDB,
-  readerSettings: ReaderSettings
+  readerSettings: MangaInDB['meta']['options']
   first: {
     label: string | number;
     value: number;
@@ -32,12 +31,12 @@ const props = defineProps<{
 /** emit */
 const emit = defineEmits<{
   (event: 'navigate', chapterIndex:number): void
-  (event: 'toggleDrawer'): void
-  (event: 'updateSettings', settings: typeof localSettings.value): void
+  (event: 'toggle-drawer'): void
+  (event: 'update-settings', settings: typeof localSettings.value): void
 }>();
 
 /** ref-ing the readerSettings props */
-const localSettings = ref<ReaderSettings>({
+const localSettings = ref<MangaInDB['meta']['options']>({
   webtoon: props.readerSettings.webtoon,
   showPageNumber: props.readerSettings.showPageNumber,
   zoomMode: props.readerSettings.zoomMode,
@@ -48,11 +47,9 @@ const localSettings = ref<ReaderSettings>({
 /** make sure user can't use webtoon + screen mode 'fit-height' */
 watch(localSettings, (nval) => {
   if(nval.webtoon && nval.zoomMode === 'fit-height') {
-    console.log('fit-height is not supported for webtoon');
     nval.zoomMode = 'fit-width';
   }
-  console.log('updating settings', nval);
-  emit('updateSettings', nval);
+  emit('update-settings', nval);
 }, {deep: true});
 
 /** Current chapter */
@@ -77,12 +74,12 @@ function navigate(o: {label: string|number, value: number}) {
     side="right"
     :width="300"
     class="bg-grey-9"
-    @update:model-value="emit('toggleDrawer')"
+    @update:model-value="emit('toggle-drawer')"
   >
     <q-bar
       v-if="drawerReveal"
       class="w-100 flex bg-grey-10 items-center justify-between cursor-pointer"
-      @click="emit('toggleDrawer')"
+      @click="emit('toggle-drawer')"
     >
       <span class="ellipsis q-pr-sm"> {{ manga.displayName || manga.name }} </span>
       <q-tooltip>

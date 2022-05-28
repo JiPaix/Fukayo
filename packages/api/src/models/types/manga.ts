@@ -1,4 +1,4 @@
-export type MangaPage = {
+export interface MangaPage {
   /**
    * ID of the manga
    * @example 'mirror_name/manga_lang/relative-url-of-manga'
@@ -71,7 +71,7 @@ export type MangaPage = {
   mirror: string
 }
 
-export type MangaInDB = MangaPage & {
+export interface MangaInDB extends MangaPage {
   chapters : (MangaPage['chapters'][0] & { read: boolean})[]
   meta : {
     /** the last read chapter id */
@@ -81,6 +81,13 @@ export type MangaInDB = MangaPage & {
     /** notify user when new chapter is out */
     notify: boolean,
     /** should the manga chapters list be updated  */
-    update: boolean
+    update: boolean,
+    options: {
+      webtoon: boolean,
+      showPageNumber: boolean,
+      zoomMode: 'auto' | 'fit-width' | 'fit-height' | 'custom',
+      zoomValue: number,
+      longStrip:boolean,
+    }
   }
 }

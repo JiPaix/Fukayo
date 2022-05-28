@@ -5,7 +5,6 @@ import { isChapterImage, isChapterImageErrorMessage } from '../helpers/typecheck
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
-import type { ReaderSettings } from './@types';
 
 /** quasar */
 const $q = useQuasar();
@@ -16,7 +15,7 @@ const props = defineProps<{
   images: (ChapterImage | ChapterImageErrorMessage)[]
   nbOfImagesToExpectFromChapter: number,
   chapterSelectedIndex: number,
-  readerSettings: ReaderSettings,
+  readerSettings: MangaInDB['meta']['options'],
   manga: MangaPage|MangaInDB,
   currentPage: { index:number, from:'child'|'parent' },
 }>();
