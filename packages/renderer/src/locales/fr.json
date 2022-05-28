@@ -196,10 +196,10 @@
     "message": "Avant de commencer une petite configuration est nécessaire",
     "password": "Mot de passe",
     "password_hints": {
-      "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",
-      "default": "Password must be at least 6 characters long",
-      "strong": "Strength: <b class=\"text-positive\">STRONG</b>",
-      "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
+      "average": "Fiabilité: <b class=\"text-warning\">NORMAL</b>",
+      "default": "le mot de passe doit contenir au moins 6 caractères",
+      "strong": "Fiabilité: <b class=\"text-positive\">FORT</b>",
+      "weak": "Fiabilité: <b class=\"text-negative\">FAIBLE</b>"
     },
     "port": "Port",
     "retry": "Reesayer",
