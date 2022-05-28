@@ -54,7 +54,7 @@ class Mangafox extends Mirror implements MirrorInterface {
       const $ = await this.fetch({
         url,
         cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
-        waitForSelector: 'ul.manga-list-4-list > li',
+        waitForSelector: '.bg-gary > .container',
       }, 'html');
 
 

@@ -54,7 +54,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const url = `${this.host}/advanced-search.html?keyword=${query}`;
       const $ = await this.fetch({
         url,
-        waitForSelector: 'ul.list_manga',
+        waitForSelector: '.tag.search-results-a',
       }, 'html');
 
       for(const el of $('div.div_item')) {
