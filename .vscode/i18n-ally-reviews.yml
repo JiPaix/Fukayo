@@ -109,3 +109,5 @@ reviews:
     description: 'text - context: tooltip'
   reader.reload:
     description: 'button - context: ask the user to reload a chapter''s page'
+  search.not_found:
+    description: console msg

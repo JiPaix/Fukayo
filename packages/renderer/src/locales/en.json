@@ -174,6 +174,7 @@
   },
   "search": {
     "all": "All",
+    "not_found": "Couldn't find {sourceWord}: {websitename}",
     "placeholder": "Search mangas",
     "tab": "Search"
   },
@@ -183,9 +184,9 @@
   "setup": {
     "address": "Address",
     "address_errors": {
+      "hasparam": "URL must not contain any parameter",
       "length": "Required",
       "protocol": "URL must start with <b>https://</b>",
-      "hasparam": "URL must not contain any parameter",
       "space": "URL cannot contain spaces"
     },
     "address_hint": "Example: <b>https://mywebsite.com</b>",
