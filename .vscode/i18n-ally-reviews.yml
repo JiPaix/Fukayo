@@ -113,3 +113,5 @@ reviews:
     description: console msg
   reader.displaymode.compatibility:
     description: tooltip
+  search.no_results:
+    description: text

@@ -36,6 +36,8 @@ const display = ref(false);
 const loading = ref(false);
 /** query results from the websocket */
 const rawResults = ref([] as (SearchResult)[]); // the raw search results
+/** all the results been fetched  */
+const done = ref(false);
 /** sort results A-Z or Z-A */
 const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
 /** list of languages available from mirrors */
@@ -127,9 +129,12 @@ async function research() {
   // stop any ongoing search requests
   socket?.emit('stopSearchInMirrors');
 
+  // reset previous results
   display.value = false;
   currentQuery.value = query.value;
   rawResults.value = [];
+  done.value = false;
+
   /** helper to keep track of on going query */
   const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
 
@@ -157,6 +162,7 @@ async function research() {
               // if all mirrors have responded, we can stop listening and stop the loading animation
               socket?.off('searchInMirrors');
               loading.value = false;
+              done.value = true;
             }
           }
         }
@@ -354,6 +360,9 @@ onBeforeUnmount(async () => {
       <search-results
         :results="results"
       />
+    </q-card-section>
+    <q-card-section v-else-if="!results.length && done">
+      {{ $t('search.no_results', {query: currentQuery}) }}
     </q-card-section>
   </q-card>
 </template>

@@ -175,6 +175,7 @@
   },
   "search": {
     "all": "Tous",
+    "no_results": "Aucun résultat pour : \"{query}\"",
     "not_found": "Impossible de trouver {sourceWord} : {websitename}",
     "placeholder": "Rechercher des mangas",
     "tab": "Rechercher"
