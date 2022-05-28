@@ -1,9 +1,8 @@
 <script lang="ts" setup>
 import { ref, computed, onBeforeMount } from 'vue';
-import { useQuasar } from 'quasar';
+import { useQuasar, format } from 'quasar';
 import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
-import filesize from 'filesize';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 
 const $q = useQuasar();
@@ -14,7 +13,7 @@ const size = ref(0);
 const files = ref<string[]>([]);
 
 const humanreadable = computed(() => {
-  return filesize(size.value);
+  return format.humanStorageSize(size.value);
 });
 
 function emptyCache() {
@@ -48,14 +47,14 @@ onBeforeMount(async () => {
       </q-item-section>
 
       <q-item-section>
-        <q-item-label>Cache</q-item-label>
+        <q-item-label>{{ $t('settings.cache') }}</q-item-label>
         <q-item-label
           caption
           lines="2"
         >
           <div>{{ humanreadable }}</div>
           <div class="text-grey">
-            {{ files.length }} Files
+            {{ files.length }} {{ $t('settings.file', files.length) }}
           </div>
         </q-item-label>
       </q-item-section>

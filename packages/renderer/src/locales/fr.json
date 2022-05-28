@@ -167,7 +167,8 @@
       "compatibility": "incompatible avec le mode webtoon",
       "fit-custom": "Manuel",
       "fit-height": "Ajuster à la hauteur de l'écran",
-      "fit-width": "Ajuster à la largeur de l'écran"
+      "fit-width": "Ajuster à la largeur de l'écran",
+      "value": "Modes d'affichage"
     },
     "first": "Retourner au premier chapitre :",
     "last": "Aller au dernier chapitre :",
@@ -190,6 +191,26 @@
     "tab": "Rechercher"
   },
   "settings": {
+    "cache": "Cache",
+    "change": "Modifier",
+    "disable": "Désactiver",
+    "displaymodes": "Modes d'affichage",
+    "enable": "Activer",
+    "file": "Fichier | Fichiers",
+    "files": {
+      "tab": "Stockage"
+    },
+    "general": {
+      "tab": "Général"
+    },
+    "reader": {
+      "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
+      "preload": "Précharger le chapitre suivant pendant la lecture"
+    },
+    "source": {
+      "adult": "Activer le contenu pour adultes",
+      "enable": "Désactiver cette {sourceWord}"
+    },
     "tab": "Configuration"
   },
   "setup": {

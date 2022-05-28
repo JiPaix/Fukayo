@@ -138,7 +138,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('reader.displaymode.value') }}
+                  {{ $t('settings.displaymodes') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section

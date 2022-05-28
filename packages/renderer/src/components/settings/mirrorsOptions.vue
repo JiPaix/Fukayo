@@ -3,6 +3,7 @@ import { ref, computed, onBeforeMount } from 'vue';
 import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
+import { format } from 'quasar';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { sortLangs, sortMirrorByNames } from '../helpers/mirrorFilters';
@@ -70,21 +71,19 @@ function toggleButtonColor(propertyName: string) {
 }
 
 function optionLabel(propertyName:string, value:unknown) {
-  let prefix = '';
-  let suffix = ' ';
-  if(typeof value !== 'boolean' && typeof value !== 'string' && typeof value !== 'number') return propertyName;
   if(typeof value === 'boolean') {
-    if(value) prefix += $t('settings.enable.value');
-    else prefix += $t('settings.disable.value');
+    if(propertyName === 'enabled') {
+      return format.capitalize($t('settings.source.enable', { sourceWord: $t('mangas.source', 1) }).toLocaleLowerCase());
+    } else if(propertyName === 'adult') {
+      return $t('settings.source.adult');
+    }
+    else if(value) return $t('settings.enable');
+    else return $t('settings.disable');
   }
   if(typeof value === 'string' || typeof value === 'number') {
-    prefix += $t('settings.change.value');
+    return $t('settings.change');
   }
-
-  if(propertyName === 'enabled') suffix += $t('settings.enabled.value');
-  if(propertyName === 'adult') suffix += $t('settings.adult.value');
-
-  return prefix + suffix;
+  return propertyName;
 }
 /** include/exclude all languages from the filter */
 function toggleAllLanguages() {
@@ -129,7 +128,7 @@ onBeforeMount(async () => {
           ref="inputRef"
           v-model="query"
           type="text"
-          :placeholder="$t('explore.placeholder.value')"
+          :placeholder="$t('explore.placeholder')"
           outlined
           clearable
           autofocus
@@ -191,7 +190,7 @@ onBeforeMount(async () => {
                   />
                 </q-item-section>
                 <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all.value') }}
+                  {{ $t('search.all') }}
                 </q-item-section>
               </q-item>
               <q-separator />

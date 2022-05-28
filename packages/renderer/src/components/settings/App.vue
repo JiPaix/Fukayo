@@ -22,17 +22,17 @@ const tab = ref<string>('general');
       <q-tab
         name="general"
         icon="settings"
-        :label="$t('settings.general.value')"
+        :label="$t('settings.general.tab')"
       />
       <q-tab
         name="sources"
         icon="travel_explore"
-        :label="$t('settings.sources.value')"
+        :label="$t('mangas.source', 20)"
       />
       <q-tab
         name="files"
         icon="storage"
-        :label="$t('settings.files.value')"
+        :label="$t('settings.files.tab')"
       />
     </q-tabs>
     <main-options v-if="tab === 'general'" />

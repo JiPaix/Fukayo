@@ -125,3 +125,19 @@ reviews:
     description: 'text - context: popup title'
   dialog.quickadd.url:
     description: 'text - context: input placeholder'
+  settings.general.tab:
+    description: 'text - context: tab'
+  settings.files.tab:
+    description: 'text - context: tab'
+  settings.reader.info:
+    description: long text
+  settings.reader.preload:
+    description: text
+  settings.displaymodes:
+    description: text
+  settings.cache:
+    description: text
+  settings.enable:
+    description: text
+  settings.source.enable:
+    description: text
