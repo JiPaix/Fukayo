@@ -209,18 +209,18 @@ function navigate(o: {label: string|number, value: number}) {
             {{ $t('reader.displaymode.fit-width') }}
           </q-tooltip>
         </q-btn>
-
-        <q-btn
-          icon="height"
-          :text-color="localSettings.webtoon ? 'negative' : undefined"
-          :color="localSettings.zoomMode === 'fit-height' ? 'orange' : undefined"
-          :disable="localSettings.webtoon"
-          @click="localSettings.zoomMode = 'fit-height'"
-        >
+        <div class="q-pa-none q-ma-none no-box-shadows">
+          <q-btn
+            icon="height"
+            :text-color="localSettings.webtoon ? 'negative' : undefined"
+            :color="localSettings.zoomMode === 'fit-height' ? 'orange' : undefined"
+            :disable="localSettings.webtoon"
+            @click="localSettings.zoomMode = 'fit-height';localSettings.webtoon = false"
+          />
           <q-tooltip>
-            {{ $t('reader.displaymode.fit-height') }}
+            {{ $t('reader.displaymode.fit-height') }} ({{ localSettings.webtoon ? $t('reader.displaymode.compatibility') : '' }})
           </q-tooltip>
-        </q-btn>
+        </div>
         <q-btn
           icon="pageview"
           :color="localSettings.zoomMode === 'custom' ? 'orange' : undefined"
@@ -268,3 +268,8 @@ function navigate(o: {label: string|number, value: number}) {
     </div>
   </q-drawer>
 </template>
+<style lang="css" scoped>
+ .no-box-shadows > .q-btn:before {
+    box-shadow: none!important;
+ }
+</style>
