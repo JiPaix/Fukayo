@@ -2,15 +2,15 @@
   "i18n-ally.localesPaths": [
     "packages/renderer/src/locales"
   ],
+  "i18n-ally.usage.scanningIgnore": [
+    "packages/api/**",
+    "packages/main/**"
+  ],
   "i18n-ally.keystyle": "nested",
   "i18n-ally.sortKeys": true,
   "i18n-ally.keepFulfilled": true,
   "i18n-ally.editor.preferEditor": true,
-  "auto-close-tag.disableOnLanguage": [
-  "js",
-  "ts",
-  "json",
-  ],
+
   "i18n-ally.enabledFrameworks": [
     "vue",
     "general"
@@ -19,4 +19,11 @@
     "json"
   ],
   "i18n-ally.extract.autoDetect": true,
+  "i18n-ally.review.enabled": false,
+  "i18n-ally.review.gutters": false,
+  "auto-close-tag.disableOnLanguage": [
+    "js",
+    "ts",
+    "json",
+    ],
 }
