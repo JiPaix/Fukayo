@@ -25,7 +25,7 @@ export function isTaskDone(res: SearchResult | SearchErrorMessage | RecommendErr
 }
 
 export function isManga(res: MangaPage | MangaErrorMessage): res is MangaPage {
-  return (res as MangaPage).inLibrary !== undefined;
+  return (res as MangaPage).inLibrary === false;
 }
 
 export function isMangaInDb(res: MangaPage | MangaInDB | MangaErrorMessage ): res is MangaInDB {

@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
 import { DatabaseIO } from './index';
-import type { MangaInDB } from './../models/types/manga';
+import type { MangaInDB, MangaPage } from './../models/types/manga';
 import type { socketInstance } from '../server/types';
 
 type Mangas = {
@@ -22,14 +22,15 @@ export class MangasDB extends DatabaseIO<Mangas> {
     this.path = resolve(env.USER_DATA, '.mangasdb');
   }
 
-  async add(manga: MangaInDB) {
+  async add(manga: MangaPage) {
     const db = this.read();
     const alreadyInDB = db.mangas.find(m => m.id === manga.id);
     const filename = await this.filenamify(manga.id);
     if(alreadyInDB) return this.patch(manga, filename);
     db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, lang: manga.lang, file: filename });
     this.write(db);
-    this.patch(manga, filename);
+    const chapters:MangaInDB['chapters'] = manga.chapters.map(c => ({ ...c, read: false }));
+    return this.patch({...manga, inLibrary: true, chapters: chapters, meta: { lastUpdate: Date.now(), notify: true, update: true }}, filename);
   }
 
   remove(manga: MangaInDB) {
@@ -37,13 +38,38 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const data = db.mangas.find(m => m.id === manga.id && m.url === manga.url && m.mirror === manga.mirror && m.lang === manga.lang);
     if(data) {
       try {
-        unlinkSync(data.file);
+        const mangaFile = readFileSync(resolve(this.path, `${data.file}.json`)).toString();
+        const mangaData = JSON.parse(mangaFile) as MangaInDB;
+        mangaData.covers.forEach(c => unlinkSync(resolve(this.path, c)));
+        unlinkSync(resolve(this.path, `${data.file}.json`));
       } catch {
         // => ignore errors
       }
     }
     db.mangas = db.mangas.filter(m => m.id !== manga.id);
     this.write(db);
+    const unDbify:MangaPage = {
+      id: manga.id,
+      url: manga.url,
+      mirror: manga.mirror,
+      lang: manga.lang,
+      displayName: manga.displayName,
+      name: manga.name,
+      inLibrary: false,
+      authors: manga.authors,
+      tags: manga.tags,
+      covers: manga.covers,
+      chapters: manga.chapters.map(c => ({
+        id: c.id,
+        url: c.url,
+        date: c.date,
+        number: c.number,
+        name: c.name,
+        volume: c.volume,
+        group: c.group,
+       })),
+    };
+    return unDbify;
   }
 
   has(mirror:string, lang:string, url:string): boolean {
@@ -76,11 +102,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
     }
   }
 
-  private patch(manga:MangaInDB, filename:string) {
+  private patch(manga:MangaInDB|MangaPage, filename:string) {
     const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
     let data = mangadb.read();
     data = {...manga, covers: this.saveCovers(manga.covers, filename), _v: data._v };
     mangadb.write(data);
+    return data as MangaInDB;
   }
 
   private saveCovers(covers:string[], filename:string) {

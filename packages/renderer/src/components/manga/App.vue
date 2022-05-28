@@ -267,33 +267,30 @@ async function cancelChapterFetch() {
 function toggleInLibrary() {
   if(!manga.value) return;
   if(isManga(manga.value) && !isMangaInDb(manga.value)) {
-    const toDb:MangaInDB = {
-      ...manga.value,
-      inLibrary: true,
-      chapters: manga.value.chapters.map((c) => { return {...c, read: false}; }),
-      meta: {
-        lastUpdate: Date.now(),
-        notify: true,
-        update: true,
-      },
-    };
-    manga.value = toDb;
-    add(toDb);
+    add();
   }
-  else if(isManga(manga.value) && isMangaInDb(manga.value)) {
-    manga.value.inLibrary = false;
-    remove(manga.value);
+  else if(!isManga(manga.value) && isMangaInDb(manga.value)) {
+    remove();
   }
 }
 
-async function add(manga:MangaInDB) {
+async function add() {
+  if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
-  socket?.emit('addManga', manga);
+  socket?.emit('addManga', manga.value, (res) => {
+    manga.value = res;
+  });
 }
 
-async function remove(manga:MangaInDB) {
+async function remove() {
+  if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
-  socket?.emit('removeManga', manga);
+  if(isMangaInDb(manga.value)) {
+    socket?.emit('removeManga', manga.value, (res) => {
+      manga.value = res;
+    });
+  }
+
 }
 
 /** fetch manga infos before component is mounted */
@@ -307,7 +304,7 @@ onBeforeMount(async () => {
   const reqId = Date.now();
 
   socket?.on('showManga', (id, mg) => {
-    if (id === reqId && isManga(mg)) {
+    if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
       manga.value = mg;
     }
     socket?.off('showManga');

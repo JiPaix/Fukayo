@@ -1,4 +1,4 @@
-import type { MangaInDB } from './../../models/types/manga';
+import type { MangaInDB, MangaPage } from './../../models/types/manga';
 import type { mirrorInfo } from '../../models/types/shared';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents } from '../../server/types';
@@ -27,8 +27,8 @@ export interface ClientToServerEvents {
   changeSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:string[]) => void) => void;
   emptyCache: (files?:string[]) => void;
-  addManga: (manga:MangaInDB) => void;
-  removeManga: (manga:MangaInDB) => void;
+  addManga: (manga:MangaPage, callback:(dbManga: MangaInDB)=>void) => void;
+  removeManga: (dbManga:MangaInDB, callback:(manga: MangaPage)=>void) => void;
   showLibrary:(id:number) => void;
 }
 

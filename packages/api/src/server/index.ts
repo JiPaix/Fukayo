@@ -154,9 +154,17 @@ export default class IOWrapper {
       mirrors.find(m=>m.name === mirror)?.recommend(socket, id);
     });
 
-    socket.on('addManga', async manga => {
-      await this.mangadb.add(manga);
+    socket.on('addManga', async (manga, callback) => {
+      const mg = await this.mangadb.add(manga);
+      callback(mg);
     });
+
+    socket.on('removeManga', (manga, callback) => {
+      const notInDB = this.mangadb.remove(manga);
+      callback(notInDB);
+    });
+
+
 
     socket.on('changeSettings', (mirror, opts, callback) => {
       mirrors.find(m=>m.name === mirror)?.changeSettings(opts);
