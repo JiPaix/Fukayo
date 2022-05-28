@@ -5,6 +5,7 @@ class scanfr extends MyMangaReaderCMS<{ enabled: boolean}> {
   constructor() {
     super({
       host: 'https://www.scan-fr.org',
+      althost: ['https://.scan-fr.org', 'https://www.scan-fr.cc', 'https://scan-fr.cc'],
       name: 'scanfr',
       displayName: 'Scan-FR',
       langs: ['fr'],

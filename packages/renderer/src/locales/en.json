@@ -3,6 +3,15 @@
     "description": "A simple electron app to read mangas",
     "name": "Electron Mangas Reader"
   },
+  "dialog": {
+    "quickadd": {
+      "bad_url": "Bad URL",
+      "no_match": "URL doesn't match any {sourceWord}",
+      "tab": "Import url",
+      "title": "Import a manga by its URL",
+      "url": "Manga or Chapter URL"
+    }
+  },
   "explore": {
     "inlibrary": "Followed",
     "meta": {

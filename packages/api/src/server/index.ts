@@ -164,7 +164,30 @@ export default class IOWrapper {
       callback(notInDB);
     });
 
+    socket.on('findMirrorByURL', (url, callback) => {
+      // try catch in case the url is not valid
+      try  {
+        const URI = new URL(url);
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost.some(h => h === URI.origin));
+        if(!mirror) return callback(undefined, false, false);
+        const isChapterPage = mirror.isChapterPage(url.replace(URI.origin, ''));
+        const isMangaPage = mirror.isMangaPage(url.replace(URI.origin, ''));
+        if(!isChapterPage && !isMangaPage) return callback(undefined, false, false);
+        return callback(mirror.mirrorInfo, isMangaPage, isChapterPage);
+      } catch {
+        return callback(undefined, false, false);
+      }
+    });
 
+    socket.on('getMangaURLfromChapterURL', async (id, url, lang) => {
+      try {
+        const URI = new URL(url);
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost.some(h => h === URI.origin));
+        mirror?.mangaFromChapterURL(socket, id, url, lang);
+      } catch  {
+        socket.emit('getMangaURLfromChapterURL', id, undefined);
+      }
+    });
 
     socket.on('changeSettings', (mirror, opts, callback) => {
       mirrors.find(m=>m.name === mirror)?.changeSettings(opts);

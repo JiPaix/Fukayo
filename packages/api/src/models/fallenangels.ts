@@ -5,6 +5,7 @@ class FallenAngels extends MyMangaReaderCMS<{ enabled: boolean}> {
   constructor() {
     super({
       host: 'https://manga.fascans.com',
+      althost: [],
       name: 'fallenangels',
       displayName: 'Fallen Angels',
       langs: ['en'],

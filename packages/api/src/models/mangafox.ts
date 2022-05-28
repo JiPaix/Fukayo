@@ -9,6 +9,15 @@ class Mangafox extends Mirror implements MirrorInterface {
   constructor() {
     super({
       host: 'https://fanfox.net',
+      althost: [
+        'http://fanfox.net',
+        'https://www.fanfox.net',
+        'http://www.fanfox.net',
+        'https://mangafox.me',
+        'http://mangafox.me',
+        'https://www.mangafox.me',
+        'http://www.mangafox.me',
+      ],
       name: 'mangafox',
       displayName: 'Mangafox',
       langs: ['en'],
@@ -375,6 +384,36 @@ class Mangafox extends Mirror implements MirrorInterface {
         else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
     }
     socket.emit('showRecommend', id, { done: true });
+  }
+
+  async mangaFromChapterURL(socket:socketInstance, id: number, url: string, lang?: string) {
+    // remove the host from the url
+    url = url.replace(this.host, '');
+    this.althost.forEach(host => url = url.replace(host, ''));
+    // if no lang is provided, we will use the default one
+    lang = lang||this.langs[0];
+    // checking what kind of page this is
+    const isMangaPage = this.isMangaPage(url),
+          isChapterPage = this.isChapterPage(url);
+
+    if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
+    if(isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+    if(isChapterPage) {
+      try {
+        const $ = await this.fetch({
+          url: `${this.host}${url}`,
+          cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
+          waitForSelector: 'body',
+        }, 'html');
+
+        const pageURL = $('.reader-header-title-1 > a[href^="/manga"]').attr('href');
+        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), lang, mirror: this.name});
+        else return socket.emit('getMangaURLfromChapterURL', id, undefined);
+      } catch {
+        return socket.emit('getMangaURLfromChapterURL', id, undefined);
+      }
+    }
+    return socket.emit('getMangaURLfromChapterURL', id, undefined);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment

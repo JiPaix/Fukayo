@@ -102,7 +102,7 @@ function navigate(o: {label: string|number, value: number}) {
       :options="manga.chapters.map((chapter, index) => ({
         label: chapterLabel(chapter.number, chapter.name),
         value: index,
-      }))"
+      })).sort((a, b) => a.value - b.value)"
       color="orange"
       @update:model-value="emit('navigate', $event.value)"
     >

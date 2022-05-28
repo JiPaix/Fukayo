@@ -3,6 +3,15 @@
     "description": "Une application simple pour lire des mangas",
     "name": "Electron Mangas Reader"
   },
+  "dialog": {
+    "quickadd": {
+      "bad_url": "Mauvaise URL",
+      "no_match": "L'URL ne correspond à aucune {sourceWord}",
+      "tab": "Importer URL",
+      "title": "Importer un manga par son URL",
+      "url": "URL du manga ou d'un chapitre"
+    }
+  },
   "explore": {
     "inlibrary": "Suivi",
     "meta": {

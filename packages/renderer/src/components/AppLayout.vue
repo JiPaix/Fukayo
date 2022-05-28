@@ -2,6 +2,8 @@
 import { ref, onBeforeMount } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
+import QuickAdd from './dialogs/QuickAdd.vue';
+
 defineProps<{
   /** App's logo */
   logo: string;
@@ -9,11 +11,27 @@ defineProps<{
 
 const drawer = ref(false),
       miniState = ref(true),
+      quick = ref(false),
       $q = useQuasar(),
       route = useRoute(),
       router = useRouter();
 
 defineExpose({ $q });
+
+// quick add dialog
+function quickadd() {
+  quick.value = true;
+  $q.dialog({
+    component: QuickAdd,
+  })
+  .onCancel(()=> quick.value = false)
+  .onDismiss(()=> quick.value = false)
+  .onOk((manga:{mirror:string, lang:string, url:string}) => {
+    const { mirror, lang, url } = manga;
+    if(route.name === 'manga') router.replace({ name: 'manga', params: { mirror, lang, url } });
+    else router.push({ name: 'manga', params: { mirror, lang, url } });
+  });
+}
 
 onBeforeMount(() => {
   if(!route.name) router.push({ name: 'home' });
@@ -106,6 +124,20 @@ onBeforeMount(() => {
             </q-item-section>
           </q-item>
 
+          <q-item
+            v-ripple
+            clickable
+            :active="route.name === 'quick'"
+            @click="quickadd"
+          >
+            <q-item-section avatar>
+              <q-icon name="electric_bolt" />
+            </q-item-section>
+
+            <q-item-section>
+              {{ $t('dialog.quickadd.tab') }}
+            </q-item-section>
+          </q-item>
           <q-separator />
 
           <q-item
@@ -130,7 +162,7 @@ onBeforeMount(() => {
       <q-page
         class="row bg-dark"
       >
-        <router-view />
+        <router-view :key="route.fullPath" />
       </q-page>
     </q-page-container>
   </q-layout>

@@ -35,6 +35,8 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
    * @example 'https://www.mirror.com'
    */
   host: string;
+  /** alternative hostnames were the site can be reached */
+  althost: string[];
   /**
    * Languages supported by the mirror
    *
@@ -87,6 +89,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
+    this.althost = opts.althost;
     this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
@@ -168,6 +171,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     this.options = { ...this.options, ...opts };
   }
 
+  
   /**
    *
    * @param url the url to fetch

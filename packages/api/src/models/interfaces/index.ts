@@ -16,6 +16,8 @@ export default interface MirrorInterface {
    * @example 'https://www.mirror.com'
    */
   host: string;
+  /** alternative hostnames were the site can be reached */
+  althost: string[]
   /**
    * Languages supported by the mirror
    *
@@ -106,5 +108,7 @@ export default interface MirrorInterface {
    * @param id arbitrary id
    */
   recommend(socket:socketInstance, id:number): void;
+
+  mangaFromChapterURL(socket:socketInstance, id:number, url: string, lang?:string): void;
 // eslint-disable-next-line semi
 }

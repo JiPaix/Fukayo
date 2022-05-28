@@ -494,7 +494,7 @@ onBeforeUnmount(() => {
         <!-- Chapters list -->
         <q-virtual-scroll
           :style="$q.screen.xs ? '' : 'height: ' + coverHeight + 'px'"
-          :items="manga.chapters"
+          :items="manga.chapters.sort((a, b) => b.number - a.number)"
           separator
         >
           <template #default="{ item, index }">

@@ -30,6 +30,8 @@ export interface ClientToServerEvents {
   addManga: (manga:MangaPage, callback:(dbManga: MangaInDB)=>void) => void;
   removeManga: (dbManga:MangaInDB, callback:(manga: MangaPage)=>void) => void;
   showLibrary:(id:number) => void;
+  findMirrorByURL: (url:string, callback:(m: mirrorInfo|undefined, isMangaPage: boolean, isChapterPage: boolean)=>void) => void;
+  getMangaURLfromChapterURL: (id:number, url:string, lang?:string) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

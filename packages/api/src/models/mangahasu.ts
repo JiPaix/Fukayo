@@ -10,6 +10,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
   constructor() {
     super({
       host: 'https://mangahasu.se',
+      althost: ['https://www.mangahasu.se'],
       name: 'mangahasu',
       displayName: 'MangaHasu',
       langs: ['en'],
@@ -302,6 +303,33 @@ class MangaHasu extends Mirror implements MirrorInterface {
       socket.emit('showRecommend', id, { done: true });
     }
 
+  }
+
+  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
+    // remove the host from the url
+    url = url.replace(this.host, '');
+    this.althost.forEach(host => url = url.replace(host, ''));
+    // if no lang is provided, we will use the default one
+    lang = lang||this.langs[0];
+    // checking what kind of page this is
+    const isMangaPage = this.isMangaPage(url),
+          isChapterPage = this.isChapterPage(url);
+
+    if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
+    if(isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+    if(isChapterPage) {
+      try {
+        const $ = await this.fetch({
+          url: `${this.host}${url}`,
+          waitForSelector: 'body',
+        }, 'html');
+        const chapterPageURL = $('a[itemprop="url"][href*=html]').attr('href');
+        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, lang, mirror: this.name });
+        return socket.emit('getMangaURLfromChapterURL', id, undefined);
+      } catch {
+        return socket.emit('getMangaURLfromChapterURL', id, undefined);
+      }
+    }
   }
 }
 

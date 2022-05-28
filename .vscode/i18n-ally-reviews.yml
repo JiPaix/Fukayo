@@ -115,3 +115,13 @@ reviews:
     description: tooltip
   search.no_results:
     description: text
+  dialog.quickadd.tab:
+    description: text
+  dialog.quickadd.bad_url:
+    description: 'text - context: error popup'
+  dialog.quickadd.no_match:
+    description: 'text - context: popup error'
+  dialog.quickadd.title:
+    description: 'text - context: popup title'
+  dialog.quickadd.url:
+    description: 'text - context: input placeholder'
