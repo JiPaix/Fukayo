@@ -7,7 +7,7 @@ import { useSocket } from './components/helpers/socket';
 import { useFavicon } from '@vueuse/core';
 import Setup from '/@/components/setup/App.vue';
 import Login from '/@/components/login/App.vue';
-import AppLayout from '/@/components/appLayout.vue';
+import AppLayout from '/@/components/AppLayout.vue';
 import favicon from '../assets/icon.svg';
 import type { LoginAuth } from '../../api/src/client/types';
 

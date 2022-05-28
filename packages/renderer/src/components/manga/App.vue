@@ -13,7 +13,7 @@ import {
   isManga,
   isMangaInDb,
 } from '../helpers/typechecker';
-import showChapter from './reader/App.vue';
+import showChapter from '../reader/App.vue';
 import type dayjs from 'dayjs';
 import type { ComponentPublicInstance} from 'vue';
 import type { socketClientInstance } from '../../../../api/src/client/types';

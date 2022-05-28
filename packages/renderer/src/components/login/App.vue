@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
-import icon from '../../assets/icon.svg';
+import icon from '../../../assets/icon.svg';
 import type { LoginAuth } from '../../../../api/src/client/types';
 
 /** vue-i18n */
