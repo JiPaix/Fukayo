@@ -111,3 +111,5 @@ reviews:
     description: 'button - context: ask the user to reload a chapter''s page'
   search.not_found:
     description: console msg
+  reader.displaymode.compatibility:
+    description: tooltip

@@ -155,6 +155,7 @@
   "reader": {
     "displaymode": {
       "auto": "Auto",
+      "compatibility": "incompatible avec le mode webtoon",
       "fit-custom": "Manuel",
       "fit-height": "Ajuster à la hauteur de l'écran",
       "fit-width": "Ajuster à la largeur de l'écran"

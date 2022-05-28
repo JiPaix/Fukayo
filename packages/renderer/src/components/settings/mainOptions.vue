@@ -39,7 +39,7 @@ const showPageNumberIcon = computed(() => {
             separator
           >
             <q-banner class="bg-primary text-white">
-              {{ $t('settings.reader.info.value') }}
+              {{ $t('settings.reader.info') }}
             </q-banner>
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
@@ -50,7 +50,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('settings.reader.preload.value') }}
+                  {{ $t('settings.reader.preload') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
@@ -72,7 +72,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('reader.longstrip.value') }}
+                  {{ $t('reader.longstrip') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
@@ -94,7 +94,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('reader.webtoon.value') }}
+                  {{ $t('reader.webtoon') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
@@ -117,7 +117,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('reader.showpagenumber.value') }}
+                  {{ $t('reader.showpagenumber') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
@@ -138,7 +138,7 @@ const showPageNumberIcon = computed(() => {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('settings.reader.displaymode.value') }}
+                  {{ $t('reader.displaymode.value') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
@@ -151,7 +151,7 @@ const showPageNumberIcon = computed(() => {
                     @click="settings.reader.zoomMode = 'auto'"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.auto.value') }}
+                      {{ $t('reader.displaymode.auto') }}
                     </q-tooltip>
                   </q-btn>
                   <q-btn
@@ -160,7 +160,7 @@ const showPageNumberIcon = computed(() => {
                     @click="settings.reader.zoomMode = 'fit-width'"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-width.value') }}
+                      {{ $t('reader.displaymode.fit-width') }}
                     </q-tooltip>
                   </q-btn>
 
@@ -173,7 +173,7 @@ const showPageNumberIcon = computed(() => {
                       @click="settings.reader.zoomMode = 'fit-height';settings.reader.webtoon = false"
                     />
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-height.value') }} ({{ settings.reader.webtoon ? $t('reader.compatiblity.value') : '' }})
+                      {{ $t('reader.displaymode.fit-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
                     </q-tooltip>
                   </div>
                   <q-btn
@@ -182,7 +182,7 @@ const showPageNumberIcon = computed(() => {
                     @click="settings.reader.zoomMode = 'custom'"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-custom.value') }}
+                      {{ $t('reader.displaymode.fit-custom') }}
                     </q-tooltip>
                   </q-btn>
                 </q-btn-group>
