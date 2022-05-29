@@ -190,15 +190,15 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
 
     const cache = await this.loadFromCache({identifier, filename});
-    if(cache) return cache;
+    if(cache) return this.returnFetch(cache);
 
+    await this.wait();
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
       const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host } });
       buffer = Buffer.from(ab.data);
     } catch {
-
       const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
       if(res instanceof Buffer) buffer = res;
     }
@@ -232,10 +232,6 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   protected async fetch<T>(config: ClusterJob, type:'json'):Promise<T>
   protected async fetch(config: ClusterJob, type:'string'):Promise<string>
   protected async fetch<T>(config: ClusterJob, type: 'html'|'json'|'string'): Promise<T|CheerioAPI|string> {
-
-    // in case the concurrency counter is messed up (shouldn't happen)
-    if(this.concurrency < 0) this.concurrency = 0;
-
     // wait for the previous request to finish (this.waitTime * this.concurrency)
     this.concurrency++;
     await this.wait();
@@ -311,6 +307,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
 
   private returnFetch<T>(data : T) {
     this.concurrency--;
+    if(this.concurrency < 0) this.concurrency = 0;
     return data;
   }
 

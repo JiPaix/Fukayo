@@ -14,6 +14,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       name: 'mangahasu',
       displayName: 'MangaHasu',
       langs: ['en'],
+      waitTime: 500, // this is long but mangahasu is picky
       icon,
       cache: true,
       meta: {
