@@ -398,6 +398,24 @@ function markNextAsUnread(index: number) {
   updateManga(updatedManga);
 }
 
+function changeDisplayName() {
+      $q.dialog({
+        title: $t('mangas.displayname.title'),
+        message: $t('mangas.original_title', {title: manga.value?.name || ''}),
+        prompt: {
+          model:  manga.value?.displayName || manga.value?.name || '',
+          type: 'text',
+        },
+        cancel: true,
+        persistent: false,
+      }).onOk(async data => {
+        if(!manga.value) return;
+        const displayName = data as string;
+        const updatedManga:MangaInDB|MangaPage = {...manga.value, displayName };
+        await updateManga(updatedManga);
+      });
+}
+
 /** fetch manga infos before component is mounted */
 onBeforeMount(async () => {
   if (!socket) socket = await useSocket(settings.server);
@@ -453,10 +471,21 @@ onBeforeUnmount(() => {
     <q-card-section
       class="text-center"
     >
-      <div v-if="manga">
+      <div
+        v-if="manga"
+        class="flex flex-center"
+      >
         <span class="text-h3">
-          {{ manga.name }}
+          {{ manga.displayName || manga.name }}
         </span>
+        <sup class="q-pb-lg">
+          <q-btn
+            icon="edit"
+            size="xs"
+            flat
+            @click="changeDisplayName()"
+          />
+        </sup>
       </div>
       <div v-else>
         <span class="text-h3">

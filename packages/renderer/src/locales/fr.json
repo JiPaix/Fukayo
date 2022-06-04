@@ -162,6 +162,9 @@
   },
   "mangas": {
     "chapter": "Chapitre | Chapitres",
+    "displayname": {
+      "title": "Changer le titre de ce manga"
+    },
     "forceupdate": "Mettre à jour",
     "markasread": {
       "current": "Marquer ce {chapterWord} comme lu",
@@ -170,6 +173,7 @@
       "previous": "Marquer le {chapterWord} précédent comme lu | Marquer les {chapterWord} précedents comme lu",
       "previous_unread": "Marquer le {chapterWord} suivant comme non lu | Marquer les {chapterWord} suivants comme non lu"
     },
+    "original_title": "Titre d'origine : {title}",
     "source": "Source | Sources",
     "volume": "Volume | Volumes"
   },

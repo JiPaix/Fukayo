@@ -157,6 +157,9 @@ export class MangasDB extends DatabaseIO<Mangas> {
         }
       });
 
+      // check if the displayName has changed
+      if(data.displayName !== manga.displayName) hasNewStuff = true;
+
       // we check if the manga has been updated by previous operations OR by the Scheduler
       const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
       if(updatedByScheduler || hasNewStuff) {
