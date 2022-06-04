@@ -24,7 +24,7 @@ export interface ClientToServerEvents {
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
   showRecommend: (id:number, mirror:string) => void;
-  changeSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
+  changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:string[]) => void) => void;
   emptyCache: (files?:string[]) => void;
   addManga: (manga:MangaPage|MangaInDB, callback:(dbManga: MangaInDB)=>void) => void;
