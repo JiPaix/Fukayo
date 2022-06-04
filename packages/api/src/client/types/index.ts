@@ -1,3 +1,4 @@
+import type { Scheduler } from './../../server/helpers/scheduler';
 import type { MangaInDB, MangaPage } from './../../models/types/manga';
 import type { mirrorInfo } from '../../models/types/shared';
 import type { Socket } from 'socket.io-client';
@@ -13,7 +14,7 @@ export type SocketClientConstructor = {
 export type LoginAuth = { login: string, password:string }
 
 
-export interface ClientToServerEvents {
+export type ClientToServerEvents = {
   getMirrors: (showdisabled:boolean, callback: (m: mirrorInfo[]) => void) => void;
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:string[], callback: (nbOfDonesToExpect:number)=>void) => void;
   stopSearchInMirrors: () => void;
@@ -25,13 +26,16 @@ export interface ClientToServerEvents {
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
-  getCacheSize: (callback: (size: number, files:string[]) => void) => void;
+  getCacheSize: (callback: (size: number, files:number) => void) => void;
   emptyCache: (files?:string[]) => void;
   addManga: (manga:MangaPage|MangaInDB, callback:(dbManga: MangaInDB)=>void) => void;
   removeManga: (dbManga:MangaInDB, callback:(manga: MangaPage)=>void) => void;
   showLibrary:(id:number) => void;
   findMirrorByURL: (url:string, callback:(m: mirrorInfo|undefined, isMangaPage: boolean, isChapterPage: boolean)=>void) => void;
   getMangaURLfromChapterURL: (id:number, url:string, lang?:string) => void;
+  forceUpdates: () => void;
+  isUpdating: (callback:(isUpdating:boolean)=>void) => void;
+  schedulerLogs: (callback:(logs:typeof Scheduler['logs'])=>void) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

@@ -19,6 +19,7 @@ import Manga from './components/manga/App.vue';
 import Explore from './components/explore/App.vue';
 import ExploreMirror from './components/explore/SourceExplore.vue';
 import Settings from './components/settings/App.vue';
+import Logs from './components/logs/App.vue';
 
 const router = createRouter({
   history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
@@ -53,6 +54,11 @@ const router = createRouter({
         name: 'settings',
         path: '/settings',
         component: Settings,
+      },
+      {
+        name: 'logs',
+        path: '/logs',
+        component: Logs,
       },
     ],
 });

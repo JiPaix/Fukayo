@@ -10,7 +10,6 @@ class scanfr extends MyMangaReaderCMS<{ enabled: boolean}> {
       displayName: 'Scan-FR',
       langs: ['fr'],
       icon,
-      cache: true,
       chapter_selector: 'ul.chapterszozo a[href*=\'/manga/\']',
       manga_page_appended_string: 'Manga ',
       meta: {

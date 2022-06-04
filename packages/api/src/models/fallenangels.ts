@@ -10,7 +10,6 @@ class FallenAngels extends MyMangaReaderCMS<{ enabled: boolean}> {
       displayName: 'Fallen Angels',
       langs: ['en'],
       icon,
-      cache: true,
       manga_page_appended_string: 'Manga ',
       meta: {
         speed: 0.3,

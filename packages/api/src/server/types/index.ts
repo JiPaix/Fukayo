@@ -6,7 +6,7 @@ import type { SearchResult } from '../../models/types/search';
 import type { TaskDone } from '../../models/types/shared';
 import type { ClientToServerEvents } from '../../client/types';
 
-export interface ServerToClientEvents {
+export type ServerToClientEvents = {
   authorized: () => void;
   unauthorized: () => void;
   token: (acessToken: string) => void;
@@ -17,6 +17,8 @@ export interface ServerToClientEvents {
   showRecommend: (id:number, mangas:SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB) => void;
   getMangaURLfromChapterURL: (id:number, infos: { mirror:string, lang:string, url:string } | undefined) => void;
+  finishedMangasUpdate: () => void;
+  startMangasUpdate: () => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>

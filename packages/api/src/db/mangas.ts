@@ -1,3 +1,4 @@
+import { SchedulerClass } from './../server/helpers/scheduler';
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
@@ -31,11 +32,11 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const db = this.read();
     const alreadyInDB = db.mangas.find(m => m.id === manga.id);
     const filename = await this.filenamify(manga.id);
-    if(alreadyInDB && isMangaInDB(manga)) return this.patch(manga, filename, alreadyInDB !== undefined);
+    if(alreadyInDB && isMangaInDB(manga)) return this.upsert(manga, filename, alreadyInDB !== undefined);
     db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, lang: manga.lang, file: filename });
     this.write(db);
-    const chapters:MangaInDB['chapters'] = manga.chapters.map(c => ({ ...c, read: false }));
     const meta:MangaInDB['meta'] = {
+      // todo: keep the original options
       lastUpdate: Date.now(),
       notify: true,
       update: true,
@@ -47,7 +48,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         longStrip: false,
       },
     };
-    return this.patch({...manga, inLibrary: true, chapters: chapters, meta}, filename);
+    return this.upsert({...manga, inLibrary: true, meta}, filename);
   }
 
   remove(manga: MangaInDB) {
@@ -84,6 +85,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         name: c.name,
         volume: c.volume,
         group: c.group,
+        read: c.read,
        })),
     };
     return unDbify;
@@ -106,12 +108,14 @@ export class MangasDB extends DatabaseIO<Mangas> {
     };
   }
 
-  getAll(id:number, socket:socketInstance) {
+  getAll(id:number, socket:socketInstance|SchedulerClass) {
     const db = this.read();
     let cancel = false;
-    socket.once('stopShowLibrary', () => {
-      cancel = true;
-    });
+    if(!(socket instanceof SchedulerClass)) {
+      socket.once('stopShowLibrary', () => {
+        cancel = true;
+      });
+    }
     for(const manga of db.mangas) {
       if(cancel) break;
       const mg = this.get(manga.mirror, manga.lang, manga.url);
@@ -128,7 +132,8 @@ export class MangasDB extends DatabaseIO<Mangas> {
       }, [] as MangaInDB[]);
   }
 
-  private patch(manga:MangaInDB, filename:string, alreadyInDB?:boolean):MangaInDB {
+  /** add or update */
+  private upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):MangaInDB {
     manga.covers = this.saveCovers(manga.covers, filename);
     // then we create the file by instanciating a DatabaseIO
     const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
@@ -143,17 +148,18 @@ export class MangasDB extends DatabaseIO<Mangas> {
       for (k in manga.meta.options) {  // const k: string
         if(data.meta.options[k] !== manga.meta.options[k]) hasNewStuff = true;
       }
-      // we also check if the manga has new chapters, or if the chapters have been read/unread
+      // check if existing chapters have been read
       manga.chapters.forEach(c => {
         const chapter = data.chapters.find(c2 => c2.id === c.id);
-        // new chapter, we change the lastUpdate
-        if(!chapter) return manga.meta.lastUpdate = Date.now();
         // new read status, no need to update lastUpdate
-        if(chapter.read !== c.read) hasNewStuff = true;
+        if(chapter && chapter.read !== c.read) {
+          hasNewStuff = true;
+        }
       });
 
-      // we check if the manga has been updated
-      if((manga.meta.lastUpdate > data.meta.lastUpdate) || hasNewStuff) {
+      // we check if the manga has been updated by previous operations OR by the Scheduler
+      const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
+      if(updatedByScheduler || hasNewStuff) {
         data = {...manga, covers: data.covers, _v: data._v };
         mangadb.write(data);
         return data;
@@ -194,3 +200,5 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return filenamify(string);
   }
 }
+
+export const MangaDatabase = new MangasDB();

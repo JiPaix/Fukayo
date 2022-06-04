@@ -18,7 +18,7 @@ const emit = defineEmits<{
   (event: 'hide'): void
   (event: 'reload', chapterIndex:number, pageIndex:number): void
   (event: 'navigate', chapterIndex:number): void
-  (event: 'update-manga', manga:MangaInDB): void
+  (event: 'update-manga', manga:MangaInDB|MangaPage): void
 }>();
 
 /** props */
@@ -216,9 +216,9 @@ function navigation(index:number) {
 }
 
 async function markAsRead() {
-  if(lastPageNav.value && isMangaInDb(props.manga)) {
+  if(lastPageNav.value) {
     const chapter = props.manga.chapters[props.chapterSelectedIndex];
-    const toUpdate:MangaInDB = {
+    const toUpdate = {
       ...props.manga,
       chapters : props.manga.chapters.map(c => {
         if(c.id === chapter.id) {

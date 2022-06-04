@@ -53,10 +53,4 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    * @example { adult: true, lowres: false }
    */
   options: T
-  /**
-   * Enable/disable cache
-   */
-  cache: boolean
-  /** Cache Max Age */
-  cacheMaxAge?: number
 }

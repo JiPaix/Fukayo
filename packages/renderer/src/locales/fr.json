@@ -156,8 +156,13 @@
   "library": {
     "tab": "Bibliothèque"
   },
+  "logs": {
+    "cache": "<span class=\"text-weight-bold\">{files} fichier</span> supprimé pour un total de {size} | <span class=\"text-weight-bold\">{files} fichiers</span> supprimés pour un total de <span class=\"text-weight-bold\">{size}</span>",
+    "found_chapter": "{number} nouveau chapitre trouvé | \n{number} nouveaux chapitres trouvés"
+  },
   "mangas": {
     "chapter": "Chapitre | Chapitres",
+    "forceupdate": "Mettre à jour",
     "source": "Source | Sources",
     "volume": "Volume | Volumes"
   },
@@ -203,6 +208,7 @@
     "general": {
       "tab": "Général"
     },
+    "logs": "Journaux",
     "reader": {
       "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
       "preload": "Précharger le chapitre suivant pendant la lecture"

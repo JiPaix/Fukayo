@@ -1,3 +1,4 @@
+import type { SchedulerClass } from './../../server/helpers/scheduler';
 import type { mirrorInfo } from '../types/shared';
 import type { socketInstance } from '../../server/types';
 
@@ -90,7 +91,7 @@ export default interface MirrorInterface {
    * @param {socketInstance} socket the request initiator
    * @param {Number} id arbitrary id
    */
-  manga(url:string, lang:string, socket:socketInstance, id:number): void;
+  manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get all images from chapter
    * @param link Relative url of chapter page (any page)

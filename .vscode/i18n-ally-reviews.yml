@@ -141,3 +141,5 @@ reviews:
     description: text
   settings.source.enable:
     description: text
+  mangas.forceupdate:
+    description: short text

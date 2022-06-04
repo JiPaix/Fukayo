@@ -3,18 +3,26 @@ import { ref, onBeforeMount } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import QuickAdd from './dialogs/QuickAdd.vue';
+import { useSocket } from './helpers/socket';
+import { useStore as useSettingsStore } from '../store/settings';
+import type { socketClientInstance } from '../../../api/src/client/types';
 
 defineProps<{
   /** App's logo */
   logo: string;
 }>();
 
+let socket:socketClientInstance|undefined;
+
 const drawer = ref(false),
       miniState = ref(true),
       quick = ref(false),
       $q = useQuasar(),
       route = useRoute(),
-      router = useRouter();
+      router = useRouter(),
+      settings = useSettingsStore();
+// are mangas updating in the background?
+const updating = ref(true);
 
 defineExpose({ $q });
 
@@ -33,9 +41,31 @@ function quickadd() {
   });
 }
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
   if(!route.name) router.push({ name: 'home' });
+  if(!socket) socket = await useSocket(settings.server);
+  socket.on('startMangasUpdate', () => {
+    updating.value = true;
+  });
+  socket.emit('isUpdating', (resp) => {
+    updating.value = resp;
+  });
+  socket.on('finishedMangasUpdate', () => {
+    setTimeout(() => {
+      updating.value = false;
+    }, 1000);
+  });
 });
+
+
+
+
+async function forceupdate() {
+  updating.value = true;
+  if(!socket) socket = await useSocket(settings.server);
+  socket?.emit('forceUpdates');
+}
+
 </script>
 
 <template>
@@ -152,6 +182,43 @@ onBeforeMount(() => {
 
             <q-item-section>
               {{ $t('settings.tab') }}
+            </q-item-section>
+          </q-item>
+          <q-separator />
+          <q-item
+            v-ripple
+            :clickable="!updating"
+            :disable="updating"
+            @click="forceupdate"
+          >
+            <q-item-section avatar>
+              <q-icon
+                v-if="!updating"
+                name="refresh"
+              />
+              <q-spinner
+                v-else
+                color="primary"
+                size="sm"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              {{ $t('mangas.forceupdate') }}
+            </q-item-section>
+          </q-item>
+          <q-item
+            v-ripple
+            clickable
+            :active="route.name === 'logs'"
+            @click="router.push({ name: 'logs' })"
+          >
+            <q-item-section avatar>
+              <q-icon name="timeline" />
+            </q-item-section>
+
+            <q-item-section>
+              {{ $t('settings.logs') }}
             </q-item-section>
           </q-item>
         </q-list>

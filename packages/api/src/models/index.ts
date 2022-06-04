@@ -1,6 +1,7 @@
-import { Database } from './../db/index';
-import { MangasDB } from '../db/mangas';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync,readdirSync, statSync } from 'node:fs';
+import { Database } from '../db/index';
+import { MangaDatabase } from '../db/mangas';
+import { SettingsDatabase } from '../db/settings';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
 import axios from 'axios';
@@ -69,23 +70,14 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
    */
   waitTime: number;
 
-  /** weither the mirror has cache enabled or not */
-  private cache: {
-    status: boolean,
-    dir: string,
-    maxAge:number,
-  };
 
   /**
    * mirror specific options
    */
   private db: Database<Record<string, unknown> & { enabled: boolean; }>;
 
-  /** access to the library db */
-  private library: MangasDB;
 
   constructor(opts: MirrorConstructor<T>) {
-    this.library = new MangasDB();
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
@@ -94,18 +86,9 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
     this.meta = opts.meta;
-    this.cache = {
-      status: opts.cache,
-      dir: resolve(env.USER_DATA, '.cache', this.name),
-      maxAge: opts.cacheMaxAge || 1000*60*60*24*7,
-    };
-    if(opts.cache) {
-      if(!existsSync(this.cache.dir)) mkdirSync(this.cache.dir, { recursive: true });
-      else this.emptyOldCache();
-      // cleanup cache every day
-      setInterval(() => {
-        this.emptyOldCache();
-      }, 1000*60*60*24);
+    if(this.cacheEnabled) {
+      const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
+      if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
     this.db = new Database<Record<string, unknown> & { enabled: boolean; }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
   }
@@ -127,6 +110,10 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     this.db.data = opts;
     this.logger('options changed', opts);
     this.db.write();
+  }
+
+  public get cacheEnabled() {
+    return SettingsDatabase.data.cache.age.enabled || SettingsDatabase.data.cache.size.enabled;
   }
   /**
    * Returns the mirror icon
@@ -162,8 +149,9 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
   }
 
-  isInLibrary(mirror:string, lang:string, url:string) {
-    return this.library.has(mirror, lang, url);
+  /** check if the fetched manga is part of the library */
+  protected isInLibrary(mirror:string, lang:string, url:string) {
+    return MangaDatabase.has(mirror, lang, url);
   }
 
   /** change the mirror settings */
@@ -171,7 +159,6 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     this.options = { ...this.options, ...opts };
   }
 
-  
   /**
    *
    * @param url the url to fetch
@@ -370,16 +357,16 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   }
 
   private async saveToCache(filename:string, buffer:Buffer) {
-    if(this.cache.status) {
-      writeFileSync(resolve(this.cache.dir, filename), buffer);
+    if(this.cacheEnabled) {
+      writeFileSync(resolve(env.USER_DATA, '.cache', this.name, filename), buffer);
     }
   }
 
   private async loadFromCache(id:{ identifier: string, filename:string }) {
-    if(this.cache.status) {
+    if(this.cacheEnabled) {
       let cacheResult:{mime: string, buffer:Buffer} | undefined;
       try {
-        const buffer = readFileSync(resolve(this.cache.dir, id.filename));
+        const buffer = readFileSync(resolve(env.USER_DATA, '.cache', id.filename));
         const mime = await this.getFileMime(buffer);
         cacheResult = { mime, buffer };
       } catch {
@@ -398,19 +385,5 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     const filename = await this.filenamify(identifier);
     return {filename, identifier};
   }
-
-  private emptyOldCache() {
-    if(this.cache.status) {
-      const files = readdirSync(this.cache.dir);
-      files.forEach(file => {
-        const stats = statSync(resolve(this.cache.dir, file));
-        // delete files older than 7 day
-        if(stats.mtime.getTime() < Date.now() - this.cache.maxAge) {
-          unlinkSync(resolve(this.cache.dir, file));
-        }
-      });
-    }
-  }
-
 }
 

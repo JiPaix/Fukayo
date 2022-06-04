@@ -295,13 +295,17 @@ async function remove() {
   }
 }
 
-async function updateManga(updatedManga:MangaInDB) {
+async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  socket.emit('addManga', updatedManga, (res) => {
-    manga.value = {...res, covers: manga.value?.covers||[] };
-    console.log('updated', res.meta.options);
-  });
+  if(isMangaInDb(manga.value)) {
+    socket.emit('addManga', updatedManga, (res) => {
+      manga.value = {...res, covers: manga.value?.covers||[] };
+      console.log('updated', res.meta.options);
+    });
+  } else {
+    manga.value = updatedManga;
+  }
 }
 
 /** fetch manga infos before component is mounted */

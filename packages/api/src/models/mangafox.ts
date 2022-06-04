@@ -1,3 +1,4 @@
+import { SchedulerClass } from './../server/helpers/scheduler';
 import type { MangaPage } from './types/manga';
 import Mirror from '.';
 import icon from './icons/mangafox.png';
@@ -22,7 +23,6 @@ class Mangafox extends Mirror implements MirrorInterface {
       displayName: 'Mangafox',
       langs: ['en'],
       icon,
-      cache: true,
       meta: {
         speed: 0.7,
         quality: 0.3,
@@ -221,6 +221,7 @@ class Mangafox extends Mirror implements MirrorInterface {
           volume: volumeNumberInt ? isNaN(volumeNumberInt) ? undefined : volumeNumberInt : undefined,
           url: chapterUrl,
           date,
+          read: false,
         });
 
       });
@@ -238,13 +239,17 @@ class Mangafox extends Mirror implements MirrorInterface {
   }
 
   // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
-  async chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(link:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowChapter', () => {
-      this.logger('fetching chapter canceled');
-      cancel = true;
-    });
+
+    if(!(socket instanceof SchedulerClass)) {
+      socket.once('stopShowChapter', () => {
+        this.logger('fetching chapter canceled');
+        cancel = true;
+      });
+    }
+
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);

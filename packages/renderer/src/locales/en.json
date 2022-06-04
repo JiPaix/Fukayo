@@ -156,8 +156,13 @@
   "library": {
     "tab": "Library"
   },
+  "logs": {
+    "cache": "<span class=\"text-weight-bold\">{files} file</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span> | <span class=\"text-weight-bold\">{files} files</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span>",
+    "found_chapter": "found {number} new chapter | found {number} new chapters"
+  },
   "mangas": {
     "chapter": "Chapter | Chapters",
+    "forceupdate": "Update",
     "source": "Source | Sources",
     "volume": "Volume | Volumes"
   },
@@ -203,6 +208,7 @@
     "general": {
       "tab": "General"
     },
+    "logs": "Logs",
     "reader": {
       "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",
       "preload": "Preload next chapter while reading"

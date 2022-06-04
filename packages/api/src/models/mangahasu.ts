@@ -1,3 +1,4 @@
+import { SchedulerClass } from './../server/helpers/scheduler';
 import Mirror from '.';
 import icon from './icons/mangahasu.png';
 import type MirrorInterface from './interfaces';
@@ -16,7 +17,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
       langs: ['en'],
       waitTime: 500, // this is long but mangahasu is picky
       icon,
-      cache: true,
       meta: {
         speed: 0.5,
         quality: 0.7,
@@ -114,13 +114,16 @@ class MangaHasu extends Mirror implements MirrorInterface {
     }
   }
 
-  async manga(url:string, lang:string, socket:socketInstance, id:number)  {
+  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowManga', () => {
-      this.logger('fetching manga canceled');
-      cancel = true;
-    });
+    if(!(socket instanceof SchedulerClass)) {
+      socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        cancel = true;
+      });
+    }
 
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
@@ -180,6 +183,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
             number: i+1,
             url: chaplink,
             date,
+            read: false,
           };
         } else {
           release = {
@@ -189,6 +193,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
             volume: undefined,
             url: chaplink,
             date,
+            read:false,
           };
         }
         if(release) chapters.push(release);

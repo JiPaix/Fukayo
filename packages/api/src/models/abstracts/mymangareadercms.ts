@@ -1,3 +1,4 @@
+import { SchedulerClass } from './../../server/helpers/scheduler';
 import Mirror from '../';
 import type { socketInstance } from '../../server/types';
 import type MirrorInterface from '../interfaces';
@@ -194,13 +195,16 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
     }
   }
 
-  async manga(url:string, lang:string, socket:socketInstance, id:number)  {
+  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowManga', () => {
-      this.logger('fetching manga canceled');
-      cancel = true;
-    });
+    if(!(socket instanceof SchedulerClass)) {
+      socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        cancel = true;
+      });
+    }
 
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
@@ -273,6 +277,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
             number: chapter,
             date,
             url: chaplink,
+            read: false,
           };
         } else {
           release = {
@@ -281,6 +286,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
             number: i+1,
             date,
             url: chaplink,
+            read: false,
           };
         }
         if(release) chapters.push(release);

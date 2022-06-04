@@ -66,6 +66,12 @@ export interface MangaPage {
      * to use if mirror can provide the same chapter from multiple scanlators
      */
     group?: string|number
+    /**
+     * Chapter's read status
+     *
+     * reset to false if the chapter is reloaded without being in the library
+     */
+    read: boolean
   }[]
   /** mirror name */
   mirror: string

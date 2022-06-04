@@ -10,15 +10,15 @@ defineExpose({ $q });
 const settings = useSettingsStore();
 let socket:socketClientInstance|undefined;
 const size = ref(0);
-const files = ref<string[]>([]);
+const files = ref(0);
 
 const humanreadable = computed(() => {
   return format.humanStorageSize(size.value);
 });
 
 function emptyCache() {
-  socket?.emit('emptyCache', files.value);
-  files.value = [];
+  socket?.emit('emptyCache');
+  files.value = 0;
   size.value = 0;
 }
 
@@ -54,7 +54,7 @@ onBeforeMount(async () => {
         >
           <div>{{ humanreadable }}</div>
           <div class="text-grey">
-            {{ files.length }} {{ $t('settings.file', files.length) }}
+            {{ files }} {{ $t('settings.file', files) }}
           </div>
         </q-item-label>
       </q-item-section>
