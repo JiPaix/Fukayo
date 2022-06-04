@@ -57,6 +57,8 @@ const images = ref<(ChapterImage | ChapterImageErrorMessage)[]>([]);
 const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterImage | ChapterImageErrorMessage)[] } | undefined>();
 /** show-chapter template ref */
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
+/** carrousel slides */
+const slide = ref(0);
 
 /** autofocus chapterRef */
 watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
@@ -570,26 +572,27 @@ onBeforeUnmount(() => {
       class="row"
     >
       <q-card-section class="col-xs-12 col-sm-5 col-md-4 col-lg-2">
-        <div v-if="manga">
-          <!-- Cover -->
-          <img
-            v-if="manga.covers && manga.covers.length > 0"
-            ref="cover"
-            class="rounded-borders w-100"
-            :src="manga.covers[0]"
+        <div class="w-100">
+          <q-carousel
+            v-if="manga && manga.covers.length > 0"
+            v-model="slide"
+            animated
+            infinite
+            autoplay
           >
-          <!-- Cover Skeleton -->
-          <q-skeleton
-            v-else
-            :height="coverHeight + 'px'"
-          />
-          <q-resize-observer @resize="onResize" />
-        </div>
-        <div v-else>
-          <!-- Cover Skeleton -->
-          <q-skeleton
-            :height="coverHeight + 'px'"
-          />
+            <q-carousel-slide
+              v-for="(mangaCover, i) in manga.covers"
+              :key="i"
+              :name="i"
+              :img-src="mangaCover"
+            />
+          </q-carousel>
+          <div v-else>
+            <!-- Cover Skeleton -->
+            <q-skeleton
+              :height="coverHeight + 'px'"
+            />
+          </div>
           <q-resize-observer @resize="onResize" />
         </div>
       </q-card-section>
