@@ -1,3 +1,4 @@
+import { SettingsDatabase } from './../db/settings';
 import { Scheduler } from './helpers/scheduler';
 import { SchedulerClass } from './helpers/scheduler';
 import mirrors from '../models/exports';
@@ -267,6 +268,15 @@ export default class IOWrapper {
       cb(Scheduler.logs);
     });
 
+    socket.on('getSettings', (cb) => {
+      cb(SettingsDatabase.data);
+    });
+
+    socket.on('changeSettings', (settings, cb) => {
+      SettingsDatabase.data = settings;
+      SettingsDatabase.write();
+      cb(SettingsDatabase.data);
+    });
   }
 }
 

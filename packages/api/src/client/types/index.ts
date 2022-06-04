@@ -3,7 +3,7 @@ import type { MangaInDB, MangaPage } from './../../models/types/manga';
 import type { mirrorInfo } from '../../models/types/shared';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents } from '../../server/types';
-
+import type { SettingsDB } from '../../db/settings';
 export type SocketClientConstructor = {
   accessToken?: string | null,
   refreshToken?: string | null,
@@ -36,6 +36,8 @@ export type ClientToServerEvents = {
   forceUpdates: () => void;
   isUpdating: (callback:(isUpdating:boolean)=>void) => void;
   schedulerLogs: (callback:(logs:typeof Scheduler['logs'])=>void) => void;
+  getSettings: (callback:(settings:SettingsDB['data'])=>void) => void;
+  changeSettings: (settings:SettingsDB['data'], callback:(settings:SettingsDB['data'])=>void) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

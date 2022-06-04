@@ -9,7 +9,7 @@ const defaultSettings = {
       enabled: true,
     },
     size: {
-      max: 1024 * 1024 * 1024, // max 1GB
+      max: 3500000000, // 3.5 GB in bytes
       enabled: true,
     },
     logs: {
@@ -26,7 +26,7 @@ const defaultSettings = {
   },
 };
 
-class SettingsDB extends Database<typeof defaultSettings> {
+export class SettingsDB extends Database<typeof defaultSettings> {
   constructor() {
     super(resolve(env.USER_DATA, 'settings_db.json'), defaultSettings);
   }

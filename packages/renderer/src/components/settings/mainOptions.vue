@@ -1,8 +1,120 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { ref, computed, watch, onBeforeMount } from 'vue';
 import { useStore as useStoreSettings} from '/@/store/settings';
-const settings = useStoreSettings();
+import { useSocket } from '../helpers/socket';
+import { useQuasar } from 'quasar';
+import { useI18n } from 'vue-i18n';
+import type { SettingsDB } from '../../../../api/src/db/settings';
+import type { socketClientInstance } from '../../../../api/src/client/types';
 
+/** quasar */
+const $q = useQuasar();
+defineExpose({ $q });
+/** vue-i18n */
+const $t = useI18n().t.bind(useI18n());
+/** settings store */
+const settings = useStoreSettings();
+/** socket */
+let socket: socketClientInstance|undefined;
+/** global settings */
+const globalSettings = ref<SettingsDB['data'] | undefined>();
+
+/** global settings models */
+const waitDay = ref<number|undefined>();
+const waitHour = ref<number|undefined>();
+const waitMinutes = ref<number|undefined>();
+const cacheSizeEnabled = ref<boolean|undefined>();
+const cacheGB = ref<number|undefined>();
+const cacheAgeEnabled = ref<boolean|undefined>();
+const cacheAge = ref<number|undefined>();
+const cacheDay = ref<number|undefined>();
+const cacheHour = ref<number|undefined>();
+const cacheMinutes = ref<number|undefined>();
+const globalSettingsChanged = ref(false);
+
+
+
+/** waitDay + waitHour + waitMinutes in ms */
+const waitupdate = computed(() => {
+  if (waitDay.value === undefined || waitHour.value === undefined || waitMinutes.value === undefined) {
+    return undefined;
+  }
+  return (
+    waitDay.value * 24 * 60 * 60 * 1000 +
+    waitHour.value * 60 * 60 * 1000 +
+    waitMinutes.value * 60 * 1000
+  );
+});
+
+/** cacheDay + cacheHour + cacheMinutes in ms */
+const cacheupdate = computed(() => {
+  if (cacheAgeEnabled.value === false || cacheDay.value === undefined || cacheHour.value === undefined || cacheMinutes.value === undefined) {
+    return undefined;
+  }
+  return (
+    cacheDay.value * 24 * 60 * 60 * 1000 +
+    cacheHour.value * 60 * 60 * 1000 +
+    cacheMinutes.value * 60 * 1000
+  );
+});
+
+const warning = computed(() => {
+  if (cacheSizeEnabled.value) {
+    if (typeof cacheGB.value !== 'undefined') {
+      if(cacheGB.value < 1) {
+        return $t('settings.scheduler.cache.error.size');
+      }
+    }
+  }
+    if(typeof cacheupdate.value !== 'undefined') {
+      // age can't be negative
+      if(cacheupdate.value < 0) return $t('settings.scheduler.cache.error.negative');
+      // age can't be less than 10 minutes
+      if(cacheupdate.value < 10 * 60 * 1000) return $t('settings.scheduler.cache.error.lessthan10min');
+    }
+    if(typeof waitupdate.value !== 'undefined') {
+      // wait can't be negative
+      if(waitupdate.value < 0) return $t('settings.scheduler.update.error.negative');
+      // wait can't be less than 10 minutes
+      if(waitupdate.value < 10 * 60 * 1000) return $t('settings.scheduler.update.error.lessthan10min');
+    }
+    return undefined;
+});
+
+watch([waitupdate, cacheSizeEnabled, cacheGB, cacheupdate, cacheAgeEnabled], ([newupdate, newcache, newcachegb, newcacheupdate, newcacheage], [oldupdate, oldcache, oldcachegb, oldcacheupdate, oldcacheage]) => {
+  if(newupdate !== oldupdate && typeof oldupdate !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcache !== oldcache && typeof oldcache !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcachegb !== oldcachegb && typeof oldcachegb !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcacheupdate !== oldcacheupdate && typeof oldcacheupdate !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcacheage !== oldcacheage && typeof oldcacheage !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+});
+
+const darkIcon = computed(() => {
+  return settings.theme === 'dark' ? 'dark_mode' : 'light_mode';
+});
+
+const cacheIcon = computed(() => {
+  return cacheSizeEnabled.value ? 'lock' : 'lock_open';
+});
+
+const cacheAgeIcon = computed(() => {
+  return cacheAgeEnabled.value ? 'sanitizer' : 'elderly';
+});
 
 const longStripIcon = computed(() => {
   return settings.reader.longStrip ? 'swipe_vertical' : 'queue_play_next';
@@ -20,23 +132,316 @@ const showPageNumberIcon = computed(() => {
   return settings.reader.showPageNumber ? 'visibility' : 'visibility_off';
 });
 
+function toggleDarkMode() {
+  if (settings.theme === 'dark') {
+    settings.theme = 'light';
+    $q.dark.set(false);
+  } else {
+    settings.theme = 'dark';
+    $q.dark.set(true);
+  }
+}
+
+function parseSettings(s: SettingsDB['data']) {
+    const update = s.library.waitBetweenUpdates;
+    // get the number of days, hours, and minutes from the update time which is in milliseconds
+    waitDay.value = Math.floor(update / (1000 * 60 * 60 * 24));
+    waitHour.value = Math.floor((update % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    waitMinutes.value = Math.floor((update % (1000 * 60 * 60)) / (1000 * 60));
+    cacheSizeEnabled.value = s.cache.size.enabled;
+
+    const cachelimit = s.cache.size.max;
+    cacheGB.value = (cachelimit / (1000 * 1000 * 1000) * 100) / 100;
+
+    cacheAgeEnabled.value = s.cache.age.enabled;
+    cacheAge.value = s.cache.age.max;
+    // get the number of days, hours, and minutes from the cache age which is in milliseconds
+    cacheDay.value = Math.floor(s.cache.age.max / (1000 * 60 * 60 * 24));
+    cacheHour.value = Math.floor((s.cache.age.max % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    cacheMinutes.value = Math.floor((s.cache.age.max % (1000 * 60 * 60)) / (1000 * 60));
+}
+
+async function getSettings() {
+  if(!socket) socket = await useSocket(settings.server);
+  socket.emit('getSettings', (s) => {
+    globalSettings.value = s;
+    parseSettings(s);
+  });
+}
+
+async function saveSettings() {
+  if(
+    !globalSettings.value
+    || typeof cacheSizeEnabled.value === 'undefined'
+    || typeof cacheAgeEnabled.value === 'undefined'
+    || typeof cacheGB.value === 'undefined'
+  ) return;
+  if(!socket) socket = await useSocket(settings.server);
+  const newGlobalSettings: SettingsDB['data'] = {
+    ...globalSettings.value,
+    library: {
+      ...globalSettings.value.library,
+      waitBetweenUpdates: waitupdate.value || globalSettings.value.library.waitBetweenUpdates,
+    },
+    cache: {
+      ...globalSettings.value.cache,
+      size: {
+        max: cacheGB.value * 1000 * 1000 * 1000,
+        enabled: cacheSizeEnabled.value,
+      },
+      age: {
+        max: cacheupdate.value || globalSettings.value.cache.age.max,
+        enabled: cacheAgeEnabled.value,
+      },
+    },
+  };
+  socket.emit('changeSettings', newGlobalSettings, (updated) => {
+    if(updated) {
+      globalSettings.value = newGlobalSettings;
+      parseSettings(newGlobalSettings);
+      globalSettingsChanged.value = false;
+    }
+  });
+}
+
+onBeforeMount(async () => {
+  await getSettings();
+});
+
 </script>
 <template>
   <q-card
     flat
-    class="w-100"
+    class="w-100 text"
+    :dark="$q.dark.isActive"
+    :class="$q.dark.isActive ? 'text-white bg-dark' : 'text-black bg-grey-2'"
   >
     <q-card-section>
       <q-list
-        :dark="settings.theme === 'dark'"
+        :dark="$q.dark.isActive"
         separator
       >
         <q-expansion-item
-          label="READER"
+          :label="$t('settings.global.title').toLocaleUpperCase()"
           class="shadow-2"
+          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+          group="global"
+          :dark="$q.dark.isActive"
         >
           <q-list
             separator
+            :dark="$q.dark.isActive"
+            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+          >
+            <q-item
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+              clickable
+              @click="settings.theme === 'light'"
+            >
+              <q-item-section :dark="$q.dark.isActive">
+                <q-item-label :dark="$q.dark.isActive">
+                  {{ $t('settings.darkmode') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+                :dark="$q.dark.isActive"
+              >
+                <q-toggle
+                  :model-value="settings.theme === 'dark'"
+                  :icon="darkIcon"
+                  size="lg"
+                  @update:model-value="toggleDarkMode"
+                />
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+              clickable
+            >
+              <q-item-section>
+                <q-item-label :dark="$q.dark.isActive">
+                  {{ $t('settings.update.wait', {chapterWord: $t('mangas.chapter', 20).toLocaleLowerCase()}) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section>
+                <div
+                  v-if="typeof waitDay !== 'undefined' && typeof waitHour !== 'undefined' && typeof waitMinutes !== 'undefined'"
+                  class="row items-start w-100 flex justify-around"
+                >
+                  <q-input
+                    v-model="waitDay"
+                    dense
+                    type="number"
+                    :min="0"
+                    :label="$t('settings.update.day', waitDay)"
+                  />
+                  <q-input
+                    v-model="waitHour"
+                    dense
+                    type="number"
+                    :min="0"
+                    :label="$t('settings.update.hour', waitHour)"
+                  />
+                  <q-input
+                    v-model="waitMinutes"
+                    dense
+                    :min="0"
+                    type="number"
+                    :label="$t('settings.update.minute', waitMinutes)"
+                  />
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="settings.theme === 'dark'"
+              clickable
+              @click="cacheSizeEnabled = !cacheSizeEnabled"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.scheduler.cache_enable') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-toggle
+                  v-model="cacheSizeEnabled"
+                  :icon="cacheIcon"
+                  size="lg"
+                />
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-if="cacheSizeEnabled"
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="settings.theme === 'dark'"
+              clickable
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.scheduler.cache_size') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <div
+                  v-if="typeof cacheGB !== 'undefined'"
+                  class="row items-start w-100 flex justify-around"
+                >
+                  <q-input
+                    v-model="cacheGB"
+                    min="1"
+                    dense
+                    type="number"
+                    :label="$t('settings.scheduler.cache.GB', cacheGB)"
+                  />
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="settings.theme === 'dark'"
+              clickable
+              @click="cacheAgeEnabled = !cacheAgeEnabled"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.scheduler.cache_age_enable') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-toggle
+                  v-model="cacheAgeEnabled"
+                  :icon="cacheAgeIcon"
+                  size="lg"
+                />
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-if="cacheAgeEnabled"
+              style="background:rgba(255, 255, 255, 0.05)"
+              class="flex items-center"
+              :dark="settings.theme === 'dark'"
+              clickable
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.scheduler.cache_age') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section>
+                <div
+                  v-if="typeof cacheDay !== 'undefined' && typeof cacheHour !== 'undefined' && typeof cacheMinutes !== 'undefined'"
+                  class="row items-start w-100 flex justify-around"
+                >
+                  <q-input
+                    v-model="cacheDay"
+                    dense
+                    type="number"
+                    :min="0"
+                    :label="$t('settings.update.day', cacheDay)"
+                  />
+                  <q-input
+                    v-model="cacheHour"
+                    dense
+                    type="number"
+                    :min="0"
+                    :label="$t('settings.update.hour', cacheHour)"
+                  />
+                  <q-input
+                    v-model="cacheMinutes"
+                    dense
+                    type="number"
+                    :min="0"
+                    :label="$t('settings.update.minute', cacheMinutes)"
+                  />
+                </div>
+              </q-item-section>
+            </q-item>
+            <q-slide-transition>
+              <div
+                v-show="globalSettingsChanged && typeof warning === 'undefined'"
+                class="w-100"
+              >
+                <q-btn
+                  class="bg-primary text-white cursor-pointer w-100"
+                  flat
+                  :rounded="false"
+                  @click="saveSettings"
+                >
+                  {{ $t('settings.globalSettings.save') }}
+                </q-btn>
+              </div>
+            </q-slide-transition>
+            <q-slide-transition>
+              <div v-show="typeof warning !== 'undefined'">
+                <q-banner class="bg-red text-white cursor-pointer">
+                  {{ warning }}
+                </q-banner>
+              </div>
+            </q-slide-transition>
+          </q-list>
+        </q-expansion-item>
+        <q-expansion-item
+          :label="$t('settings.reader.title').toLocaleUpperCase()"
+          class="shadow-2"
+          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+          group="reader"
+        >
+          <q-list
+            separator
+            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
           >
             <q-banner class="bg-primary text-white">
               {{ $t('settings.reader.info') }}
@@ -44,6 +449,7 @@ const showPageNumberIcon = computed(() => {
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
+
               :dark="settings.theme === 'dark'"
               clickable
               @click="settings.reader.preloadNext = !settings.reader.preloadNext"

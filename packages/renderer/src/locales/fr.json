@@ -219,16 +219,50 @@
     "general": {
       "tab": "Général"
     },
+    "global": {
+      "title": "paramètres globaux"
+    },
+    "globalSettings": {
+      "save": "Cliquez ici pour enregistrer les modifications"
+    },
     "logs": "Journaux",
     "reader": {
       "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
-      "preload": "Précharger le chapitre suivant pendant la lecture"
+      "preload": "Précharger le chapitre suivant pendant la lecture",
+      "title": "Lecteur"
+    },
+    "scheduler": {
+      "cache": {
+        "GB": "Gigaoctet | \nGigaoctets",
+        "MB": "Mégaoctet | \nMégaoctets",
+        "error": {
+          "lessthan10min": "L'âge du cache ne peut pas être inférieur à 10 minutes",
+          "negative": "L'âge du cache ne peut pas être négatif",
+          "size": "La taille limite du cache ne peut pas être inférieure à 1 Go"
+        }
+      },
+      "cache_age": "Définir la durée du cache",
+      "cache_age_enable": "Limiter la durée du cache",
+      "cache_enable": "Limiter la taille du cache",
+      "cache_size": "Définir la limite du cache",
+      "update": {
+        "error": {
+          "lessthan10min": "Le temps entre les mises à jour ne peut pas être inférieur à 10 minutes",
+          "negative": "Le temps entre les mises à jour ne peut pas être négatif"
+        }
+      }
     },
     "source": {
       "adult": "Activer le contenu pour adultes",
       "enable": "Désactiver cette {sourceWord}"
     },
-    "tab": "Configuration"
+    "tab": "Configuration",
+    "update": {
+      "day": "Jour | Jours",
+      "hour": "Heure | Heures",
+      "minute": "Minute | Minutes",
+      "wait": "Mettre à jour les listes de {chapterWord} tous les"
+    }
   },
   "setup": {
     "address": "Adresse",

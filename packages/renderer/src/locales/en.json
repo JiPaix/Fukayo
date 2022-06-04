@@ -219,16 +219,50 @@
     "general": {
       "tab": "General"
     },
+    "global": {
+      "title": "global settings"
+    },
+    "globalSettings": {
+      "save": "Click here to save changes"
+    },
     "logs": "Logs",
     "reader": {
       "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",
-      "preload": "Preload next chapter while reading"
+      "preload": "Preload next chapter while reading",
+      "title": "Reader"
+    },
+    "scheduler": {
+      "cache": {
+        "GB": "Gigabyte | Gigabytes",
+        "MB": "Megabyte | Megabytes",
+        "error": {
+          "lessthan10min": "Cache age can't be lower than 10 minutes",
+          "negative": "Cache age can't be negative",
+          "size": "The cache size limit cannot be less than 1Gb"
+        }
+      },
+      "cache_age": "Define the cache duration",
+      "cache_age_enable": "Limit cache duration",
+      "cache_enable": "Limit the size of cache",
+      "cache_size": "Define the cache limit",
+      "update": {
+        "error": {
+          "lessthan10min": "Time between updates cannot be lower than 10 minutes",
+          "negative": "Time between updates cannot be negative"
+        }
+      }
     },
     "source": {
       "adult": "Enable adult content",
       "enable": "Disable this {sourceWord}"
     },
-    "tab": "Configuration"
+    "tab": "Configuration",
+    "update": {
+      "day": "Day | Days",
+      "hour": "Hour | Hours",
+      "minute": "Minute | Minutes",
+      "wait": "Update {chapterWord} lists every"
+    }
   },
   "setup": {
     "address": "Address",

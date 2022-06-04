@@ -7,7 +7,6 @@ import mirrors from '../../models/exports';
 import { MangaDatabase } from '../../db/mangas';
 import { SettingsDatabase } from '../../db/settings';
 import type TypedEmitter from 'typed-emitter';
-import type { MangasDB } from '../../db/mangas';
 import type { ServerToClientEvents } from './../types/index';
 import type MirrorInterface from '../../models/interfaces';
 import type { MangaErrorMessage } from '../../models/types/errors';
@@ -15,23 +14,26 @@ import type { Server as ioServer } from 'socket.io';
 import type { ClientToServerEvents } from '../../client/types';
 
 export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
-  private mangadb:MangasDB;
   private intervals: {
     updates: NodeJS.Timer;
+    nextupdate: number;
     cache: NodeJS.Timer;
+    nextcache: number;
   };
   private ongoing = {
     updates: false,
     cache: false,
   };
+
   mangaLogs:{date: number, message:'chapter'|'chapter_error', mirror:string, id: string, chapter:number }[] = [];
   cacheLogs: { date: number, message: 'cache'|'cache_error', files:number, size:number }[] = [];
   io?: ioServer<ClientToServerEvents, ServerToClientEvents>;
   constructor() {
     super();
-    this.mangadb = MangaDatabase;
     this.intervals = {
+      nextcache: Date.now() + (30 * 60 * 1000),
       cache: setInterval(this.update.bind(this), 30 * 60 * 1000),
+      nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
       updates: setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
   }
@@ -144,11 +146,24 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     clearInterval(this.intervals.cache);
     clearInterval(this.intervals.updates);
     this.intervals = {
+      nextcache: Date.now() + (30 * 60 * 1000),
       cache: setInterval(this.update.bind(this), 30 * 60 * 1000),
-      updates: setInterval(this.update.bind(this), this.settings.library.waitBetweenUpdates),
+      nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
+      updates: setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
   }
 
+  restartUpdate() {
+    clearInterval(this.intervals.updates);
+    this.intervals.updates = setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
+  }
+
+  restartCache() {
+    clearInterval(this.intervals.cache);
+    this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
+    this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+  }
   /**
    *
    * @param force if true, will force the update of all the mangas
@@ -157,6 +172,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     if(this.ongoing.updates) return;
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
+    if(force) this.restartUpdate();
     const mangas = this.getMangasToUpdate(force);
     Object.keys(mangas).forEach(async mirrorName => {
       const mirror = mirrors.find(m => m.name === mirrorName);
@@ -168,7 +184,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
 
   private getMangasToUpdate(force?:boolean) {
     // filter mangas were lastUpdate + waitBetweenUpdates is less than now
-    const mangas = this.mangadb.getAllSync()
+    const mangas = MangaDatabase.getAllSync()
       .filter(manga => {
         if(force) return true;
         return (manga.meta.lastUpdate + this.settings.library.waitBetweenUpdates) > Date.now();
@@ -203,7 +219,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       }
     }
     res.forEach(async (m) => {
-      await this.mangadb.add(m);
+      await MangaDatabase.add(m);
     });
   }
 
