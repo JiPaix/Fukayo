@@ -4,13 +4,15 @@ import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { format } from 'quasar';
+import { format, useQuasar } from 'quasar';
 import type { Scheduler } from '../../../../api/src/server/helpers/scheduler';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type dayjs from 'dayjs';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import type { MangaInDB } from '../../../../api/src/models/types/manga';
 
+/** quasar */
+const $q = useQuasar();
 /** quasar format util */
 const { humanStorageSize } = format;
 /** settings */
@@ -84,15 +86,20 @@ onBeforeMount(async () => {
 
 </script>
 <template>
-  <div class="w-100 q-ma-sm">
+  <div
+    class="w-100 q-ma-sm"
+    :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
+  >
     <q-infinite-scroll :offset="250">
       <q-list
         v-for="(log, index) in logs"
         :key="index"
+        :dark="$q.dark.isActive"
       >
         <q-item
           clickable
           class="q-py-md"
+          :dark="$q.dark.isActive"
           @click="itemClick(log)"
         >
           <q-item-section avatar>
@@ -159,7 +166,10 @@ onBeforeMount(async () => {
             </div>
           </q-item-section>
         </q-item>
-        <q-separator v-if="index < (logs.length-1)" />
+        <q-separator
+          v-if="index < (logs.length-1)"
+          :dark="$q.dark.isActive"
+        />
       </q-list>
     </q-infinite-scroll>
   </div>

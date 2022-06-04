@@ -240,19 +240,19 @@ onBeforeMount(async () => {
               clickable
               @click="settings.theme === 'light'"
             >
-              <q-item-section :dark="$q.dark.isActive">
-                <q-item-label :dark="$q.dark.isActive">
+              <q-item-section>
+                <q-item-label>
                   {{ $t('settings.darkmode') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section
                 side
-                :dark="$q.dark.isActive"
               >
                 <q-toggle
                   :model-value="settings.theme === 'dark'"
                   :icon="darkIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                   @update:model-value="toggleDarkMode"
                 />
               </q-item-section>
@@ -264,7 +264,7 @@ onBeforeMount(async () => {
               clickable
             >
               <q-item-section>
-                <q-item-label :dark="$q.dark.isActive">
+                <q-item-label>
                   {{ $t('settings.update.wait', {chapterWord: $t('mangas.chapter', 20).toLocaleLowerCase()}) }}
                 </q-item-label>
               </q-item-section>
@@ -279,6 +279,7 @@ onBeforeMount(async () => {
                     type="number"
                     :min="0"
                     :label="$t('settings.update.day', waitDay)"
+                    :dark="$q.dark.isActive"
                   />
                   <q-input
                     v-model="waitHour"
@@ -286,6 +287,7 @@ onBeforeMount(async () => {
                     type="number"
                     :min="0"
                     :label="$t('settings.update.hour', waitHour)"
+                    :dark="$q.dark.isActive"
                   />
                   <q-input
                     v-model="waitMinutes"
@@ -293,6 +295,7 @@ onBeforeMount(async () => {
                     :min="0"
                     type="number"
                     :label="$t('settings.update.minute', waitMinutes)"
+                    :dark="$q.dark.isActive"
                   />
                 </div>
               </q-item-section>
@@ -300,7 +303,7 @@ onBeforeMount(async () => {
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="cacheSizeEnabled = !cacheSizeEnabled"
             >
@@ -316,6 +319,7 @@ onBeforeMount(async () => {
                   v-model="cacheSizeEnabled"
                   :icon="cacheIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
@@ -323,7 +327,7 @@ onBeforeMount(async () => {
               v-if="cacheSizeEnabled"
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
             >
               <q-item-section>
@@ -342,6 +346,7 @@ onBeforeMount(async () => {
                     dense
                     type="number"
                     :label="$t('settings.scheduler.cache.GB', cacheGB)"
+                    :dark="$q.dark.isActive"
                   />
                 </div>
               </q-item-section>
@@ -349,7 +354,7 @@ onBeforeMount(async () => {
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="cacheAgeEnabled = !cacheAgeEnabled"
             >
@@ -365,6 +370,7 @@ onBeforeMount(async () => {
                   v-model="cacheAgeEnabled"
                   :icon="cacheAgeIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
@@ -372,7 +378,7 @@ onBeforeMount(async () => {
               v-if="cacheAgeEnabled"
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
             >
               <q-item-section>
@@ -391,6 +397,7 @@ onBeforeMount(async () => {
                     type="number"
                     :min="0"
                     :label="$t('settings.update.day', cacheDay)"
+                    :dark="$q.dark.isActive"
                   />
                   <q-input
                     v-model="cacheHour"
@@ -398,6 +405,7 @@ onBeforeMount(async () => {
                     type="number"
                     :min="0"
                     :label="$t('settings.update.hour', cacheHour)"
+                    :dark="$q.dark.isActive"
                   />
                   <q-input
                     v-model="cacheMinutes"
@@ -405,6 +413,7 @@ onBeforeMount(async () => {
                     type="number"
                     :min="0"
                     :label="$t('settings.update.minute', cacheMinutes)"
+                    :dark="$q.dark.isActive"
                   />
                 </div>
               </q-item-section>
@@ -426,7 +435,10 @@ onBeforeMount(async () => {
             </q-slide-transition>
             <q-slide-transition>
               <div v-show="typeof warning !== 'undefined'">
-                <q-banner class="bg-red text-white cursor-pointer">
+                <q-banner
+                  class="bg-red text-white cursor-pointer"
+                  :dark="$q.dark.isActive"
+                >
                   {{ warning }}
                 </q-banner>
               </div>
@@ -442,6 +454,7 @@ onBeforeMount(async () => {
           <q-list
             separator
             :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+            :dark="$q.dark.isActive"
           >
             <q-banner class="bg-primary text-white">
               {{ $t('settings.reader.info') }}
@@ -449,8 +462,7 @@ onBeforeMount(async () => {
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="settings.reader.preloadNext = !settings.reader.preloadNext"
             >
@@ -466,13 +478,14 @@ onBeforeMount(async () => {
                   v-model="settings.reader.preloadNext"
                   :icon="preloadIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="settings.reader.longStrip = !settings.reader.longStrip"
             >
@@ -488,13 +501,14 @@ onBeforeMount(async () => {
                   v-model="settings.reader.longStrip"
                   :icon="longStripIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="settings.reader.webtoon = !settings.reader.webtoon"
             >
@@ -511,13 +525,14 @@ onBeforeMount(async () => {
                   :disable="settings.reader.zoomMode === 'fit-height'"
                   :icon="webtoonIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
               @click="settings.reader.webtoon = !settings.reader.webtoon"
             >
@@ -533,13 +548,14 @@ onBeforeMount(async () => {
                   v-model="settings.reader.showPageNumber"
                   :icon="showPageNumberIcon"
                   size="lg"
+                  :dark="$q.dark.isActive"
                 />
               </q-item-section>
             </q-item>
             <q-item
               style="background:rgba(255, 255, 255, 0.05)"
               class="flex items-center"
-              :dark="settings.theme === 'dark'"
+              :dark="$q.dark.isActive"
               clickable
             >
               <q-item-section>

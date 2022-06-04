@@ -103,6 +103,7 @@ watch(() => props.currentPage, (nval, oldval) => {
     ref="content"
     tabindex="0"
     class="text-center"
+    :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
   >
     <div
       v-for="(img, i) in images"
@@ -155,6 +156,7 @@ watch(() => props.currentPage, (nval, oldval) => {
                 color="orange"
               />
               <q-chip
+                :dark="$q.dark.isActive"
                 color="white"
                 text-color="black"
               >
@@ -167,7 +169,10 @@ watch(() => props.currentPage, (nval, oldval) => {
           class="absolute-bottom text-subtitle1 text-center"
           style="background:none;"
         >
-          <q-chip v-if="props.readerSettings.showPageNumber">
+          <q-chip
+            v-if="props.readerSettings.showPageNumber"
+            :dark="$q.dark.isActive"
+          >
             {{ img.index+1 }}/{{ nbOfImagesToExpectFromChapter }}
           </q-chip>
         </div>

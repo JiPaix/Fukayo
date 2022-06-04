@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { chapterLabel } from './helpers';
 import { isChapterImageErrorMessage, isMangaInDb } from '../helpers/typechecker';
 import { useStore as useStoreSettings } from '/@/store/settings';
+import { useQuasar } from 'quasar';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
@@ -11,6 +12,8 @@ import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 
 
+/** quasar */
+const $q = useQuasar();
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** emit */
@@ -279,7 +282,10 @@ async function markAsRead() {
           @click="drawerRight = !drawerRight"
         />
       </q-toolbar>
-      <q-bar>
+      <q-bar
+        :dark="$q.dark.isActive"
+        :class="$q.dark.isActive ? '' : 'bg-grey-4 text-dark'"
+      >
         <span
           v-if="manga.chapters[chapterSelectedIndex].volume !== undefined"
           class="text-caption"
@@ -309,6 +315,7 @@ async function markAsRead() {
     <q-footer>
       <q-linear-progress
         v-if="showProgressBar"
+        :dark="$q.dark.isActive"
         class="absolute absolute-bottom"
         style="margin-left: 0"
         size="4px"

@@ -467,6 +467,8 @@ onBeforeUnmount(() => {
 <template>
   <q-card
     class="w-100"
+    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
+    :dark="$q.dark.isActive"
   >
     <q-card-section
       class="text-center"
@@ -490,6 +492,7 @@ onBeforeUnmount(() => {
       <div v-else>
         <span class="text-h3">
           <q-skeleton
+            :dark="$q.dark.isActive"
             type="rect"
             height="57px"
             class="q-mb-sm"
@@ -501,6 +504,7 @@ onBeforeUnmount(() => {
         <q-chip
           v-for="(tag, i) in manga.tags"
           :key="i"
+          :dark="$q.dark.isActive"
           color="orange"
         >
           {{ tag }}
@@ -513,6 +517,7 @@ onBeforeUnmount(() => {
         <q-skeleton
           v-for="i in 4"
           :key="i"
+          :dark="$q.dark.isActive"
           type="QChip"
         />
       </div>
@@ -523,7 +528,8 @@ onBeforeUnmount(() => {
         <span class="q-mr-sm">{{ $t("mangas.source") }}: </span>
         <a
           v-if="manga && mirrorinfo"
-          class="text-weight-medium text-white"
+          class="text-weight-medium"
+          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
           style="text-decoration: none"
           :href="mirrorinfo.host + manga.url"
           target="_blank"
@@ -534,6 +540,7 @@ onBeforeUnmount(() => {
         </a>
         <q-skeleton
           v-else
+          :dark="$q.dark.isActive"
           type="text"
           width="50px"
         />
@@ -545,6 +552,7 @@ onBeforeUnmount(() => {
         >
         <q-skeleton
           v-else
+          :dark="$q.dark.isActive"
           height="16px"
           width="16px"
           type="rect"
@@ -563,6 +571,7 @@ onBeforeUnmount(() => {
         </span>
         <q-skeleton
           v-else
+          :dark="$q.dark.isActive"
           type="text"
           class="text-weight-medium q-ml-sm"
           width="50px"
@@ -593,6 +602,7 @@ onBeforeUnmount(() => {
     <q-card-section v-else>
       <!-- Synopsis Skeleton (42px = 2 lines) -->
       <q-skeleton
+        :dark="$q.dark.isActive"
         type="rect"
         style="height: 42px"
       />
@@ -608,6 +618,7 @@ onBeforeUnmount(() => {
             animated
             infinite
             autoplay
+            :dark="$q.dark.isActive"
           >
             <q-carousel-slide
               v-for="(mangaCover, i) in manga.covers"
@@ -620,6 +631,7 @@ onBeforeUnmount(() => {
             <!-- Cover Skeleton -->
             <q-skeleton
               :height="coverHeight + 'px'"
+              :dark="$q.dark.isActive"
             />
           </div>
           <q-resize-observer @resize="onResize" />
@@ -638,6 +650,7 @@ onBeforeUnmount(() => {
           <template #default="{ item, index }">
             <q-item
               :key="index"
+              :dark="$q.dark.isActive"
               @click="showChapterComp(index)"
             >
               <!-- Chapter name, volume, number -->
@@ -744,6 +757,7 @@ onBeforeUnmount(() => {
             v-for="i in 60"
             :key="i"
             type="text"
+            :dark="$q.dark.isActive"
             :width="chapterSkeletonWidth"
           />
         </div>

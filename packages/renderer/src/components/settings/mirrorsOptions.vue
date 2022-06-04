@@ -3,7 +3,7 @@ import { ref, computed, onBeforeMount } from 'vue';
 import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
-import { format } from 'quasar';
+import { format, useQuasar } from 'quasar';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { sortLangs, sortMirrorByNames } from '../helpers/mirrorFilters';
@@ -16,8 +16,8 @@ const settings = useSettingsStore();
 let socket:socketClientInstance|undefined;
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
-
-
+/** quasar */
+const $q = useQuasar();
 /** search filter */
 const query = ref<string|null>('');
 /** sort ascending/descending sorting */
@@ -121,8 +121,12 @@ onBeforeMount(async () => {
   <q-card
     class="w-100"
     flat
+    :dark="$q.dark.isActive"
+    :class="$q.dark.isActive ? 'bg-dark': 'bg-grey-2'"
   >
-    <q-card-section class="row items-center">
+    <q-card-section
+      class="row items-center"
+    >
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
           ref="inputRef"
@@ -132,7 +136,8 @@ onBeforeMount(async () => {
           outlined
           clearable
           autofocus
-          color="white"
+          :color="$q.dark.isActive ? 'white' : 'primary'"
+          :dark="$q.dark.isActive"
         >
           <template
             #append
@@ -146,10 +151,12 @@ onBeforeMount(async () => {
         </q-input>
       </div>
       <div class="col-12 q-mt-md text-center">
-        <q-btn-group>
+        <q-btn-group
+          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
+        >
           <q-btn
             :ripple="false"
-            color="white"
+            :color="$q.dark.isActive ? 'white' : 'dark'"
             text-color="orange"
             icon="filter_alt"
             style="cursor:default!important;"
@@ -164,10 +171,11 @@ onBeforeMount(async () => {
             icon="translate"
             size="1em"
           >
-            <q-list>
+            <q-list :dark="$q.dark.isActive">
               <q-item
                 dense
                 clickable
+                :dark="$q.dark.isActive"
                 @click="toggleAllLanguages"
               >
                 <q-checkbox
@@ -176,6 +184,7 @@ onBeforeMount(async () => {
                   color="primary"
                   class="q-ma-none q-pa-none"
                   toggle-indeterminate
+                  :dark="$q.dark.isActive"
                   @click="toggleAllLanguages"
                 />
                 <q-item-section
@@ -198,6 +207,7 @@ onBeforeMount(async () => {
                 v-for="lang in allLangs"
                 :key="lang"
                 clickable
+                :dark="$q.dark.isActive"
                 @click="toggleLang(lang)"
               >
                 <q-checkbox
@@ -206,6 +216,7 @@ onBeforeMount(async () => {
                   color="orange"
                   :val="lang"
                   class="q-ma-none q-pa-none"
+                  :dark="$q.dark.isActive"
                 />
                 <q-item-section class="q-ma-none">
                   {{ $t('languages.'+lang+'.value') }}
@@ -219,8 +230,8 @@ onBeforeMount(async () => {
     <q-card-section>
       <q-infinite-scroll class="w-100 q-mt-md q-pa-lg">
         <q-list
-          :dark="settings.theme === 'dark'"
-
+          :dark="$q.dark.isActive"
+          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
           separator
         >
           <q-expansion-item
@@ -230,10 +241,12 @@ onBeforeMount(async () => {
             :icon="'img:'+mirror.icon"
             :label="mirror.displayName"
             class="shadow-2"
-            :dark="settings.theme === 'dark'"
+            :dark="$q.dark.isActive"
+            :class="$q.dark.isActive ? '' : 'bg-grey-4'"
           >
             <q-list
               separator
+              :dark="$q.dark.isActive"
             >
               <div
                 v-for="(value, propertyName) in mirror.options"
@@ -243,8 +256,9 @@ onBeforeMount(async () => {
                   v-if="propertyName !== 'version'"
                   class="flex items-center"
                   :clickable="typeof value === 'boolean'"
-                  :dark="settings.theme === 'dark'"
+                  :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.05)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
                   @click="typeof value === 'boolean' ? changeOption(mirror.name, propertyName, !value) : null"
                 >
                   <q-item-section>
@@ -262,6 +276,7 @@ onBeforeMount(async () => {
                       :unchecked-icon="toggleButtonIconUnchecked(propertyName)"
                       :model-value="value"
                       size="lg"
+                      :dark="$q.dark.isActive"
                       @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
                     />
                   </q-item-section>
@@ -273,6 +288,7 @@ onBeforeMount(async () => {
                       :type="typeof value === 'number' ? 'number' : 'text'"
                       dense
                       :model-value="value"
+                      :dark="$q.dark.isActive"
                       @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
                     >
                       <template #after>

@@ -36,6 +36,7 @@ onBeforeMount(async () => {
   <q-list separator>
     <q-item
       v-ripple
+      :dark="$q.dark.isActive"
       clickable
       @click="emptyCache"
     >

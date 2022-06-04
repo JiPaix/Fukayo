@@ -69,7 +69,10 @@ onBeforeMount(async () => {
 
 </script>
 <template>
-  <q-card class="w-100">
+  <q-card
+    class="w-100"
+    :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
+  >
     <q-card-section class="row items-center">
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
@@ -80,7 +83,8 @@ onBeforeMount(async () => {
           outlined
           clearable
           autofocus
-          color="white"
+          :color="$q.dark.isActive ? 'white' : 'primary'"
+          :dark="$q.dark.isActive"
         >
           <template
             #append
@@ -97,7 +101,7 @@ onBeforeMount(async () => {
         <q-btn-group>
           <q-btn
             :ripple="false"
-            color="white"
+            :color="$q.dark.isActive ? 'white' : 'dark'"
             text-color="orange"
             icon="filter_alt"
             style="cursor:default!important;"
@@ -112,10 +116,11 @@ onBeforeMount(async () => {
             icon="translate"
             size="1em"
           >
-            <q-list>
+            <q-list :dark="$q.dark.isActive">
               <q-item
                 dense
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pickall"
               >
                 <q-checkbox
@@ -124,6 +129,7 @@ onBeforeMount(async () => {
                   color="primary"
                   class="q-ma-none q-pa-none"
                   toggle-indeterminate
+                  :dark="$q.dark.isActive"
                   @click="pickall"
                 />
                 <q-item-section
@@ -146,6 +152,7 @@ onBeforeMount(async () => {
                 v-for="lang in allLangs"
                 :key="lang"
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pick(lang)"
               >
                 <q-checkbox
@@ -154,6 +161,7 @@ onBeforeMount(async () => {
                   color="orange"
                   :val="lang"
                   class="q-ma-none q-pa-none"
+                  :dark="$q.dark.isActive"
                 />
                 <q-item-section class="q-ma-none">
                   {{ $t('languages.'+lang+'.value') }}
@@ -168,7 +176,7 @@ onBeforeMount(async () => {
       <q-list
         class="w-100 q-mt-md q-pa-lg"
         separator
-        :dark="settings.theme === 'dark'"
+        :dark="$q.dark.isActive"
       >
         <q-item
           v-for="mirror in mirrors"
@@ -176,7 +184,7 @@ onBeforeMount(async () => {
           v-ripple
           clickable
           class="q-mx-md"
-          :dark="settings.theme.includes('dark')"
+          :dark="$q.dark.isActive"
           @click="router.push({
             name: 'explore_mirror',
             params: {
@@ -206,6 +214,7 @@ onBeforeMount(async () => {
                   dense
                   size="sm"
                   color="orange"
+                  :dark="$q.dark.isActive"
                 >
                   {{ $t(`languages.${lang}.value`) }}
                 </q-chip>
@@ -228,7 +237,7 @@ onBeforeMount(async () => {
                   color="accent"
                   style="width:40px;height:6px;"
                   rounded
-                  :dark="settings.theme === 'dark'"
+                  :dark="$q.dark.isActive"
                 />
               </div>
             </div>
@@ -243,7 +252,7 @@ onBeforeMount(async () => {
                 color="warning"
                 style="width:40px;height:6px;"
                 rounded
-                :dark="settings.theme === 'dark'"
+                :dark="$q.dark.isActive"
               />
             </div>
             <div class="row items-center">
@@ -255,7 +264,7 @@ onBeforeMount(async () => {
                 color="info"
                 style="width:40px;height:6px;"
                 rounded
-                :dark="settings.theme === 'dark'"
+                :dark="$q.dark.isActive"
               />
             </div>
           </q-item-section>

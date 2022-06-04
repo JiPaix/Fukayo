@@ -5,7 +5,10 @@ import { useStore as useSettingsStore } from '../../store/settings';
 import { useRouter } from 'vue-router';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { MangaInDB } from '../../../../api/src/models/types/manga';
+import { useQuasar } from 'quasar';
 
+/** quasar */
+const $q = useQuasar();
 /** router */
 const router = useRouter();
 /** web socket */
@@ -46,6 +49,8 @@ onBeforeUnmount(() => {
 <template>
   <q-card
     class="w-100"
+    :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
+    :dark="$q.dark.isActive"
   >
     <q-card-section
       class="text-center"

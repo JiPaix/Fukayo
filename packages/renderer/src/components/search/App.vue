@@ -190,7 +190,10 @@ onBeforeUnmount(async () => {
 });
 </script>
 <template>
-  <q-card class="w-100">
+  <q-card
+    class="w-100"
+    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
+  >
     <q-card-section class="row items-center">
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
@@ -201,7 +204,8 @@ onBeforeUnmount(async () => {
           outlined
           clearable
           autofocus
-          color="white"
+          :dark="$q.dark.isActive"
+          :color="$q.dark.isActive ? 'white': 'primary'"
           :loading="loading"
           @keyup.enter="research"
         >
@@ -221,7 +225,6 @@ onBeforeUnmount(async () => {
         <q-btn-group>
           <q-btn
             :ripple="false"
-            color="white"
             text-color="orange"
             icon="filter_alt"
             style="cursor:default!important;"
@@ -233,14 +236,15 @@ onBeforeUnmount(async () => {
           />
 
           <q-btn-dropdown
-            :text-color="includedAllMirrors ? 'white' : 'orange'"
+            :text-color="includedAllMirrors ? '' : 'orange'"
             icon="bookmarks"
             size="1em"
           >
-            <q-list>
+            <q-list :dark="$q.dark.isActive">
               <q-item
                 dense
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pickallMirrors"
               >
                 <q-checkbox
@@ -249,6 +253,7 @@ onBeforeUnmount(async () => {
                   color="primary"
                   toggle-indeterminate
                   class="q-ma-none q-pa-none"
+                  :dark="$q.dark.isActive"
                   @click="pickallMirrors"
                 />
                 <q-item-section
@@ -271,6 +276,7 @@ onBeforeUnmount(async () => {
                 v-for="mirror in mirrorsList"
                 :key="mirror.name"
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pickMirror(mirror.name)"
               >
                 <q-checkbox
@@ -279,6 +285,7 @@ onBeforeUnmount(async () => {
                   color="orange"
                   :val="mirror.name"
                   class="q-ma-none q-pa-none"
+                  :dark="$q.dark.isActive"
                 />
                 <q-item-section
                   avatar
@@ -303,10 +310,11 @@ onBeforeUnmount(async () => {
             icon="translate"
             size="1em"
           >
-            <q-list>
+            <q-list :dark="$q.dark.isActive">
               <q-item
                 dense
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pickAllLangs"
               >
                 <q-checkbox
@@ -315,6 +323,7 @@ onBeforeUnmount(async () => {
                   color="primary"
                   class="q-ma-none q-pa-none"
                   toggle-indeterminate
+                  :dark="$q.dark.isActive"
                   @click="pickAllLangs"
                 />
                 <q-item-section
@@ -337,6 +346,7 @@ onBeforeUnmount(async () => {
                 v-for="lang in allLangs"
                 :key="lang"
                 clickable
+                :dark="$q.dark.isActive"
                 @click="pickLang(lang)"
               >
                 <q-checkbox
@@ -345,6 +355,7 @@ onBeforeUnmount(async () => {
                   color="orange"
                   :val="lang"
                   class="q-ma-none q-pa-none"
+                  :dark="$q.dark.isActive"
                   @update:model-value="pickLang(lang)"
                 />
                 <q-item-section class="q-ma-none">

@@ -101,279 +101,280 @@ async function startServer () {
   <div
     class="row q-pa-lg"
   >
-    <div class="col-12">
-      <q-card
-        dark
-        bordered
-        class="q-pa-lg"
+    <q-card
+      :dark="$q.dark.isActive"
+      bordered
+      class="q-pa-lg"
+      :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-3'"
+    >
+      <q-card-section
+        horizontal
+        class="items-center justify-center"
       >
-        <q-card-section
-          horizontal
-          class="items-center justify-center"
-        >
-          <q-avatar class="q-mr-md">
-            <img
-              :src="icon"
-            >
-          </q-avatar>
-          <div class="text-h6">
-            {{ $t('app.name') }}
-            <div class="text-body2 text-grey-7">
-              {{ $t('app.description') }}
-            </div>
+        <q-avatar class="q-mr-md">
+          <img
+            :src="icon"
+          >
+        </q-avatar>
+        <div class="text-h6">
+          {{ $t('app.name') }}
+          <div class="text-body2 text-grey-7">
+            {{ $t('app.description') }}
           </div>
-        </q-card-section>
-        <q-separator
-          dark
-          color="grey-9"
-          inset
-          class="justify-center q-mt-md"
+        </div>
+      </q-card-section>
+      <q-separator
+        dark
+        color="grey-9"
+        inset
+        class="justify-center q-mt-md"
+      />
+      <q-card-section>
+        <div class="text-h6">
+          {{ $t('setup.message') }} :
+        </div>
+      </q-card-section>
+      <q-form
+        class="q-gutter-md"
+        @submit.prevent="startServer"
+      >
+        <q-input
+          v-model="settings.server.login"
+          name="login"
+          filled
+          dense
+          :rules="[isLoginValid]"
+          bottoms-slots
+          type="text"
+          :label="$t('setup.login')"
         />
-        <q-card-section>
-          <div class="text-h6">
-            {{ $t('setup.message') }} :
-          </div>
-        </q-card-section>
-        <q-form
-          class="q-gutter-md"
-          @submit.prevent="startServer"
+        <q-input
+          v-model="password"
+          name="password"
+          filled
+          dense
+          :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
+          bottom-slots
+          :type="showPassword ? 'text' : 'password'"
+          :label="$t('setup.password')"
         >
-          <q-input
-            v-model="settings.server.login"
-            name="login"
-            filled
-            dense
-            :rules="[isLoginValid]"
-            bottoms-slots
-            type="text"
-            :label="$t('setup.login')"
-          />
-          <q-input
-            v-model="password"
-            name="password"
-            filled
-            dense
-            :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
-            bottom-slots
-            :type="showPassword ? 'text' : 'password'"
-            :label="$t('setup.password')"
-          >
-            <template #hint>
-              <div
-                :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
-                v-html="$t(passwordHint(password))"
-              />
-            </template>
-            <template #prepend>
+          <template #hint>
+            <div
+              :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
+              v-html="$t(passwordHint(password))"
+            />
+          </template>
+          <template #prepend>
+            <q-icon
+              :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
+              :name="showPassword ? 'visibility' : 'visibility_off'"
+              style="cursor:pointer;"
+              @click="showPassword = !showPassword"
+            />
+          </template>
+        </q-input>
+        <q-input
+          v-model.number="settings.server.port"
+          name="port"
+          filled
+          dense
+          type="number"
+          :rules="[isPortValid]"
+          bottom-slots
+          :label="$t('setup.port')"
+        >
+          <template #append>
+            <div
+              class="column q-pa-none"
+            >
               <q-icon
-                :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
-                :name="showPassword ? 'visibility' : 'visibility_off'"
-                style="cursor:pointer;"
-                @click="showPassword = !showPassword"
-              />
-            </template>
-          </q-input>
-          <q-input
-            v-model.number="settings.server.port"
-            name="port"
-            filled
-            dense
-            type="number"
-            :rules="[isPortValid]"
-            bottom-slots
-            :label="$t('setup.port')"
-          >
-            <template #append>
-              <div
-                class="column q-pa-none"
-              >
-                <q-icon
-                  size="sm"
-                  style="margin-bottom:-4px;cursor:pointer;"
-                  dense
-                  name="expand_less"
-                  @click="settings.server.port++"
-                />
-                <q-icon
-                  size="sm"
-                  style="margin-top:-4px;cursor:pointer;"
-                  dense
-                  name="expand_more"
-                  @click="settings.server.port--"
-                />
-              </div>
-            </template>
-            <template #hint>
-              <q-slider
+                size="sm"
+                style="margin-bottom:-4px;cursor:pointer;"
                 dense
-                :model-value="settings.server.port"
-                :min="1024"
-                :max="65535"
-                color="positive"
-                label
-                @change="settings.server.port = $event"
+                name="expand_less"
+                @click="settings.server.port++"
               />
-            </template>
-          </q-input>
-          <q-card>
-            <q-card-section>
-              {{ $t('setup.security.choose') }}
-            </q-card-section>
-            <q-card-section>
-              <q-list>
-                <q-item
-                  v-ripple
-                  tag="label"
-                >
-                  <q-item-section avatar>
-                    <q-radio
-                      id="no-ssl"
-                      v-model="settings.server.ssl"
-                      val="false"
-                      color="negative"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ $t('setup.security.none') }}</q-item-label>
-                    <q-item-label caption>
-                      {{ $t('setup.security.none_description') }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
+              <q-icon
+                size="sm"
+                style="margin-top:-4px;cursor:pointer;"
+                dense
+                name="expand_more"
+                @click="settings.server.port--"
+              />
+            </div>
+          </template>
+          <template #hint>
+            <q-slider
+              dense
+              :model-value="settings.server.port"
+              :min="1024"
+              :max="65535"
+              color="positive"
+              label
+              @change="settings.server.port = $event"
+            />
+          </template>
+        </q-input>
+        <q-card
+          :dark="$q.dark.isActive"
+          :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+        >
+          <q-card-section>
+            {{ $t('setup.security.choose') }}
+          </q-card-section>
+          <q-card-section>
+            <q-list>
+              <q-item
+                v-ripple
+                tag="label"
+              >
+                <q-item-section avatar>
+                  <q-radio
+                    id="no-ssl"
+                    v-model="settings.server.ssl"
+                    val="false"
+                    color="negative"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ $t('setup.security.none') }}</q-item-label>
+                  <q-item-label caption>
+                    {{ $t('setup.security.none_description') }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
 
-                <q-item
-                  v-ripple
-                  tag="label"
-                >
-                  <q-item-section avatar>
-                    <q-radio
-                      id="app-ssl"
-                      v-model="settings.server.ssl"
-                      val="app"
-                      color="warning"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>
-                      {{ $t('setup.security.app') }} <small>({{ $t('setup.security.selfsigned') }})</small>
-                    </q-item-label>
-                    <q-item-label
-                      caption
-                      class="flex"
-                    >
-                      <span>
-                        {{ $t('setup.security.app_description', { appName: $t('app.name') }) }}
-                      </span>
-                      <q-slide-transition>
-                        <div
-                          v-if="settings.server.ssl === 'app'"
-                        >
-                          <q-input
-                            v-model="settings.server.hostname"
-                            class="q-mt-sm q-ml-auto "
-                            dense
-                            :autofocus="!isHostNameValid(settings.server.hostname)"
-                            bottom-slots
-                            clearable
-                            no-error-icon
-                            name="hostname"
-                            :error="hostNameHint(settings.server.hostname) !== ''"
-                            :type="'text'"
-                            :label="$t('setup.address')"
-                          >
-                            <template
-                              #prepend
-                            >
-                              <q-icon
-                                name="public"
-                              />
-                            </template>
-                            <template #hint>
-                              <div v-html="$t('setup.address_hint')" />
-                            </template>
-                            <template #error>
-                              <div v-html="$t(hostNameHint(settings.server.hostname))" />
-                            </template>
-                          </q-input>
-                        </div>
-                      </q-slide-transition>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-
-                <q-item
-                  v-ripple
-                  tag="label"
-                >
-                  <q-item-section
-                    avatar
-                    top
+              <q-item
+                v-ripple
+                tag="label"
+              >
+                <q-item-section avatar>
+                  <q-radio
+                    id="app-ssl"
+                    v-model="settings.server.ssl"
+                    val="app"
+                    color="warning"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    {{ $t('setup.security.app') }} <small>({{ $t('setup.security.selfsigned') }})</small>
+                  </q-item-label>
+                  <q-item-label
+                    caption
+                    class="flex"
                   >
-                    <q-radio
-                      id="user-ssl"
-                      v-model="settings.server.ssl"
-                      val="provided"
-                      color="positive"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label>{{ $t('setup.security.provided') }}</q-item-label>
-                    <q-item-label caption>
-                      {{ $t('setup.security.provided_description') }}
-                    </q-item-label>
+                    <span>
+                      {{ $t('setup.security.app_description', { appName: $t('app.name') }) }}
+                    </span>
                     <q-slide-transition>
                       <div
-                        v-if="settings.server.ssl === 'provided'"
-                        class="flex justify-around q-mt-sm"
+                        v-if="settings.server.ssl === 'app'"
                       >
-                        <q-btn
+                        <q-input
+                          v-model="settings.server.hostname"
+                          class="q-mt-sm q-ml-auto "
                           dense
-                          @click="prompt($t('setup.security.pastcert'), 'cert', settings.server.cert)"
+                          :autofocus="!isHostNameValid(settings.server.hostname)"
+                          bottom-slots
+                          clearable
+                          no-error-icon
+                          name="hostname"
+                          :error="hostNameHint(settings.server.hostname) !== ''"
+                          :type="'text'"
+                          :label="$t('setup.address')"
                         >
-                          <template #default>
-                            <span>{{ $t('setup.security.certificate') }}</span>
+                          <template
+                            #prepend
+                          >
                             <q-icon
-                              right
-                              name="lock"
-                              :color="certifColor(settings.server.cert)"
+                              name="public"
                             />
                           </template>
-                        </q-btn>
-                        <q-btn
-                          dense
-                          @click="prompt($t('setup.security.pastprivkey'), 'key', settings.server.key)"
-                        >
-                          <template #default>
-                            <span>{{ $t('setup.security.privkey') }}</span>
-                            <q-icon
-                              right
-                              name="key"
-                              :color="keyColor(settings.server.key)"
-                            />
+                          <template #hint>
+                            <div v-html="$t('setup.address_hint')" />
                           </template>
-                        </q-btn>
+                          <template #error>
+                            <div v-html="$t(hostNameHint(settings.server.hostname))" />
+                          </template>
+                        </q-input>
                       </div>
                     </q-slide-transition>
-                  </q-item-section>
-                </q-item>
-              </q-list>
-            </q-card-section>
-          </q-card>
-          <div class="row justify-end">
-            <q-btn
-              id="start"
-              type="submit"
-              size="xl"
-              round
-              :loading="starting"
-              :color="!readyToStart() ? 'warning' : 'negative'"
-              :disabled="!readyToStart() || starting"
-              icon="local_fire_department"
-            />
-          </div>
-        </q-form>
-      </q-card>
-    </div>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item
+                v-ripple
+                tag="label"
+              >
+                <q-item-section
+                  avatar
+                  top
+                >
+                  <q-radio
+                    id="user-ssl"
+                    v-model="settings.server.ssl"
+                    val="provided"
+                    color="positive"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ $t('setup.security.provided') }}</q-item-label>
+                  <q-item-label caption>
+                    {{ $t('setup.security.provided_description') }}
+                  </q-item-label>
+                  <q-slide-transition>
+                    <div
+                      v-if="settings.server.ssl === 'provided'"
+                      class="flex justify-around q-mt-sm"
+                    >
+                      <q-btn
+                        dense
+                        @click="prompt($t('setup.security.pastcert'), 'cert', settings.server.cert)"
+                      >
+                        <template #default>
+                          <span>{{ $t('setup.security.certificate') }}</span>
+                          <q-icon
+                            right
+                            name="lock"
+                            :color="certifColor(settings.server.cert)"
+                          />
+                        </template>
+                      </q-btn>
+                      <q-btn
+                        dense
+                        @click="prompt($t('setup.security.pastprivkey'), 'key', settings.server.key)"
+                      >
+                        <template #default>
+                          <span>{{ $t('setup.security.privkey') }}</span>
+                          <q-icon
+                            right
+                            name="key"
+                            :color="keyColor(settings.server.key)"
+                          />
+                        </template>
+                      </q-btn>
+                    </div>
+                  </q-slide-transition>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card-section>
+        </q-card>
+        <div class="row justify-end">
+          <q-btn
+            id="start"
+            type="submit"
+            size="xl"
+            round
+            :loading="starting"
+            :color="!readyToStart() ? 'warning' : 'negative'"
+            :disabled="!readyToStart() || starting"
+            icon="local_fire_department"
+          />
+        </div>
+      </q-form>
+    </q-card>
   </div>
 </template>
 <style lang="css">

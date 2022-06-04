@@ -98,21 +98,30 @@ async function forceupdate() {
 
     <q-drawer
       v-model="drawer"
+      -
+      :dark="$q.dark.isActive"
       show-if-above
       :side="$q.screen.lt.md ? 'right' : 'left'"
       :mini="miniState"
       :width="200"
       bordered
-      class="bg-dark"
+      :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
       @mouseover="miniState = false"
       @mouseout="miniState = true"
     >
-      <q-scroll-area class="fit">
-        <q-list padding>
+      <q-scroll-area
+        class="fit"
+        :dark="$q.dark.isActive"
+      >
+        <q-list
+          padding
+          :dark="$q.dark.isActive"
+        >
           <q-item
             v-ripple
             clickable
             :active="route.name === 'home'"
+            :dark="$q.dark.isActive"
             @click="router.push({ name: 'home' })"
           >
             <q-item-section avatar>
@@ -126,6 +135,7 @@ async function forceupdate() {
 
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             clickable
             :active="route.name === 'explore' || route.name === 'explore_mirror'"
             @click="router.push({ name: 'explore' })"
@@ -141,6 +151,7 @@ async function forceupdate() {
 
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             clickable
             :active="route.name === 'search'"
             @click="router.push({ name: 'search' })"
@@ -156,6 +167,7 @@ async function forceupdate() {
 
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             clickable
             :active="route.name === 'quick'"
             @click="quickadd"
@@ -168,10 +180,10 @@ async function forceupdate() {
               {{ $t('dialog.quickadd.tab') }}
             </q-item-section>
           </q-item>
-          <q-separator />
-
+          <q-separator :dark="$q.dark.isActive" />
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             clickable
             :active="route.name === 'settings'"
             @click="router.push({ name: 'settings' })"
@@ -184,9 +196,10 @@ async function forceupdate() {
               {{ $t('settings.tab') }}
             </q-item-section>
           </q-item>
-          <q-separator />
+          <q-separator :dark="$q.dark.isActive" />
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             :clickable="!updating"
             :disable="updating"
             @click="forceupdate"
@@ -209,6 +222,7 @@ async function forceupdate() {
           </q-item>
           <q-item
             v-ripple
+            :dark="$q.dark.isActive"
             clickable
             :active="route.name === 'logs'"
             @click="router.push({ name: 'logs' })"
@@ -227,7 +241,8 @@ async function forceupdate() {
 
     <q-page-container>
       <q-page
-        class="row bg-dark"
+        class="row"
+        :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
       >
         <router-view :key="route.fullPath" />
       </q-page>

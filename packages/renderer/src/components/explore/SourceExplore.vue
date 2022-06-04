@@ -91,10 +91,11 @@ onBeforeUnmount(async () => {
     container
     :style="'height: '+($q.screen.height-50)+'px'"
     class="shadow-2"
+    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-header
       elevated
-      class="bg-dark"
+      :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     >
       <q-bar
         v-if="mirror"
@@ -141,9 +142,13 @@ onBeforeUnmount(async () => {
               >
                 <div
                   v-if="item.inLibrary"
-                  class="absolute-top-right bg-accent q-ma-lg"
+                  class="absolute-top-right q-ma-lg q-pa-xs rounded-borders text-white"
+                  :class="$q.dark.isActive ? 'bg-accent' : 'bg-primary' "
                 >
-                  {{ $t('explore.inlibrary') }}
+                  <q-icon name="bookmark" />
+                  <q-tooltip>
+                    {{ $t('explore.inlibrary') }}
+                  </q-tooltip>
                 </div>
                 <div
                   class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"

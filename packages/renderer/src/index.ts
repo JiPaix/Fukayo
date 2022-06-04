@@ -80,9 +80,7 @@ myApp.use(Quasar, {
       primary: '#3d75ad',
       secondary: '#4da89f',
       accent: '#9C27B0',
-
       dark: '#1d1d1d',
-
       positive: '#3b9c52',
       negative: '#b53645',
       info: '#61c1d4',

@@ -19,7 +19,7 @@ useFavicon(favicon); // change favicon
 const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
-$q.dark.set(true);
+$q.dark.set(settings.theme === 'dark');
 $q.loading.hide();
 const loading = ref(false);
 
@@ -74,9 +74,9 @@ onBeforeMount(()=> {
 });
 </script>
 <template>
-  <q-layout dark>
+  <q-layout>
     <q-page-container>
-      <q-page dark>
+      <q-page>
         <div v-if="!loading">
           <div v-if="!connected">
             <!-- Setup page if client is electron -->

@@ -81,6 +81,7 @@ function showManga (item:SearchResult) {
         </div>
         <q-skeleton
           v-else
+          :dark="$q.dark.isActive"
           class="col-xs-12 col-sm-6 cover flex cursor-pointer"
           :class="$q.screen.lt.sm ? 'xs-cover' : ''"
           @click="showManga(item)"
@@ -101,47 +102,45 @@ function showManga (item:SearchResult) {
           class="flex column justify-between"
           :class="$q.screen.xs ? 'w-100' : 'w-50'"
         >
-          <div class="flex column q-pa-sm">
+          <div class="flex column q-pa-sm w-100">
             <div
-              class="row q-ma-sm shadow-1"
+              class="row q-ma-sm shadow-1 flex items-center bg-white text-black"
+              style="border-top-left-radius:3px;border-bottom-left-radius: 3px;border-top-right-radius:3px;border-bottom-right-radius: 3px;"
             >
               <div
-                class="col-lg-4 col-xs-2 bg-white text-black text-center"
-                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
+                class="col-lg-4 col-xs-2 text-center"
               >
                 <q-icon name="translate" />
               </div>
               <div
-                class="col-lg-8 col-xs-9 text-center text-uppercase text-caption ellipsis"
-                style="border-top-right-radius:3px;border-bottom-right-radius: 3px;"
+                class="col-lg-8 col-xs-9 text-right text-uppercase text-caption ellipsis"
               >
-                {{ $t('languages.'+item.lang+'') }}
+                <span class="q-mr-sm">{{ $t('languages.'+item.lang+'.value') }}</span>
               </div>
             </div>
             <div
-              class="row q-ma-sm shadow-1"
+              class="row q-ma-sm shadow-1 flex items-center bg-white text-black"
+              style="border-top-left-radius:3px;border-bottom-left-radius: 3px;border-top-right-radius:3px;border-bottom-right-radius: 3px;"
             >
               <div
-                class="col-lg-4 col-xs-2 bg-white text-black text-center"
-                style="border-top-left-radius:3px;border-bottom-left-radius: 3px;"
+                class="col-lg-4 col-xs-2 text-center"
               >
                 <q-icon :name="'img:'+item.mirrorinfo.icon" />
               </div>
               <div
-                class="col-lg-8 col-xs-9 text-center text-uppercase text-caption ellipsis"
-                style="border-top-right-radius:3px;border-bottom-right-radius: 3px;"
+                class="col-lg-8 col-xs-9 text-right text-uppercase text-caption ellipsis"
               >
-                {{ item.mirrorinfo.displayName }}
+                <span class="q-mr-sm">{{ item.mirrorinfo.displayName }}</span>
               </div>
             </div>
           </div>
           <div
             v-if="item.last_release"
-            class="q-pa-sm flex column bottom"
+            class="q-pa-sm flex column bottom w-100"
           >
             <div
               v-if="(item.last_release.name !== undefined && item.last_release.chapter === undefined) || $q.screen.lt.sm"
-              class="bg-orange text-white text-center q-pa-md rounded-borders w-100 text-weight-medium"
+              class="bg-orange text-white text-center q-pa-sm q-mb-sm rounded-borders w-100 text-weight-medium ellipsis"
             >
               <span v-if="item.last_release.chapter !== undefined">
                 {{ $t('mangas.chapter').toLocaleUpperCase() }} {{ item.last_release.chapter }}
@@ -151,7 +150,6 @@ function showManga (item:SearchResult) {
               </span>
               <span
                 v-if="item.last_release.name !== undefined"
-                class="ellipsis"
               >
                 {{ item.last_release.name }}
               </span>
@@ -166,7 +164,7 @@ function showManga (item:SearchResult) {
               >
                 {{ item.last_release.volume }}
               </div>
-              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
+              <div class="col-8 q-py-sm bg-white text-dark text-center text-uppercase text-weight-medium ellipsis">
                 {{ $t('mangas.volume', item.last_release.volume) }}
               </div>
             </div>
@@ -181,7 +179,7 @@ function showManga (item:SearchResult) {
               >
                 {{ item.last_release.chapter }}
               </div>
-              <div class="col-8 q-py-sm text-center text-uppercase text-weight-medium ellipsis">
+              <div class="col-8 q-py-sm bg-white text-dark  text-center text-uppercase text-weight-medium ellipsis">
                 {{ $t('mangas.chapter', item.last_release.chapter === 0 ? 1 : item.last_release.chapter) }}
               </div>
             </div>

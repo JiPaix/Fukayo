@@ -1,8 +1,11 @@
 <script lang="ts" setup>
 import { ref, watch, onUpdated } from 'vue';
 import { chapterLabel } from './helpers';
+import { useQuasar } from 'quasar';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 
+/** quasar */
+const $q = useQuasar();
 /** props */
 const props = defineProps<{
   drawer:boolean,
@@ -73,12 +76,15 @@ function navigate(o: {label: string|number, value: number}) {
     :model-value="drawer"
     side="right"
     :width="300"
-    class="bg-grey-9"
+    :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-2'"
+    :dark="$q.dark.isActive"
     @update:model-value="emit('toggle-drawer')"
   >
     <q-bar
       v-if="drawerReveal"
-      class="w-100 flex bg-grey-10 items-center justify-between cursor-pointer"
+      class="w-100 flex items-center justify-between cursor-pointer"
+      :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-3'"
+      :dark="$q.dark.isActive"
       @click="emit('toggle-drawer')"
     >
       <span class="ellipsis q-pr-sm"> {{ manga.displayName || manga.name }} </span>
@@ -101,6 +107,7 @@ function navigate(o: {label: string|number, value: number}) {
         value: index,
       })).sort((a, b) => a.value - b.value)"
       color="orange"
+      :dark="$q.dark.isActive"
       @update:model-value="emit('navigate', $event.value)"
     >
       <template #selected-item>
@@ -111,6 +118,7 @@ function navigate(o: {label: string|number, value: number}) {
       <template #option="scope">
         <q-item
           v-bind="scope.itemProps"
+          :dark="$q.dark.isActive"
         >
           <q-item-section>
             <q-item-label>
@@ -176,16 +184,19 @@ function navigate(o: {label: string|number, value: number}) {
         v-model="localSettings.longStrip"
         :label="$t('reader.longstrip')"
         color="orange"
+        :dark="$q.dark.isActive"
       />
       <q-toggle
         v-model="localSettings.webtoon"
         :label="$t('reader.webtoon')"
         color="orange"
+        :dark="$q.dark.isActive"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
         :label="$t('reader.showpagenumber')"
         color="orange"
+        :dark="$q.dark.isActive"
       />
       <q-btn-group class="q-ml-auto q-mr-auto q-mt-lg">
         <q-btn
@@ -258,6 +269,7 @@ function navigate(o: {label: string|number, value: number}) {
           :min="5"
           :max="500"
           color="orange"
+          :dark="$q.dark.isActive"
           label
           class="w-100"
         />

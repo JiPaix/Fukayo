@@ -136,7 +136,10 @@ onBeforeUnmount(() => {
     @hide="onDialogCancel"
     @keyup.enter="showManga"
   >
-    <q-card class="q-dialog-plugin">
+    <q-card
+      class="q-dialog-plugin"
+      :dark="$q.dark.isActive"
+    >
       <q-card-section class=" q-mb-lg">
         <span class="text-h5">
           {{ $t('dialog.quickadd.title') }}
@@ -150,6 +153,7 @@ onBeforeUnmount(() => {
           :model-value="input"
           type="text"
           :label="$t('dialog.quickadd.url')"
+          :dark="$q.dark.isActive"
           @update:model-value="(v) => { input = saneInput(v); findMirrorbyUrl() }"
           @keydown="isInputNew = true"
         />
@@ -167,6 +171,7 @@ onBeforeUnmount(() => {
             options-dense
             :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
             :options="availableLangs"
+            :dark="$q.dark.isActive"
           />
         </div>
       </q-card-section>
