@@ -163,6 +163,13 @@
   "mangas": {
     "chapter": "Chapitre | Chapitres",
     "forceupdate": "Mettre à jour",
+    "markasread": {
+      "current": "Marquer ce {chapterWord} comme lu",
+      "current_unread": "Marquer ce {chapterWord} comme non-lu",
+      "next": "Marquer le {chapterWord} suivant comme lu | Marquer les {chapterWord} suivants comme lu",
+      "previous": "Marquer le {chapterWord} précédent comme lu | Marquer les {chapterWord} précedents comme lu",
+      "previous_unread": "Marquer le {chapterWord} suivant comme non lu | Marquer les {chapterWord} suivants comme non lu"
+    },
     "source": "Source | Sources",
     "volume": "Volume | Volumes"
   },

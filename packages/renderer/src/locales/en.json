@@ -163,6 +163,13 @@
   "mangas": {
     "chapter": "Chapter | Chapters",
     "forceupdate": "Update",
+    "markasread": {
+      "current": "Mark this {chapterWord} as read",
+      "current_unread": "Mark this {chapterWord} as unread",
+      "next": "Mark next {chapterWord} as read",
+      "previous": "Mark previous {chapterWord} as read",
+      "previous_unread": "Mark next {chapterWord} as unread"
+    },
     "source": "Source | Sources",
     "volume": "Volume | Volumes"
   },

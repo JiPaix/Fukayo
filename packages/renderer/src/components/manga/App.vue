@@ -301,11 +301,99 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(isMangaInDb(manga.value)) {
     socket.emit('addManga', updatedManga, (res) => {
       manga.value = {...res, covers: manga.value?.covers||[] };
-      console.log('updated', res.meta.options);
     });
   } else {
     manga.value = updatedManga;
   }
+}
+
+async function markAsRead(index:number) {
+  if(!manga.value) return;
+  if(!socket) socket = await useSocket(settings.server);
+  const updatedManga = manga.value;
+  updatedManga.chapters[index].read = true;
+  await updateManga(updatedManga);
+}
+
+async function markAsUnread(index:number) {
+  if(!manga.value) return;
+  if(!socket) socket = await useSocket(settings.server);
+  const updatedManga = manga.value;
+  updatedManga.chapters[index].read = false;
+  await updateManga(updatedManga);
+}
+
+const unreadChaps = computed(() => {
+  if(!manga.value) return [];
+  return manga.value.chapters.filter((c) => !c.read);
+});
+
+function hasPreviousUnread(index: number) {
+  if(!manga.value) return false;
+  const chapNum = manga.value.chapters[index].number;
+  const unreadFromIndex = unreadChaps.value.filter(c => c.number < chapNum);
+  if(unreadFromIndex.length > 0) return true;
+  return false;
+}
+
+function hasNextUnread(index: number) {
+  if(!manga.value) return false;
+  const chapNum = manga.value.chapters[index].number;
+  const unreadFromIndex = unreadChaps.value.filter(c => c.number > chapNum);
+  if(unreadFromIndex.length > 0) return true;
+  return false;
+}
+
+function markPreviousAsRead(index: number) {
+  if(!manga.value) return;
+  const chapNum = manga.value.chapters[index].number;
+  const updatedChapters = manga.value.chapters.map((c) => {
+    if(c.number < chapNum) {
+      c.read = true;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
+}
+
+function markPreviousAsUnread(index: number) {
+  if(!manga.value) return;
+  const chapNum = manga.value.chapters[index].number;
+  const updatedChapters = manga.value.chapters.map((c) => {
+    if(c.number < chapNum) {
+      c.read = false;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
+}
+
+function markNextAsRead(index: number) {
+  if(!manga.value) return;
+  const chapNum = manga.value.chapters[index].number;
+  const updatedChapters = manga.value.chapters.map((c) => {
+    if(c.number > chapNum) {
+      c.read = true;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
+}
+
+function markNextAsUnread(index: number) {
+  if(!manga.value) return;
+  const chapNum = manga.value.chapters[index].number;
+  const updatedChapters = manga.value.chapters.map((c) => {
+    if(c.number > chapNum) {
+      c.read = false;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
 }
 
 /** fetch manga infos before component is mounted */
@@ -320,7 +408,10 @@ onBeforeMount(async () => {
 
   socket?.on('showManga', (id, mg) => {
     if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
-      manga.value = mg;
+      manga.value = {
+        ...mg,
+        chapters: mg.chapters.sort((a, b) => b.number - a.number),
+      };
     }
     socket?.off('showManga');
   });
@@ -509,7 +600,7 @@ onBeforeUnmount(() => {
         <!-- Chapters list -->
         <q-virtual-scroll
           :style="$q.screen.xs ? '' : 'height: ' + coverHeight + 'px'"
-          :items="manga.chapters.sort((a, b) => b.number - a.number)"
+          :items="manga.chapters"
           separator
         >
           <template #default="{ item, index }">
@@ -547,14 +638,63 @@ onBeforeUnmount(() => {
                   {{ dayJS ? dayJS(item.date).fromNow() : item.date }}
                 </q-item-label>
                 <!-- Chapter Action Buttons -->
-                <q-item-label>
-                  <q-btn
-                    icon="play_arrow"
-                    round
-                    color="orange"
-                    size="xs"
-                    @click="showChapterComp(index)"
-                  />
+                <q-item-label class="flex justify-between">
+                  <q-btn-group
+                    flat
+                  >
+                    <q-btn
+                      icon="play_arrow"
+                      dense
+                      :color="item.read ? 'orange-9' :'orange'"
+                      @click="showChapterComp(index)"
+                    />
+                    <q-btn
+                      :icon="item.read ? 'visibility_off' : 'visibility'"
+                      dense
+                      :color="item.read ? 'orange-9' :'orange'"
+                      @click="item.read ? markAsUnread(index) : markAsRead(index)"
+                    >
+                      <q-tooltip v-if="item.read">
+                        {{ $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                      </q-tooltip>
+                      <q-tooltip v-else>
+                        {{ $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                      </q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      v-if="index < manga.chapters.length - 1"
+                      icon="arrow_downward"
+                      dense
+                      :color="hasPreviousUnread(index) ? 'orange' : 'orange-9'"
+                      @click="hasPreviousUnread(index) ? markPreviousAsRead(index) : markPreviousAsUnread(index)"
+                    >
+                      <q-tooltip>
+                        {{ $t('mangas.markasread.previous', { chapterWord: $t('mangas.chapter', manga.chapters.length).toLocaleLowerCase() }, manga.chapters.length) }}
+                      </q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      v-else
+                      color="orange"
+                    />
+                    <q-btn
+                      v-if="index > 0"
+                      icon="arrow_upward"
+                      dense
+                      :color="hasNextUnread(index) ? 'orange' : 'orange-9'"
+                      @click="hasNextUnread(index) ? markNextAsRead(index) : markNextAsUnread(index)"
+                    >
+                      <q-tooltip v-if="hasNextUnread(index)">
+                        {{ $t('mangas.markasread.next', { chapterWord: $t('mangas.chapter', manga.chapters.length).toLocaleLowerCase() }, manga.chapters.length) }}
+                      </q-tooltip>
+                      <q-tooltip v-else>
+                        {{ $t('mangas.markasread.previous_unread', { chapterWord: $t('mangas.chapter', manga.chapters.length).toLocaleLowerCase() }, manga.chapters.length) }}
+                      </q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      v-else
+                      color="orange"
+                    />
+                  </q-btn-group>
                 </q-item-label>
               </q-item-section>
             </q-item>
