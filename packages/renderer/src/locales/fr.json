@@ -22,6 +22,9 @@
     "placeholder": "Filtrer les sources par nom",
     "tab": "Explorer"
   },
+  "global": {
+    "colon_word": "{word} :"
+  },
   "languages": {
     "ar": {
       "desc": "Arabic",

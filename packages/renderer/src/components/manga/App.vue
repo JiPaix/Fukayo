@@ -525,7 +525,7 @@ onBeforeUnmount(() => {
     <q-card-section>
       <!-- Mirror and Language -->
       <div class="flex items-center q-mt-md">
-        <span class="q-mr-sm">{{ $t("mangas.source") }}: </span>
+        <span class="q-mr-sm">{{ $t('global.colon_word', {word: $t("mangas.source")}) }}</span>
         <a
           v-if="manga && mirrorinfo"
           class="text-weight-medium"
@@ -562,7 +562,7 @@ onBeforeUnmount(() => {
       <div
         class="flex items-center"
       >
-        {{ $t("languages.language.value") }}:
+        {{ $t('global.colon_word', {word: $t("languages.language.value") }) }}
         <span
           v-if="manga"
           class="text-weight-medium q-ml-sm"
