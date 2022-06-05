@@ -117,6 +117,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   static getAllCacheFiles(dirPath?:string, arrayOfFiles?:{ filename: string, size:number, age:number }[]): { filename: string, size:number, age:number }[] {
+    if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     const path = dirPath || resolve(env.USER_DATA, '.cache');
     const files = readdirSync(path);
     let res = arrayOfFiles || [];

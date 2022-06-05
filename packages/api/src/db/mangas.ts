@@ -24,6 +24,7 @@ function isMangaInDB(res: MangaPage | MangaInDB ): res is MangaInDB {
 export class MangasDB extends DatabaseIO<Mangas> {
   private path: string;
   constructor() {
+    if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
     this.path = resolve(env.USER_DATA, '.mangasdb');
   }

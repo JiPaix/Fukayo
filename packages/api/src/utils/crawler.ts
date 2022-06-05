@@ -39,6 +39,7 @@ let runningTask = 0;
  * Initialize cluster instance if not already initialized.
  */
 async function useCluster() {
+  if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
   if(cluster) return cluster;
   // pseudo benchmarking
   const cores = (await si.cpu()).physicalCores;

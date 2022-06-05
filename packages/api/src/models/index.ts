@@ -78,6 +78,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
 
 
   constructor(opts: MirrorConstructor<T>) {
+    if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
@@ -357,12 +358,14 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   }
 
   private async saveToCache(filename:string, buffer:Buffer) {
+    if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       writeFileSync(resolve(env.USER_DATA, '.cache', this.name, filename), buffer);
     }
   }
 
   private async loadFromCache(id:{ identifier: string, filename:string }) {
+    if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       let cacheResult:{mime: string, buffer:Buffer} | undefined;
       try {
