@@ -98,7 +98,6 @@ async function forceupdate() {
 
     <q-drawer
       v-model="drawer"
-      -
       :dark="$q.dark.isActive"
       show-if-above
       :side="$q.screen.lt.md ? 'right' : 'left'"
