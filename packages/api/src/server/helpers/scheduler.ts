@@ -172,16 +172,16 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    *
    * @param force if true, will force the update of all the mangas
    */
-  update(force?:boolean) {
+  async update(force?:boolean) {
     if(this.ongoing.updates) return;
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     if(force) this.restartUpdate();
-    const mangas = this.getMangasToUpdate(force);
-    Object.keys(mangas).forEach(async mirrorName => {
+    const mangaByMirror = this.getMangasToUpdate(force);
+    for(const mirrorName of Object.keys(mangaByMirror)) {
       const mirror = mirrors.find(m => m.name === mirrorName);
-      if(mirror) await this.updateMangas(mirror, mangas[mirrorName]);
-    });
+      if(mirror) await this.updateMangas(mirror, mangaByMirror[mirrorName]);
+    }
     this.ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
   }
@@ -228,15 +228,18 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   private async updateSingleManga(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
+
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
-      const listener = (id:number, manga:MangaInDB | MangaPage | MangaErrorMessage ) => {
+      const listener = (id:number, mangaFromMirror:MangaInDB | MangaPage | MangaErrorMessage ) => {
         if(id !== reqId) return;
-        if(isMangaPage(manga)) {
+        if(isMangaPage(mangaFromMirror)) {
           this.removeListener('showManga', listener);
-          resolve(manga);
+          this.logger('does it match?', mangaFromMirror.id === manga.id);
+          resolve(mangaFromMirror);
         } else {
+          this.removeListener('showManga', listener);
           reject(manga);
         }
       };
