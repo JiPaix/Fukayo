@@ -146,12 +146,12 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   restart() {
     clearInterval(this.intervals.cache);
     clearInterval(this.intervals.updates);
-    this.intervals = {
-      nextcache: Date.now() + (30 * 60 * 1000),
-      cache: setInterval(this.update.bind(this), 30 * 60 * 1000),
-      nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
-      updates: setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
-    };
+    if(this.cacheEnabled) {
+      this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
+      this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+    }
+    this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
+    this.intervals.updates = setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
   }
 
   restartUpdate() {
@@ -162,9 +162,12 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
 
   restartCache() {
     clearInterval(this.intervals.cache);
-    this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
-    this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+    if(this.cacheEnabled) {
+      this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
+      this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+    }
   }
+
   /**
    *
    * @param force if true, will force the update of all the mangas

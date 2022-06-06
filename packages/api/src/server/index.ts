@@ -273,8 +273,26 @@ export default class IOWrapper {
     });
 
     socket.on('changeSettings', (settings, cb) => {
+      // watch if we need to restart cache/update timers
+      let restartCache = false;
+      let restartUpdates = false;
+      // if waitBetweenUpdates is changed, we need to restart the update timer
+      if(settings.library.waitBetweenUpdates !== SettingsDatabase.data.library.waitBetweenUpdates) {
+        restartUpdates = true;
+      }
+      // if any of this cache settings is changed, we need to restart the cache timer
+      if(settings.cache.age.enabled !== SettingsDatabase.data.cache.age.enabled
+        || settings.cache.size.enabled == SettingsDatabase.data.cache.size.enabled
+        || settings.cache.age.max !== SettingsDatabase.data.cache.age.max
+        || settings.cache.size.max !== SettingsDatabase.data.cache.size.max)
+      {
+        restartCache = true;
+      }
+      // we need to write the new settings to the database before restarting the cache/update timers
       SettingsDatabase.data = settings;
       SettingsDatabase.write();
+      if(restartUpdates) Scheduler.restartUpdate();
+      if(restartCache) Scheduler.restartCache();
       cb(SettingsDatabase.data);
     });
   }
