@@ -223,7 +223,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       }
     }
     res.forEach(async (m) => {
-      await MangaDatabase.add(m);
+      await MangaDatabase.add({ manga: m });
     });
   }
 

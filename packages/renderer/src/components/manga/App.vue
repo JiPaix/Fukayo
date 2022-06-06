@@ -61,6 +61,14 @@ const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:numb
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 /** carrousel slides */
 const slide = ref(0);
+/** Reader settings */
+const localSettings = ref<MangaInDB['meta']['options']>({
+  webtoon: settings.reader.webtoon,
+  showPageNumber:  settings.reader.showPageNumber,
+  zoomMode: settings.reader.zoomMode,
+  zoomValue: settings.reader.zoomValue,
+  longStrip: settings.reader.longStrip,
+});
 
 /** autofocus chapterRef */
 watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
@@ -290,7 +298,7 @@ function toggleInLibrary() {
 async function add() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
-  socket?.emit('addManga', manga.value, (res) => {
+  socket?.emit('addManga', { manga: manga.value, settings: localSettings.value }, (res) => {
     manga.value = {
       ...res,
       covers: manga.value?.covers || [],
@@ -311,12 +319,20 @@ async function remove() {
 async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  if(isMangaInDb(manga.value)) {
-    socket.emit('addManga', updatedManga, (res) => {
+  if(isMangaInDb(updatedManga)) {
+    socket.emit('addManga', { manga: updatedManga }, (res) => {
       manga.value = {...res, covers: manga.value?.covers||[] };
     });
   } else {
     manga.value = updatedManga;
+  }
+}
+
+function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
+  if(!manga.value) return;
+  localSettings.value = newSettings;
+  if(isMangaInDb(manga.value)) {
+    updateManga({...manga.value, meta: {...manga.value.meta, options: newSettings}});
   }
 }
 
@@ -794,10 +810,12 @@ onBeforeUnmount(() => {
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
         :sorted-images="sortedImages"
         :chapter-error="chapterError"
+        :display-setting="localSettings"
         @hide="hideChapterComp"
         @reload="reloadChapterImage"
         @navigate="showChapterComp($event)"
         @update-manga="updateManga"
+        @update-settings="updateReaderSettings"
       />
     </q-dialog>
   </q-card>

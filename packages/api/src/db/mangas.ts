@@ -29,19 +29,18 @@ export class MangasDB extends DatabaseIO<Mangas> {
     this.path = resolve(env.USER_DATA, '.mangasdb');
   }
 
-  async add(manga: MangaPage|MangaInDB) {
+  async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
     const db = this.read();
-    const alreadyInDB = db.mangas.find(m => m.id === manga.id);
-    const filename = await this.filenamify(manga.id);
-    if(alreadyInDB && isMangaInDB(manga)) return this.upsert(manga, filename, alreadyInDB !== undefined);
-    db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, lang: manga.lang, file: filename });
+    const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
+    const filename = await this.filenamify(payload.manga.id);
+    if(alreadyInDB && isMangaInDB(payload.manga)) return this.upsert(payload.manga, filename, alreadyInDB !== undefined);
+    db.mangas.push({ id: payload.manga.id, url: payload.manga.url, mirror: payload.manga.mirror, lang: payload.manga.lang, file: filename });
     this.write(db);
     const meta:MangaInDB['meta'] = {
-      // todo: keep the original options
       lastUpdate: Date.now(),
       notify: true,
       update: true,
-      options : {
+      options : payload.settings || {
         webtoon: false,
         showPageNumber: true,
         zoomMode: 'auto',
@@ -49,7 +48,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         longStrip: false,
       },
     };
-    return this.upsert({...manga, inLibrary: true, meta}, filename);
+    return this.upsert({...payload.manga, inLibrary: true, meta}, filename);
   }
 
   remove(manga: MangaInDB) {

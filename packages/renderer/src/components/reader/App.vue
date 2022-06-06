@@ -3,7 +3,6 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { chapterLabel } from './helpers';
 import { isChapterImageErrorMessage, isMangaInDb } from '../helpers/typechecker';
-import { useStore as useStoreSettings } from '/@/store/settings';
 import { useQuasar } from 'quasar';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
@@ -22,6 +21,7 @@ const emit = defineEmits<{
   (event: 'reload', chapterIndex:number, pageIndex?:number): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'update-manga', manga:MangaInDB|MangaPage): void
+  (event: 'update-settings', settings:MangaInDB['meta']['options']): void
 }>();
 
 /** props */
@@ -36,10 +36,9 @@ const props = defineProps<{
   sortedImages: (ChapterImage | ChapterImageErrorMessage)[]
   /** has the chapter failed to load */
   chapterError: string|null
+  /** reader settings */
+  displaySetting: MangaInDB['meta']['options']
 }>();
-
-/** settings */
-const settings = useStoreSettings();
 
 /** displays a progress bar while images are loading */
 const showProgressBar = computed(() => {
@@ -67,30 +66,11 @@ const drawerRight = ref(true);
 /** Tell the sidebar if the q-header is revealed or not */
 const drawerRightReveal = ref(false);
 
-/** Reader settings */
-const localSettings = ref<MangaInDB['meta']['options']>({
-  webtoon: settings.reader.webtoon,
-  showPageNumber:  settings.reader.showPageNumber,
-  zoomMode: settings.reader.zoomMode,
-  zoomValue: settings.reader.zoomValue,
-  longStrip: settings.reader.longStrip,
-});
-
 /**
  * Listen to @update-settings from side-bar and update local settings
  */
 async function updateSettings(opts: MangaInDB['meta']['options']) {
-  localSettings.value = opts;
-  if(isMangaInDb(props.manga)) {
-    const toUpdate:MangaInDB = {
-      ...props.manga,
-      meta: {
-        ...props.manga.meta,
-        options: opts,
-      },
-    };
-    emit('update-manga', toUpdate);
-  }
+  emit('update-settings', opts);
 }
 
 /** Previous Chapter */
@@ -220,7 +200,10 @@ function navigation(index:number) {
   emit('navigate', index);
 }
 
-async function markAsRead() {
+/**
+ * Mark chapter as read if the user is on the last page
+ */
+async function markAsReadIfLastPage() {
   if(lastPageNav.value) {
     const chapter = props.manga.chapters[props.chapterSelectedIndex];
     const toUpdate = {
@@ -342,7 +325,7 @@ async function markAsRead() {
       :drawer-reveal="drawerRightReveal"
       :manga="manga"
       :chapter-selected-index="chapterSelectedIndex"
-      :reader-settings="isMangaInDb(manga) ? manga.meta.options : localSettings"
+      :reader-settings="isMangaInDb(manga) ? manga.meta.options : displaySetting"
       :first="first"
       :previous="previous"
       :next="next"
@@ -358,10 +341,10 @@ async function markAsRead() {
           :images="images"
           :nb-of-images-to-expect-from-chapter="props.nbOfImagesToExpectFromChapter"
           :chapter-selected-index="chapterSelectedIndex"
-          :reader-settings="isMangaInDb(manga) ? manga.meta.options : localSettings"
+          :reader-settings="isMangaInDb(manga) ? manga.meta.options : displaySetting"
           :manga="manga"
           :current-page="currentPageIndex"
-          @page-change="currentPageIndex = $event; markAsRead()"
+          @page-change="currentPageIndex = $event; markAsReadIfLastPage()"
           @reload="(chapterIndex, pageIndex) => emit('reload', chapterIndex, pageIndex)"
           @navigate="navigation"
         />

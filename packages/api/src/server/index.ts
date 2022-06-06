@@ -208,8 +208,8 @@ export default class IOWrapper {
      * Add manga to db
      * callback returns the manga's data (which is different from the one sent by the mirror)
      */
-    socket.on('addManga', async (manga, callback) => {
-      const mg = await MangaDatabase.add(manga);
+    socket.on('addManga', async (payload, callback) => {
+      const mg = await MangaDatabase.add(payload);
       callback(mg);
     });
 
