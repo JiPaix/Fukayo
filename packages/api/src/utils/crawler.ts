@@ -108,6 +108,7 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
   } catch(e) {
     // in most cases happens because waitForSelector timeout is reached (cloudflare?)
     runningTask = runningTask-1;
+    closeClusterIfAllDone();
     if(e instanceof Error) return e;
   }
 }
@@ -132,6 +133,7 @@ async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
   } catch(e) {
     // in most cases happens because waitForSelector timeout is reached (cloudflare?)
     runningTask = runningTask-1;
+    closeClusterIfAllDone();
     if(e instanceof Error) return e;
   }
 }
