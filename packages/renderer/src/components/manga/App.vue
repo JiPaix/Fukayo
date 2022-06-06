@@ -18,7 +18,7 @@ import type dayjs from 'dayjs';
 import type { ComponentPublicInstance} from 'vue';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
-import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
+import type { ChapterErrorMessage, ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 
@@ -53,8 +53,10 @@ const chapterSelectedIndex = ref<number | null>(null);
 const nbOfImagesToExpectFromChapter = ref(0);
 /** images and/or error messages */
 const images = ref<(ChapterImage | ChapterImageErrorMessage)[]>([]);
+/** message if chapter couldn't load */
+const chapterError = ref<string|null>(null);
 /** next chapter buffer */
-const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterImage | ChapterImageErrorMessage)[] } | undefined>();
+const nextChapterBuffer = ref<{ index:number, nbOfImagesToExpectFromChapter:number|undefined, images : (ChapterImage | ChapterImageErrorMessage)[], error?: ChapterErrorMessage } | undefined>();
 /** show-chapter template ref */
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 /** carrousel slides */
@@ -133,10 +135,10 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
             }
           }
         } else if (isChapterErrorMessage(res)) {
-          // TODO: show error message
-          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
+          chapterError.value = res.trace || res.error;
         } else {
           // unhandled should not happen
+          chapterError.value =  $t('reader.error.chapter', {chapterWord: $t('mangas.chapter').toLocaleLowerCase() });
         }
       });
     },
@@ -157,6 +159,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
     nbOfImagesToExpectFromChapter: undefined,
     index: nextIndex,
     images: [],
+    error: undefined,
   };
   socket?.emit(
     'showChapter',
@@ -172,8 +175,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
           nextChapterBuffer.value?.images.push(res);
           if(res.lastpage) socket?.off('showChapter');
         } else if (isChapterErrorMessage(res)) {
-          // TODO: show error message
-          // at this point either the mirror is down or the chapter is not available on the server (url is wrong?)
+            nextChapterBuffer.value = { index: nextIndex, images: [], nbOfImagesToExpectFromChapter: undefined, error: res };
         } else {
           // unhandled should not happen
         }
@@ -194,6 +196,7 @@ async function showChapterComp(chapterIndex:number) {
   chapterSelectedIndex.value = chapterIndex;
   displayChapter.value = true;
   nbOfImagesToExpectFromChapter.value = 0;
+  chapterError.value = null;
   startChapterFetch(chapterIndex);
 }
 
@@ -216,6 +219,10 @@ async function hideChapterComp() {
 async function startChapterFetch(chapterIndex: number) {
   if(!nextChapterBuffer.value) fetchChapter(chapterIndex);
   else if(nextChapterBuffer.value.index !== chapterIndex) fetchChapter(chapterIndex);
+  else if(nextChapterBuffer.value.error) {
+    chapterError.value = nextChapterBuffer.value.error.trace || nextChapterBuffer.value.error.error;
+    nextChapterBuffer.value = undefined;
+  }
   else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === undefined) fetchChapter(chapterIndex);
   else if(nextChapterBuffer.value.nbOfImagesToExpectFromChapter === nextChapterBuffer.value.images.length) {
     nbOfImagesToExpectFromChapter.value = nextChapterBuffer.value.nbOfImagesToExpectFromChapter;
@@ -233,10 +240,14 @@ async function startChapterFetch(chapterIndex: number) {
 /**
  * Request a specific image for a given chapter
  */
-async function reloadChapterImage(chapterIndex: number, pageIndex: number) {
+async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
   if (!manga.value) return; // should not happen
   // prepare and send the request
   if (!socket) socket = await useSocket(settings.server);
+  if(!pageIndex) {
+    if(chapterSelectedIndex.value) return showChapterComp(chapterSelectedIndex.value);
+    return;
+  }
   const id = Date.now();
   socket?.emit(
     'showChapter',
@@ -782,6 +793,7 @@ onBeforeUnmount(() => {
         :chapter-selected-index="chapterSelectedIndex"
         :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
         :sorted-images="sortedImages"
+        :chapter-error="chapterError"
         @hide="hideChapterComp"
         @reload="reloadChapterImage"
         @navigate="showChapterComp($event)"

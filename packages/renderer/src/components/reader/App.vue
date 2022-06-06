@@ -19,7 +19,7 @@ const $t = useI18n().t.bind(useI18n());
 /** emit */
 const emit = defineEmits<{
   (event: 'hide'): void
-  (event: 'reload', chapterIndex:number, pageIndex:number): void
+  (event: 'reload', chapterIndex:number, pageIndex?:number): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'update-manga', manga:MangaInDB|MangaPage): void
 }>();
@@ -34,6 +34,8 @@ const props = defineProps<{
   nbOfImagesToExpectFromChapter: number
   /** images sorted by index */
   sortedImages: (ChapterImage | ChapterImageErrorMessage)[]
+  /** has the chapter failed to load */
+  chapterError: string|null
 }>();
 
 /** settings */
@@ -268,7 +270,7 @@ async function markAsRead() {
           type="QAvatar"
         />
         <q-toolbar-title>
-          <span class="text-subtitle1">{{ manga.displayName || manga.name }}  - {{ currentPageIndex.index }}</span>
+          <span class="text-subtitle1">{{ manga.displayName || manga.name }}  - {{ $t('reader.page.count', {current: currentPageIndex.index, total: nbOfImagesToExpectFromChapter}) }}</span>
           <q-tooltip>
             {{ manga.name }}
           </q-tooltip>
@@ -341,6 +343,7 @@ async function markAsRead() {
     <q-page-container>
       <q-page>
         <image-viewer
+          v-if="!chapterError"
           :images="images"
           :nb-of-images-to-expect-from-chapter="props.nbOfImagesToExpectFromChapter"
           :chapter-selected-index="chapterSelectedIndex"
@@ -351,6 +354,39 @@ async function markAsRead() {
           @reload="(chapterIndex, pageIndex) => emit('reload', chapterIndex, pageIndex)"
           @navigate="navigation"
         />
+        <div
+          v-else
+          class="absolute-full flex flex-center bg-negative text-white q-pb-lg"
+        >
+          <div class="text-center">
+            <div class="text-h4">
+              {{ $t(
+                'global.colon_word' ,
+                {
+                  word: $t(
+                    'reader.error.chapter',
+                    {
+                      chapterWord: $t('mangas.chapter').toLocaleLowerCase()
+                    }
+                  )
+                }
+              ) }}
+            </div>
+            <div
+              class="text-center text-caption q-mb-lg"
+            >
+              <div>{{ props.chapterError }}</div>
+            </div>
+            <q-btn
+              icon-right="broken_image"
+              color="white"
+              text-color="black"
+              @click="emit('reload', chapterSelectedIndex)"
+            >
+              {{ $t('reader.error.reload') }}
+            </q-btn>
+          </div>
+        </div>
       </q-page>
     </q-page-container>
   </q-layout>
