@@ -270,7 +270,18 @@ async function markAsRead() {
           type="QAvatar"
         />
         <q-toolbar-title>
-          <span class="text-subtitle1">{{ manga.displayName || manga.name }}  - {{ $t('reader.page.count', {current: currentPageIndex.index, total: nbOfImagesToExpectFromChapter}) }}</span>
+          <span
+            v-if="nbOfImagesToExpectFromChapter > 0"
+            class="text-subtitle1"
+          >
+            {{ manga.displayName || manga.name }} - {{ $t('reader.page.count', {current: currentPageIndex.index+1, total: nbOfImagesToExpectFromChapter}) }}
+          </span>
+          <span v-else-if="!chapterError">
+            {{ manga.displayName || manga.name }} - {{ $t('reader.loading') }}
+          </span>
+          <span v-else>
+            {{ manga.displayName || manga.name }} - {{ $t('reader.error.chapter', $t('mangas.chapter').toLocaleLowerCase() ) }}
+          </span>
           <q-tooltip>
             {{ manga.name }}
           </q-tooltip>
