@@ -36,6 +36,7 @@ const emit = defineEmits<{
   (event: 'navigate', chapterIndex:number): void
   (event: 'toggle-drawer'): void
   (event: 'update-settings', settings: typeof localSettings.value): void
+  (event: 'update-manga', manga:MangaInDB|MangaPage): void
 }>();
 
 /** ref-ing the readerSettings props */
@@ -70,6 +71,22 @@ function navigate(o: {label: string|number, value: number}) {
   emit('navigate', o.value);
 }
 
+function toggleRead() {
+  const chapter = props.manga.chapters[props.chapterSelectedIndex];
+    const toUpdate = {
+    ...props.manga,
+    chapters : props.manga.chapters.map(c => {
+      if(c.id === chapter.id) {
+        return {
+          ...c,
+          read: !c.read,
+        };
+      }
+      return c;
+    }),
+  };
+  emit('update-manga', toUpdate);
+}
 </script>
 <template>
   <q-drawer
@@ -165,7 +182,6 @@ function navigate(o: {label: string|number, value: number}) {
             <span>{{ next.label }}</span>
           </q-tooltip>
         </q-btn>
-
         <q-btn
           :disable="!last"
           @click="last ? navigate(last) : null"
@@ -175,6 +191,19 @@ function navigate(o: {label: string|number, value: number}) {
             <span>{{ $t('reader.last') }}</span>
             <br>
             <span>{{ last.label }}</span>
+          </q-tooltip>
+        </q-btn>
+      </q-btn-group>
+    </div>
+    <div class="flex flex-center q-mt-lg">
+      <q-btn-group>
+        <q-btn
+          :text-color="manga.chapters[chapterSelectedIndex].read ? 'orange' : 'white'"
+          @click="toggleRead"
+        >
+          <q-icon :name="manga.chapters[chapterSelectedIndex].read ? 'o_visibility_off' : 'o_visibility'" />
+          <q-tooltip>
+            <span>{{ manga.chapters[chapterSelectedIndex].read ? $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter')}) : $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter')}) }}</span>
           </q-tooltip>
         </q-btn>
       </q-btn-group>

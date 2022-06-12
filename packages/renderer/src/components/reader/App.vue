@@ -333,6 +333,7 @@ async function markAsReadIfLastPage() {
       @toggle-drawer="drawerRight = !drawerRight"
       @navigate="navigation"
       @update-settings="updateSettings"
+      @update-manga="emit('update-manga', $event)"
     />
     <q-page-container>
       <q-page>
