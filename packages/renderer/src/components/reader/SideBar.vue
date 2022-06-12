@@ -87,6 +87,11 @@ function toggleRead() {
   };
   emit('update-manga', toUpdate);
 }
+function toggleLibrary() {
+  const toUpdate = props.manga;
+  toUpdate.inLibrary = !toUpdate.inLibrary;
+  emit('update-manga', toUpdate);
+}
 </script>
 <template>
   <q-drawer
@@ -197,6 +202,15 @@ function toggleRead() {
     </div>
     <div class="flex flex-center q-mt-lg">
       <q-btn-group>
+        <q-btn
+          :text-color="manga.inLibrary ? 'red' : 'white'"
+          @click="toggleLibrary"
+        >
+          <q-icon :name="manga.inLibrary ? 'o_delete' : 'o_favorite'" />
+          <q-tooltip>
+            <span>{{ manga.inLibrary ? $t('reader.manga.remove') : $t('reader.manga.add') }}</span>
+          </q-tooltip>
+        </q-btn>
         <q-btn
           :text-color="manga.chapters[chapterSelectedIndex].read ? 'orange' : 'white'"
           @click="toggleRead"
