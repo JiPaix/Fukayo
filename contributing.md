@@ -1,6 +1,6 @@
 # Contributing
 
-First and foremost, thank you! We appreciate that you want to contribute to Electron Mangas Reader, your time is valuable, and your contributions mean a lot to us.
+First and foremost, thank you! We appreciate that you want to contribute to Fukayo, your time is valuable, and your contributions mean a lot to us.
 
 ## Contribution Guidelines
 - Your contribution(s) must comply with our [Code of Conduct](CODE_OF_CONDUCT.md)

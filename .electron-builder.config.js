@@ -10,7 +10,7 @@ if (process.env.VITE_APP_VERSION === undefined) {
  */
 const config = {
   appId: 'com.electron.electronmangasreader',
-  productName: 'Electron Mangas Reader',
+  productName: 'Fukayo',
   // copyright: '',
   directories: {
     output: 'dist',

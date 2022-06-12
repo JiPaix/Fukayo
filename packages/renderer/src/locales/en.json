@@ -1,7 +1,7 @@
 {
   "app": {
     "description": "A simple electron app to read mangas",
-    "name": "Electron Mangas Reader"
+    "name": "Fukayo"
   },
   "dialog": {
     "quickadd": {
