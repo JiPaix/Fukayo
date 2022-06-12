@@ -5,7 +5,14 @@ import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from '.
 import type { ServerToClientEvents } from '../server/types';
 
 declare global {
-  interface Window { readonly apiServer: { startServer: (payload: startPayload) => Promise<ForkResponse>; stopServer: () => Promise<ForkResponse>; getEnv: string; } }
+  interface Window {
+    readonly apiServer: {
+      startServer: (payload: startPayload) => Promise<ForkResponse>;
+      stopServer: () => Promise<ForkResponse>;
+      copyImageToClipboard: (string: string) => Promise<void>;
+      getEnv: string;
+    }
+  }
 }
 
 /**

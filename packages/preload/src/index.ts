@@ -4,7 +4,7 @@
 
 import {contextBridge} from 'electron';
 import { getPath } from './config';
-import { startServer, stopServer } from './apiServer';
+import { startServer, stopServer, copyImageToClipboard } from './apiServer';
 
 
 /**
@@ -35,4 +35,4 @@ contextBridge.exposeInMainWorld('versions', process.versions);
   * intended to be used in a vuex store plugin
   */
 contextBridge.exposeInMainWorld('getPath', getPath);
-contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE });
+contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE, copyImageToClipboard });

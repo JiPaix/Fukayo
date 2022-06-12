@@ -13,7 +13,7 @@ interface Window {
     readonly apiServer: {
       startServer: (payload: import('../api/src/app/types').startPayload) => Promise<import('../api/src/app/types').ForkResponse>;
       stopServer: () => Promise<import('../api/src/app/types').ForkResponse>;
-      copyImageToClipboard: (string: string) => Promise<any>;
+      copyImageToClipboard: (string: string) => Promise<void>;
       getEnv: string;
     };
 }
