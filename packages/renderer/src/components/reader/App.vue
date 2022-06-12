@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { chapterLabel } from './helpers';
+import { chapterLabel, isMouseEvent } from './helpers';
 import { isChapterImageErrorMessage, isMangaInDb } from '../helpers/typechecker';
 import { useQuasar } from 'quasar';
 import ImageViewer from './ImageViewer.vue';
@@ -164,8 +164,9 @@ function decrementNav() {
 }
 
 /** listening to keyup events */
-function onKey(event: KeyboardEvent) {
-  if(event.key === 'ArrowRight') {
+function onKey(event: KeyboardEvent|MouseEvent) {
+  const left = $q.screen.width / 2;
+  if((isMouseEvent(event) && event.offsetX < left) || (!isMouseEvent(event) && event.key === 'ArrowRight')) {
     incrementNav(); // move to next page
     const delta = Date.now() - lastNavForward.value;
     if(delta < 300) {
@@ -175,10 +176,9 @@ function onKey(event: KeyboardEvent) {
     // in other case, update the "next-page" event count
     lastNavForward.value = Date.now();
   }
-  else if(event.key === 'ArrowLeft') {
+  else if((isMouseEvent(event) && event.offsetX > left) || (!isMouseEvent(event) && event.key === 'ArrowLeft')) {
     decrementNav(); // move to previous page
     const delta = Date.now() - lastNavBack.value;
-    console.log('d', delta, 'back', backNavCount.value);
     if(delta < 300) {
       // if the user is rapidly pressing the arrow key and he is on the first page move to the previous chapter
       if(previous.value !== null && firstPageNav.value) return navigation(previous.value.value);
@@ -348,6 +348,7 @@ async function markAsReadIfLastPage() {
           @page-change="currentPageIndex = $event; markAsReadIfLastPage()"
           @reload="(chapterIndex, pageIndex) => emit('reload', chapterIndex, pageIndex)"
           @navigate="navigation"
+          @on-key="onKey"
         />
         <div
           v-else

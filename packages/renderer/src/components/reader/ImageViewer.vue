@@ -25,6 +25,7 @@ const emit = defineEmits<{
   (event: 'reload', chapterIndex:number, pageIndex:number): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'page-change', payload:{ index: number, from: 'child'}): void
+  (event: 'onKey', payload:MouseEvent): void
 }>();
 
 /** reload a page */
@@ -129,6 +130,7 @@ watch(() => props.currentPage, (nval, oldval) => {
         :style="props.readerSettings.zoomMode === 'fit-height' ? undefined : imageStyle"
         :height="imageHeight ? imageHeight + 'px': undefined"
         :fit="props.readerSettings.zoomMode === 'fit-height' ? 'scale-down' : undefined"
+        @click="emit('onKey', $event)"
       >
         <template #error>
           <div
