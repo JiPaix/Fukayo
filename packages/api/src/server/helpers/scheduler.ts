@@ -36,6 +36,8 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
       updates: setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
+    this.clearcache();
+    this.update();
   }
 
   get logs() {
