@@ -203,7 +203,7 @@ function toggleLibrary() {
     <div class="flex flex-center q-mt-lg">
       <q-btn-group>
         <q-btn
-          :text-color="manga.inLibrary ? 'red' : 'white'"
+          :text-color="manga.inLibrary ? 'red' : ''"
           @click="toggleLibrary"
         >
           <q-icon :name="manga.inLibrary ? 'o_delete' : 'o_favorite'" />
@@ -212,7 +212,7 @@ function toggleLibrary() {
           </q-tooltip>
         </q-btn>
         <q-btn
-          :text-color="manga.chapters[chapterSelectedIndex].read ? 'orange' : 'white'"
+          :text-color="manga.chapters[chapterSelectedIndex].read ? 'orange' : ''"
           @click="toggleRead"
         >
           <q-icon :name="manga.chapters[chapterSelectedIndex].read ? 'o_visibility_off' : 'o_visibility'" />
