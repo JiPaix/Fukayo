@@ -181,6 +181,7 @@
     "volume": "Volume | Volumes"
   },
   "reader": {
+    "copytoclipboard": "Copier l'image dans le presse-papiers",
     "displaymode": {
       "auto": "Auto",
       "compatibility": "incompatible avec le mode webtoon",

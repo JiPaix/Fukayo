@@ -87,6 +87,12 @@ function scrollToPage(forward:boolean) {
   if(target) setVerticalScrollPosition(target, offset, duration);
 }
 
+/** copy to clipboard for electron users */
+function copyToClipboard(src: string) {
+  if(!window.apiServer) return;
+  window.apiServer.copyImageToClipboard(src);
+}
+
 /**
  * watch if the current page has been changed by triggering a "page-change" event
  */
@@ -165,6 +171,24 @@ watch(() => props.currentPage, (nval, oldval) => {
             </div>
           </div>
         </template>
+        <q-menu
+          v-if="isChapterImage(img) && $q.platform.is.electron"
+          touch-position
+          context-menu
+        >
+          <q-list
+            dense
+            style="min-width: 100px"
+          >
+            <q-item
+              v-close-popup
+              clickable
+              @click="copyToClipboard(img.src)"
+            >
+              <q-item-section>{{ $t('reader.copytoclipboard') }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
         <div
           class="absolute-bottom text-subtitle1 text-center"
           style="background:none;"

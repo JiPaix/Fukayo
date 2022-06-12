@@ -8,3 +8,7 @@ export async function startServer(payload:startPayload) {
 export async function stopServer() {
   return ipcRenderer.invoke('stop-server');
 }
+
+export function copyImageToClipboard(string:string) {
+  return ipcRenderer.invoke('copy-image-to-clipboard', string);
+}

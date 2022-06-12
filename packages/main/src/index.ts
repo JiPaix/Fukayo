@@ -1,5 +1,5 @@
 import './security-restrictions';
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, nativeImage, clipboard } from 'electron';
 import { restoreOrCreateWindow } from '/@/mainWindow';
 import { forkAPI } from './forkAPI';
 import type { Paths } from './../../preload/src/config';
@@ -89,4 +89,10 @@ ipcMain.handle('get-path', (ev, path:Paths) => {
 ipcMain.handle('start-server', (ev,  payload: startPayload) => {
   api = new forkAPI(payload);
   return api.start();
+});
+
+// image to clipboard
+ipcMain.handle('copy-image-to-clipboard', (ev, string: string) => {
+  const img = nativeImage.createFromDataURL(string);
+  return clipboard.writeImage(img);
 });
