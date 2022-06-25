@@ -66,6 +66,15 @@ async function forceupdate() {
   socket?.emit('forceUpdates');
 }
 
+function toggleDarkMode() {
+  if (settings.theme === 'dark') {
+    settings.theme = 'light';
+    $q.dark.set(false);
+  } else {
+    settings.theme = 'dark';
+    $q.dark.set(true);
+  }
+}
 </script>
 
 <template>
@@ -85,6 +94,13 @@ async function forceupdate() {
           />
           {{ $t('app.name') }}
         </q-toolbar-title>
+        <q-btn
+          dense
+          flat
+          round
+          icon="contrast"
+          @click="toggleDarkMode"
+        />
         <q-btn
           v-if="$q.screen.lt.md"
           dense
