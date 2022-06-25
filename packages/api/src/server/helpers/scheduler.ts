@@ -31,10 +31,11 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   constructor() {
     super();
     this.intervals = {
-      nextcache: Date.now() + (30 * 60 * 1000),
-      cache: setInterval(this.update.bind(this), 30 * 60 * 1000),
+      // we should perform checks every minute
+      nextcache: Date.now() + 60000,
+      cache: setTimeout(this.update.bind(this), 60000),
       nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
-      updates: setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
+      updates: setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
     this.clearcache();
     this.update();
@@ -64,8 +65,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.io = io;
   }
 
-  private addMangaLog(message:'chapter'|'chapter_error', mirror:string, id: string, chapter:number) {
-    this.logger({message, mirror, id});
+  private addMangaLog(message:'chapter'|'chapter_error', mirror:string, id: string, chapter:number):void {
     if(!this.settings.library.logs.enabled) return;
     this.mangaLogs.push({date: Date.now(), message, mirror, id, chapter});
     if(this.mangaLogs.length > this.settings.library.logs.max) {
@@ -74,7 +74,6 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   addCacheLog(message:'cache', files:number, size:number) {
-    this.logger({message, files, size});
     if(!this.settings.library.logs.enabled) return;
     this.cacheLogs.push({date: Date.now(), message, files, size});
     if(this.cacheLogs.length > this.settings.library.logs.max) {
@@ -94,27 +93,30 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       if(age.enabled) {
         // delete files older than max, and remove them from the array
         cacheFiles = cacheFiles.filter(file => {
-          if((Date.now() - file.age) > age.max) {
+          if(file.age > age.max) {
             total.files++;
             total.size += file.size;
+            SchedulerClass.unlinkSyncNoFail(file.filename);
             return true;
           }
-          SchedulerClass.unlinkSyncNoFail(file.filename);
           return false;
         });
       }
       if(size.enabled) {
-        const max = size.max;
-        // delete files with a size bigger than max.
-        cacheFiles.forEach(file => {
-          if(file.size > max) {
+        const totalsize = cacheFiles.reduce((acc, file) => acc + file.size, 0);
+        if (totalsize > size.max) {
+          // delete files until the size is under the max starting from the oldest
+          cacheFiles.sort((a, b) => a.age - b.age);
+          cacheFiles.forEach(file => {
             total.files++;
             total.size += file.size;
-            return SchedulerClass.unlinkSyncNoFail(file.filename);
-          }
-        });
+            SchedulerClass.unlinkSyncNoFail(file.filename);
+            if(total.size < size.max) return false;
+          });
+        }
       }
-      this.addCacheLog('cache', total.files, total.size);
+      if(total.files > 0 && total.size > 0) this.addCacheLog('cache', total.files, total.size);
+      this.restartCache();
     }
   }
 
@@ -146,27 +148,27 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   restart() {
-    clearInterval(this.intervals.cache);
-    clearInterval(this.intervals.updates);
+    clearTimeout(this.intervals.cache);
+    clearTimeout(this.intervals.updates);
     if(this.cacheEnabled) {
-      this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
-      this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+      this.intervals.cache = setTimeout(this.update.bind(this), 300000);
+      this.intervals.nextcache = Date.now() + 300000;
     }
     this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
-    this.intervals.updates = setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.intervals.updates = setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
   }
 
   restartUpdate() {
-    clearInterval(this.intervals.updates);
-    this.intervals.updates = setInterval(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    clearTimeout(this.intervals.updates);
+    this.intervals.updates = setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
     this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
   }
 
   restartCache() {
-    clearInterval(this.intervals.cache);
+    clearTimeout(this.intervals.cache);
     if(this.cacheEnabled) {
-      this.intervals.cache = setInterval(this.update.bind(this), 30 * 60 * 1000);
-      this.intervals.nextcache = Date.now() + (30 * 60 * 1000);
+      this.intervals.cache = setTimeout(this.update.bind(this), 300000);
+      this.intervals.nextcache = Date.now() + 300000;
     }
   }
 
@@ -175,10 +177,10 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    * @param force if true, will force the update of all the mangas
    */
   async update(force?:boolean) {
+    this.logger('updating');
     if(this.ongoing.updates) return;
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
-    if(force) this.restartUpdate();
     const mangaByMirror = this.getMangasToUpdate(force);
     for(const mirrorName of Object.keys(mangaByMirror)) {
       const mirror = mirrors.find(m => m.name === mirrorName);
@@ -186,6 +188,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     }
     this.ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
+    this.logger('done updating');
     this.restartUpdate();
   }
 
@@ -194,7 +197,8 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     const mangas = MangaDatabase.getAllSync()
       .filter(manga => {
         if(force) return true;
-        return (manga.meta.lastUpdate + this.settings.library.waitBetweenUpdates) > Date.now();
+        else if((manga.meta.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
+        else return false;
       });
     // groups mangas by mirror
     const mangasByMirror: sortedMangas<typeof mangas[0]> = {};
