@@ -1,11 +1,11 @@
 {
-  "name": "all-mangas-reader-desktop",
+  "name": "fukayo",
   "description": "Read your favorite manga from your favorite website, keep track of your reading progress and share your reading history with your friends.",
   "author": "some People",
-  "homepage": "https://homepage.com",
+  "homepage": "https://fukayo.com",
   "repository": "github:JiPaix/AMR",
   "license": "MIT",
-  "version": "0.6.56",
+  "version": "0.6.128",
   "private": false,
   "engines": {
     "node": ">=v16.13",
@@ -66,7 +66,7 @@
     "simple-git-hooks": "2.7.0",
     "typed-emitter": "^2.1.0",
     "typescript": "4.7.2",
-    "user-agents": "^1.0.1029",
+    "user-agents": "^1.0.1058",
     "vite": "2.9.9",
     "vitest": "^0.12.9",
     "vue": "^3.2.36",
