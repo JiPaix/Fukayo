@@ -1,5 +1,5 @@
 import {createApp} from 'vue';
-import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import App from './App.vue';
 
 const myApp = createApp(App);
@@ -22,7 +22,7 @@ import Settings from './components/settings/App.vue';
 import Logs from './components/logs/App.vue';
 
 const router = createRouter({
-  history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
+  history: createWebHistory(),
   routes: [
       {
         name: 'home',
@@ -37,7 +37,7 @@ const router = createRouter({
       },
       {
         name: 'manga',
-        path: '/manga/:mirror/:lang/:url',
+        path: '/manga/:mirror/:lang/:url/:chapterindex?',
         component: Manga,
       },
       {
