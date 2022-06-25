@@ -127,6 +127,7 @@ function toggleLibrary() {
       :options="manga.chapters.map((chapter, index) => ({
         label: chapterLabel(chapter.number, chapter.name),
         value: index,
+        read: chapter.read,
       })).sort((a, b) => a.value - b.value)"
       color="orange"
       :dark="$q.dark.isActive"
@@ -145,6 +146,17 @@ function toggleLibrary() {
           <q-item-section>
             <q-item-label>
               <div class="ellipsis">
+                <q-icon
+                  v-if="!scope.opt.read"
+                  left
+                  name="new_releases"
+                  color="positive"
+                />
+                <q-icon
+                  v-else
+                  left
+                  name="done"
+                />
                 {{ scope.opt.label }}
               </div>
             </q-item-label>
