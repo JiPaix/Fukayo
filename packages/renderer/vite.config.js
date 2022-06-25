@@ -45,7 +45,17 @@ const config = {
       external: [
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],
+      output: {
+        manualChunks(id) {
+          if (id.includes('/node_modules/')) {
+            const modules = ['quasar', '@quasar', 'vue', '@vue', 'dayjs', '@intlify', '@vueuse', 'vue-i18n'];
+            const chunk = modules.find((module) => id.includes(`/node_modules/${module}`));
+            return chunk ? `vendor-${chunk}` : 'vendor';
+          }
+        },
+      },
     },
+
     emptyOutDir: true,
     reportCompressedSize: false,
   },
