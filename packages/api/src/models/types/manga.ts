@@ -78,7 +78,7 @@ export interface MangaPage {
 }
 
 export interface MangaInDB extends MangaPage {
-  chapters : (MangaPage['chapters'][0] & { read: boolean})[]
+  chapters : (MangaPage['chapters'][0])[]
   meta : {
     /** the last read chapter id */
     lastReadChapterId?: string,

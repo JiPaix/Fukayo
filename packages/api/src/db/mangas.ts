@@ -29,6 +29,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     this.path = resolve(env.USER_DATA, '.mangasdb');
   }
 
+  /** add or update a manga */
   async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
     const db = this.read();
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
@@ -104,6 +105,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const data = mangadb.read();
     return {
       ...data,
+      chapters: data.chapters.sort((a, b) => b.number - a.number),
       covers: this.getCovers(data.covers),
     };
   }

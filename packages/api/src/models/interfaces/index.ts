@@ -85,13 +85,21 @@ export default interface MirrorInterface {
    */
   search(query: string, socket:socketInstance, id:number): void;
   /**
-   * Get manga info from
+   * Get manga infos (title, authors, tags, chapters, covers, etc..)
    * @param {String} url Relative url to the manga page
    * @param {String} lang ISO-639-1 language code
-   * @param {socketInstance} socket the request initiator
+   * @param {socketInstance|SchedulerClass} socket the request initiator
    * @param {Number} id arbitrary id
    */
   manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number): void;
+  /**
+   * Get mangas infos (title, authors, tags, chapters, covers, etc..)
+   * @param {String} meta.url Relative url to the manga page
+   * @param {String} meta.lang ISO-639-1 language code
+   * @param {socketInstance|SchedulerClass} socket the request initiator
+   * @param {Number} id arbitrary id
+   */
+   mangas?(infos: { url:string, lang:string }[], socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get all images from chapter
    * @param link Relative url of chapter page (any page)

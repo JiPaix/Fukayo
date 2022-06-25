@@ -208,7 +208,10 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
 
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
-    if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    if(!isMangaPage) {
+      this.stopListening(socket);
+      return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    }
 
     const mangaId = `${this.name}/${this.langs[0]}${link}`;
 
@@ -223,7 +226,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
       const synopsis = $('.well p').text().trim();
       const covers = [];
 
-      if(cancel) return;
+      if(cancel) return this.stopListening(socket);
 
       let coverLink = $('.boxed img').attr('src');
       if(coverLink) {
@@ -291,9 +294,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
         }
         if(release) chapters.push(release);
       }
+      this.stopListening(socket);
       if(cancel) return;
-      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirror: this.name, inLibrary: false, name, synopsis, covers, authors, tags, chapters });
+      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], mirror: this.name, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number) });
     } catch(e) {
+      this.stopListening(socket);
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
@@ -302,13 +307,15 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
     }
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopShowChapter', () => {
-      this.logger('fetching chapter canceled');
-      cancel = true;
-    });
+    if(!(socket instanceof SchedulerClass)) {
+      socket.once('stopShowChapter', () => {
+        this.logger('fetching chapter canceled');
+        cancel = true;
+      });
+    }
 
     const link = url.replace(this.host, '');
     this.logger('fetching', url);
@@ -316,7 +323,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
     const isLinkaChapter = this.isChapterPage(link);
     if(!isLinkaChapter) return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
 
-    if(cancel) return;
+    if(cancel) return this.stopListening(socket);
     try {
       const $ = await this.fetch({
         url: `${this.host}${link}`,
@@ -327,7 +334,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
       const nbOfPages = $($('img', $('.viewer-cnt #ppp').prev())).length;
       if(callback) callback(nbOfPages);
 
-      if(cancel) return;
+      if(cancel) return this.stopListening(socket);
       const res:string[] = [];
       $('img', $('.viewer-cnt #ppp').prev()).each((i, el) => {
           let src = $(el).attr('data-src');
@@ -347,8 +354,10 @@ export class MyMangaReaderCMS<T = Record<string, unknown> & { enabled: boolean}>
         }
         socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
       }
+      this.stopListening(socket);
       if(cancel) return;
     } catch(e) {
+      this.stopListening(socket);
       this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});

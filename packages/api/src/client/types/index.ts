@@ -23,6 +23,7 @@ export type ClientToServerEvents = {
   stopShowRecommend: () => void;
   stopShowLibrary: () => void;
   showManga: (id:number, mirror:string, lang:string, url:string) => void;
+  showMangas: (id:number, mirror:string, meta: { lang: string, url: string }[]) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;

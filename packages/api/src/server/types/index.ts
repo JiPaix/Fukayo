@@ -13,6 +13,7 @@ export type ServerToClientEvents = {
   refreshToken: (acessToken: string) => void;
   searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
   showManga: (id:number, manga:MangaPage|MangaInDB|MangaErrorMessage) =>void
+  showMangas: (id:number, mangas:(MangaInDB | MangaPage | MangaErrorMessage)[]) =>void
   showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB) => void;

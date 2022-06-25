@@ -186,6 +186,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     }
     this.ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
+    this.restartUpdate();
   }
 
   private getMangasToUpdate(force?:boolean) {
@@ -204,33 +205,59 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     return mangasByMirror;
   }
 
+
   private async updateMangas(mirror:MirrorInterface, mangas: MangaInDB[]) {
     const res:MangaInDB[] = [];
     const now = Date.now();
-    for(const manga of mangas) {
+    if(mirror.mangas) {
       try {
-        const fetched = await this.updateSingleManga(mirror, manga);
-        let count = 0;
-        // if fetched has chapters not in manga add them if they don't already exist
-        fetched.chapters.forEach(chapter => {
-          if(!manga.chapters.find(c => c.id === chapter.id)) {
-            manga.chapters.push({...chapter, read: false });
-            res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
-            count++;
+        const fetched = await this.updateManyMangas(mirror, mangas);
+        for(const mangaPage of fetched) {
+          let count = 0;
+          const manga = mangas.find(m => m.id === mangaPage.id);
+          if(!manga) {
+            this.addMangaLog('chapter_error', mirror.name, mangaPage.id, count);
+            continue;
           }
-        });
-        if(count > 0) this.addMangaLog('chapter', mirror.name, manga.id, count);
-      } catch(e) {
-        this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
+          mangaPage.chapters.forEach(chapter => {
+            if(!manga.chapters.find(c=> c.id === chapter.id)) {
+              manga.chapters.push({...chapter, read: false});
+              count++;
+            }
+          });
+          if(count > 0) this.addMangaLog('chapter', mirror.name, manga.id, count);
+        }
+      } catch {
+        // do nothing
       }
+
+    } else {
+      for(const manga of mangas) {
+        this.logger('updating', manga.name, '@', manga.mirror);
+        try {
+          const fetched = await this.updateSingleManga(mirror, manga);
+          let count = 0;
+          // if fetched has chapters not in manga add them if they don't already exist
+          fetched.chapters.forEach(chapter => {
+            if(!manga.chapters.find(c => c.id === chapter.id)) {
+              manga.chapters.push({...chapter, read: false });
+              count++;
+            }
+          });
+          if(count > 0) this.addMangaLog('chapter', mirror.name, manga.id, count);
+        } catch(e) {
+          this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
+        }
+        res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
+      }
+      res.forEach(async (m) => {
+        await MangaDatabase.add({ manga: m });
+      });
     }
-    res.forEach(async (m) => {
-      await MangaDatabase.add({ manga: m });
-    });
+
   }
 
   private async updateSingleManga(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
-
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
@@ -238,7 +265,6 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
         if(id !== reqId) return;
         if(isMangaPage(mangaFromMirror)) {
           this.removeListener('showManga', listener);
-          this.logger('does it match?', mangaFromMirror.id === manga.id);
           resolve(mangaFromMirror);
         } else {
           this.removeListener('showManga', listener);
@@ -251,8 +277,25 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     });
   }
 
+  private async updateManyMangas(mirror:MirrorInterface, mangas: MangaInDB[]):Promise<MangaPage[]> {
+    return new Promise((resolve, reject) => {
+      const reqId = Date.now();
+      const listener = (id:number, mangasFromMirrors:(MangaInDB | MangaPage | MangaErrorMessage)[]) => {
+        if(id !== reqId) return;
+        const res = mangasFromMirrors.filter(isMangaPage);
+        if(res.length) resolve(res);
+        else reject(mangasFromMirrors);
+      };
+      this.on('showMangas', listener.bind(this));
+      const meta = mangas.map(m => { return { url: m.url, lang: m.lang }; });
+      if(mirror.mangas) mirror.mangas(meta, this, reqId);
+      else throw new Error('mirror does not have mangas() function');
+    });
 
+  }
 }
+
+
 
 export const Scheduler = new SchedulerClass();
 
