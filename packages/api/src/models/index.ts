@@ -11,6 +11,8 @@ import type { CheerioAPI, CheerioOptions, AnyNode} from 'cheerio';
 import type { mirrorInfo } from './types/shared';
 import type { ClusterJob } from '../utils/types/crawler';
 import type { MirrorConstructor } from './types/constructor';
+import { SchedulerClass } from '../server/helpers/scheduler';
+import type { socketInstance } from '../server/types';
 
 
 /**
@@ -387,6 +389,16 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
     const filename = await this.filenamify(identifier);
     return {filename, identifier};
+  }
+
+  /** stop listening to "stop" messages */
+  protected stopListening(socket:socketInstance|SchedulerClass) {
+    if(!(socket instanceof SchedulerClass)) {
+      socket.removeAllListeners('stopShowManga');
+      socket.removeAllListeners('stopShowChapter');
+      socket.removeAllListeners('stopSearchInMirrors');
+      socket.removeAllListeners('stopShowRecommend');
+    }
   }
 }
 
