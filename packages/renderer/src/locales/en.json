@@ -173,8 +173,9 @@
       "current": "Mark this {chapterWord} as read",
       "current_unread": "Mark this {chapterWord} as unread",
       "next": "Mark next {chapterWord} as read",
+      "next_unread": "Mark next {chapterWord} as unread",
       "previous": "Mark previous {chapterWord} as read",
-      "previous_unread": "Mark next {chapterWord} as unread"
+      "previous_unread": "Mark previous {chapterWord} as unread"
     },
     "original_title": "Original title: {title}",
     "source": "Source | Sources",
@@ -190,14 +191,22 @@
       "fit-width": "Fit to screen's width",
       "value": "Display modes"
     },
+    "error": {
+      "chapter": "Couldn't load {chapterWord}",
+      "reload": "Reload"
+    },
     "first": "Go back to the first chapter:",
     "last": "Go to the latest chapter:",
+    "loading": "Loading",
     "longstrip": "Display the whole chapter as a long strip",
     "manga": {
       "add": "Add to library",
       "remove": "Remove from the library"
     },
     "next": "Go to the next chapter:",
+    "page": {
+      "count": "Page {current}/{total}"
+    },
     "previous": "Go back to the previous chapter:",
     "reload": "Reload this page",
     "showpagenumber": "Show page number",

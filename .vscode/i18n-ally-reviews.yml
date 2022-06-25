@@ -143,3 +143,5 @@ reviews:
     description: text
   mangas.forceupdate:
     description: short text
+  reader.page.count:
+    description: text

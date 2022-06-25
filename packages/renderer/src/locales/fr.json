@@ -173,8 +173,9 @@
       "current": "Marquer ce {chapterWord} comme lu",
       "current_unread": "Marquer ce {chapterWord} comme non-lu",
       "next": "Marquer le {chapterWord} suivant comme lu | Marquer les {chapterWord} suivants comme lu",
+      "next_unread": "Marquer le {chapterWord} suivant comme non lu | Marquer les {chapterWord} suivants comme non lu",
       "previous": "Marquer le {chapterWord} précédent comme lu | Marquer les {chapterWord} précedents comme lu",
-      "previous_unread": "Marquer le {chapterWord} suivant comme non lu | Marquer les {chapterWord} suivants comme non lu"
+      "previous_unread": "Marquer le {chapterWord} précedent comme non lu | Marquer les {chapterWord} précedents comme non lu"
     },
     "original_title": "Titre d'origine : {title}",
     "source": "Source | Sources",
@@ -190,14 +191,22 @@
       "fit-width": "Ajuster à la largeur de l'écran",
       "value": "Modes d'affichage"
     },
+    "error": {
+      "chapter": "Le {chapterWord} n'a pas pu être chargé",
+      "reload": "Recharger"
+    },
     "first": "Retourner au premier chapitre :",
     "last": "Aller au dernier chapitre :",
+    "loading": "Chargement",
     "longstrip": "Afficher tout le chapitre sous la forme d'une longue bande",
     "manga": {
       "add": "Ajouter à la bibliothèque",
       "remove": "Supprimer de la bibliothèque"
     },
     "next": "Passer au chapitre suivant :",
+    "page": {
+      "count": "Page {current}/{total}"
+    },
     "previous": "Revenir au chapitre précédent :",
     "reload": "Recharger cette page",
     "showpagenumber": "Afficher le numéro de page",
