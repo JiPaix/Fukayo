@@ -42,45 +42,47 @@ export function toggleAllLanguages(includedAllLanguage: boolean|null, allLangs: 
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
-export function toggleLang(lang:string, includedLangsRAW: Ref<string[]>, mirrorsRAW?:Ref<mirrorInfo[]>, includedMirrors?: Ref<string[]>) {
+export function toggleLang(lang:string, includedLangsRAW: Ref<string[]>, mirrorsRAW?:mirrorInfo[], includedMirrors?: Ref<string[]>) {
   if(includedLangsRAW.value.some(m => m === lang)) {
     includedLangsRAW.value = includedLangsRAW.value.filter(m => m !== lang);
   } else {
     includedLangsRAW.value.push(lang);
   }
-  if(includedMirrors && mirrorsRAW) includedMirrors.value = mirrorsRAW.value.filter(m => {
+  if(includedMirrors && mirrorsRAW) includedMirrors.value = mirrorsRAW.filter(m => {
     return includedLangsRAW.value.some(l => m.langs.includes(l));
   }).map(m => m.name);
 }
 
-export function toggleAllMirrors(mirrorsRAW: Ref<mirrorInfo[]>, includedAllMirrors: boolean|null, includedMirrors: Ref<string[]>, includedLangsRAW?: Ref<string[]>) {
+export function toggleAllMirrors(mirrorsRAW: mirrorInfo[], includedAllMirrors: boolean|null, includedMirrors: Ref<string[]>, includedLangsRAW?: Ref<string[]>) {
   if(includedAllMirrors) {
-    mirrorsRAW.value.forEach(m => {
+    mirrorsRAW.forEach(m => {
       if(includedMirrors.value.includes(m.name)) toggleMirror(m.name, mirrorsRAW, includedMirrors, includedLangsRAW);
     });
   } else {
-    mirrorsRAW.value.forEach(m => {
+    mirrorsRAW.forEach(m => {
       if(!includedMirrors.value.includes(m.name)) toggleMirror(m.name, mirrorsRAW, includedMirrors, includedLangsRAW);
     });
   }
 }
 
-export function toggleMirror(mirror:string, mirrorsRAW: Ref<mirrorInfo[]>, includedMirrors: Ref<string[]>, includedLangsRAW?: Ref<string[]>) {
+export function toggleMirror(mirror:string, mirrorsRAW: mirrorInfo[], includedMirrors: Ref<string[]>, includedLangsRAW?: Ref<string[]>) {
   if(includedMirrors.value.some(m => m === mirror)) {
     includedMirrors.value = includedMirrors.value.filter(m => m !== mirror);
   } else {
     includedMirrors.value.push(mirror);
   }
   if(includedLangsRAW) {
-    const mirrors = mirrorsRAW.value.filter(m => includedMirrors.value.includes(m.name));
+    const mirrors = mirrorsRAW.filter(m => includedMirrors.value.includes(m.name));
     includedLangsRAW.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
   }
 }
 
 
-export function setupMirrorFilters(mirrors:mirrorInfo[], mirrorsRAW: Ref<mirrorInfo[]>, includedLangsRAW: Ref<string[]>, allLangs: Ref<string[]>, includedMirrors?: Ref<string[]>) {
+export function setupMirrorFilters(mirrors:mirrorInfo[], mirrorsRAW: Ref<mirrorInfo[]>, includedLangsRAW: Ref<string[]>, allLangs: Ref<string[]>|string[], includedMirrors?: Ref<string[]>) {
   mirrorsRAW.value = mirrors.sort((a, b) => a.name.localeCompare(b.name));
   includedLangsRAW.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
-  allLangs.value = includedLangsRAW.value;
+  if((allLangs as Ref<string[]>).value) {
+    (allLangs as Ref<string[]>).value = includedLangsRAW.value;
+  }
   if(includedMirrors) includedMirrors.value = mirrors.map(m => m.name);
 }

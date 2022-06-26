@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { watch, nextTick } from 'vue';
+import { watch, nextTick, inject } from 'vue';
 import { onBeforeMount, onBeforeUnmount, ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore as useSettingsStore } from '/@/store/settings';
-
 import { QItem, useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import { useSocket } from '../helpers/socket';
@@ -15,8 +14,9 @@ import {
   isMangaInDb,
 } from '../helpers/typechecker';
 import showChapter from '../reader/App.vue';
-import ChapterItem from './ChapterItem.vue';
+
 import type { ComponentPublicInstance} from 'vue';
+import type dayjs from 'dayjs';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
@@ -28,6 +28,7 @@ const $q = useQuasar();
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** dayJS lib */
+const dayJS = inject<typeof dayjs>('dayJS');
 /** current route */
 const route = useRoute();
 /** stored settings */
@@ -40,8 +41,6 @@ const mirrorinfo = ref<mirrorInfo|undefined>();
 const displayChapter = ref(false);
 /** the number of chapters */
 const nbOfChapters = ref(0);
-/** the chapters */
-const chapters = ref<MangaInDB['chapters']|MangaPage['chapters']>([]);
 /** index of the manga.chapter to show */
 const chapterSelectedIndex = ref<number | null>(null);
 /** number of images to expect from the server */
@@ -73,6 +72,13 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 /** manga infos as retrieved by the server */
 const mangaRaw = ref<PartialBy<Manga, 'chapters'>>();
+
+const chapters = computed(() => {
+  if (mangaRaw.value && mangaRaw.value.chapters) {
+    return mangaRaw.value.chapters;
+  }
+  return [];
+});
 /** manga infos */
 const manga = computed(() => {
   if(!mangaRaw.value) return undefined;
@@ -80,7 +86,7 @@ const manga = computed(() => {
     ...mangaRaw.value,
     chapters: chapters.value.map(chapter => {
       const hasNextUnread = unreadChaps.value.filter(search => search.number > chapter.number).length > 0;
-      const hasPrevUnread = unreadChaps.value.filter(search => search.number > chapter.number).length > 0;
+      const hasPrevUnread = unreadChaps.value.filter(search => search.number < chapter.number).length > 0;
       return {
         ...chapter,
         hasNextUnread,
@@ -451,13 +457,6 @@ async function autoShowManga() {
   if(isNaN(index)) return;
   await showChapterComp(index);
 }
-      function getItems (from:number, size:number) {
-        const items = [];
-        for (let i = 0; i < size; i++) {
-          items.push(chapters.value[ from + i ]);
-        }
-        return Object.freeze(items);
-      }
 
 /**
  * fetch manga infos
@@ -474,7 +473,6 @@ onBeforeMount(async () => {
   socket?.on('showManga', (id, mg) => {
     if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
       nbOfChapters.value = mg.chapters.length;
-      chapters.value = mg.chapters;
       mangaRaw.value = mg;
       autoShowManga();
     }
@@ -715,16 +713,186 @@ onBeforeUnmount(() => {
     <div class="row">
       <q-virtual-scroll
         v-slot="{ item, index }"
-        style="overflow-x:hidden;"
+        :items="chapters"
         :style="'max-height: '+virtualScrollHeight+'px;'"
         :items-size="nbOfChapters"
-        :items-fn="getItems"
-        type="list"
         :virtual-scroll-item-size="52"
         separator
         class="w-100"
       >
-        <chapter-item
+        <q-item
+          :key="index"
+          :dark="$q.dark.isActive"
+          clickable
+          style="max-height:52px;"
+        >
+          <!-- Chapter name, volume, number -->
+          <q-item-section
+            :class="item.read ? 'text-grey-9' : ''"
+            @click="showChapterComp(index)"
+          >
+            <q-item-label>
+              <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }}</span>
+              <span v-if="item.volume !== undefined && item.number !== undefined">
+                -
+              </span>
+              <span
+                v-if="item.number !== undefined"
+              >{{ $t("mangas.chapter") }} {{ item.number }}</span>
+              <span v-if="item.volume === undefined && item.number === undefined">{{
+                item.name
+              }}</span>
+            </q-item-label>
+            <q-item-label
+              v-if="item.number !== undefined"
+              caption
+            >
+              <span class="text-grey-6">{{ item.name }}</span>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+          >
+            <!-- Chapter Date -->
+            <q-item-label caption>
+              {{ dayJS ? dayJS(item.date).fromNow() : item.date }}
+              <q-btn-dropdown
+                dropdown-icon="more_vert"
+                flat
+              >
+                <q-list separator>
+                  <q-item
+                    v-if="index > 0 && item.hasNextUnread"
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markNextAsRead(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_up"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.next', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                  </q-item>
+                  <q-item
+                    v-else-if="index > 0"
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markNextAsUnread(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_up"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility_off"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.next_unread', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                  </q-item>
+                  <q-item
+                    v-if="item.read"
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markAsUnread(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_right"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility_off"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                  </q-item>
+                  <q-item
+                    v-else
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markAsRead(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_right"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                  </q-item>
+                  <q-item
+                    v-if="index < nbOfChapters - 1 && item.hasPrevUnread"
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markPreviousAsRead(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_down"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.previous', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                  </q-item>
+                  <q-item
+                    v-else-if="index < nbOfChapters - 1"
+                    v-close-popup
+                    class="flex items-center"
+                    clickable
+                    @click="markPreviousAsUnread(index)"
+                  >
+                    <q-icon
+                      left
+                      name="keyboard_double_arrow_down"
+                      size="sm"
+                      class="q-mx-none"
+                    />
+                    <q-icon
+                      left
+                      name="visibility_off"
+                      size="sm"
+                      class="q-ml-none"
+                    />
+                    {{ $t('mangas.markasread.previous_unread', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <!-- <chapter-item
           :chapter="item"
           :length="nbOfChapters"
           :index="index"
@@ -734,38 +902,37 @@ onBeforeUnmount(() => {
           @mark-next-as-unread="markNextAsUnread"
           @mark-previous-as-read="markPreviousAsRead"
           @mark-previous-as-unread="markPreviousAsUnread"
-        />
-        <q-separator />
-
-        <!-- show Chapter Dialog -->
-        <q-dialog
-          ref="dialogRef"
-          v-model="displayChapter"
-          maximized
-          class="bg-dark"
-          transition-show="flip-left"
-          transition-hide="flip-right"
-          transition-duration="300"
-          @hide="hideChapterComp"
-        >
-          <show-chapter
-            v-if="manga && manga.chapters && manga.chapters.length && chapterSelectedIndex !== null"
-            ref="chapterRef"
-            tabindex="0"
-            :manga="manga"
-            :chapter-selected-index="chapterSelectedIndex"
-            :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
-            :sorted-images="sortedImages"
-            :chapter-error="chapterError"
-            :display-setting="localSettings"
-            @hide="hideChapterComp"
-            @reload="reloadChapterImage"
-            @navigate="showChapterComp($event)"
-            @update-manga="updateManga"
-            @update-settings="updateReaderSettings"
-          />
-        </q-dialog>
+          @show-chapter-comp="showChapterComp"
+        /> -->
       </q-virtual-scroll>
     </div>
   </q-card>
+  <!-- show Chapter Dialog -->
+  <q-dialog
+    ref="dialogRef"
+    v-model="displayChapter"
+    maximized
+    class="bg-dark"
+    transition-show="flip-left"
+    transition-hide="flip-right"
+    transition-duration="300"
+    @hide="hideChapterComp"
+  >
+    <show-chapter
+      v-if="manga && manga.chapters && manga.chapters.length && chapterSelectedIndex !== null"
+      ref="chapterRef"
+      tabindex="0"
+      :manga="manga"
+      :chapter-selected-index="chapterSelectedIndex"
+      :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
+      :sorted-images="sortedImages"
+      :chapter-error="chapterError"
+      :display-setting="localSettings"
+      @hide="hideChapterComp"
+      @reload="reloadChapterImage"
+      @navigate="showChapterComp($event)"
+      @update-manga="updateManga"
+      @update-settings="updateReaderSettings"
+    />
+  </q-dialog>
 </template>

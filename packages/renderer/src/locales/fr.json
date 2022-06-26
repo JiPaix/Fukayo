@@ -157,6 +157,11 @@
     }
   },
   "library": {
+    "filter_by_name": "Recherche dans votre bibliothèque",
+    "hide_unread": "Cacher les mangas dont vous avez lu tous les {chapterWord}",
+    "left_to_read": "{chapterWord} restant | {chapterWord} restants",
+    "search": "",
+    "show_unread": "Afficher les mangas pour lesquels vous avez lu tous les {chapterWord}",
     "tab": "Bibliothèque"
   },
   "logs": {

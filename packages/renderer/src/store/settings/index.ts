@@ -23,6 +23,10 @@ export const useStore = defineStore('settings', {
         longStrip: true,
         preloadNext: true,
       },
+      library: {
+        showUnread: true,
+        sort: 'AZ' as 'AZ' | 'ZA' | 'unread' | 'read',
+      },
     };
   },
 });

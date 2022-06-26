@@ -73,36 +73,46 @@ const includedLangs = computed(() => {
 });
 
 /** returns true if all available mirror are included in the filter */
-const includedAllMirrors = computed(() => {
-  if(includedMirrors.value.length < mirrorsList.value.length) {
-    if(includedMirrors.value.length === 0) return false;
-    return null;
-  }
-  return true;
+const includedAllMirrors = computed({
+  get() {
+    if(includedMirrors.value.length < mirrorsList.value.length) {
+      if(includedMirrors.value.length === 0) return false;
+      return null;
+    }
+    return true;
+  },
+  set() {
+    pickallMirrors();
+  },
 });
 
 /** returns true if all available languages are included in the filter */
-const includedAllLanguage = computed(() => {
-  if(includedLangsRAW.value.length < allLangs.value.length) {
-    if(includedLangsRAW.value.length === 0) return false;
-    return null;
-  }
-  return true;
+const includedAllLanguage = computed({
+  get() {
+    if(includedLangsRAW.value.length < allLangs.value.length) {
+      if(includedLangsRAW.value.length === 0) return false;
+      return null;
+    }
+    return true;
+  },
+  set() {
+    pickAllLangs();
+  },
 });
 
 /** include/exclude a mirror from the filter, also affects the language filter */
 function pickMirror(mirror:string) {
-  toggleMirror(mirror, mirrorsList, includedMirrors, includedLangsRAW);
+  toggleMirror(mirror, mirrorsList.value, includedMirrors, includedLangsRAW);
 }
 
 /** include/exclude all mirrors from the filter */
 function pickallMirrors() {
-  toggleAllMirrors(mirrorsList, includedAllMirrors.value, includedMirrors, includedLangsRAW);
+  toggleAllMirrors(mirrorsList.value, includedAllMirrors.value, includedMirrors, includedLangsRAW);
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
 function pickLang(lang:string) {
-  toggleLang(lang, includedLangsRAW, mirrorsList, includedMirrors);
+  toggleLang(lang, includedLangsRAW, mirrorsList.value, includedMirrors);
 }
 
 /** include/exclude all languages from the filter */
@@ -254,7 +264,6 @@ onBeforeUnmount(async () => {
                   toggle-indeterminate
                   class="q-ma-none q-pa-none"
                   :dark="$q.dark.isActive"
-                  @click="pickallMirrors"
                 />
                 <q-item-section
                   avatar
@@ -324,7 +333,6 @@ onBeforeUnmount(async () => {
                   class="q-ma-none q-pa-none"
                   toggle-indeterminate
                   :dark="$q.dark.isActive"
-                  @click="pickAllLangs"
                 />
                 <q-item-section
                   avatar
