@@ -24,8 +24,6 @@ const drawer = ref(false),
 // are mangas updating in the background?
 const updating = ref(true);
 
-defineExpose({ $q });
-
 // quick add dialog
 function quickadd() {
   quick.value = true;

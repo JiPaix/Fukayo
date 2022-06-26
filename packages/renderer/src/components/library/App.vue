@@ -12,7 +12,6 @@ import type { MangaGroup, MangaInDBwithLabel } from './@types';
 
 /** quasar */
 const $q = useQuasar();
-defineExpose({ $q });
 /** web socket */
 let socket: socketClientInstance | undefined;
 /** settings */

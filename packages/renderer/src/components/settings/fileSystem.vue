@@ -6,7 +6,6 @@ import { useStore as useSettingsStore } from '/@/store/settings';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 
 const $q = useQuasar();
-defineExpose({ $q });
 const settings = useSettingsStore();
 let socket:socketClientInstance|undefined;
 const size = ref(0);

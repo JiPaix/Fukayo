@@ -9,7 +9,6 @@ import type { socketClientInstance } from '../../../../api/src/client/types';
 
 /** quasar */
 const $q = useQuasar();
-defineExpose({ $q });
 /** vue-i18n */
 const $t = useI18n().t.bind(useI18n());
 /** settings store */

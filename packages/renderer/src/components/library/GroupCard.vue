@@ -18,8 +18,6 @@ const props = defineProps<{
 const router = useRouter();
 /** quasar */
 const $q = useQuasar();
-defineExpose({ $q });
-
 /** slider model */
 const slide = ref(0);
 
