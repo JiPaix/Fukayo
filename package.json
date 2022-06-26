@@ -75,7 +75,7 @@
   "dependencies": {
     "@mdi/font": "^6.7.96",
     "@mdi/js": "^6.7.96",
-    "@quasar/extras": "^1.14.0",
+    "@quasar/extras": "^1.14.1",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.2",
@@ -92,7 +92,7 @@
     "quasar": "^2.7.3",
     "socket.io": "^4.5.1",
     "socket.io-client": "^4.5.1",
-    "systeminformation": "^5.11.15",
+    "systeminformation": "^5.11.22",
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.0.16"
   }
