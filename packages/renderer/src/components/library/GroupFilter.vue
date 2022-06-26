@@ -88,7 +88,7 @@ function pickAllLangs() {
       v-model="search"
       clearable
       filled
-      color="purple-12"
+      color="orange"
       :label="$t('library.filter_by_name')"
       class="col-12"
       @keyup="emit('search', search)"
