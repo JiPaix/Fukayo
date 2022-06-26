@@ -98,7 +98,7 @@ onBeforeMount(async () => {
         </q-input>
       </div>
       <div class="col-12 q-mt-md text-center">
-        <q-btn-group>
+        <q-btn-group :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'">
           <q-btn
             :ripple="false"
             :color="$q.dark.isActive ? 'white' : 'dark'"
@@ -116,7 +116,10 @@ onBeforeMount(async () => {
             icon="translate"
             size="1em"
           >
-            <q-list :dark="$q.dark.isActive">
+            <q-list
+              :dark="$q.dark.isActive"
+              :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+            >
               <q-item
                 dense
                 clickable

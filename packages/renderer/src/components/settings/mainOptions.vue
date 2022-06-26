@@ -234,11 +234,11 @@ onBeforeMount(async () => {
             :class="$q.dark.isActive ? '' : 'bg-grey-2'"
           >
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
-              @click="settings.theme === 'light'"
+              @click="toggleDarkMode"
             >
               <q-item-section>
                 <q-item-label>
@@ -258,7 +258,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -301,7 +301,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -325,7 +325,7 @@ onBeforeMount(async () => {
             </q-item>
             <q-item
               v-if="cacheSizeEnabled"
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -352,7 +352,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -376,7 +376,7 @@ onBeforeMount(async () => {
             </q-item>
             <q-item
               v-if="cacheAgeEnabled"
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -460,7 +460,7 @@ onBeforeMount(async () => {
               {{ $t('settings.reader.info') }}
             </q-banner>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -483,7 +483,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -506,7 +506,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -530,7 +530,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
@@ -553,7 +553,7 @@ onBeforeMount(async () => {
               </q-item-section>
             </q-item>
             <q-item
-              style="background:rgba(255, 255, 255, 0.05)"
+              style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable

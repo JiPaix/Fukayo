@@ -227,6 +227,7 @@
   "settings": {
     "cache": "Cache",
     "change": "Modify",
+    "darkmode": "Enable dark mode",
     "disable": "Disable",
     "displaymodes": "Display modes",
     "enable": "Enable",

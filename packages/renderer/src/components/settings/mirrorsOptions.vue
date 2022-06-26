@@ -152,7 +152,7 @@ onBeforeMount(async () => {
       </div>
       <div class="col-12 q-mt-md text-center">
         <q-btn-group
-          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
+          :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
         >
           <q-btn
             :ripple="false"
@@ -171,7 +171,10 @@ onBeforeMount(async () => {
             icon="translate"
             size="1em"
           >
-            <q-list :dark="$q.dark.isActive">
+            <q-list
+              :dark="$q.dark.isActive"
+              :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+            >
               <q-item
                 dense
                 clickable
@@ -231,7 +234,6 @@ onBeforeMount(async () => {
       <q-infinite-scroll class="w-100 q-mt-md q-pa-lg">
         <q-list
           :dark="$q.dark.isActive"
-          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
           separator
         >
           <q-expansion-item
@@ -242,7 +244,7 @@ onBeforeMount(async () => {
             :label="mirror.displayName"
             class="shadow-2"
             :dark="$q.dark.isActive"
-            :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+            :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
           >
             <q-list
               separator
@@ -257,7 +259,7 @@ onBeforeMount(async () => {
                   class="flex items-center"
                   :clickable="typeof value === 'boolean'"
                   :dark="$q.dark.isActive"
-                  style="background:rgba(255, 255, 255, 0.05)"
+                  style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
                   @click="typeof value === 'boolean' ? changeOption(mirror.name, propertyName, !value) : null"
                 >

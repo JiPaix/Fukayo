@@ -227,6 +227,7 @@
   "settings": {
     "cache": "Cache",
     "change": "Modifier",
+    "darkmode": "Activer le mode sombre",
     "disable": "Désactiver",
     "displaymodes": "Modes d'affichage",
     "enable": "Activer",
