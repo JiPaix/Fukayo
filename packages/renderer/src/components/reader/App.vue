@@ -62,7 +62,7 @@ const images = computed(() =>
 );
 
 /** Display/Hide the sidebar */
-const drawerRight = ref(true);
+const drawerRight = ref($q.platform.has.touch ? false : true);
 /** Tell the sidebar if the q-header is revealed or not */
 const drawerRightReveal = ref(false);
 
@@ -233,8 +233,6 @@ async function markAsReadIfLastPage() {
     <q-header
       elevated
       class="bg-dark"
-      reveal
-      @reveal="drawerRightReveal = !drawerRightReveal"
     >
       <q-toolbar>
         <q-btn

@@ -9,7 +9,6 @@ const $q = useQuasar();
 /** props */
 const props = defineProps<{
   drawer:boolean,
-  drawerReveal:boolean,
   chapterSelectedIndex: number,
   manga: MangaPage|MangaInDB,
   readerSettings: MangaInDB['meta']['options']
@@ -102,23 +101,6 @@ function toggleLibrary() {
     :dark="$q.dark.isActive"
     @update:model-value="emit('toggle-drawer')"
   >
-    <q-bar
-      v-if="drawerReveal"
-      class="w-100 flex items-center justify-between cursor-pointer"
-      :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-3'"
-      :dark="$q.dark.isActive"
-      @click="emit('toggle-drawer')"
-    >
-      <span class="ellipsis q-pr-sm"> {{ manga.displayName || manga.name }} </span>
-      <q-tooltip>
-        {{ manga.name }}
-      </q-tooltip>
-      <q-icon
-        flat
-        dense
-        name="close"
-      />
-    </q-bar>
     <q-select
       v-model="selectedChap"
       hide-bottom-space
