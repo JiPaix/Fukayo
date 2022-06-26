@@ -63,8 +63,6 @@ const images = computed(() =>
 
 /** Display/Hide the sidebar */
 const drawerRight = ref($q.platform.has.touch ? false : true);
-/** Tell the sidebar if the q-header is revealed or not */
-const drawerRightReveal = ref(false);
 
 /**
  * Listen to @update-settings from side-bar and update local settings
@@ -320,7 +318,6 @@ async function markAsReadIfLastPage() {
     </q-footer>
     <side-bar
       :drawer="drawerRight"
-      :drawer-reveal="drawerRightReveal"
       :manga="manga"
       :chapter-selected-index="chapterSelectedIndex"
       :reader-settings="isMangaInDb(manga) ? manga.meta.options : displaySetting"
