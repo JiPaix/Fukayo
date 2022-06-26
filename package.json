@@ -60,7 +60,7 @@
     "eslint-plugin-vue": "9.0.1",
     "happy-dom": "4.1.0",
     "nano-staged": "0.8.0",
-    "nock": "^13.2.4",
+    "nock": "^13.2.7",
     "playwright": "^1.22.2",
     "simple-git": "^3.7.1",
     "simple-git-hooks": "2.8.0",
@@ -69,7 +69,7 @@
     "user-agents": "^1.0.1059",
     "vite": "2.9.9",
     "vitest": "^0.16.0",
-    "vue": "^3.2.36",
+    "vue": "^3.2.37",
     "vue-tsc": "^0.34.16"
   },
   "dependencies": {
@@ -77,7 +77,7 @@
     "@mdi/js": "^6.7.96",
     "@quasar/extras": "^1.14.0",
     "axios": "^0.27.2",
-    "cheerio": "^1.0.0-rc.11",
+    "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.2",
     "express": "^4.18.1",
     "file-type": "^17.1.1",
