@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ComponentPublicInstance } from 'vue';
 import { ref, computed, watch } from 'vue';
 import { useQuasar, scroll } from 'quasar';
 import { isChapterImage, isChapterImageErrorMessage } from '../helpers/typechecker';
@@ -25,7 +26,7 @@ const emit = defineEmits<{
   (event: 'reload', chapterIndex:number, pageIndex:number): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'page-change', payload:{ index: number, from: 'child'}): void
-  (event: 'onKey', payload:MouseEvent): void
+  (event: 'onKey', payload:MouseEvent, imgSize?:number): void
 }>();
 
 /** reload a page */
@@ -36,6 +37,9 @@ function reload(pageIndex: number) {
 
 /** Sates for "reload page" buttons */
 const reloaders = ref(Array.from({length: props.nbOfImagesToExpectFromChapter}, () => false));
+
+/** image tempalte refs */
+const imgRefs = ref<{ ref:ComponentPublicInstance, id: number }[]>([]);
 
 /** computed css for q-img */
 const imageStyle = computed(() => {
@@ -125,12 +129,13 @@ watch(() => props.currentPage, (nval, oldval) => {
     >
       <q-img
         v-show="props.readerSettings.longStrip ? true : i === props.currentPage.index"
+        :ref="(el) => el !== null ? imgRefs.push({ref: el as ComponentPublicInstance, id: i}) : undefined"
         v-intersection="{ handler: onIntersection, cfg: { threshold: 0.6 } }"
         :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) ? img.src : 'undefined'"
         :style="props.readerSettings.zoomMode === 'fit-height' ? undefined : imageStyle"
         :height="imageHeight ? imageHeight + 'px': undefined"
         :fit="props.readerSettings.zoomMode === 'fit-height' ? 'scale-down' : undefined"
-        @click="emit('onKey', $event)"
+        @click="emit('onKey', $event, imgRefs.find(r => r.id === i)?.ref.$el.clientWidth)"
       >
         <template #error>
           <div

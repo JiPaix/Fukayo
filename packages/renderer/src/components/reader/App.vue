@@ -164,9 +164,9 @@ function decrementNav() {
 }
 
 /** listening to keyup events */
-function onKey(event: KeyboardEvent|MouseEvent) {
-  const left = $q.screen.width / 2;
-  if((isMouseEvent(event) && event.offsetX < left) || (!isMouseEvent(event) && event.key === 'ArrowRight')) {
+function onKey(event: KeyboardEvent|MouseEvent, divSize?: number) {
+  const left = (divSize || $q.screen.width) / 2;
+  if((isMouseEvent(event) && event.offsetX > left) || (!isMouseEvent(event) && event.key === 'ArrowRight')) {
     incrementNav(); // move to next page
     const delta = Date.now() - lastNavForward.value;
     if(delta < 300) {
@@ -176,7 +176,7 @@ function onKey(event: KeyboardEvent|MouseEvent) {
     // in other case, update the "next-page" event count
     lastNavForward.value = Date.now();
   }
-  else if((isMouseEvent(event) && event.offsetX > left) || (!isMouseEvent(event) && event.key === 'ArrowLeft')) {
+  else if((isMouseEvent(event) && event.offsetX < left) || (!isMouseEvent(event) && event.key === 'ArrowLeft')) {
     decrementNav(); // move to previous page
     const delta = Date.now() - lastNavBack.value;
     if(delta < 300) {
