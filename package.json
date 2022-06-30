@@ -61,7 +61,7 @@
     "happy-dom": "5.3.2",
     "nano-staged": "0.8.0",
     "nock": "^13.2.7",
-    "playwright": "^1.22.2",
+    "playwright": "^1.23.1",
     "simple-git": "^3.10.0",
     "simple-git-hooks": "2.8.0",
     "typed-emitter": "^2.1.0",
