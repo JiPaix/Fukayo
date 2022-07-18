@@ -70,7 +70,7 @@
     "vite": "2.9.14",
     "vitest": "^0.18.0",
     "vue": "^3.2.37",
-    "vue-tsc": "^0.38.4"
+    "vue-tsc": "^0.38.8"
   },
   "dependencies": {
     "@mdi/font": "^6.9.96",
