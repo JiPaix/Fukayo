@@ -29,11 +29,8 @@ defaults:
 jobs:
   eslint:
     runs-on: ubuntuvm
+
     steps:
-      - name: Runner workspace path
-        run: |
-          echo "Cleaning up previous run"
-          rm -rf "${{ github.workspace }}"
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
