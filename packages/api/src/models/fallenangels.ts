@@ -1,7 +1,7 @@
 import { MyMangaReaderCMS } from './abstracts/mymangareadercms';
 import icon from './icons/fallenangels.png';
 
-class FallenAngels extends MyMangaReaderCMS<{ enabled: boolean}> {
+class FallenAngels extends MyMangaReaderCMS {
   constructor() {
     super({
       host: 'https://manga.fascans.com',
