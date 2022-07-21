@@ -30,6 +30,16 @@ jobs:
         os: [ windowsvm, ubuntuvm ]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Runner workspace path (linux)
+        if: runner.os == 'Linux'
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
+      - name: Runner workspace path (linux)
+        if: runner.os == 'Windows'
+        run: |
+          echo "Cleaning up previous run"
+          rd /s /q "${{ github.workspace }}"
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:

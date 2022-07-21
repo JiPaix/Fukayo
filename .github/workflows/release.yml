@@ -31,6 +31,10 @@ jobs:
       draft-id: ${{ steps.draft-create.outputs.id }}
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
+      - name: Runner workspace path
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}"
 
       - uses: MontyD/package-json-updated-action@1.0.1
         id: version-updated
