@@ -17,6 +17,7 @@ class FallenAngels extends MyMangaReaderCMS<{ enabled: boolean}> {
         popularity: 0.3,
       },
       options: {
+        cache:true,
         enabled: true,
       },
     });

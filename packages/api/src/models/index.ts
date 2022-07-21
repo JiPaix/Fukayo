@@ -76,7 +76,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   /**
    * mirror specific options
    */
-  private db: Database<Record<string, unknown> & { enabled: boolean; }>;
+  private db: Database<Record<string, unknown> & { enabled: boolean; cache: boolean }>;
 
 
   constructor(opts: MirrorConstructor<T>) {
@@ -93,7 +93,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
       const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
-    this.db = new Database<Record<string, unknown> & { enabled: boolean; }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+    this.db = new Database<Record<string, unknown> & { enabled: boolean; cache: boolean }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
   }
 
   public get enabled() {
@@ -109,7 +109,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     return this.db.data;
   }
 
-  public set options(opts: Record<string, unknown> & { enabled: boolean, _v: string }) {
+  public set options(opts: Record<string, unknown> & { enabled: boolean, cache:boolean, _v: string }) {
     this.db.data = opts;
     this.logger('options changed', opts);
     this.db.write();
@@ -198,7 +198,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
 
     const mime = await this.getFileMime(buffer);
     if(mime && mime.startsWith('image/')) {
-      this.saveToCache(filename, buffer);
+      if(this.options.cache) this.saveToCache(filename, buffer);
       return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
     }
   }

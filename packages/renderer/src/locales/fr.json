@@ -273,6 +273,7 @@
     },
     "source": {
       "adult": "Activer le contenu pour adultes",
+      "cache": "Activer le cache",
       "enable": "Désactiver cette {sourceWord}"
     },
     "tab": "Configuration",

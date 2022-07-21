@@ -24,6 +24,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       },
       options: {
         enabled: true,
+        cache: true,
       },
     });
   }

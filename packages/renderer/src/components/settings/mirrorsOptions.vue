@@ -76,6 +76,8 @@ function optionLabel(propertyName:string, value:unknown) {
       return format.capitalize($t('settings.source.enable', { sourceWord: $t('mangas.source', 1) }).toLocaleLowerCase());
     } else if(propertyName === 'adult') {
       return $t('settings.source.adult');
+    } else if(propertyName === 'cache') {
+      return $t('settings.source.cache');
     }
     else if(value) return $t('settings.enable');
     else return $t('settings.disable');

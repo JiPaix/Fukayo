@@ -1,4 +1,4 @@
-export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean}> = {
+export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean, cache:boolean }> = {
   /** slug name: `az-_` */
   name: string,
   /** full name */

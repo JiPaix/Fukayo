@@ -18,6 +18,7 @@ class scanfr extends MyMangaReaderCMS<{ enabled: boolean}> {
         popularity: 0.5,
       },
       options: {
+        cache:true,
         enabled: true,
       },
     });

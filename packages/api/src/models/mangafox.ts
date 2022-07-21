@@ -28,7 +28,7 @@ class Mangafox extends Mirror implements MirrorInterface {
         quality: 0.3,
         popularity: 0.6,
       },
-      options: { enabled: true, adult: true },
+      options: { enabled: true, cache:true, adult: true },
     });
   }
 
