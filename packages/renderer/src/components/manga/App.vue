@@ -15,7 +15,7 @@ import {
 } from '../helpers/typechecker';
 import showChapter from '../reader/App.vue';
 
-import type { ComponentPublicInstance} from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import type dayjs from 'dayjs';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
@@ -57,15 +57,6 @@ const content = ref<HTMLElement>();
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 /** carrousel slides */
 const slide = ref(0);
-/** Reader settings */
-const localSettings = ref<MangaInDB['meta']['options']>({
-  webtoon: settings.reader.webtoon,
-  showPageNumber:  settings.reader.showPageNumber,
-  zoomMode: settings.reader.zoomMode,
-  zoomValue: settings.reader.zoomValue,
-  longStrip: settings.reader.longStrip,
-});
-
 
 type Manga = MangaInDB | MangaPage;
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
@@ -94,6 +85,15 @@ const manga = computed(() => {
       };
     }),
   };
+});
+
+/** Reader settings */
+const localSettings = ref<MangaInDB['meta']['options']>({
+  webtoon: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.webtoon : settings.reader.webtoon,
+  showPageNumber: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.showPageNumber : settings.reader.showPageNumber,
+  zoomMode: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.zoomMode : settings.reader.zoomMode,
+  zoomValue: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.zoomValue : settings.reader.zoomValue,
+  longStrip: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.longStrip : settings.reader.longStrip,
 });
 
 /** unread chapters */
@@ -927,7 +927,7 @@ onBeforeUnmount(() => {
       :nb-of-images-to-expect-from-chapter="nbOfImagesToExpectFromChapter"
       :sorted-images="sortedImages"
       :chapter-error="chapterError"
-      :display-setting="localSettings"
+      :display-settings="localSettings"
       @hide="hideChapterComp"
       @reload="reloadChapterImage"
       @navigate="showChapterComp($event)"

@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { chapterLabel, isMouseEvent } from './helpers';
-import { isChapterImageErrorMessage, isMangaInDb } from '../helpers/typechecker';
+import { isChapterImageErrorMessage } from '../helpers/typechecker';
 import { useQuasar } from 'quasar';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
@@ -37,7 +37,7 @@ const props = defineProps<{
   /** has the chapter failed to load */
   chapterError: string|null
   /** reader settings */
-  displaySetting: MangaInDB['meta']['options']
+  displaySettings: MangaInDB['meta']['options']
 }>();
 
 /** displays a progress bar while images are loading */
@@ -320,7 +320,7 @@ async function markAsReadIfLastPage() {
       :drawer="drawerRight"
       :manga="manga"
       :chapter-selected-index="chapterSelectedIndex"
-      :reader-settings="isMangaInDb(manga) ? manga.meta.options : displaySetting"
+      :reader-settings="displaySettings"
       :first="first"
       :previous="previous"
       :next="next"
@@ -337,7 +337,7 @@ async function markAsReadIfLastPage() {
           :images="images"
           :nb-of-images-to-expect-from-chapter="props.nbOfImagesToExpectFromChapter"
           :chapter-selected-index="chapterSelectedIndex"
-          :reader-settings="isMangaInDb(manga) ? manga.meta.options : displaySetting"
+          :reader-settings="displaySettings"
           :manga="manga"
           :current-page="currentPageIndex"
           @page-change="currentPageIndex = $event; markAsReadIfLastPage()"
