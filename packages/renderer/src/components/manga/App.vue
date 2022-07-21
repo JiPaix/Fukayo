@@ -348,7 +348,7 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
   if(isMangaInDb(manga.value)) {
-    socket.emit('addManga', { manga: manga.value, ...updatedManga }, (res) => {
+    socket.emit('addManga', { manga: updatedManga }, (res) => {
       mangaRaw.value = {...res, covers: manga.value?.covers||[] };
     });
   } else {
