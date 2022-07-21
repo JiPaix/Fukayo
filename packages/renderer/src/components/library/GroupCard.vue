@@ -5,6 +5,7 @@ import type { MangaGroup } from './@types';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { useRouter } from 'vue-router';
 import MirrorChips from './MirrorChips.vue';
+import GroupMenu from './GroupMenu.vue';
 
 /** props */
 const props = defineProps<{
@@ -20,6 +21,8 @@ const router = useRouter();
 const $q = useQuasar();
 /** slider model */
 const slide = ref(0);
+/** dialog */
+const dialog = ref(false);
 
 /** most unread first */
 function sort(group: typeof props.group) {
@@ -34,12 +37,36 @@ const sortedGroup = computed(() => {
   return sort(props.group);
 });
 
+const defaultImageSize = {
+    width: 150,
+    height: 235.5,
+};
+// add 'px' to width and height
+function addPx(size: { width: number, height: number }) {
+  return {
+    width: `${size.width}px`,
+    height: `${size.height}px`,
+  };
+}
+
 /** Card size */
 const size = computed(() => {
-  return {
-    width: '150px',
-    height: '235.5px',
-  };
+  if($q.screen.xs) {
+    // mobile
+    return addPx({
+      width: defaultImageSize.width * 2,
+      height: defaultImageSize.height * 2,
+    });
+  }
+  if($q.screen.sm) {
+    // tablet
+    return addPx({
+      width: defaultImageSize.width * 1.5,
+      height: defaultImageSize.height * 1.5,
+    });
+  }
+  // desktop
+  return addPx(defaultImageSize);
 });
 
 
@@ -58,99 +85,22 @@ function showManga(mangaInfo:{ mirror: string, url:string, lang:string, chapteri
     },
   });
 }
-
-const QMenuColors = {
-  dark : {
-    bold: {
-      some: 'text-orange',
-      none: 'text-grey-6',
-    },
-    some:'text-orange-2',
-    none: 'text-grey-6',
-  },
-  light : {
-    bold: {
-      some: 'text-orange',
-      none: 'text-grey-6',
-    },
-    some:'text-primary',
-    none: 'text-grey-6',
-  },
-};
-
-function QMenuChapterColor (unread: number) {
-  if($q.dark.isActive) {
-    if(unread > 0) return QMenuColors.dark.bold.some;
-    return QMenuColors.dark.bold.none;
-  } else {
-    if(unread > 0) return QMenuColors.light.bold.some;
-    return QMenuColors.light.bold.none;
-  }
-}
-
-function QMenuLabelColor (unread:number) {
-  if($q.dark.isActive) {
-    if(unread > 0) return QMenuColors.dark.some;
-    return QMenuColors.dark.none;
-  } else {
-    if(unread > 0) return QMenuColors.light.some;
-    return QMenuColors.light.none;
-  }
-}
-
 </script>
 
 <template>
   <q-card
     v-ripple
     class="q-ma-xs q-my-lg"
+    @click="dialog = !dialog"
   >
-    <q-menu
-      anchor="center middle"
-      self="center middle"
-    >
-      <q-list
-        :style="'min-width:'+ size.width"
-        separator
-      >
-        <q-item
-          v-for="(manga, i) in sortedGroup"
-          :key="i"
-          v-close-popup
-          clickable
-          @click="showManga({mirror: manga.mirror, url: manga.url, lang: manga.lang})"
-        >
-          <q-item-section>
-            <q-item-label class="flex items-center">
-              <q-img
-                :src="getMirror(manga.mirror)?.icon"
-                height="16px"
-                width="16px"
-                class="q-mr-xs bg-white"
-              />
-              <span class="text-bold">{{ getMirror(manga.mirror)?.displayName }}</span>
-              <span
-                class="text-caption q-ml-xs"
-              >
-                ({{ $t(`languages.${manga.lang}.value`) }})
-              </span>
-            </q-item-label>
-            <q-item-label
-              caption
-              lines="1"
-            >
-              <span
-                class="q-mr-xs"
-                :class="QMenuChapterColor(manga.unread)"
-              >
-                {{ manga.unread }}
-              </span>
-              <span :class="QMenuLabelColor(manga.unread)">{{ $t('library.left_to_read', {chapterWord: $t('mangas.chapter', manga.unread).toLocaleLowerCase() }, manga.unread) }}</span>
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
+    <group-menu
+      :mirrors="props.mirrors"
+      :sorted-group="sortedGroup"
+      :width="size.width"
+      :dialog="dialog"
+      @show-manga="showManga"
+      @update-dialog="dialog = !dialog"
+    />
     <q-carousel
       v-model="slide"
       animated

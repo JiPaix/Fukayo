@@ -19,13 +19,11 @@ const hover = ref(false);
 const QChipSize = computed(() => {
   switch ($q.screen.name) {
     case 'xs':
-      return '';
+      return 'q-pa-sm';
     case 'sm':
-      return '';
-    case 'md':
-      return '';
+      return 'q-pa-xs';
     default:
-      return 'md';
+      return '';
   }
 });
 
@@ -52,7 +50,7 @@ const QChipColor = computed(() => {
   <div
     :size="QChipSize"
     class="q-mb-xs flex flex-center justify-between text-white shadow-3 rounded-borders"
-    :class="QChipColor"
+    :class="QChipColor+' '+QChipSize"
     @click="emit('showManga')"
     @mouseenter="hover=true"
     @mouseleave="hover=false"

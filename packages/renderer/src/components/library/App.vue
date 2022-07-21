@@ -203,7 +203,7 @@ onBeforeUnmount(() => {
       class="w-100 q-pa-lg"
     >
       <div
-        class="flex items-center"
+        class="flex flex-center"
       >
         <group-card
           v-for="(group, i) in mangas"
