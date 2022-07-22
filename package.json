@@ -92,7 +92,7 @@
     "quasar": "^2.7.5",
     "socket.io": "^4.5.1",
     "socket.io-client": "^4.5.1",
-    "systeminformation": "^5.11.24",
+    "systeminformation": "^5.12.1",
     "vue-i18n": "^9.1.10",
     "vue-router": "^4.1.2"
   }
