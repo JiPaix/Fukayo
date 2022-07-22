@@ -60,7 +60,7 @@
     "eslint-plugin-vue": "9.2.0",
     "happy-dom": "6.0.4",
     "nano-staged": "0.8.0",
-    "nock": "^13.2.8",
+    "nock": "^13.2.9",
     "playwright": "^1.24.0",
     "simple-git": "^3.10.0",
     "simple-git-hooks": "2.8.0",
