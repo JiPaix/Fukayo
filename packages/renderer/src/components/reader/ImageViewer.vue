@@ -92,6 +92,10 @@ function scrollToPage(forward:boolean) {
   if(target) setVerticalScrollPosition(target, offset, duration);
 }
 
+function shouldPreload(index:number) {
+  if(props.readerSettings.longStrip) return index >= props.currentPage.index - 1 && index <= props.currentPage.index + 1;
+  else return index === props.currentPage.index;
+}
 /** copy to clipboard for electron users */
 function copyToClipboard(src: string) {
   if(!window.apiServer) return;
@@ -131,7 +135,7 @@ watch(() => props.currentPage, (nval, oldval) => {
         v-show="props.readerSettings.longStrip ? true : i === props.currentPage.index"
         :ref="(el) => el !== null ? imgRefs.push({ref: el as ComponentPublicInstance, id: i}) : undefined"
         v-intersection="{ handler: onIntersection, cfg: { threshold: 0.6 } }"
-        :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) ? img.src : 'undefined'"
+        :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) && shouldPreload(i) ? img.src : 'undefined'"
         :style="props.readerSettings.zoomMode === 'fit-height' ? undefined : imageStyle"
         :height="imageHeight ? imageHeight + 'px': undefined"
         :fit="props.readerSettings.zoomMode === 'fit-height' ? 'scale-down' : undefined"
