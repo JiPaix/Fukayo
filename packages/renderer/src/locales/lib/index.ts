@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import dayjsrelative from 'dayjs/plugin/relativeTime';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
 
-export const availableLanguages = ['en-US', 'fr'] as const;
+export const availableLanguages = ['en', 'fr'] as const;
 
 export function findLocales(lang:string) {
   const locale = availableLanguages.find(locale => {
@@ -16,7 +16,7 @@ export function findLocales(lang:string) {
     const regex = new RegExp(`${locale}-.*`);
     return regex.test(lang);
   });
-  return locale ? locale : 'en-US';
+  return locale ? locale : 'en';
 }
 
 export function setupI18n(options:I18nOptions = {}) {
@@ -34,7 +34,7 @@ export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, true>, loca
 
   /** Quasar */
   const langList = import.meta.glob('../../../../../node_modules/quasar/lang/*.mjs');
-  langList[ `../../../../../node_modules/quasar/lang/${ locale }.mjs` ]().then(lang => {
+  langList[ `../../../../../node_modules/quasar/lang/${ locale === 'en' ? 'en-US' : locale}.mjs` ]().then(lang => {
     Quasar.lang.set(lang.default);
   });
 
