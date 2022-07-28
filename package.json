@@ -52,7 +52,7 @@
     "@vue/test-utils": "2.0.2",
     "@vueuse/core": "^8.9.4",
     "cross-env": "7.0.3",
-    "electron": "^19.0.9",
+    "electron": "^19.0.10",
     "electron-builder": "^23.1.0",
     "electron-devtools-installer": "3.2.0",
     "electron-updater": "5.0.5",
