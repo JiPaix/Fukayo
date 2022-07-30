@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { useStore as useSettingsStore } from '../../store/settings';
@@ -81,6 +81,32 @@ function pickAllLangs() {
   emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
 }
 
+watch(() => props.mirrorList, (mirrors) => {
+  mirrors.forEach(m => {
+    if(!includedMirrors.value.includes(m.name)) {
+      includedMirrors.value.push(m.name);
+    }
+  });
+});
+
+watch(() => props.langList, (langs) => {
+  langs.forEach(l => {
+    if(!includedLangsRAW.value.includes(l)) {
+      includedLangsRAW.value.push(l);
+    }
+  });
+});
+
+onMounted(() => {
+  const langs = new Set<string>();
+  const mirrors = new Set<string>();
+  props.mirrorList.forEach(m => {
+    m.langs.forEach(l => langs.add(l));
+    mirrors.add(m.name);
+  });
+  includedLangsRAW.value = Array.from(langs);
+  includedMirrors.value = Array.from(mirrors);
+});
 </script>
 <template>
   <div class="row">
