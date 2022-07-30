@@ -133,7 +133,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   public get mirrorInfo():mirrorInfo {
-
     const allOptions = this.options;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _v, ...options } = allOptions;
@@ -145,7 +144,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       icon: this.icon,
       langs: this.langs,
       meta: this.meta,
-      options: this.options,
+      options: options,
     };
   }
 
