@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { env } from 'node:process';
+import semver from 'semver';
 import { dirname, resolve } from 'node:path';
 import packageJson from '../../../../package.json';
 
@@ -25,7 +26,10 @@ export class Database<T> {
     if(!existsSync(path)) mkdirSync(path, { recursive: true });
 
     // Read or create the database
-    if(existsSync(this.file)) this.data = this.readNoAssign();
+    if(existsSync(this.file)) {
+      this.data = this.readNoAssign();
+      this.autopatch(defaultData);
+    }
     else {
       this.data = { ...defaultData, _v: packageJson.version };
       this.write();
@@ -37,15 +41,24 @@ export class Database<T> {
   }
 
   /**
-   * Apply patches to a database depending on the version
-   * @param targets version the database should be upgraded to
-   * @param fN function to upgrade the database to the next version
+   * checks if the database is outdated and if so, it will automatically update it
+   * @param defaultData the default data to use if the database is not up to date
    */
-  patch(targets:string[], fN: (data: databaseGeneric<T>|undefined) => void) {
-    if(targets.includes(this.data._v)) {
-      return fN(this.data);
+  private autopatch(defaultData: T) {
+    if(semver.gt(packageJson.version, this.data._v)) {
+      this.logger('Updating database version');
+      const newData = Object.keys(defaultData).reduce((acc, key) => {
+        if(this.data[key as keyof T] === undefined || typeof this.data[key as keyof T] !== typeof defaultData[key as keyof T]) {
+          acc[key as keyof T] = defaultData[key as keyof T];
+        }
+        return acc;
+      }
+      , {} as Partial<T>);
+
+      // write the data anyway so we update _v and don't trigger the autopatch again
+      this.data = { ...this.data, ...newData, _v: packageJson.version };
+      this.write();
     }
-    return fN(undefined);
   }
   /**
    * Read the database from disk and load it into memory
@@ -87,6 +100,8 @@ export class DatabaseIO<T> {
     this.file = pathToFile;
     if (!existsSync(pathToFile)) {
       this.write({ ...defaultData, _v: packageJson.version });
+    } else {
+      this.autopatch(defaultData);
     }
   }
 
@@ -103,22 +118,24 @@ export class DatabaseIO<T> {
     writeFileSync(this.file, JSON.stringify(data));
     return data as databaseGeneric<T>;
   }
+
   /**
-   * Apply patches to a database depending on the version
-   * @param targets version the database should be upgraded to
-   * @param fN function to upgrade the database to the next version
+   * checks if the database is outdated and if so, it will automatically update it
+   * @param defaultData the default data to use if the database is not up to date
    */
-   patch(targets:string[], fN: (data: databaseGeneric<T>) => databaseGeneric<T>|Promise<databaseGeneric<T>>) {
+  autopatch(defaultData: T) {
     const oldData = this.read();
-    isPromise;
-    if(targets.includes(oldData._v)) {
-      const fun = fN;
-      if(isPromise(fun)) {
-        fun(oldData).then(data => this.write(data));
-        fun(oldData).then(data => this.write(data));
-      } else {
-        fun(oldData);
+    if(semver.gt(packageJson.version, oldData._v)) {
+      this.logger('Updating database version');
+      const newData = Object.keys(defaultData).reduce((acc, key) => {
+        if(oldData[key as keyof T] === undefined || typeof oldData[key as keyof T] !== typeof defaultData[key as keyof T]) {
+          acc[key as keyof T] = defaultData[key as keyof T];
+        }
+        return acc;
       }
+      , {} as Partial<T>);
+      // write the data anyway so we update _v and don't trigger the autopatch again
+      this.write({ ...oldData, ...newData, _v: packageJson.version });
     }
   }
 }
