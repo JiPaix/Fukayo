@@ -5,7 +5,7 @@ import icon from './icons/mangafox.png';
 import type MirrorInterface from './interfaces/index';
 import type { socketInstance } from '../server/types';
 
-class Mangafox extends Mirror implements MirrorInterface {
+class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
   constructor() {
     super({

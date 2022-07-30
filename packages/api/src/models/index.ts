@@ -25,7 +25,7 @@ import type { socketInstance } from '../server/types';
  * // if mirror has no options use undefined
  * class myMirror extends Mirror<undefined> {}
  */
-export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
+export default class Mirror<T extends Record<string, unknown> = Record<string, unknown>> {
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
@@ -76,7 +76,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   /**
    * mirror specific options
    */
-  private db: Database<Record<string, unknown> & { enabled: boolean; cache: boolean }>;
+  private db: Database<MirrorConstructor<T>['options']>;
 
 
   constructor(opts: MirrorConstructor<T>) {
@@ -93,7 +93,7 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
       const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
-    this.db = new Database<Record<string, unknown> & { enabled: boolean; cache: boolean }>(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+    this.db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
   }
 
   public get enabled() {
@@ -109,8 +109,8 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
     return this.db.data;
   }
 
-  public set options(opts: Record<string, unknown> & { enabled: boolean, cache:boolean, _v: string }) {
-    this.db.data = opts;
+  public set options(opts: MirrorConstructor<T>['options']) {
+    this.db.data = { ...this.db.data, ...opts };
     this.logger('options changed', opts);
     this.db.write();
   }
@@ -132,6 +132,10 @@ export default class Mirror<T = Record<string, unknown> & { enabled: boolean}> {
   }
 
   public get mirrorInfo():mirrorInfo {
+
+    const allOptions = this.options;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _v, ...options } = allOptions;
     return {
       name: this.name,
       displayName: this.displayName,
