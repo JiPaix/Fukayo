@@ -50,7 +50,7 @@
     "@typescript-eslint/parser": "^5.31.0",
     "@vitejs/plugin-vue": "2.3.3",
     "@vue/test-utils": "2.0.2",
-    "@vueuse/core": "^9.0.0",
+    "@vueuse/core": "^9.0.2",
     "cross-env": "7.0.3",
     "electron": "^19.0.10",
     "electron-builder": "^23.1.0",
