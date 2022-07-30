@@ -128,7 +128,7 @@ watch(() => props.currentPage, (nval, oldval) => {
         'margin-bottom': props.readerSettings.webtoon
           || !props.readerSettings.longStrip
           || (props.readerSettings.longStrip && i === (images.length-1))
-          ? '0' : '40px'
+          ? '0' : '20px'
       }"
     >
       <q-img
@@ -172,13 +172,6 @@ watch(() => props.currentPage, (nval, oldval) => {
                 size="10em"
                 color="orange"
               />
-              <q-chip
-                :dark="$q.dark.isActive"
-                color="white"
-                text-color="black"
-              >
-                {{ img.index+1 }}/{{ nbOfImagesToExpectFromChapter }}
-              </q-chip>
             </div>
           </div>
         </template>
@@ -200,17 +193,6 @@ watch(() => props.currentPage, (nval, oldval) => {
             </q-item>
           </q-list>
         </q-menu>
-        <div
-          class="absolute-bottom text-subtitle1 text-center"
-          style="background:none;"
-        >
-          <q-chip
-            v-if="props.readerSettings.showPageNumber"
-            :dark="$q.dark.isActive"
-          >
-            {{ img.index+1 }}/{{ nbOfImagesToExpectFromChapter }}
-          </q-chip>
-        </div>
       </q-img>
     </div>
   </div>
