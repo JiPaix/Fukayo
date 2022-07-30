@@ -4,6 +4,7 @@ import { SettingsDatabase } from '../db/settings';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
+import type { AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from '../utils/crawler';
@@ -179,7 +180,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * const url = 'https://www.example.com/images/some-image.jpg?token=123';
    * downloadImage(url, false)
    */
-  protected async downloadImage(url:string, referer?:string, dependsOnParams = false) {
+  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig) {
     this.concurrency++;
     const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
 
@@ -190,7 +191,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
-      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host } });
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config });
       buffer = Buffer.from(ab.data);
     } catch {
       const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
