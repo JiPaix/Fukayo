@@ -27,10 +27,10 @@ const allLangs = ref<string[]>([]);
 /** language(s) to include in the  results */
 const includedLangsRAW = ref<string[]>([]);
 /** Mirrors info as retrieved from the server */
-const mirrorsRAW = ref<mirrorInfo[]>([]);
+const mirrorsRAW = ref<Array<mirrorInfo & { isLoggedIn?: boolean }>>([]);
 
 const mirrors = computed(() => {
-  return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value);
+  return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value) as Array<mirrorInfo & { isLoggedIn?: boolean }>;
 });
 
 const includedAllLanguage = computed(() => {
@@ -72,21 +72,47 @@ function toggleButtonColor(propertyName: string) {
 
 function optionLabel(propertyName:string, value:unknown) {
   if(typeof value === 'boolean') {
-    if(propertyName === 'enabled') {
-      return format.capitalize($t('settings.source.enable', { sourceWord: $t('mangas.source', 1) }).toLocaleLowerCase());
-    } else if(propertyName === 'adult') {
-      return $t('settings.source.adult');
-    } else if(propertyName === 'cache') {
-      return $t('settings.source.cache');
+    switch (propertyName) {
+      case 'enabled':
+         return format.capitalize($t('settings.source.enable', { sourceWord: $t('mangas.source', 1) }).toLocaleLowerCase());
+      case 'adult':
+        return $t('settings.source.adult');
+      case 'cache':
+        return $t('settings.source.cache');
+      default:
+        return value ? $t('settings.enable') : $t('settings.disable');
     }
-    else if(value) return $t('settings.enable');
-    else return $t('settings.disable');
   }
   if(typeof value === 'string' || typeof value === 'number') {
-    return $t('settings.change');
+    switch (propertyName) {
+      case 'login':
+        return $t('settings.source.login');
+      case 'password':
+        return $t('settings.source.password');
+      case 'host':
+        return $t('settings.source.host');
+      case 'port':
+        return $t('settings.source.port');
+      case 'protocol':
+        return $t('settings.source.protocol');
+    }
   }
-  return propertyName;
+  return `${$t('settings.change')} ${propertyName}`;
 }
+
+function omit<T extends Record<string, unknown>>(obj: T, keys: string[]) {
+  const result = { ...obj };
+  for (const key of keys) {
+    delete result[key];
+  }
+  return result;
+}
+
+function asTypeOrUndefined<T>(value: T): T|undefined {
+  if(value) return value;
+  return undefined;
+}
+
 /** include/exclude all languages from the filter */
 function toggleAllLanguages() {
   if(includedAllLanguage.value) {
@@ -113,7 +139,7 @@ function toggleLang(lang:string) {
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   socket.emit('getMirrors', true, (m) => {
-    mirrorsRAW.value = m.sort((a, b) => a.name.localeCompare(b.name));
+    mirrorsRAW.value = m.map(m => { return {...m, isLoggedIn: false}; }).sort((a, b) => a.name.localeCompare(b.name));
     includedLangsRAW.value = Array.from(new Set(m.map(m => m.langs).flat()));
     allLangs.value = includedLangsRAW.value;
   });
@@ -253,11 +279,10 @@ onBeforeMount(async () => {
               :dark="$q.dark.isActive"
             >
               <div
-                v-for="(value, propertyName) in mirror.options"
+                v-for="(value, propertyName) in omit(mirror.options, ['login', 'password', 'host', 'port', 'protocol'])"
                 :key="propertyName"
               >
                 <q-item
-                  v-if="propertyName !== 'version'"
                   class="flex items-center"
                   :clickable="typeof value === 'boolean'"
                   :dark="$q.dark.isActive"
@@ -305,6 +330,106 @@ onBeforeMount(async () => {
                       </template>
                     </q-input>
                   </q-item-section>
+                </q-item>
+              </div>
+              <div v-if="mirror.options.login">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('login', mirror.options.login) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-input
+                    type="text"
+                    dense
+                    :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="(v) => changeOption(mirror.name, 'login', v)"
+                  />
+                </q-item>
+              </div>
+              <div v-if="mirror.options.password">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('password', mirror.options.password) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-input
+                    type="password"
+                    dense
+                    :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="(v) => changeOption(mirror.name, 'password', v)"
+                  />
+                </q-item>
+              </div>
+              <div v-if="mirror.options.host">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('host', mirror.options.host) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-input
+                    type="text"
+                    dense
+                    :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="(v) => changeOption(mirror.name, 'host', v)"
+                  />
+                </q-item>
+              </div>
+              <div v-if="mirror.options.port">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('port', mirror.options.port) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-input
+                    type="number"
+                    dense
+                    :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="(v) => changeOption(mirror.name, 'port', v)"
+                  />
+                </q-item>
+              </div>
+              <div v-if="mirror.options.protocol">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('protocol', mirror.options.protocol) }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-select
+                    dense
+                    :model-value="asTypeOrUndefined(mirror.options.protocol as string) || '8080'"
+                    :dark="$q.dark.isActive"
+                    :options="['http', 'https']"
+                    @update:model-value="(v) => changeOption(mirror.name, 'port', v)"
+                  />
                 </q-item>
               </div>
             </q-list>
