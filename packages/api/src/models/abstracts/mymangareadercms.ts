@@ -12,7 +12,7 @@ type JSONQueryResult = {
   }[]
 }
 
-export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror<T> implements MirrorInterface {
+export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implements MirrorInterface {
   private chapter_selector: string;
   private chapter_url: RegExp;
   private manga_page_appended_string?: string;

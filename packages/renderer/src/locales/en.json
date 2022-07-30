@@ -274,7 +274,12 @@
     "source": {
       "adult": "Enable adult content",
       "cache": "Enable cache",
-      "enable": "Disable this {sourceWord}"
+      "enable": "Disable this {sourceWord}",
+      "host": "Hostname (eg. \"localhost\")",
+      "login": "Login",
+      "password": "Password",
+      "port": "Port",
+      "protocol": "Protocol"
     },
     "tab": "Configuration",
     "update": {
