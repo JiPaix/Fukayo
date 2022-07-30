@@ -253,7 +253,7 @@ async function markAsReadIfLastPage() {
             v-if="nbOfImagesToExpectFromChapter > 0"
             class="text-subtitle1"
           >
-            {{ manga.displayName || manga.name }} - {{ $t('reader.page.count', {current: currentPageIndex.index+1, total: nbOfImagesToExpectFromChapter}) }}
+            {{ manga.displayName || manga.name }} {{ displaySettings.showPageNumber ? `- ${$t('reader.page.count', {current: currentPageIndex.index+1, total: nbOfImagesToExpectFromChapter})}` : '' }}
           </span>
           <span v-else-if="!chapterError">
             {{ manga.displayName || manga.name }} - {{ $t('reader.loading') }}
