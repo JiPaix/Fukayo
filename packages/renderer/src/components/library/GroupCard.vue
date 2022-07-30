@@ -91,7 +91,7 @@ function showManga(mangaInfo:{ mirror: string, url:string, lang:string, chapteri
   <q-card
     v-ripple
     class="q-ma-xs q-my-lg"
-    @click="dialog = !dialog"
+    @click="sortedGroup.length === 1 ? showManga({mirror: sortedGroup[0].mirror, lang: sortedGroup[0].lang, url: sortedGroup[0].url}) : dialog = !dialog"
   >
     <group-menu
       :mirrors="props.mirrors"
