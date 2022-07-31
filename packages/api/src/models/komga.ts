@@ -75,21 +75,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     });
   }
 
-  public get enabled():boolean {
-    if(!this.options.enabled) return false;
-    if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return false;
-    if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return false;
-    return true;
-  }
-
-  private get canTryFetch():boolean {
-    if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return false;
-    if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return false;
-    return true;
-  }
   changeSettings(opts: Record<string, unknown>) {
     this.options = { ...this.options, ...opts };
   }
+
   private path(path:string) {
     if(!this.options.protocol || !this.options.host || !this.options.port) throw new Error('missing credentials');
     return `${this.options.protocol}://${this.options.host}:${this.options.port}/api/v1${path}`;
