@@ -116,6 +116,7 @@ type bookContent = {
 
 type book = {
   id: string,
+  seriesId: string
   media: {
     pagesCount: number,
   },
@@ -190,12 +191,14 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
   }
 
   isMangaPage(url: string): boolean {
-    const res = /^\/series\/\w+$/gmi.test(url);
+    url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
+    const res = /^(\/series\/\w+)|(\/book\/\w+)$/gmi.test(url);
     if(!res) this.logger('not a manga page:', url);
     return res;
   }
   isChapterPage(url: string): boolean {
-    const res = /^\/books\/\w+$/gmi.test(url);
+    url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
+    const res = /^(\/books\/\w+)|(\/book\/\w+\/read)$/gmi.test(url);
     if(!res) this.logger('not a chapter page:', url);
     return res;
   }
@@ -314,7 +317,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       return socket.emit('showManga', id, {id: mangaId, url, lang, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number), inLibrary: false, mirror: this.name });
     } catch(e) {
       this.stopListening(socket);
-      this.logger('error while fetching manga', e);
+      this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
       if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
@@ -344,7 +347,6 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-      this.logger('fetching chapter', this.path(url));
       const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
       const nbOfPages = res.media.pagesCount-1;
       if(callback) callback(nbOfPages);
@@ -393,18 +395,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
 
       for(const serie of $.content) {
         if(cancel) break;
-        // const link = $('.info-manga > a', el).first().attr('href')?.replace(this.host, '');
-        // const name = $('.info-manga .name-manga', el).text().trim();
-        // if((!name || !link) || (link && !this.isMangaPage(link))) continue;
-        // // mangahasu images needs to be downloaded.
-        // const covers:string[] = [];
-        // const coverLink = $('.wrapper_imgage img', el).attr('src');
-        // if(coverLink) {
-        //   const img = await this.downloadImage(coverLink).catch(() => undefined);
-        //   if(img) covers.push(img);
-        // }
-        // // manga id = "mirror_name/lang/link-of-manga-page"
-        // const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
         const link = `/series/${serie.id}`;
         const mangaId = `${this.name}/${serie.metadata.language}${link}`;
 
@@ -439,8 +430,14 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
   }
 
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
-    // remove the host from the url
-    url = url.replace(this.host, '');
+    url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
+    url = url.replace(this.host, ''); // remove the host from the url
+    if(this.options.host && this.options.port && this.options.protocol) {
+      url = url.replace(this.options.host, '');
+      url = url.replace(':'+this.options.port.toString(), '');
+      url = url.replace(this.options.protocol+'://', '');
+    }
+
     // if no lang is provided, we will use the default one
     lang = lang||this.langs[0];
     // checking what kind of page this is
@@ -448,17 +445,19 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           isChapterPage = this.isChapterPage(url);
 
     if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-    if(isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
-    if(isChapterPage) {
+    if(isMangaPage || isChapterPage) {
       try {
-        const $ = await this.fetch({
-          url: `${this.host}${url}`,
-          waitForSelector: 'body',
-        }, 'html');
-        const chapterPageURL = $('a[itemprop="url"][href*=html]').attr('href');
-        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, lang, mirror: this.name });
+        if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
+        if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
+        url = url.replace('/read', '');
+        url = url.replace(/book(s?)/, 'books');
+        const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
+        const mangaPageURL = `/series/${res.seriesId}/`;
+        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, lang, mirror: this.name });
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      } catch {
+      } catch(e) {
+        if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
+        else this.logger('error while fetching manga from chapter url', e);
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       }
     }

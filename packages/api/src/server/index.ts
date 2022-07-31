@@ -117,10 +117,15 @@ export default class IOWrapper {
     socket.on('findMirrorByURL', (url, callback) => {
       try  { // try catch in case the url is not valid input
         const URI = new URL(url);
-        const mirror = mirrors.find(m => m.host === URI.origin || m.althost.some(h => h === URI.origin));
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && m.options.host === URI.host));
         if(!mirror) return callback(undefined, false, false);
-        const isChapterPage = mirror.isChapterPage(url.replace(URI.origin, ''));
-        const isMangaPage = mirror.isMangaPage(url.replace(URI.origin, ''));
+        let link = url.replace(URI.origin, '');
+        if(mirror.options.host && mirror.options.port) {
+          link = link.replace(mirror.options.host as string, '');
+          link = link.replace(`:${mirror.options.port}`, '');
+        }
+        const isChapterPage = mirror.isChapterPage(link);
+        const isMangaPage = mirror.isMangaPage(link);
         if(!isChapterPage && !isMangaPage) return callback(undefined, false, false);
         return callback(mirror.mirrorInfo, isMangaPage, isChapterPage);
       } catch {
@@ -176,7 +181,7 @@ export default class IOWrapper {
     socket.on('getMangaURLfromChapterURL', async (id, url, lang) => {
       try {
         const URI = new URL(url);
-        const mirror = mirrors.find(m => m.host === URI.origin || m.althost.some(h => h === URI.origin));
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && m.options.host === URI.host));
         if(mirror) {
           const indb = MangaDatabase.get(mirror.name, lang||mirror.langs[0], URI.toString().replace(URI.origin, ''));
           if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);

@@ -46,6 +46,12 @@ export default interface MirrorInterface {
      */
     popularity: number,
   }
+  /** mirror's options */
+  options: {
+    enabled: boolean,
+    cache: boolean
+    [x: string]: unknown
+  }
   /**
    * Time to wait in ms between requests
    */
