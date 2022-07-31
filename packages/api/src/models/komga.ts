@@ -356,8 +356,14 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
         url = url.replace('/read', '');
         url = url.replace(/book(s?)/, 'books');
-        const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
-        const mangaPageURL = `/series/${res.seriesId}/`;
+        const match = url.match(/\/series\/(\w+)/);
+        let mangaPageURL = '/series/';
+        if(match) {
+          mangaPageURL += match[1];
+        } else {
+          const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
+          mangaPageURL += res.seriesId;
+        }
         if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, lang, mirror: this.name });
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch(e) {
