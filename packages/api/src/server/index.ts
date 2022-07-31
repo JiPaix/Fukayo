@@ -117,7 +117,7 @@ export default class IOWrapper {
     socket.on('findMirrorByURL', (url, callback) => {
       try  { // try catch in case the url is not valid input
         const URI = new URL(url);
-        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && m.options.host === URI.host));
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(!mirror) return callback(undefined, false, false);
         let link = url.replace(URI.origin, '');
         if(mirror.options.host && mirror.options.port) {
