@@ -425,10 +425,10 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-select
                     dense
-                    :model-value="asTypeOrUndefined(mirror.options.protocol as string) || '8080'"
+                    :model-value="asTypeOrUndefined(mirror.options.protocol as string) || 'http'"
                     :dark="$q.dark.isActive"
                     :options="['http', 'https']"
-                    @update:model-value="(v) => changeOption(mirror.name, 'port', v)"
+                    @update:model-value="(v) => changeOption(mirror.name, 'protocol', v)"
                   />
                 </q-item>
               </div>
