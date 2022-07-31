@@ -79,8 +79,10 @@ function optionLabel(propertyName:string, value:unknown) {
         return $t('settings.source.adult');
       case 'cache':
         return $t('settings.source.cache');
+      case 'markAsRead':
+        return $t('settings.source.markAsRead');
       default:
-        return value ? $t('settings.enable') : $t('settings.disable');
+        return value ? $t('settings.enable')  : $t('settings.disable');
     }
   }
   if(typeof value === 'string' || typeof value === 'number') {

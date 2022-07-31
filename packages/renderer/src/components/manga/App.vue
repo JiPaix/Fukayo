@@ -367,9 +367,12 @@ function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
 async function markAsRead(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  const updatedChapters = chapters.value.map((c) => {
+  const updatedChapters = chapters.value.map(c => {
     if(c.number === chapters.value[index].number) {
       c.read = true;
+      if(manga.value) {
+        socket?.emit('markAsRead', {mirror: manga.value.mirror, lang: manga.value.lang, url: manga.value.url, chapterUrl: c.url, read: true});
+      }
     }
     return c;
   });
@@ -380,9 +383,12 @@ async function markAsRead(index:number) {
 async function markAsUnread(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  const updatedChapters = chapters.value.map((c) => {
+  const updatedChapters = chapters.value.map(c => {
     if(c.number === chapters.value[index].number) {
       c.read = false;
+      if(manga.value) {
+        socket?.emit('markAsRead', {mirror: manga.value.mirror, lang: manga.value.lang, url: manga.value.url, chapterUrl: c.url, read: false});
+      }
     }
     return c;
   });
@@ -393,9 +399,12 @@ async function markAsUnread(index:number) {
 function markPreviousAsRead(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
-  const updatedChapters = chapters.value.map((c) => {
+  const updatedChapters = chapters.value.map(c => {
     if(c.number < chapNum) {
       c.read = true;
+      if(manga.value) {
+        socket?.emit('markAsRead', {mirror: manga.value.mirror, lang: manga.value.lang, url: manga.value.url, chapterUrl: c.url, read: true});
+      }
     }
     return c;
   });
@@ -406,9 +415,12 @@ function markPreviousAsRead(index: number) {
 function markPreviousAsUnread(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
-  const updatedChapters = chapters.value.map((c) => {
+  const updatedChapters = chapters.value.map(c => {
     if(c.number < chapNum) {
       c.read = false;
+      if(manga.value) {
+        socket?.emit('markAsRead', {mirror: manga.value.mirror, lang: manga.value.lang, url: manga.value.url, chapterUrl: c.url, read: false});
+      }
     }
     return c;
   });

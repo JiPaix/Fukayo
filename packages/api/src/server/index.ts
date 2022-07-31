@@ -227,6 +227,13 @@ export default class IOWrapper {
       callback(notInDB);
     });
 
+    /** Mark manga as read on external sources (if available) */
+    socket.on('markAsRead', payload => {
+      const mirror = mirrors.find(m => m.name === payload.mirror);
+      if(mirror && mirror.markAsRead) {
+        mirror.markAsRead(payload.url, payload.lang, payload.chapterUrl, payload.read);
+      }
+    });
     /**
      * Change settings for a mirror
      * callback returns all mirrors' mirrorInfo

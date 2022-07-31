@@ -4,13 +4,19 @@ import { useI18n } from 'vue-i18n';
 import { chapterLabel, isMouseEvent } from './helpers';
 import { isChapterImageErrorMessage } from '../helpers/typechecker';
 import { useQuasar } from 'quasar';
+import { useStore as useSettingsStore } from '/@/store/settings';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import { useSocket } from '../helpers/socket';
 
-
+/** web socket */
+let socket: socketClientInstance | undefined;
+/** stored settings */
+const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
 /** vue-i18n */
@@ -202,12 +208,15 @@ function navigation(index:number) {
  * Mark chapter as read if the user is on the last page
  */
 async function markAsReadIfLastPage() {
+
+  if(!socket) socket = await useSocket(settings.server);
   if(lastPageNav.value) {
     const chapter = props.manga.chapters[props.chapterSelectedIndex];
     const toUpdate = {
       ...props.manga,
       chapters : props.manga.chapters.map(c => {
         if(c.id === chapter.id) {
+          socket?.emit('markAsRead', {mirror: props.manga.mirror, lang: props.manga.lang, url: props.manga.url, chapterUrl: c.url, read: true});
           return {
             ...c,
             read: true,

@@ -117,6 +117,7 @@ export default interface MirrorInterface {
    */
   chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
 
+  markAsRead?(url:string, lang:string, chapterUrl:string, read:boolean): void;
   /**
    *
    * @param socket the request initiator

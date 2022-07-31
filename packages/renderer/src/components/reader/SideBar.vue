@@ -1,9 +1,17 @@
 <script lang="ts" setup>
 import { ref, watch, onUpdated } from 'vue';
-import { chapterLabel } from './helpers';
+import { useSocket } from '../helpers/socket';
+import { useStore as useSettingsStore } from '/@/store/settings';
 import { useQuasar } from 'quasar';
+import { chapterLabel } from './helpers';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
+import type { socketClientInstance } from '../../../../api/src/client/types';
 
+
+/** web socket */
+let socket: socketClientInstance | undefined;
+/** stored settings */
+const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
 /** props */
@@ -70,12 +78,14 @@ function navigate(o: {label: string|number, value: number}) {
   emit('navigate', o.value);
 }
 
-function toggleRead() {
+async function toggleRead() {
+  if(!socket) socket = await useSocket(settings.server);
   const chapter = props.manga.chapters[props.chapterSelectedIndex];
     const toUpdate = {
     ...props.manga,
     chapters : props.manga.chapters.map(c => {
       if(c.id === chapter.id) {
+        socket?.emit('markAsRead', {mirror: props.manga.mirror, lang: props.manga.lang, url: props.manga.url, chapterUrl: c.url, read: !c.read});
         return {
           ...c,
           read: !c.read,

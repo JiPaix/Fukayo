@@ -131,6 +131,12 @@
       "localvalue": "中文",
       "value": "Chinois (Taïwan)"
     },
+    "xx": {
+      "desc": "Inconnu",
+      "flag": "xx",
+      "localvalue": "Inconnu",
+      "value": "Inconnu"
+    },
     "zh": {
       "desc": "Chinese",
       "flag": "cn",
@@ -154,12 +160,6 @@
       "flag": "tw",
       "localvalue": "中文",
       "value": "Chinois (Taïwan)"
-    },
-    "xx": {
-      "desc": "Inconnu",
-      "flag": "xx",
-      "localvalue": "Inconnu",
-      "value": "Inconnu"
     }
   },
   "library": {
@@ -283,6 +283,7 @@
       "enable": "Désactiver cette {sourceWord}",
       "host": "Nom d'hôte (par exemple \"localhost\")",
       "login": "Login",
+      "markAsRead": "Marquer les chapitres comme lus/non lus sur le site web ou l'application",
       "password": "Mot de passe",
       "port": "Port",
       "protocol": "Protocole"

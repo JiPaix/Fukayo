@@ -4,7 +4,7 @@ import { SettingsDatabase } from '../db/settings';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { env } from 'node:process';
-import type { AxiosRequestConfig } from 'axios';
+import type { AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import { load } from 'cheerio';
 import { crawler } from '../utils/crawler';
@@ -220,6 +220,36 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
     const filenamify = imp.default;
     return filenamify(string);
+  }
+
+  protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put' = 'post', config?:AxiosRequestConfig) {
+    this.concurrency++;
+    await this.wait();
+    try {
+      const resp = await axios[type]<RESP>(url, data, { ...config });
+      return resp.data;
+    } catch(e) {
+      if((e as AxiosError).response) {
+        this.logger({
+          type: 'post error',
+          message: (e as AxiosError).response?.data,
+          url,
+        });
+      } else if(e instanceof Error){
+        this.logger({
+          type: 'post error',
+          message: e.message,
+          url,
+        });
+      } else {
+        this.logger({
+          type: 'post error',
+          message: e,
+          url,
+        });
+      }
+      return undefined;
+    }
   }
 
   protected async fetch(config: ClusterJob, type:'html'):Promise<CheerioAPI>

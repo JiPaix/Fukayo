@@ -131,6 +131,12 @@
       "localvalue": "中文",
       "value": "Chinese (Taiwan)"
     },
+    "xx": {
+      "desc": "Unknown",
+      "flag": "xx",
+      "localvalue": "Unknown",
+      "value": "Unknown"
+    },
     "zh": {
       "desc": "Chinese",
       "flag": "cn",
@@ -154,12 +160,6 @@
       "flag": "tw",
       "localvalue": "中文",
       "value": "Chinese (Taiwan)"
-    },
-    "xx": {
-      "desc": "Unknown",
-      "flag": "xx",
-      "localvalue": "Unknown",
-      "value": "Unknown"
     }
   },
   "library": {
@@ -283,6 +283,7 @@
       "enable": "Disable this {sourceWord}",
       "host": "Hostname (eg. \"localhost\")",
       "login": "Login",
+      "markAsRead": "Mark chapters as read/unread on the website or the app",
       "password": "Password",
       "port": "Port",
       "protocol": "Protocol"
