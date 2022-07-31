@@ -332,7 +332,7 @@ onBeforeMount(async () => {
                   </q-item-section>
                 </q-item>
               </div>
-              <div v-if="mirror.options.login">
+              <div v-if="mirror.options.hasOwnProperty('login')">
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
@@ -352,7 +352,7 @@ onBeforeMount(async () => {
                   />
                 </q-item>
               </div>
-              <div v-if="mirror.options.password">
+              <div v-if="mirror.options.hasOwnProperty('password')">
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
@@ -372,7 +372,7 @@ onBeforeMount(async () => {
                   />
                 </q-item>
               </div>
-              <div v-if="mirror.options.host">
+              <div v-if="mirror.options.hasOwnProperty('host')">
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
@@ -392,7 +392,7 @@ onBeforeMount(async () => {
                   />
                 </q-item>
               </div>
-              <div v-if="mirror.options.port">
+              <div v-if="mirror.options.hasOwnProperty('port')">
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
@@ -412,7 +412,7 @@ onBeforeMount(async () => {
                   />
                 </q-item>
               </div>
-              <div v-if="mirror.options.protocol">
+              <div v-if="mirror.options.hasOwnProperty('protocol')">
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
