@@ -229,7 +229,8 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
 
         const books = await this.fetch<bookContent>({url: this.path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
-
+        let lang = 'xx';
+        if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
         // we return the results based on SearchResult model
         socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -239,7 +240,7 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
           covers,
           synopsis,
           last_release,
-          lang: result.metadata.language,
+          lang,
           inLibrary: this.isInLibrary(this.mirrorInfo.name, result.metadata.language, link) ? true : false,
         });
       }
@@ -411,6 +412,8 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
         const covers = [];
         const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
+        let lang = 'xx';
+        if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;
 
         socket.emit('showRecommend', id, {
           id: mangaId,
@@ -418,7 +421,7 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
           name: serie.metadata.title,
           url:link,
           covers,
-          lang: serie.metadata.language,
+          lang,
           inLibrary: this.isInLibrary(this.mirrorInfo.name, serie.metadata.language, link) ? true : false,
         });
       }

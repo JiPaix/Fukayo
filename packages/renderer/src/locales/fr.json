@@ -154,6 +154,12 @@
       "flag": "tw",
       "localvalue": "中文",
       "value": "Chinois (Taïwan)"
+    },
+    "xx": {
+      "desc": "Inconnu",
+      "flag": "xx",
+      "localvalue": "Inconnu",
+      "value": "Inconnu"
     }
   },
   "library": {
