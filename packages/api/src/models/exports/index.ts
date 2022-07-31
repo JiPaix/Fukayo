@@ -2,7 +2,7 @@ import mangafox from '../mangafox';
 import mangahasu from '../mangahasu';
 import scanfr from '../scan-fr';
 import fallenangels from '../fallenangels';
-import kogma from '../kogma';
+import komga from '../komga';
 import type MirrorInterface from '../interfaces';
 
 /** Every mirrors */
@@ -11,7 +11,7 @@ const mirrors: MirrorInterface[] = [
   mangahasu,
   scanfr,
   fallenangels,
-  kogma,
+  komga,
 ];
 
 export default mirrors;

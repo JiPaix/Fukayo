@@ -1,4 +1,4 @@
-import { SchedulerClass } from './../server/helpers/scheduler';
+import { SchedulerClass } from '../server/helpers/scheduler';
 import Mirror from '.';
 import icon from './icons/komga.png';
 import type MirrorInterface from './interfaces';
@@ -143,7 +143,7 @@ type book = {
   },
 }
 
-class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https'}> implements MirrorInterface {
+class Komga extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https'}> implements MirrorInterface {
   constructor() {
     super({
       host: 'http://localhost',
@@ -466,5 +466,5 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
 }
 
 
-const kogma = new Kogma();
-export default kogma;
+const komga = new Komga();
+export default komga;
