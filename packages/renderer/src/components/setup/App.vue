@@ -15,8 +15,6 @@ const settings = useSettingsStore();
 /** emit */
 const emit = defineEmits<{ (event: 'done'): void }>();
 
-/** setup password */
-const password = ref<string | null>(null);
 /** toggler to show the password */
 const showPassword = ref(false);
 /** show a loading screen while the server starts */
@@ -52,7 +50,7 @@ function prompt (title:string, kind:'cert'|'key', model?:string|null) {
  */
 function readyToStart() {
   if(!isLoginValid(settings.server.login)) return false;
-  if(!isPasswordValid(password.value)) return false;
+  if(!isPasswordValid(settings.server.password)) return false;
   if(!isPortValid(settings.server.port)) return false;
   if(settings.server.ssl === 'provided') {
     if(!isProvidedCertificateValid(settings.server.cert)) return false;
@@ -74,7 +72,7 @@ async function startServer () {
   // define the payload
   const payload = {
     login: settings.server.login || 'admin',
-    password: password.value as string,
+    password: settings.server.password as string,
     port: settings.server.port,
     hostname: settings.server.hostname,
     ssl: settings.server.ssl,
@@ -148,24 +146,24 @@ async function startServer () {
           :label="$t('setup.login')"
         />
         <q-input
-          v-model="password"
+          v-model="settings.server.password"
           name="password"
           filled
           dense
-          :color="password === null || isPasswordValid(password) ? 'white': 'negative'"
+          :color="settings.server.password === null || isPasswordValid(settings.server.password) ? 'white': 'negative'"
           bottom-slots
           :type="showPassword ? 'text' : 'password'"
           :label="$t('setup.password')"
         >
           <template #hint>
             <div
-              :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
-              v-html="$t(passwordHint(password))"
+              :class="settings.server.password === null || isPasswordValid(settings.server.password) ? 'text-white': 'text-negative'"
+              v-html="$t(passwordHint(settings.server.password))"
             />
           </template>
           <template #prepend>
             <q-icon
-              :class="password === null || isPasswordValid(password) ? 'text-white': 'text-negative'"
+              :class="settings.server.password === null || isPasswordValid(settings.server.password) ? 'text-white': 'text-negative'"
               :name="showPassword ? 'visibility' : 'visibility_off'"
               style="cursor:pointer;"
               @click="showPassword = !showPassword"

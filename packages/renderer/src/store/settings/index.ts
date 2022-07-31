@@ -7,6 +7,7 @@ export const useStore = defineStore('settings', {
       theme: 'dark',
       server : {
         login: 'admin',
+        password: null as string | null,
         port: 4444,
         ssl: 'false' as 'false' | 'provided' | 'app',
         hostname: 'https://localhost',
