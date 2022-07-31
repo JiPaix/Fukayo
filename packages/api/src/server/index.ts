@@ -181,7 +181,7 @@ export default class IOWrapper {
     socket.on('getMangaURLfromChapterURL', async (id, url, lang) => {
       try {
         const URI = new URL(url);
-        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && m.options.host === URI.host));
+        const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(mirror) {
           const indb = MangaDatabase.get(mirror.name, lang||mirror.langs[0], URI.toString().replace(URI.origin, ''));
           if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);

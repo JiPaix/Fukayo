@@ -340,9 +340,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     if(this.options.host && this.options.port && this.options.protocol) {
       url = url.replace(this.options.host, '');
       url = url.replace(':'+this.options.port.toString(), '');
-      url = url.replace(this.options.protocol+'://', '');
+      url = url.replace(/http(s?):\/\//, '');
     }
-
     // if no lang is provided, we will use the default one
     lang = lang||this.langs[0];
     // checking what kind of page this is
