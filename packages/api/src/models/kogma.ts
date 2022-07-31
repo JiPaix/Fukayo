@@ -143,14 +143,14 @@ type book = {
   },
 }
 
-class Kogma extends Mirror<{login?: string, password?:string, host?:string, port?:number, protocol?:'http'|'https'}> implements MirrorInterface {
+class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https'}> implements MirrorInterface {
   constructor() {
     super({
       host: 'http://localhost',
       althost: ['http://localhost'],
       name: 'komga',
       displayName: 'Komga',
-      langs: ['en', 'fr'], // availableLanguages is a constant, we need to make it mutable
+      langs: ['en', 'fr'],
       waitTime: 200,
       icon,
       meta: {
@@ -161,11 +161,11 @@ class Kogma extends Mirror<{login?: string, password?:string, host?:string, port
       options: {
         enabled: true,
         cache: true,
-        login: undefined,
-        password: undefined,
-        host: undefined,
-        port: undefined,
-        protocol: undefined,
+        login: null,
+        password: null,
+        host: null,
+        port: null,
+        protocol: 'http',
       },
     });
   }
