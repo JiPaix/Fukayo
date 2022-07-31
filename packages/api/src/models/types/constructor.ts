@@ -9,7 +9,7 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    */
   host: string,
   /** alternative hostnames were the site can be reached */
-  althost: string[]
+  althost?: string[]
   /**
    * mirror icon (import)
    * @example

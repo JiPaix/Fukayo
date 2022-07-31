@@ -147,7 +147,6 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
   constructor() {
     super({
       host: 'http://localhost',
-      althost: ['http://localhost'],
       name: 'komga',
       displayName: 'Komga',
       langs: ['en', 'fr'],
@@ -442,7 +441,6 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
     // remove the host from the url
     url = url.replace(this.host, '');
-    this.althost.forEach(host => url = url.replace(host, ''));
     // if no lang is provided, we will use the default one
     lang = lang||this.langs[0];
     // checking what kind of page this is

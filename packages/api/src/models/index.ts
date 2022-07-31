@@ -40,7 +40,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    */
   host: string;
   /** alternative hostnames were the site can be reached */
-  althost: string[];
+  althost?: string[];
   /**
    * Languages supported by the mirror
    *

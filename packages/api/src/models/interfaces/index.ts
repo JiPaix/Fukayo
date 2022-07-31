@@ -18,7 +18,7 @@ export default interface MirrorInterface {
    */
   host: string;
   /** alternative hostnames were the site can be reached */
-  althost: string[]
+  althost?: string[]
   /**
    * Languages supported by the mirror
    *

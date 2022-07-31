@@ -369,7 +369,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
     // remove the host from the url
     url = url.replace(this.host, '');
-    this.althost.forEach(host => url = url.replace(host, ''));
+    if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
     // if no lang is provided, we will use the default one
     lang = lang||this.langs[0];
     // checking what kind of page this is
