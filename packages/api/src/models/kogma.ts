@@ -191,7 +191,7 @@ class Kogma extends Mirror<{login?: string|null, password?:string|null, host?:st
   }
 
   isMangaPage(url: string): boolean {
-    const res = /^\/series\/\d+$/gmi.test(url);
+    const res = /^\/series\/\w+$/gmi.test(url);
     if(!res) this.logger('not a manga page:', url);
     return res;
   }
