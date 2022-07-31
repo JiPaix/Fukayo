@@ -38,6 +38,9 @@ type bookContent = {
       releaseDate: null|string,
       title: string,
     },
+    readProgress: null | {
+      completed: boolean,
+    },
   }[]
 }
 // /books/{id}
@@ -49,7 +52,7 @@ type book = {
   },
 }
 
-class Komga extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https'}> implements MirrorInterface {
+class Komga extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
   constructor() {
     super({
       host: 'http://localhost',
@@ -71,6 +74,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         host: null,
         port: null,
         protocol: 'http',
+        markAsRead: true,
       },
     });
   }
@@ -175,7 +179,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         auth: {username: this.options.login, password: this.options.password},
       }, 'json');
       const name = result.metadata.title;
-      const lang = result.metadata.language;
+      let lang = 'xx';
+      if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
 
       if(cancel) return this.stopListening(socket);
       const mangaId = `${this.name}/${result.metadata.language}${`/series/${result.id}`}`;
@@ -196,13 +201,14 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(book.metadata.releaseDate && book.metadata.releaseDate.length) date = new Date(book.metadata.releaseDate).getTime();
         if(cancel) break;
         const chaplink = `/books/${book.id}`;
+        const read = book.readProgress ? book.readProgress.completed : false;
         const release: MangaPage['chapters'][0] = {
           id: `${mangaId}@${chaplink}`,
           name: book.metadata.title,
           number: book.metadata.numberSort,
           url: chaplink,
           date: date,
-          read:false,
+          read,
         };
         chapters.push(release);
       }
@@ -359,6 +365,20 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         else this.logger('error while fetching manga from chapter url', e);
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       }
+    }
+  }
+
+  markAsRead(url:string, lang:string, chapterUrl:string, read:boolean) {
+    if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
+    if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
+    if(!url.length || !lang.length || !chapterUrl.length) return;
+    if(!this.options.markAsRead) return;
+    try {
+      this.logger('toggling read status of chapter', chapterUrl);
+      const payload = read ? { completed: true } : { completed: false, page: 1 };
+      this.post(this.path(chapterUrl+'/read-progress'), payload, 'patch', {auth: {username: this.options.login, password: this.options.password}});
+    } catch(e) {
+      this.logger('error while marking chapter as read', e);
     }
   }
 }
