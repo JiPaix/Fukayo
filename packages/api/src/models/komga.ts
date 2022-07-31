@@ -5,142 +5,47 @@ import type MirrorInterface from './interfaces';
 import type { MangaPage } from './types/manga';
 import type { socketInstance } from '../server/types';
 
+//  /series?search=word
 type searchContent = {
   content: {
     id: string,
-    libraryId: string,
-    name: string,
-    url: string,
-    created: string,
-    lastModified: string,
-    fileLastModified: string,
-    booksCount: number,
-    booksReadCount: number,
-    booksUnreadCount: number,
-    booksInProgressCount: number,
     metadata: {
-      status: string,
-      statusLock: boolean,
       title: string,
-      titleLock: boolean,
-      titleSort: string,
-      titleSortLock: boolean,
       summary: string,
-      summaryLock: boolean,
-      readingDirection: string,
-      readingDirectionLock: boolean,
-      publisher: string,
-      publisherLock: boolean,
-      ageRating: null,
-      ageRatingLock: boolean,
       language: string,
-      languageLock: boolean,
       genres: string[],
-      genresLock: boolean,
       tags: string[],
-      tagsLock: boolean,
-      totalBookCount: number,
-      totalBookCountLock: boolean,
-      sharingLabels: unknown[],
-      sharingLabelsLock: false,
-      created: string,
-      lastModified: string
     },
     booksMetadata: {
       authors: string[],
       tags: string[],
-      releaseDate: null|string,
-      summary: string
-      summaryNumber: string
-      created: string
-      lastModified: string
     },
-    deleted: boolean
   }[]
 
 }
 
+// /series/{id}/books
 type bookContent = {
   content: {
     created: string,
     deleted: boolean,
-    fileHash: string,
-    fileLastModified: string,
     id: string,
-    lastModified: string,
-    libraryId: string,
     media: {
-      comment: string,
-      mediaType: string,
       pagesCount: number,
-      status: string
     },
     metadata: {
-      authors: string[],
-      authorsLock: boolean,
-      created: string,
-      isbn: string,
-      isbnLock: boolean,
-      lastModified: string,
-      links: string[],
-      linksLock: boolean,
-      number: string,
-      numberLock: boolean,
       numberSort: number,
-      numberSortLock: boolean,
       releaseDate: null|string,
-      releaseDateLock: boolean,
-      summary: string,
-      summaryLock: boolean,
-      tags: string[],
-      tagsLock: boolean,
       title: string,
-      titleLock: boolean
     },
-    name: string,
-    number: number,
-    readProgress: {
-      completed: boolean,
-      created: string,
-      lastModified: string,
-      page: 4,
-      readDate: string
-    },
-    seriesId: string,
-    seriesTitle: string,
-    size: string,
-    sizeBytes: number,
-    url: string
   }[]
 }
-
+// /books/{id}
 type book = {
   id: string,
   seriesId: string
   media: {
     pagesCount: number,
-  },
-  metadata: {
-
-    authorsLock: false,
-    created: '2020-07-05T12:11:50',
-    isbn: '',
-    isbnLock: false,
-    lastModified: '2020-07-05T12:11:50',
-    links: [],
-    linksLock: false,
-    number: '4',
-    numberLock: false,
-    numberSort: 4,
-    numberSortLock: false,
-    releaseDate: null,
-    releaseDateLock: false,
-    summary: '',
-    summaryLock: false,
-    tags: [],
-    tagsLock: false,
-    title: 'Space_Adventures_004__c2c__diff_ver',
-    titleLock: false
   },
 }
 
