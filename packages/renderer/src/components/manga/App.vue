@@ -367,17 +367,27 @@ function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
 async function markAsRead(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  const updatedManga = manga.value;
-  chapters.value[index].read = true;
-  await updateManga(updatedManga);
+  const updatedChapters = chapters.value.map((c) => {
+    if(c.number === chapters.value[index].number) {
+      c.read = true;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
 }
 
 async function markAsUnread(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  const updatedManga = manga.value;
-  chapters.value[index].read = false;
-  await updateManga(updatedManga);
+  const updatedChapters = chapters.value.map((c) => {
+    if(c.number === chapters.value[index].number) {
+      c.read = false;
+    }
+    return c;
+  });
+  const updatedManga = { ...manga.value, chapters: updatedChapters };
+  updateManga(updatedManga);
 }
 
 function markPreviousAsRead(index: number) {
