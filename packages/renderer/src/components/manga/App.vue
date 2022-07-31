@@ -726,7 +726,7 @@ onBeforeUnmount(() => {
         :items="chapters"
         :style="'max-height: '+virtualScrollHeight+'px;'"
         :items-size="nbOfChapters"
-        :virtual-scroll-item-size="52"
+        :virtual-scroll-item-size="62"
         separator
         class="w-100"
       >
@@ -734,7 +734,7 @@ onBeforeUnmount(() => {
           :key="index"
           :dark="$q.dark.isActive"
           clickable
-          style="max-height:52px;"
+          style="max-height:62px;"
         >
           <!-- Chapter name, volume, number -->
           <q-item-section
@@ -756,6 +756,7 @@ onBeforeUnmount(() => {
             <q-item-label
               v-if="item.number !== undefined"
               caption
+              lines="1"
             >
               <span class="text-grey-6">{{ item.name }}</span>
             </q-item-label>
