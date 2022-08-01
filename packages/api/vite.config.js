@@ -58,6 +58,7 @@ const config = {
         'socket.io',
         'filenamify',
         'user-agents',
+        'form-data',
       ],
       output:{
         manualChunks(id) {
