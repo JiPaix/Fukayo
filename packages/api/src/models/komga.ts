@@ -60,7 +60,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       name: 'komga',
       displayName: 'Komga',
       langs: supportedLangs,
-      waitTime: 200,
+      waitTime: 100,
       icon,
       meta: {
         speed: 1,

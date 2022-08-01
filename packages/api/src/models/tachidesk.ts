@@ -61,7 +61,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       name: 'tachidesk',
       displayName: 'Tachidesk',
       langs: supportedLangs,
-      waitTime: 200,
+      waitTime: 100,
       icon,
       meta: {
         speed: 1,
