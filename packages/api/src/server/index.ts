@@ -24,7 +24,7 @@ export default class IOWrapper {
   constructor(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}) {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
-    this.io = new ioServer(runner, {cors: { origin: '*'}});
+    this.io = new ioServer(runner, {cors: { origin: '*'}, maxHttpBufferSize: 1e+9});
     this.db = new TokenDatabase({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     this.use();
     this.io.on('connection', this.routes.bind(this));
