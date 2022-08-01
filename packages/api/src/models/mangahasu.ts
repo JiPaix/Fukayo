@@ -52,6 +52,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(!(socket instanceof SchedulerClass)) {
         socket.once('stopSearchInMirrors', () => {
           this.logger('search canceled');
+          this.stopListening(socket);
           cancel = true;
         });
       }
@@ -106,7 +107,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
-      if(cancel) return this.stopListening(socket); // 3rd obligatory check
+      if(cancel) return;
     } catch(e) {
       this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
@@ -114,7 +115,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    this.stopListening(socket);
+    return this.stopListening(socket);
   }
 
   async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
@@ -124,13 +125,17 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(!(socket instanceof SchedulerClass)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
+        this.stopListening(socket);
         cancel = true;
       });
     }
 
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
-    if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    if(!isMangaPage) {
+      socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+      return this.stopListening(socket);
+    }
 
     const mangaId = `${this.name}/${this.langs[0]}${link}`;
 
@@ -143,7 +148,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
       const covers: string[] = [];
 
-      if(cancel) return this.stopListening(socket);
+      if(cancel) return;
       // mangahasu images needs to be downloaded.
       const coverLink = $('.info-img > img').attr('src');
       if(coverLink) {
@@ -201,17 +206,16 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
         if(release) chapters.push(release);
       }
-      this.stopListening(socket);
       if(cancel) return;
-      return socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number), inLibrary: false, mirror: this.name });
+      socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number), inLibrary: false, mirror: this.name });
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
-      if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
-      return socket.emit('showManga', id, {error: 'manga_error_unknown'});
+      if(e instanceof Error) socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
+      else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
+    return this.stopListening(socket);
   }
 
   async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
@@ -220,6 +224,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(!(socket instanceof SchedulerClass)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
+        this.stopListening(socket);
         cancel = true;
       });
     }
@@ -228,11 +233,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(link);
     if(!isLinkaChapter) {
-      this.stopListening(socket);
-      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      return this.stopListening(socket);
     }
 
-    if(cancel) return this.stopListening(socket);
+    if(cancel) return;
 
     try {
       const $ = await this.fetch({
@@ -244,7 +249,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const nbOfPages = $('.img-chapter img').length;
       if(callback) callback(nbOfPages);
 
-      if(cancel) return this.stopListening(socket);
+      if(cancel) return;
       for(const [i, el] of $('.img-chapter img').toArray().entries()) {
         if(cancel) break;
         // if the user requested a specific page, we will skip the others
@@ -258,17 +263,17 @@ class MangaHasu extends Mirror implements MirrorInterface {
             continue;
           }
         }
-        socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
       }
-      this.stopListening(socket);
+      if(cancel) return;
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
-      if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
-      return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
+      if(e instanceof Error) socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
+      else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
+    return this.stopListening(socket);
   }
 
   async recommend(socket: socketInstance|SchedulerClass, id: number) {
@@ -278,6 +283,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(!(socket instanceof SchedulerClass)) {
         socket.once('stopShowRecommend', () => {
           this.logger('fetching recommendations canceled');
+          this.stopListening(socket);
           cancel = true;
         });
       }
@@ -302,7 +308,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         // manga id = "mirror_name/lang/link-of-manga-page"
         const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
 
-        socket.emit('showRecommend', id, {
+        if(!cancel) socket.emit('showRecommend', id, {
           id: mangaId,
           mirrorinfo: this.mirrorInfo,
           name,
@@ -312,18 +318,15 @@ class MangaHasu extends Mirror implements MirrorInterface {
           inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
-      this.stopListening(socket);
       if(cancel) return;
-      socket.emit('showRecommend', id, { done: true });
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while recommending mangas', e);
       if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
       else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
-      socket.emit('showRecommend', id, { done: true });
     }
-
+    socket.emit('showRecommend', id, { done: true });
+    return this.stopListening(socket);
   }
 
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
@@ -336,8 +339,14 @@ class MangaHasu extends Mirror implements MirrorInterface {
     const isMangaPage = this.isMangaPage(url),
           isChapterPage = this.isChapterPage(url);
 
-    if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-    if(isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+    if(!isMangaPage && !isChapterPage) {
+      socket.emit('getMangaURLfromChapterURL', id, undefined);
+      return this.stopListening(socket);
+    }
+    if(isMangaPage && !isChapterPage) {
+      socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+      return this.stopListening(socket);
+    }
     if(isChapterPage) {
       try {
         const $ = await this.fetch({
@@ -345,11 +354,12 @@ class MangaHasu extends Mirror implements MirrorInterface {
           waitForSelector: 'body',
         }, 'html');
         const chapterPageURL = $('a[itemprop="url"][href*=html]').attr('href');
-        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, lang, mirror: this.name });
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
+        if(chapterPageURL) socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, lang, mirror: this.name });
+        else socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch {
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
+        socket.emit('getMangaURLfromChapterURL', id, undefined);
       }
+      return this.stopListening(socket);
     }
   }
 }

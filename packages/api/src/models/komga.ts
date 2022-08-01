@@ -111,6 +111,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(!(socket instanceof SchedulerClass)) {
         socket.once('stopSearchInMirrors', () => {
           this.logger('search canceled');
+          this.stopListening(socket);
           cancel = true;
         });
       }
@@ -133,7 +134,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         let lang = 'xx';
         if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
         // we return the results based on SearchResult model
-        socket.emit('searchInMirrors', id, {
+        if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
           mirrorinfo: this.mirrorInfo,
           name,
@@ -145,7 +146,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           inLibrary: this.isInLibrary(this.mirrorInfo.name, result.metadata.language, link) ? true : false,
         });
       }
-      if(cancel) return this.stopListening(socket);
+      if(cancel) return;
     } catch(e) {
       this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
@@ -153,7 +154,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    this.stopListening(socket);
+    return this.stopListening(socket);
   }
 
   async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
@@ -163,14 +164,16 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     if(!(socket instanceof SchedulerClass)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
+        this.stopListening(socket);
         cancel = true;
       });
     }
     const isMangaPage = this.isMangaPage(url);
-    if(!isMangaPage) return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    if(!isMangaPage) {
+      socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+      return this.stopListening(socket);
+    }
 
-
-    //
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
@@ -183,7 +186,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       let lang = 'xx';
       if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
 
-      if(cancel) return this.stopListening(socket);
+      if(cancel) return;
       const mangaId = `${this.name}/${result.metadata.language}${`/series/${result.id}`}`;
       const covers:string[] = [];
       const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
@@ -213,17 +216,16 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         };
         chapters.push(release);
       }
-      this.stopListening(socket);
       if(cancel) return;
-      return socket.emit('showManga', id, {id: mangaId, url, lang, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number), inLibrary: false, mirror: this.name });
+      socket.emit('showManga', id, {id: mangaId, url, lang, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => b.number - a.number), inLibrary: false, mirror: this.name });
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
-      if(typeof e === 'string') return socket.emit('showManga', id, {error: 'manga_error', trace: e});
-      return socket.emit('showManga', id, {error: 'manga_error_unknown'});
+      if(e instanceof Error) socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
+      else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
+    return this.stopListening(socket);
   }
 
   async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
@@ -243,7 +245,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
     }
 
-    if(cancel) return this.stopListening(socket);
+    if(cancel) return;
 
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
@@ -251,7 +253,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
       const nbOfPages = res.media.pagesCount-1;
       if(callback) callback(nbOfPages);
-      if(cancel) return this.stopListening(socket);
+      if(cancel) return;
       // loop for each page
 
       for(let i = 0; i < res.media.pagesCount; i++) {
@@ -260,20 +262,20 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
         const img = await this.downloadImage(this.path(`/books/${res.id}/pages/${i+1}`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
         } else {
-          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
         }
       }
-      this.stopListening(socket);
+      if(cancel) return;
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) return socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
-      if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
-      return socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
+      if(e instanceof Error) socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
+      else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
+    return this.stopListening(socket);
   }
 
   async recommend(socket: socketInstance|SchedulerClass, id: number) {
@@ -316,18 +318,15 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           inLibrary: this.isInLibrary(this.mirrorInfo.name, serie.metadata.language, link) ? true : false,
         });
       }
-      this.stopListening(socket);
       if(cancel) return;
-      socket.emit('showRecommend', id, { done: true });
     } catch(e) {
-      this.stopListening(socket);
       this.logger('error while recommending mangas', e);
       if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
       else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
-      socket.emit('showRecommend', id, { done: true });
     }
-
+    socket.emit('showRecommend', id, { done: true });
+    return this.stopListening(socket);
   }
 
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
@@ -344,7 +343,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     const isMangaPage = this.isMangaPage(url),
           isChapterPage = this.isChapterPage(url);
 
-    if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
+    if(!isMangaPage && !isChapterPage) {
+      socket.emit('getMangaURLfromChapterURL', id, undefined);
+      return this.stopListening(socket);
+    }
     if(isMangaPage || isChapterPage) {
       try {
         if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
