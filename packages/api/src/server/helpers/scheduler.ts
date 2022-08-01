@@ -182,6 +182,10 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     const mangaByMirror = this.getMangasToUpdate(force);
+    // setMaxListeners according to the number of manga to update
+    const nbMangas = Object.keys(mangaByMirror).reduce((acc, key) => acc + mangaByMirror[key].length, 0);
+    this.setMaxListeners(nbMangas + 1);
+    // update the mangas
     for(const mirrorName of Object.keys(mangaByMirror)) {
       const mirror = mirrors.find(m => m.name === mirrorName);
       if(mirror) await this.updateMangas(mirror, mangaByMirror[mirrorName]);
