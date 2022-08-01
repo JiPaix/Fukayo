@@ -332,6 +332,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
   async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     url = url.replace(this.host, ''); // remove the host from the url
+    url = url.replace(/\/$/, ''); // remove trailing slash
     if(this.options.host && this.options.port && this.options.protocol) {
       url = url.replace(this.options.host, '');
       url = url.replace(':'+this.options.port.toString(), '');
