@@ -164,7 +164,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           continue;
         }
 
-        const covers = [];
+        const covers: string[] = [];
         let coverLink = $('img', el).attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
@@ -224,7 +224,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       let name = $('h2.widget-title').first().text().trim();
       if(this.manga_page_appended_string) name = name.replace(this.manga_page_appended_string, '').trim();
       const synopsis = $('.well p').text().trim();
-      const covers = [];
+      const covers: string[] = [];
 
       if(cancel) return this.stopListening(socket);
 

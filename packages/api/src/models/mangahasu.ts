@@ -141,7 +141,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       }, 'html');
       const name = $('.info-title > h1').text().trim();
       const synopsis = $('.content-info:contains("Summary") > div').text().trim();
-      const covers = [];
+      const covers: string[] = [];
 
       if(cancel) return this.stopListening(socket);
       // mangahasu images needs to be downloaded.

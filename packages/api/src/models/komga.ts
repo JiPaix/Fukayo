@@ -121,7 +121,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(cancel) break;
         const name = result.metadata.title;
         const link = `/series/${result.id}`;
-        const covers = [];
+        const covers: string[] = [];
         const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
 
@@ -300,7 +300,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const link = `/series/${serie.id}`;
         const mangaId = `${this.name}/${serie.metadata.language}${link}`;
 
-        const covers = [];
+        const covers: string[] = [];
         const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
         let lang = 'xx';
