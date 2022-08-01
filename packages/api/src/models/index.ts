@@ -397,6 +397,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       writeFileSync(resolve(env.USER_DATA, '.cache', this.name, filename), buffer);
+      this.logger('saved to cache', filename);
     }
   }
 
@@ -405,15 +406,15 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     if(this.cacheEnabled) {
       let cacheResult:{mime: string, buffer:Buffer} | undefined;
       try {
-        const buffer = readFileSync(resolve(env.USER_DATA, '.cache', id.filename));
+        const buffer = readFileSync(resolve(env.USER_DATA, '.cache', this.name, id.filename));
         const mime = await this.getFileMime(buffer);
         cacheResult = { mime, buffer };
       } catch {
         cacheResult = undefined;
       }
       if(cacheResult) {
-        this.logger('cache hit', id.identifier);
-        return this.returnFetch(`data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`);
+        this.logger('cache hit', id.filename);
+        return `data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`;
       }
     }
   }
