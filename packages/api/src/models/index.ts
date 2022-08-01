@@ -14,7 +14,7 @@ import type { ClusterJob } from '../utils/types/crawler';
 import type { MirrorConstructor } from './types/constructor';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import type { socketInstance } from '../server/types';
-
+import type { supportedLangs } from '../../../renderer/src/locales/lib/supportedLangs';
 
 /**
  * The default mirror class
@@ -46,7 +46,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    *
    * ISO 639-1 codes
    */
-  langs: string[];
+  langs: string[] | typeof supportedLangs;
   /** Meta information */
   meta: {
     /**

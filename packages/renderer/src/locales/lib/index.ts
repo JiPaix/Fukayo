@@ -2,14 +2,14 @@ import { nextTick } from 'vue';
 import type { I18n , I18nOptions } from 'vue-i18n';
 import { createI18n } from 'vue-i18n';
 import { Quasar } from 'quasar';
+import { supportedLangs } from './supportedLangs';
 import dayjs from 'dayjs';
 import dayjsrelative from 'dayjs/plugin/relativeTime';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
 
-export const availableLanguages = ['en', 'fr'] as const;
 
 export function findLocales(lang:string) {
-  const locale = availableLanguages.find(locale => {
+  const locale = supportedLangs.find(locale => {
     if (locale === lang) {
       return true;
     }

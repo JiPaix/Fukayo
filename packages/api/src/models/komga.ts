@@ -1,3 +1,4 @@
+import { supportedLangs } from './../../../renderer/src/locales/lib/supportedLangs';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import Mirror from '.';
 import icon from './icons/komga.png';
@@ -58,7 +59,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       host: 'http://localhost',
       name: 'komga',
       displayName: 'Komga',
-      langs: ['en', 'fr'],
+      langs: supportedLangs,
       waitTime: 200,
       icon,
       meta: {

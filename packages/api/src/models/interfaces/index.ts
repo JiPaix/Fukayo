@@ -1,7 +1,7 @@
 import type { SchedulerClass } from './../../server/helpers/scheduler';
 import type { mirrorInfo } from '../types/shared';
 import type { socketInstance } from '../../server/types';
-
+import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**
@@ -24,7 +24,7 @@ export default interface MirrorInterface {
    *
    * ISO 639-1 codes
    */
-  langs: string[];
+  langs: string[] | typeof supportedLangs;
   /** Meta information */
   meta: {
     /**

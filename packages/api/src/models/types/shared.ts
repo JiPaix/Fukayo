@@ -1,3 +1,5 @@
+import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
+
 export type TaskDone = {
   done: boolean;
 }
@@ -28,7 +30,7 @@ export type mirrorInfo = {
    *
    * ISO 639-1 codes
    */
-  langs:string[],
+  langs:string[] | typeof supportedLangs,
   /**
    * Mirror specific option
    * @example { adult: true, lowres: false }
