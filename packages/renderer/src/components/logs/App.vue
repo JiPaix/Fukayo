@@ -34,7 +34,7 @@ const logs = computed(() => {
 });
 
 function isMangaLog(res:typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]): res is typeof Scheduler['logs']['manga'][0] {
-  return res.message === 'chapter' || res.message === 'chapter_error';
+  return res.message === 'chapter' || res.message === 'chapter_error' || res.message === 'chapter_read';
 }
 
 const mirrors = ref<mirrorInfo[]>([]);
@@ -64,6 +64,21 @@ function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler[
     if(!manga) return;
     router.push({ name: 'manga', params: { mirror: manga.mirror, lang: manga.lang, url: manga.url } });
   }
+}
+
+function colorSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
+  if(log.message === 'chapter') return 'positive';
+  if(log.message === 'chapter_error' || log.message === 'cache_error') return 'negative';
+  if(log.message === 'chapter_read' || log.message === 'cache') return 'secondary';
+}
+
+function iconSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
+  if(log.message === 'chapter') return 'new_releases';
+  if(log.message === 'chapter_error') return 'personal_injury';
+  if(log.message === 'chapter_read') return 'visibility';
+  if(log.message === 'cache') return 'recycling';
+  if(log.message === 'cache_error') return 'dangerous';
+
 }
 
 onBeforeMount(async () => {
@@ -104,8 +119,8 @@ onBeforeMount(async () => {
         >
           <q-item-section avatar>
             <q-icon
-              :color="log.message.includes('error') ? 'negative' : 'positive'"
-              :name="log.message.includes('cache') ? 'cached' : 'new_releases'"
+              :color="colorSelector(log)"
+              :name="iconSelector(log)"
               size="lg"
             />
           </q-item-section>
@@ -126,7 +141,9 @@ onBeforeMount(async () => {
               lines="1"
             >
               <div class="flex">
-                <span>{{ $t('logs.found_chapter', {number: log.chapter}, log.chapter) }}</span>
+                <span v-if="log.message === 'chapter'">{{ $t('logs.found_chapter', {number: log.chapter}, log.chapter) }}</span>
+                <span v-else-if="log.message === 'chapter_error'">{{ $t('logs.error_chapter') }}</span>
+                <span v-else-if="log.message === 'chapter_read'">{{ $t('logs.read_chapter', {number: log.chapter}, log.chapter) }}</span>
               </div>
             </q-item-label>
           </q-item-section>

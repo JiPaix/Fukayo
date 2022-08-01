@@ -172,7 +172,9 @@
   },
   "logs": {
     "cache": "<span class=\"text-weight-bold\">{files} file</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span> | <span class=\"text-weight-bold\">{files} files</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span>",
-    "found_chapter": "found {number} new chapter | found {number} new chapters"
+    "error_chapter": "encoutered an error while updating",
+    "found_chapter": "found {number} new chapter | found {number} new chapters",
+    "read_chapter": "updated read status for {number} chapter | updated read statues for {number} chapters"
   },
   "mangas": {
     "chapter": "Chapter | Chapters",

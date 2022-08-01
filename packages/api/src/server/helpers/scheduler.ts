@@ -25,7 +25,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     cache: false,
   };
 
-  mangaLogs:{date: number, message:'chapter'|'chapter_error', mirror:string, id: string, chapter:number }[] = [];
+  mangaLogs:{date: number, message:'chapter'|'chapter_read'|'chapter_error', mirror:string, id: string, chapter:number }[] = [];
   cacheLogs: { date: number, message: 'cache'|'cache_error', files:number, size:number }[] = [];
   io?: ioServer<ClientToServerEvents, ServerToClientEvents>;
   constructor() {
@@ -65,7 +65,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.io = io;
   }
 
-  private addMangaLog(message:'chapter'|'chapter_error', mirror:string, id: string, chapter:number):void {
+  private addMangaLog(message:'chapter'|'chapter_error'|'chapter_read', mirror:string, id: string, chapter:number):void {
     if(!this.settings.library.logs.enabled) return;
     this.mangaLogs.push({date: Date.now(), message, mirror, id, chapter});
     if(this.mangaLogs.length > this.settings.library.logs.max) {
@@ -178,9 +178,12 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    */
   async update(force?:boolean) {
     this.logger('updating');
+    // if we are already updating, return
     if(this.ongoing.updates) return;
+    // emit to all the clients that we are updating
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
+    // get the list of mangas
     const mangaByMirror = this.getMangasToUpdate(force);
     // setMaxListeners according to the number of manga to update
     const nbMangas = Object.keys(mangaByMirror).reduce((acc, key) => acc + mangaByMirror[key].length, 0);
@@ -190,9 +193,11 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       const mirror = mirrors.find(m => m.name === mirrorName);
       if(mirror) await this.updateMangas(mirror, mangaByMirror[mirrorName]);
     }
+    // emit to all the clients that we are done updating
     this.ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
     this.logger('done updating');
+    // restart update intervals/timeouts
     this.restartUpdate();
   }
 
@@ -221,19 +226,27 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       try {
         const fetched = await this.updateManyMangas(mirror, mangas);
         for(const mangaPage of fetched) {
-          let count = 0;
+          let countNewChaps = 0;
+          let countNewReadStatus = 0;
           const manga = mangas.find(m => m.id === mangaPage.id);
           if(!manga) {
-            this.addMangaLog('chapter_error', mirror.name, mangaPage.id, count);
+            this.addMangaLog('chapter_error', mirror.name, mangaPage.id, countNewChaps);
             continue;
           }
           mangaPage.chapters.forEach(chapter => {
-            if(!manga.chapters.find(c=> c.id === chapter.id)) {
-              manga.chapters.push({...chapter, read: false});
-              count++;
+            const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
+            if(chapterInDB) {
+              if(!chapterInDB.read && chapter.read) {
+                chapterInDB.read = false;
+                countNewReadStatus++;
+              }
+            } else {
+              manga.chapters.push(chapter);
+              countNewChaps++;
             }
           });
-          if(count > 0) this.addMangaLog('chapter', mirror.name, manga.id, count);
+          if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
+          if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
         }
       } catch {
         // do nothing
@@ -244,15 +257,23 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
         this.logger('updating', manga.name, '@', manga.mirror);
         try {
           const fetched = await this.updateSingleManga(mirror, manga);
-          let count = 0;
+          let countNewChaps = 0;
+          let countNewReadStatus = 0;
           // if fetched has chapters not in manga add them if they don't already exist
           fetched.chapters.forEach(chapter => {
-            if(!manga.chapters.find(c => c.id === chapter.id)) {
-              manga.chapters.push({...chapter, read: false });
-              count++;
+            const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
+            if(chapterInDB) {
+              if(!chapterInDB.read && chapter.read) {
+                chapterInDB.read = true;
+                countNewReadStatus++;
+              }
+            } else {
+              manga.chapters.push(chapter);
+              countNewChaps++;
             }
           });
-          if(count > 0) this.addMangaLog('chapter', mirror.name, manga.id, count);
+          if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
+          if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
         } catch(e) {
           this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
         }
