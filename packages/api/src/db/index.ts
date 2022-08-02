@@ -46,15 +46,13 @@ export class Database<T> {
    */
   private autopatch(defaultData: T) {
     if(semver.gt(packageJson.version, this.data._v)) {
-      this.logger('Updating database version');
       const newData = Object.keys(defaultData).reduce((acc, key) => {
-        if(this.data[key as keyof T] === undefined || typeof this.data[key as keyof T] !== typeof defaultData[key as keyof T]) {
+        if(this.data[key as keyof T] === undefined) {
           acc[key as keyof T] = defaultData[key as keyof T];
         }
         return acc;
       }
       , {} as Partial<T>);
-
       // write the data anyway so we update _v and don't trigger the autopatch again
       this.data = { ...this.data, ...newData, _v: packageJson.version };
       this.write();
