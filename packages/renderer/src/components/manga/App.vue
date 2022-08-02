@@ -480,6 +480,17 @@ async function autoShowManga() {
   await showChapterComp(index);
 }
 
+function getMirrorInfoUrl(link:string) {
+  if(!mirrorinfo.value) return;
+  let url = '';
+  if(mirrorinfo.value.options.protocol) url += mirrorinfo.value.options.protocol + '://';
+  if(mirrorinfo.value.options.host) url += mirrorinfo.value.options.host;
+  if(mirrorinfo.value.options.port) url += ':' + mirrorinfo.value.options.port;
+  url += link;
+  console.log('opening', url);
+  return url;
+}
+
 /**
  * fetch manga infos
  */
@@ -648,7 +659,7 @@ onBeforeUnmount(() => {
                   class="text-weight-medium"
                   :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
                   style="text-decoration: none"
-                  :href="mirrorinfo.host + manga.url"
+                  :href="getMirrorInfoUrl(manga.url)"
                   target="_blank"
                 >
                   {{ mirrorinfo.displayName }}
