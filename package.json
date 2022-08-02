@@ -68,14 +68,14 @@
     "typescript": "4.7.4",
     "user-agents": "^1.0.1092",
     "vite": "2.9.14",
-    "vitest": "^0.19.1",
+    "vitest": "^0.20.3",
     "vue": "^3.2.37",
     "vue-tsc": "^0.39.2"
   },
   "dependencies": {
     "@mdi/font": "^7.0.96",
     "@mdi/js": "^7.0.96",
-    "@quasar/extras": "^1.15.0",
+    "@quasar/extras": "^1.15.1",
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.12",
     "dayjs": "^1.11.4",
