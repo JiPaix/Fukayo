@@ -93,7 +93,9 @@ function scrollToPage(forward:boolean) {
 }
 
 function shouldPreload(index:number) {
-  if(props.readerSettings.longStrip) return index >= props.currentPage.index - 1 && index <= props.currentPage.index + 1;
+  if(props.readerSettings.longStrip) {
+    return index === props.currentPage.index || (index >= props.currentPage.index-3 && index <= props.currentPage.index+3);
+  }
   else return index === props.currentPage.index;
 }
 /** copy to clipboard for electron users */
