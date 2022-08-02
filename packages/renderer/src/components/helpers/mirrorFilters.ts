@@ -49,7 +49,7 @@ export function toggleLang(lang:string, includedLangsRAW: Ref<string[]>, mirrors
     includedLangsRAW.value.push(lang);
   }
   if(includedMirrors && mirrorsRAW) includedMirrors.value = mirrorsRAW.filter(m => {
-    return includedLangsRAW.value.some(l => m.langs.includes(l));
+    return includedLangsRAW.value.some(l => (m.langs as string[]).includes(l));
   }).map(m => m.name);
 }
 

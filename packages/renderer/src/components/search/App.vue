@@ -60,7 +60,7 @@ const results = computed(() => {
       };
   })
   .filter(r => includedMirrors.value.includes(r.mirrorinfo.name))
-  .filter(r => includedLangsRAW.value.some(l => r.mirrorinfo.langs.includes(l)))
+  .filter(r => includedLangsRAW.value.some(l => (r.mirrorinfo.langs as string[]).includes(l)))
   .sort((a,b) => {
     if(sortAZ.value) return a.name.localeCompare(b.name);
     return b.name.localeCompare(a.name);

@@ -49,7 +49,7 @@ const availableLangs = computed(() => {
 const isOk = computed(() => {
   if(!results.value.mirror) return false;
   if(!selectedLanguage.value) return false;
-  if(!results.value.mirror.langs.includes(selectedLanguage.value.value)) return false;
+  if(!(results.value.mirror.langs as string[]).includes(selectedLanguage.value.value)) return false;
   return true;
 });
 
@@ -89,7 +89,7 @@ async function showManga() {
   // checking first if the form is completed
   if(!results.value.mirror) return;
   if(!selectedLanguage.value) return;
-  if(!results.value.mirror.langs.includes(selectedLanguage.value.value)) return;
+  if(!(results.value.mirror.langs as string[]).includes(selectedLanguage.value.value)) return;
   // if user inputed a chapter page, we need to get the manga url
   if(!socket) socket = await useSocket(settings.server);
   const reqId = Date.now();
