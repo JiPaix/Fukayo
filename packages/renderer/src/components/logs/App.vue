@@ -69,7 +69,7 @@ function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler[
 function colorSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
   if(log.message === 'chapter') return 'positive';
   if(log.message === 'chapter_error' || log.message === 'cache_error') return 'negative';
-  if(log.message === 'chapter_read' || log.message === 'cache') return 'secondary';
+  if(log.message === 'chapter_read' || log.message === 'cache' || log.message === 'manga_metadata') return 'secondary';
 }
 
 function iconSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
@@ -78,7 +78,7 @@ function iconSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Schedul
   if(log.message === 'chapter_read') return 'visibility';
   if(log.message === 'cache') return 'recycling';
   if(log.message === 'cache_error') return 'dangerous';
-
+  if(log.message === 'manga_metadata') return 'analytics';
 }
 
 onBeforeMount(async () => {
@@ -141,9 +141,10 @@ onBeforeMount(async () => {
               lines="1"
             >
               <div class="flex">
-                <span v-if="log.message === 'chapter'">{{ $t('logs.found_chapter', {number: log.chapter}, log.chapter) }}</span>
+                <span v-if="log.message === 'chapter'">{{ $t('logs.found_chapter', {number: log.nbOfUpdates}, log.nbOfUpdates) }}</span>
                 <span v-else-if="log.message === 'chapter_error'">{{ $t('logs.error_chapter') }}</span>
-                <span v-else-if="log.message === 'chapter_read'">{{ $t('logs.read_chapter', {number: log.chapter}, log.chapter) }}</span>
+                <span v-else-if="log.message === 'chapter_read'">{{ $t('logs.read_chapter', {number: log.nbOfUpdates}, log.nbOfUpdates) }}</span>
+                <span v-else-if="log.message === 'manga_metadata'">{{ $t('logs.new_metadata') }}</span>
               </div>
             </q-item-label>
           </q-item-section>

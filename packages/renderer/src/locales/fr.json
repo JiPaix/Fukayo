@@ -174,6 +174,7 @@
     "cache": "<span class=\"text-weight-bold\">{files} fichier</span> supprimé pour un total de {size} | <span class=\"text-weight-bold\">{files} fichiers</span> supprimés pour un total de <span class=\"text-weight-bold\">{size}</span>",
     "error_chapter": "erreur rencontrée lors de la mise à jour",
     "found_chapter": "{number} nouveau chapitre trouvé | \n{number} nouveaux chapitres trouvés",
+    "new_metadata": "métadonnées mises à jour",
     "read_chapter": "le status de lecture de {number} chapitre ont été mis à jour | les status de lecture de {number} chapitres ont été mis à jour"
   },
   "mangas": {
