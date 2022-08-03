@@ -487,7 +487,6 @@ function getMirrorInfoUrl(link:string) {
   if(mirrorinfo.value.options.host) url += mirrorinfo.value.options.host;
   if(mirrorinfo.value.options.port) url += ':' + mirrorinfo.value.options.port;
   url += link;
-  console.log('opening', url);
   return url;
 }
 
