@@ -3,9 +3,11 @@ import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useDialogPluginComponent } from 'quasar';
-import type { socketClientInstance } from '../../../../api/src/client/types';
 import { useSocket } from '../helpers/socket';
+import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** dialog component setup */
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -13,8 +15,7 @@ defineEmits([
   ...useDialogPluginComponent.emits,
 ]);
 
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** socket */

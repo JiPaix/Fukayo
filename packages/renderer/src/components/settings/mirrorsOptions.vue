@@ -4,18 +4,18 @@ import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import { useI18n } from 'vue-i18n';
 import { format, useQuasar } from 'quasar';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { sortLangs, sortMirrorByNames } from '../helpers/mirrorFilters';
 import { applyAllFilters } from '../helpers/mirrorFilters';
-
+import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** stored settings */
 const settings = useSettingsStore();
 /** socket */
 let socket:socketClientInstance|undefined;
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** quasar */
 const $q = useQuasar();
 /** search filter */

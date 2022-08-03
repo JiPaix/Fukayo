@@ -1,11 +1,15 @@
 import { nextTick } from 'vue';
-import type { I18n , I18nOptions } from 'vue-i18n';
 import { createI18n } from 'vue-i18n';
 import { Quasar } from 'quasar';
 import { supportedLangs } from './supportedLangs';
 import dayjs from 'dayjs';
 import dayjsrelative from 'dayjs/plugin/relativeTime';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
+import type { I18n , I18nOptions } from 'vue-i18n';
+import type en from '../en.json';
+import type { supportedLangsType } from './supportedLangs';
+
+type MessageSchema = typeof en
 
 
 export function findLocales(lang:string) {
@@ -19,15 +23,19 @@ export function findLocales(lang:string) {
   return locale ? locale : 'en';
 }
 
-export function setupI18n(options:I18nOptions = {}) {
+export function setupI18n(options:I18nOptions<{ message: MessageSchema }, supportedLangsType>) {
   if(!options.globalInjection) options.globalInjection = true;
-  if(!options.locale) options.locale = findLocales(navigator.language);
-  const i18n = createI18n(options);
-  setI18nLanguage(i18n, options.locale);
+  const lang = findLocales(navigator.language);
+  const i18n = createI18n<[MessageSchema], supportedLangsType>({
+    locale: options.locale,
+  });
+  i18n.global.locale = lang;
+
+  setI18nLanguage(i18n, lang);
   return i18n;
 }
 
-export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, true>, locale:string) {
+export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, true>, locale:string) {
   /** vue-i18n */
   i18n.global.locale = locale;
   loadLocaleMessages(i18n, locale);
@@ -49,7 +57,7 @@ export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, true>, loca
   dayjs.extend(dayjslocalizedformat);
 }
 
-export async function loadLocaleMessages(i18n:I18n<unknown, unknown, unknown, true>, locale:string) {
+export async function loadLocaleMessages(i18n:I18n<unknown, unknown, unknown, string, true>, locale:string) {
   // load locale messages with dynamic import
   const messages = await import(`../${locale}.json`);
 

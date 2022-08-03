@@ -3,13 +3,14 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore as useSettingsStore } from '/@/store/settings';
 import icon from '../../../assets/icon.svg';
-import type { LoginAuth } from '../../../../api/src/client/types';
 import { useQuasar } from 'quasar';
+import type { LoginAuth } from '../../../../api/src/client/types';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** quasar */
 const $q = useQuasar();
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */

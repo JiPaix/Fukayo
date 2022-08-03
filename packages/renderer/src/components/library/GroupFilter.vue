@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import { useStore as useSettingsStore } from '../../store/settings';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '../helpers/mirrorFilters';
-
+import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** props */
 const props = defineProps<{
@@ -16,8 +17,7 @@ const emit = defineEmits<{
   (event: 'search', input: typeof search.value): void
   (event: 'filter', mirror: string[], langs:string[]): void
 }>();
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** settings */
 const settings = useSettingsStore();
 /** search filter */

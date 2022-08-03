@@ -11,6 +11,8 @@ import SearchResults from './SearchResults.vue';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { SearchResult } from '../../../../api/src/models/types/search';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type en from '../../locales/en.json';
+import type { supportedLangsType } from '/@/locales/lib/supportedLangs';
 
 /** current route */
 const route = useRoute();
@@ -19,7 +21,7 @@ const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
 /** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** socket */
 let socket:socketClientInstance|undefined;
 

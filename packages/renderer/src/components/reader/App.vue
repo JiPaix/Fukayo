@@ -5,13 +5,15 @@ import { chapterLabel, isMouseEvent } from './helpers';
 import { isChapterImageErrorMessage } from '../helpers/typechecker';
 import { useQuasar } from 'quasar';
 import { useStore as useSettingsStore } from '/@/store/settings';
+import { useSocket } from '../helpers/socket';
 import ImageViewer from './ImageViewer.vue';
 import SideBar from './SideBar.vue';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 import type { socketClientInstance } from '../../../../api/src/client/types';
-import { useSocket } from '../helpers/socket';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** web socket */
 let socket: socketClientInstance | undefined;
@@ -19,8 +21,7 @@ let socket: socketClientInstance | undefined;
 const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** emit */
 const emit = defineEmits<{
   (event: 'hide'): void

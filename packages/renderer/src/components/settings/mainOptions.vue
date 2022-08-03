@@ -6,11 +6,12 @@ import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 import type { SettingsDB } from '../../../../api/src/db/settings';
 import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** quasar */
 const $q = useQuasar();
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** settings store */
 const settings = useStoreSettings();
 /** socket */

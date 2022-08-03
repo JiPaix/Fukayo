@@ -8,14 +8,15 @@ import { useQuasar } from 'quasar';
 import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '../helpers/mirrorFilters';
 import type { socketClientInstance } from '../../../../api/src/client/types';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 const router = useRouter();
 /** stored settings */
 const settings = useSettingsStore();
 /** socket */
 let socket:socketClientInstance|undefined;
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** quasar */
 const $q = useQuasar();
 /** search filter */

@@ -10,6 +10,8 @@ import type { socketClientInstance } from '../../../../api/src/client/types';
 import type dayjs from 'dayjs';
 import type { mirrorInfo } from '../../../../api/src/models/types/shared';
 import type { MangaInDB } from '../../../../api/src/models/types/manga';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import type en from '../../locales/en.json';
 
 /** quasar */
 const $q = useQuasar();
@@ -23,8 +25,7 @@ const router = useRouter();
 let socket:socketClientInstance|undefined;
 /** dayJS lib */
 const dayJS = inject<typeof dayjs>('dayJS');
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 const mangaLogs = ref<typeof Scheduler['logs']['manga']>([]);
 
 const cacheLogs = ref<typeof Scheduler['logs']['cache']>([]);

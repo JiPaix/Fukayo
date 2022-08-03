@@ -10,9 +10,10 @@ import Login from '/@/components/login/App.vue';
 import AppLayout from '/@/components/AppLayout.vue';
 import favicon from '../assets/icon.svg';
 import type { LoginAuth } from '../../api/src/client/types';
+import type { supportedLangsType } from './locales/lib/supportedLangs';
+import type en from './locales/en.json';
 
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** load favicon */
 useFavicon(favicon); // change favicon
 /** stored settings */
