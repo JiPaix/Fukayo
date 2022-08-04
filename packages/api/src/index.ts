@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import { Fork } from './app';
 import { verify } from './utils/standalone';
 import client from './client';
+import { setupFileServFolder } from './utils/fileserv';
 import type { ForkEnv } from './types';
 
 export default function useFork(settings: ForkEnv = env):Promise<client> {
@@ -26,13 +27,43 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
     app.use(express.static(env.VIEW));
   }
 
-  // 403-404 handler
-  app.use((req, res, next) => {
-    if(res.headersSent) return next();
-    if(env.VIEW) res.status(404).json({error: 'not_found'});
-    else res.status(403).send('Forbidden');
-    next();
+  // init the file server directory
+  const fileDirectory = setupFileServFolder();
+
+  // serve the files
+  app.get('/files/:fileName', (req, res, next) => {
+    const options = {
+      root: fileDirectory,
+      dotfiles: 'deny',
+      headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true,
+      },
+    };
+    const fileName = req.params.fileName;
+    res.sendFile(fileName, options, (err) => {
+      if (err) {
+        next(err);
+      }
+    });
   });
+
+  // force authentication for file requests
+  app.use('/files', (req, res, next) => {
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const strauth = Buffer.from(b64auth, 'base64').toString();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, login, password] = strauth.match(/(.*?):(.*)/) || [];
+    if(login !== env.LOGIN || password !== env.PASSWORD) {
+      // Access denied...
+      res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
+      res.status(401).send('Authentication required.'); // custom message
+    } else {
+      // Access granted...
+      next();
+    }
+  });
+
 
   // enable logging
   if (env.MODE === 'development') {
