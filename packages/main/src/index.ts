@@ -20,11 +20,6 @@ app.on('second-instance', restoreOrCreateWindow);
 
 
 /**
- * Disable Hardware Acceleration for more power-save
- */
-app.disableHardwareAcceleration();
-
-/**
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
