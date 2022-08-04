@@ -3,6 +3,7 @@ import { ComponentPublicInstance } from 'vue';
 import { ref, computed, watch } from 'vue';
 import { useQuasar, scroll } from 'quasar';
 import { isChapterImage, isChapterImageErrorMessage } from '../helpers/typechecker';
+import { useStore as useSettingsStore } from '/@/store/settings';
 import type { ChapterImage } from '../../../../api/src/models/types/chapter';
 import type { ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
 import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
@@ -10,6 +11,9 @@ import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/mang
 /** quasar */
 const $q = useQuasar();
 const { getScrollTarget, setVerticalScrollPosition } = scroll;
+
+/** settings */
+const settings = useSettingsStore();
 
 /** props */
 const props = defineProps<{
@@ -104,6 +108,14 @@ function copyToClipboard(src: string) {
   window.apiServer.copyImageToClipboard(src);
 }
 
+function findSource(src: string) {
+  if(window.apiServer) {
+    const protocol = settings.server.ssl === 'false' ? 'http' : 'https';
+    return `${protocol}://127.0.0.1:${settings.server.port}${src}`;
+  }
+  return src;
+}
+
 /**
  * watch if the current page has been changed by triggering a "page-change" event
  */
@@ -137,7 +149,7 @@ watch(() => props.currentPage, (nval, oldval) => {
         v-show="props.readerSettings.longStrip ? true : i === props.currentPage.index"
         :ref="(el) => el !== null ? imgRefs.push({ref: el as ComponentPublicInstance, id: i}) : undefined"
         v-intersection="{ handler: onIntersection, cfg: { threshold: 0.6 } }"
-        :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) && shouldPreload(i) ? img.src : 'undefined'"
+        :src="img && !isChapterImageErrorMessage(img) && isChapterImage(img) && shouldPreload(i) ? findSource(img.src) : 'undefined'"
         :style="props.readerSettings.zoomMode === 'fit-height' ? undefined : imageStyle"
         :height="imageHeight ? imageHeight + 'px': undefined"
         :fit="props.readerSettings.zoomMode === 'fit-height' ? 'scale-down' : undefined"
