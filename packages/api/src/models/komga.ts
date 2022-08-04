@@ -123,7 +123,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const name = result.metadata.title;
         const link = `/series/${result.id}`;
         const covers: string[] = [];
-        const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
 
         const synopsis = result.metadata.summary;
@@ -189,7 +189,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(cancel) return;
       const mangaId = `${this.name}/${result.metadata.language}${`/series/${result.id}`}`;
       const covers:string[] = [];
-      const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+      const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
 
       const synopsis = result.metadata.summary;
@@ -260,7 +260,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
-        const img = await this.downloadImage(this.path(`/books/${res.id}/pages/${i+1}`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.path(`/books/${res.id}/pages/${i+1}`), 'page', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
           if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
         } else {
@@ -303,7 +303,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const mangaId = `${this.name}/${serie.metadata.language}${link}`;
 
         const covers: string[] = [];
-        const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
         let lang = 'xx';
         if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;

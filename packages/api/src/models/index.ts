@@ -15,6 +15,7 @@ import type { MirrorConstructor } from './types/constructor';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import type { socketInstance } from '../server/types';
 import type { supportedLangs } from '../../../renderer/src/locales/lib/supportedLangs';
+import { serv } from '../utils/fileserv';
 
 /**
  * The default mirror class
@@ -179,12 +180,12 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * const url = 'https://www.example.com/images/some-image.jpg?token=123';
    * downloadImage(url, false)
    */
-  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig) {
+  protected async downloadImage(url:string, returnType: 'cover'|'page', referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<string|undefined> {
     this.concurrency++;
     const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
 
-    const cache = await this.loadFromCache({identifier, filename});
-    if(cache) return this.returnFetch(cache);
+    const cache = await this.loadFromCache({identifier, filename}, returnType);
+    if(cache) return this.returnFetch(cache, filename);
 
     await this.wait();
     // fetch the image using axios, or use puppeteer as fallback
@@ -200,19 +201,20 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     // if none of the methods worked, return undefined
     if(!buffer) return this.returnFetch(undefined);
 
-    const mime = await this.getFileMime(buffer);
+    const { mime } = await this.getFileMime(buffer);
     if(mime && mime.startsWith('image/')) {
       if(this.options.cache) this.saveToCache(filename, buffer);
+      if(returnType === 'page') return this.returnFetch(buffer, filename);
       return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
     }
   }
 
-  private async getFileMime(buffer:Buffer, fallback = 'image/jpeg') {
+  private async getFileMime(buffer:Buffer) {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
     const fT = await fileTypeFromBuffer(buffer);
-    if(fT) return fT.mime;
-    return fallback;
+    if(fT) return { mime: fT.mime };
+    else return { mime: 'image/jpeg' };
   }
 
   private async filenamify(string:string) {
@@ -329,9 +331,14 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private returnFetch<T>(data : T) {
+  private returnFetch<T>(data : T, filename?: undefined):T
+  private returnFetch<T>(data : T, filename: string):string
+  private returnFetch<T>(data : T, filename?: string|undefined):T|string {
     this.concurrency--;
     if(this.concurrency < 0) this.concurrency = 0;
+    if(data instanceof Buffer && filename) {
+      return serv(data, filename);
+    }
     return data;
   }
 
@@ -401,20 +408,21 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async loadFromCache(id:{ identifier: string, filename:string }) {
+  private async loadFromCache(id:{ identifier: string, filename:string }, returnType: 'cover' | 'page'):Promise<Buffer|string|undefined> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
-      let cacheResult:{mime: string, buffer:Buffer} | undefined;
+      let cacheResult:{mime: string|undefined, buffer:Buffer} | undefined;
       try {
         const buffer = readFileSync(resolve(env.USER_DATA, '.cache', this.name, id.filename));
-        const mime = await this.getFileMime(buffer);
-        cacheResult = { mime, buffer };
+        if(returnType === 'cover') cacheResult = { mime: (await this.getFileMime(buffer)).mime, buffer };
+        else cacheResult = { mime:undefined, buffer };
       } catch {
         cacheResult = undefined;
       }
       if(cacheResult) {
         this.logger('cache hit', id.filename);
-        return `data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`;
+        if(returnType === 'cover') return `data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`;
+        else return cacheResult.buffer;
       }
     }
   }
