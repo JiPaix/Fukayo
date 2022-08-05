@@ -230,6 +230,15 @@ async function markAsReadIfLastPage() {
   }
 }
 
+function toggleDarkMode() {
+  if (settings.theme === 'dark') {
+    settings.theme = 'light';
+    $q.dark.set(false);
+  } else {
+    settings.theme = 'dark';
+    $q.dark.set(true);
+  }
+}
 </script>
 <template>
   <q-layout
@@ -275,6 +284,13 @@ async function markAsReadIfLastPage() {
             {{ manga.name }}
           </q-tooltip>
         </q-toolbar-title>
+        <q-btn
+          dense
+          flat
+          round
+          icon="contrast"
+          @click="toggleDarkMode"
+        />
         <q-btn
           flat
           round
