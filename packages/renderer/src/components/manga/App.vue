@@ -96,7 +96,7 @@ const localSettings = ref<MangaInDB['meta']['options']>({
   longStrip: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.longStrip : settings.reader.longStrip,
 });
 
-/** unread chapters */
+/** list of unread chapters */
 const unreadChaps = computed(() => {
   return chapters.value.filter((c) => !c.read);
 });
@@ -139,7 +139,7 @@ function sortImages(images: (ChapterImage | ChapterImageErrorMessage)[]) {
 /**
  * Fetch the chapter images:
  *
- * put them in `images` array and update `nbOfImagesToExpectFromChapter`
+ * put them in `images[]` and update `nbOfImagesToExpectFromChapter`
  */
 async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
   if(!manga.value) return;
@@ -179,7 +179,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
 /**
  * Fetch the next chapter:
  *
- * put it in `nextChapterBuffer.images`, updates `nextChapterBuffer.nbOfImagesToExpectFromChapter` and `nextChapterBuffer.index`
+ * put it in `nextChapterBuffer.images[]`, updates `nextChapterBuffer.nbOfImagesToExpectFromChapter` and `nextChapterBuffer.index`
  */
 async function fetchNextChapter(/** index of the next chapter */ nextIndex:number) {
   if(!settings.reader.preloadNext) return;
@@ -219,8 +219,8 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
 }
 
 /**
- * Show chapter images dialog
- * @param chapterIndex index of the manga.chapter to show
+ * Show reader's dialog
+ * @param chapterIndex index of the chapter to show
  */
 async function showChapterComp(chapterIndex:number) {
   if(displayChapter.value) cancelChapterFetch();
@@ -234,9 +234,16 @@ async function showChapterComp(chapterIndex:number) {
   startChapterFetch(chapterIndex);
 }
 
-/**
- * Hide chapter images dialog
- */
+/** automatically shows reader's dialog if route has a chapterindex */
+async function showChapterCompInternal() {
+  const { chapterindex } = route.params as { chapterindex: string|undefined };
+  if(!chapterindex) return;
+  const index = parseInt(chapterindex);
+  if(isNaN(index)) return;
+  await showChapterComp(index);
+}
+
+/** hide reader's dialog */
 async function hideChapterComp() {
   displayChapter.value = false;
   chapterSelectedIndex.value = null;
@@ -275,7 +282,9 @@ async function startChapterFetch(chapterIndex: number) {
 }
 
 /**
- * Request a specific image for a given chapter
+ * Reload a chapter image
+ * @param chapterIndex index of the chapter
+ * @param pageIndex index of the page
  */
 async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
   if (!manga.value) return; // should not happen
@@ -306,15 +315,14 @@ async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
   );
 }
 
-/**
- * Cancel chapter fetching
- */
+/** tell API to cancel current fetches */
 async function cancelChapterFetch() {
   if (!socket) socket = await useSocket(settings.server);
   socket?.emit('stopShowChapter');
   socket?.off('showChapter');
 }
 
+/** toggle manga in and out of library */
 function toggleInLibrary() {
   if(!manga.value) return;
   if(isManga(manga.value) && !isMangaInDb(manga.value)) {
@@ -325,6 +333,7 @@ function toggleInLibrary() {
   }
 }
 
+/** add manga to library */
 async function add() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
@@ -336,6 +345,7 @@ async function add() {
   });
 }
 
+/** remove manga from library */
 async function remove() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
@@ -346,6 +356,7 @@ async function remove() {
   }
 }
 
+/** upserts manga in database, also updates `mangaRaw` */
 async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -358,6 +369,7 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
   }
 }
 
+/** update reader's settings, also calls `updateManga` if manga is in db */
 function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
   if(!manga.value) return;
   localSettings.value = newSettings;
@@ -366,6 +378,7 @@ function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
   }
 }
 
+/** Mark a chapter as read */
 async function markAsRead(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -382,6 +395,7 @@ async function markAsRead(index:number) {
   updateManga(updatedManga);
 }
 
+/** Mark a chapter as unread */
 async function markAsUnread(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -398,6 +412,7 @@ async function markAsUnread(index:number) {
   updateManga(updatedManga);
 }
 
+/** Mark all previous chapters as read */
 function markPreviousAsRead(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -414,6 +429,7 @@ function markPreviousAsRead(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all previous chapters as unread */
 function markPreviousAsUnread(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -430,6 +446,7 @@ function markPreviousAsUnread(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all next chapters as read */
 function markNextAsRead(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -443,6 +460,7 @@ function markNextAsRead(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all next chapters as unread */
 function markNextAsUnread(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -456,6 +474,7 @@ function markNextAsUnread(index: number) {
   updateManga(updatedManga);
 }
 
+/** Opens the "change display name" dialog, calls `updateManga` when user press "OK" */
 function changeDisplayName() {
       $q.dialog({
         title: $t('mangas.displayname.title'),
@@ -474,14 +493,7 @@ function changeDisplayName() {
       });
 }
 
-async function autoShowManga() {
-  const { chapterindex } = route.params as { chapterindex: string|undefined };
-  if(!chapterindex) return;
-  const index = parseInt(chapterindex);
-  if(isNaN(index)) return;
-  await showChapterComp(index);
-}
-
+/** parse the "source" link for self-hosted mirrors */
 function getMirrorInfoUrl(link:string) {
   if(!mirrorinfo.value) return;
   let url = '';
@@ -493,7 +505,7 @@ function getMirrorInfoUrl(link:string) {
 }
 
 /**
- * fetch manga infos
+ * fetch manga infos before mounting the component
  */
 onBeforeMount(async () => {
   if (!socket) socket = await useSocket(settings.server);
@@ -508,7 +520,7 @@ onBeforeMount(async () => {
     if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
       nbOfChapters.value = mg.chapters.length;
       mangaRaw.value = mg;
-      autoShowManga();
+        showChapterCompInternal();
     }
     socket?.off('showManga');
   });
