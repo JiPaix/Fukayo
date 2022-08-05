@@ -69,7 +69,7 @@ const images = computed(() =>
 );
 
 /** Display/Hide the sidebar */
-const drawerRight = ref($q.platform.has.touch ? false : true);
+const drawerRight = ref($q.screen.lt.md ? false : true);
 
 /**
  * Listen to @update-settings from side-bar and update local settings
