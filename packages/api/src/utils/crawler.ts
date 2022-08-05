@@ -86,6 +86,7 @@ async function useCluster() {
 
 async function task({page, data}: { page: Page, data: ClusterJob }) {
   try {
+    if(data.auth) await page.authenticate({username:data.auth.username, password:data.auth.password});
     page.setDefaultTimeout(data.timeout || 10000);
     await page.setUserAgent(userAgent.random().toString());
     if(data.cookies) data.cookies.forEach(c => page.setCookie(c));

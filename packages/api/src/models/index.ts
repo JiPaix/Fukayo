@@ -194,7 +194,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config, timeout: 5000 });
       buffer = Buffer.from(ab.data);
     } catch {
-      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`, timeout: 10000}, true);
+      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`, ...config, timeout: 10000 }, true);
       if(res instanceof Buffer) buffer = res;
     }
 
@@ -327,7 +327,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.crawler({url: config.url, waitForSelector: config.waitForSelector, timeout: 10000 }, false);
+      return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false);
     }
   }
 
