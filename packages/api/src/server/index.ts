@@ -197,7 +197,7 @@ export default class IOWrapper {
      * Get a manga's chapter
      * the mirror will reply with a 'showChapter' event containing the chapter's data
      */
-    socket.on('showChapter', (id, mirror, lang, url, callback: (nbOfPagesToExpect:number)=>void, retryIndex?:number) => {
+    socket.on('showChapter', (id, mirror, lang, url, retryIndex, callback) => {
       mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback, retryIndex);
     });
 

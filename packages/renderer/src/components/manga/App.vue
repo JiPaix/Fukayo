@@ -153,6 +153,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
+    undefined,
     (nbOfPagesToExpect) => {
       // callback returns the number of pages to expect
       nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
@@ -200,6 +201,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[nextIndex].url,
+    undefined,
     (nbOfImagesToExpectFromChapter) => {
       if(nextChapterBuffer.value) nextChapterBuffer.value.nbOfImagesToExpectFromChapter = nbOfImagesToExpectFromChapter;
       socket?.on('showChapter', (id, res) => {
@@ -288,32 +290,40 @@ async function startChapterFetch(chapterIndex: number) {
  * @param chapterIndex index of the chapter
  * @param pageIndex index of the page
  */
-async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
+async function reloadChapterImage(chapterIndex: number, pageIndex?: string) {
   if (!manga.value) return; // should not happen
-  // prepare and send the request
-  if (!socket) socket = await useSocket(settings.server);
+
   if(!pageIndex) {
     if(chapterSelectedIndex.value) return showChapterComp(chapterSelectedIndex.value);
     return;
   }
+
+  // prepare and send the request
   const id = Date.now();
-  socket?.emit(
+  if (!socket) socket = await useSocket(settings.server);
+  const index = pageIndex && !isNaN(parseInt(pageIndex)) ? parseInt(pageIndex) : undefined;
+
+  socket.emit(
     'showChapter',
     id,
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
+    index,
     () => {
-      socket?.on('showChapter', (id, res) => {
+      socket?.on('showChapter', (id, chap) => {
         if (id !== id) return; // should not happen
-        if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
-          if(isChapterImage(res)) res.src = parseImgURL(res.src);
-          images.value[pageIndex] = res;
+        if (isChapterImage(chap) || isChapterImageErrorMessage(chap)) {
+          if(isChapterImage(chap)) chap.src = parseImgURL(chap.src) + 'XXXXX';
+          images.value[chap.index] = chap;
+          console.log('okay');
+          if(chap.lastpage) socket?.off('showChapter');
+        } else if (isChapterErrorMessage(chap)) {
+          chapterError.value = chap.trace || chap.error;
+          socket?.off('showChapter');
         }
-        socket?.off('showChapter');
       });
     },
-    pageIndex,
   );
 }
 

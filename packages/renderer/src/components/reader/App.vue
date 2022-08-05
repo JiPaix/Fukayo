@@ -25,7 +25,7 @@ const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n())
 /** emit */
 const emit = defineEmits<{
   (event: 'hide'): void
-  (event: 'reload', chapterIndex:number, pageIndex?:number): void
+  (event: 'reload', chapterIndex:number, pageIndex?:string): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'update-manga', manga:MangaInDB|MangaPage): void
   (event: 'update-settings', settings:MangaInDB['meta']['options']): void

@@ -23,7 +23,7 @@ const props = defineProps<{
 
 /** emit */
 const emit = defineEmits<{
-  (event: 'reload', chapterIndex:number, pageIndex:number): void
+  (event: 'reload', chapterIndex:number, pageIndex:string): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'page-change', payload:{ index: number, from: 'child'}): void
   (event: 'onKey', payload:MouseEvent, imgSize?:number): void
@@ -32,7 +32,7 @@ const emit = defineEmits<{
 /** reload a page */
 function reload(pageIndex: number) {
   reloaders.value[pageIndex] = true;
-  emit('reload', props.chapterSelectedIndex, pageIndex);
+  emit('reload', props.chapterSelectedIndex, pageIndex.toString());
 }
 
 /** Sates for "reload page" buttons */

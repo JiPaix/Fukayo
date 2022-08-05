@@ -309,9 +309,9 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         const img = await this.downloadImage(this.path(url+'/page/'+i), 'page', undefined, false, { withCredentials: true });
 
         if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img, lastpage: retryIndex ? true : i+1 === nbOfPages });
         } else {
-          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true : i+1 === nbOfPages });
         }
       }
       if(cancel) return;
