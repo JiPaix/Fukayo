@@ -263,7 +263,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     await this.wait();
 
     // fetch the data (try to use axios first, then puppeteer)
-    const res = await this.internalFetch<T>(config);
+    const res = await this.internalFetch<T>(config, type);
 
     // throw an error if both axios and puppeteer failed
     if(typeof res === 'undefined' || res instanceof Error) {
@@ -301,7 +301,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async internalFetch<T>(config: ClusterJob) {
+  private async internalFetch<T>(config: ClusterJob, type: 'html'|'json'|'string') {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
       referer: config.referer || this.host.replace(/http(s?):\/\//g, ''),
@@ -312,7 +312,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     try {
       // try to use axios first
       const response = await axios.get<string|T>(config.url, { ...config, timeout: 5000 });
-
       if(typeof response.data === 'string') {
         if(config.waitForSelector) {
           const $ = this.loadHTML(response.data);
@@ -327,7 +326,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false);
+      return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false, type);
     }
   }
 

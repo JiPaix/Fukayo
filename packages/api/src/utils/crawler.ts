@@ -97,10 +97,18 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
       if (req.isInterceptResolutionHandled()) return;
     });
 
-    // get the content
+    page.on('response', async resp => {
+        if(data.type === 'json') html = await resp.text();
+    });
+
+    // go to page and wait for network idle
     await page.goto(data.url, { referer: data.referer });
-    if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, { timeout: 1000*20 });
-    const html = await page.content();
+    await page.waitForNetworkIdle();
+
+    if(data.type !== 'json') {
+      if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, { timeout: 1000*20 });
+      html = await page.content();
+    }
 
     // remove task from task list then close cluster if needed
     runningTask = runningTask-1;
@@ -143,10 +151,11 @@ async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
 /**
  * execute a task with headless browser
  */
-export async function crawler(data: ClusterJob, isFile: false): Promise<string | Error | undefined>
+export async function crawler(data: ClusterJob, isFile: false, type: 'html'|'json'|'string'): Promise<string | Error | undefined>
 export async function crawler(data: ClusterJob, isFile: true): Promise<Buffer | Error | undefined>
-export async function crawler(data: ClusterJob, isFile: boolean) {
+export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'json'|'string') {
   const instance = await useCluster();
+  if(type) data.type = type;
   if(isFile) {
     return instance.execute(data, taskFile) as Promise<Buffer | Error | undefined>;
   }
