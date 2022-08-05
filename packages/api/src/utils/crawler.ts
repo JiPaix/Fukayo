@@ -86,6 +86,7 @@ async function useCluster() {
 
 async function task({page, data}: { page: Page, data: ClusterJob }) {
   try {
+    let html:undefined|string|Error = undefined;
     if(data.auth) await page.authenticate({username:data.auth.username, password:data.auth.password});
     page.setDefaultTimeout(data.timeout || 10000);
     await page.setUserAgent(userAgent.random().toString());
@@ -98,14 +99,19 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
     });
 
     page.on('response', async resp => {
+      if(!resp.ok()) {
+        html = new Error(`bad_request: ${resp.status()}`);
+      } else {
         if(data.type === 'json') html = await resp.text();
+      }
     });
 
     // go to page and wait for network idle
     await page.goto(data.url, { referer: data.referer });
     await page.waitForNetworkIdle();
 
-    if(data.type !== 'json') {
+    // if we didn't get a 404, and user asked for HTML/STRING, get it
+    if(data.type !== 'json' && !html) {
       if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, { timeout: 1000*20 });
       html = await page.content();
     }

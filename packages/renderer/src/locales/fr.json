@@ -182,6 +182,15 @@
     "displayname": {
       "title": "Changer le titre de ce manga"
     },
+    "errors": {
+      "bad_request": "Requête incorrecte : {code}",
+      "invalid_auth": "Erreur d'authentification",
+      "invalid_json": "Impossible d'obtenir les données attendues (timeout ou source cassée)",
+      "invalid_link": "Impossible de valider l'url du manga : {url}",
+      "nodata": "Impossible de charger le manga",
+      "timeout": "Aucune réponse de l'hôte (timeout) : {source}",
+      "unknown": "Erreur inattendue"
+    },
     "forceupdate": "Mettre à jour",
     "markasread": {
       "current": "Marquer ce {chapterWord} comme lu",

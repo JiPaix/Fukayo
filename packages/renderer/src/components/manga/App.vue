@@ -57,6 +57,8 @@ const content = ref<HTMLElement>();
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 /** carrousel slides */
 const slide = ref(0);
+/** manga failed to load*/
+const nodata = ref<string[]|null>(null);
 
 type Manga = MangaInDB | MangaPage;
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
@@ -506,10 +508,8 @@ function getMirrorInfoUrl(link:string) {
   return url;
 }
 
-/**
- * fetch manga infos before mounting the component
- */
-onBeforeMount(async () => {
+async function startFetch() {
+  nodata.value = null;
   if (!socket) socket = await useSocket(settings.server);
   const { mirror, lang, url } = route.params as {
     mirror: string;
@@ -518,13 +518,34 @@ onBeforeMount(async () => {
   };
   const reqId = Date.now();
 
-  socket?.on('showManga', (id, mg) => {
-    if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
-      nbOfChapters.value = mg.chapters.length;
-      mangaRaw.value = mg;
+  socket.once('showManga', (id, mg) => {
+    if (id === reqId) {
+      if((isManga(mg) || isMangaInDb(mg))) {
+        nodata.value = null;
+        nbOfChapters.value = mg.chapters.length;
+        mangaRaw.value = mg;
         showChapterCompInternal();
+      }
+      else {
+        const msg:string[] = [];
+        let { error, trace } = mg;
+        if(error === 'manga_error_invalid_link') msg.push($t('mangas.errors.invalid_link', {url}));
+        else if(error === 'manga_error_unknown') msg.push($t('mangas.errors.unknown', {url}));
+        else if(error == 'manga_error_404') msg.push($t('mangas.errors.404', {url}));
+        else {
+          if(trace) {
+            if(trace.includes('timeout')) msg.push($t('mangas.errors.timeout', {source: mirrorinfo.value?.displayName}));
+            else if(trace.includes('ERR_INVALID_AUTH_CREDENTIALS')) msg.push($t('mangas.errors.invalid_auth'));
+            else if (trace.includes('invalid_json')) msg.push($t('mangas.errors.invalid_json'));
+            else if(trace.includes('bad_request')) msg.push($t('mangas.errors.bad_request', {code: trace.split('bad_request: ')[1]}));
+            else msg.push($t('mangas.errors.unknown', {url}));
+          } else {
+            msg.push($t('mangas.errors.unknown', {url}));
+          }
+        }
+        nodata.value = msg;
+      }
     }
-    socket?.off('showManga');
   });
 
   socket.emit('getMirrors', true, (mirrors) => {
@@ -532,11 +553,12 @@ onBeforeMount(async () => {
     if(m) mirrorinfo.value = m;
     socket?.emit('showManga', reqId, mirror, lang, url);
   });
+}
+
+onBeforeMount(async () => {
+  await startFetch();
 });
 
-/**
- * stop fetching manga infos when component is unmounted
- */
 onBeforeUnmount(() => {
   socket?.emit('stopShowManga');
   socket?.off('showChapter');
@@ -545,7 +567,43 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
+  <div
+    v-if="nodata"
+    class="absolute-full flex column flex-center"
+  >
+    <q-banner
+      class="text-white bg-negative"
+    >
+      <template #avatar>
+        <q-icon
+          name="signal_wifi_off"
+          color="white"
+        />
+      </template>
+      <p class="text-h5">
+        {{ $t('mangas.errors.nodata') }}:
+      </p>
+      <ul>
+        <li
+          v-for="(msg, i) in nodata"
+          :key="i"
+        >
+          <span class="text-caption">{{ msg }}</span>
+        </li>
+      </ul>
+
+      <template #action>
+        <q-btn
+          flat
+          color="white"
+          :label="$t('setup.retry')"
+          @click="startFetch"
+        />
+      </template>
+    </q-banner>
+  </div>
   <q-card
+    v-else
     id="manga-page"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
