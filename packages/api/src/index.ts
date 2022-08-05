@@ -52,8 +52,9 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
   app.use('/files', (req, res, next) => {
     const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
     const strauth = Buffer.from(b64auth, 'base64').toString();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, login, password] = strauth.match(/(.*?):(.*)/) || [];
+    const splitIndex = strauth.indexOf(':');
+    const login = strauth.substring(0, splitIndex);
+    const password = strauth.substring(splitIndex + 1);
     if(login !== env.LOGIN || password !== env.PASSWORD) {
       // Access denied...
       res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
