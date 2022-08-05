@@ -191,10 +191,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
-      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config });
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config, timeout: 5000 });
       buffer = Buffer.from(ab.data);
     } catch {
-      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
+      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`, timeout: 10000}, true);
       if(res instanceof Buffer) buffer = res;
     }
 
@@ -228,7 +228,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.concurrency++;
     await this.wait();
     try {
-      const resp = await axios[type]<RESP>(url, data, { ...config });
+      const resp = await axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
       return resp.data;
     } catch(e) {
       if((e as AxiosError).response) {
@@ -311,7 +311,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
 
     try {
       // try to use axios first
-      const response = await axios.get<string|T>(config.url, config);
+      const response = await axios.get<string|T>(config.url, { ...config, timeout: 5000 });
 
       if(typeof response.data === 'string') {
         if(config.waitForSelector) {
@@ -327,7 +327,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.crawler({url: config.url, waitForSelector: config.waitForSelector }, false);
+      return this.crawler({url: config.url, waitForSelector: config.waitForSelector, timeout: 10000 }, false);
     }
   }
 
