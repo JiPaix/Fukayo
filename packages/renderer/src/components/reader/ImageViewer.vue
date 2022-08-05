@@ -52,12 +52,12 @@ function scrollToPage() {
   if(target) setVerticalScrollPosition(target, offset, duration);
 }
 
-function shouldPreload(index:number) {
-  if(props.readerSettings.longStrip) {
-    return index === props.currentPage.index || (index >= props.currentPage.index-5 && index <= props.currentPage.index+5);
-  }
-  else return index === props.currentPage.index;
-}
+// function shouldPreload(index:number) {
+//   if(props.readerSettings.longStrip) {
+//     return index === props.currentPage.index || (index >= props.currentPage.index-5 && index <= props.currentPage.index+5);
+//   }
+//   else return index === props.currentPage.index;
+// }
 
 /**
  * watch if the current page has been changed by triggering a "page-change" event
@@ -81,7 +81,7 @@ watch(() => props.currentPage, (nval) => {
       :key="i"
     >
       <image-comp
-        v-if="(props.readerSettings.longStrip && shouldPreload(i)) || (!props.readerSettings.longStrip && i === currentPage.index)"
+        v-if="(props.readerSettings.longStrip) || (!props.readerSettings.longStrip && i === currentPage.index)"
         :image="img"
         :settings="props.readerSettings"
         :last-page="i === images.length-1"
