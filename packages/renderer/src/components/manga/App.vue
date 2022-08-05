@@ -497,9 +497,11 @@ function changeDisplayName() {
 function getMirrorInfoUrl(link:string) {
   if(!mirrorinfo.value) return;
   let url = '';
-  if(mirrorinfo.value.options.protocol) url += mirrorinfo.value.options.protocol + '://';
-  if(mirrorinfo.value.options.host) url += mirrorinfo.value.options.host;
-  if(mirrorinfo.value.options.port) url += ':' + mirrorinfo.value.options.port;
+  const { protocol, host, port} = mirrorinfo.value.options;
+  if(protocol && host && port) {
+    url += protocol + '://' + host + ':' + port;
+  }
+  else url += mirrorinfo.value.host;
   url += link;
   return url;
 }
