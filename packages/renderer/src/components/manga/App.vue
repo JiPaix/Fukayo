@@ -109,18 +109,6 @@ const sortedImages = computed(() => {
   return [];
 });
 
-/** q-virtual-scroll height */
-const virtualScrollHeight = computed(() => {
-  if(content.value && $q.screen.lg) {
-    const size = $q.screen.height - content.value.clientHeight - 100;
-    // turn "size" into a multiple of 52
-    return Math.floor(size / 52) * 52;
-  }
-  const size = $q.screen.height - 100;
-  // turn "size" into a multiple of 52
-  return Math.floor(size / 52) * 52;
-});
-
 /** autofocus chapterRef */
 watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
   if(newManga && newManga.chapters && newManga.chapters.length && newIndex !== null) {
@@ -760,7 +748,6 @@ onBeforeUnmount(() => {
       <q-virtual-scroll
         v-slot="{ item, index }"
         :items="chapters"
-        :style="'max-height: '+virtualScrollHeight+'px;'"
         :items-size="nbOfChapters"
         :virtual-scroll-item-size="62"
         separator
