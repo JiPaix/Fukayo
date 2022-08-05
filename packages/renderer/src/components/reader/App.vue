@@ -146,7 +146,7 @@ const firstPageNav = computed(() => currentPageIndex.value.index === 0);
  * increment "next-page" event count if the user is on the last page
  */
 function incrementNav() {
-  if(lastPageNav.value) forwardNavCount.value = Math.min(forwardNavCount.value + 1, 2) as 0|1|2;
+  if(lastPageNav.value) forwardNavCount.value = Math.min(forwardNavCount.value + 1, 2) as 1|2;
   else forwardNavCount.value = 0;
   backNavCount.value = 0; // also reset "previous-page" event count
   if(currentPageIndex.value.index < images.value.length - 1) {
