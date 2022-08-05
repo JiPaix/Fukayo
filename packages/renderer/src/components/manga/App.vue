@@ -316,7 +316,6 @@ async function reloadChapterImage(chapterIndex: number, pageIndex?: string) {
         if (isChapterImage(chap) || isChapterImageErrorMessage(chap)) {
           if(isChapterImage(chap)) chap.src = parseImgURL(chap.src) + 'XXXXX';
           images.value[chap.index] = chap;
-          console.log('okay');
           if(chap.lastpage) socket?.off('showChapter');
         } else if (isChapterErrorMessage(chap)) {
           chapterError.value = chap.trace || chap.error;
