@@ -357,7 +357,7 @@ function toggleDarkMode() {
       @update-manga="emit('update-manga', $event)"
     />
     <q-page-container>
-      <q-page>
+      <q-page :style="`background-color:${$q.dark.isActive ? '#1d1d1d' : 'white'}`">
         <image-viewer
           v-if="!chapterError"
           :images="images"
