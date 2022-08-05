@@ -531,7 +531,6 @@ async function startFetch() {
         let { error, trace } = mg;
         if(error === 'manga_error_invalid_link') msg.push($t('mangas.errors.invalid_link', {url}));
         else if(error === 'manga_error_unknown') msg.push($t('mangas.errors.unknown', {url}));
-        else if(error == 'manga_error_404') msg.push($t('mangas.errors.404', {url}));
         else {
           if(trace) {
             if(trace.includes('timeout')) msg.push($t('mangas.errors.timeout', {source: mirrorinfo.value?.displayName}));
