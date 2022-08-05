@@ -130,7 +130,15 @@ watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
   }
 });
 
-
+/** Turn relative url into absolute */
+function parseImgURL(src: string) {
+  if(src.startsWith('https') || src.startsWith('http')) return src;
+  if(window.apiServer) {
+    const protocol = settings.server.ssl === 'false' ? 'http' : 'https';
+    return `${protocol}://127.0.0.1:${settings.server.port}${src}`;
+  }
+  return src;
+}
 
 /**
  * Sort the chapters pages and pages errors by their index
@@ -161,6 +169,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
+          if(isChapterImage(res)) res.src = parseImgURL(res.src);
           images.value.push(res);
           if(res.lastpage) {
             socket?.off('showChapter');
@@ -206,6 +215,7 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
+          if(isChapterImage(res)) res.src = parseImgURL(res.src);
           nextChapterBuffer.value?.images.push(res);
           if(res.lastpage) socket?.off('showChapter');
         } else if (isChapterErrorMessage(res)) {
@@ -264,7 +274,10 @@ async function startChapterFetch(chapterIndex: number) {
     nbOfImagesToExpectFromChapter.value = nextChapterBuffer.value.nbOfImagesToExpectFromChapter;
     const res:(ChapterImage | ChapterImageErrorMessage)[] = [];
     nextChapterBuffer.value.images.forEach((c) => {
-      if(isChapterImage(c) || isChapterImageErrorMessage(c)) res.push(c);
+      if(isChapterImage(c) || isChapterImageErrorMessage(c)) {
+        if(isChapterImage(c)) c.src = parseImgURL(c.src);
+        res.push(c);
+      }
     });
     nextChapterBuffer.value = undefined;
     images.value = res;
@@ -295,6 +308,7 @@ async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
+          if(isChapterImage(res)) res.src = parseImgURL(res.src);
           images.value[pageIndex] = res;
         }
         socket?.off('showChapter');
