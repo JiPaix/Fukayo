@@ -1,4 +1,3 @@
-import { nextTick } from 'vue';
 import { createI18n } from 'vue-i18n';
 import { Quasar } from 'quasar';
 import { supportedLangs } from './supportedLangs';
@@ -27,42 +26,34 @@ export function setupI18n(options:I18nOptions<{ message: MessageSchema }, suppor
   if(!options.globalInjection) options.globalInjection = true;
   const lang = findLocales(navigator.language);
   const i18n = createI18n<[MessageSchema], supportedLangsType>({
-    locale: options.locale,
+    locale: lang,
   });
-  i18n.global.locale = lang;
 
   setI18nLanguage(i18n, lang);
   return i18n;
 }
 
 export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, true>, locale:string) {
-  /** vue-i18n */
-  i18n.global.locale = locale;
-  loadLocaleMessages(i18n, locale);
 
-  /** Quasar */
-  const langList = import.meta.glob('../../../../../node_modules/quasar/lang/*.mjs');
-  langList[ `../../../../../node_modules/quasar/lang/${ locale === 'en' ? 'en-US' : locale}.mjs` ]().then(lang => {
-    Quasar.lang.set(lang.default);
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  (import(`../${locale}.json`) as Promise<{default : typeof import('../en.json') }>).then(messages => {
+    /** vue-i18n */
+    i18n.global.locale = locale;
+    i18n.global.setLocaleMessage(locale, messages.default);
+
+    /** Quasar */
+    const langList = import.meta.glob('../../../../../node_modules/quasar/lang/*.mjs');
+    langList[ `../../../../../node_modules/quasar/lang/${ locale === 'en' ? 'en-US' : locale}.mjs` ]().then(lang => {
+      Quasar.lang.set(lang.default);
+    });
+
+    /** dayjs */
+    const list = import.meta.glob('../../../../../node_modules/dayjs/esm/locale/*.js');
+    list[ `../../../../../node_modules/dayjs/esm/locale/${ locale }.js` ]().then((c) => {
+      dayjs.locale(c.default);
+    });
+    dayjs.extend(dayjsrelative);
+    dayjs.extend(dayjslocalizedformat);
+
   });
-
-  /** dayjs */
-  const list = import.meta.glob('../../../../../node_modules/dayjs/esm/locale/*.js');
-
-  list[ `../../../../../node_modules/dayjs/esm/locale/${ locale }.js` ]().then((c) => {
-    dayjs.locale(c.default);
-  });
-
-  dayjs.extend(dayjsrelative);
-  dayjs.extend(dayjslocalizedformat);
-}
-
-export async function loadLocaleMessages(i18n:I18n<unknown, unknown, unknown, string, true>, locale:string) {
-  // load locale messages with dynamic import
-  const messages = await import(`../${locale}.json`);
-
-  // set locale and locale message
-  i18n.global.setLocaleMessage(locale, messages.default);
-
-  return nextTick();
 }
