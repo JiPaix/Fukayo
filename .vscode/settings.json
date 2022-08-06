@@ -27,4 +27,8 @@
     "ts",
     "json",
     ],
+    "conventionalCommits.scopes": [
+      "i18n",
+      "electron"
+    ],
 }
