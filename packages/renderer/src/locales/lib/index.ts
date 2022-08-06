@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n';
 import { Quasar } from 'quasar';
-import { supportedLangs } from './supportedLangs';
+import { findLocale } from './findLocale';
 import dayjs from 'dayjs';
 import dayjsrelative from 'dayjs/plugin/relativeTime';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
@@ -10,21 +10,9 @@ import type { supportedLangsType } from './supportedLangs';
 
 type MessageSchema = typeof en
 
-
-export function findLocales(lang:string) {
-  const locale = supportedLangs.find(locale => {
-    if (locale === lang) {
-      return true;
-    }
-    const regex = new RegExp(`${locale}-.*`);
-    return regex.test(lang);
-  });
-  return locale ? locale : 'en';
-}
-
 export function setupI18n(options:I18nOptions<{ message: MessageSchema }, supportedLangsType>) {
   if(!options.globalInjection) options.globalInjection = true;
-  const lang = findLocales(navigator.language);
+  const lang = findLocale(navigator.language);
   const i18n = createI18n<[MessageSchema], supportedLangsType>({
     locale: lang,
   });
