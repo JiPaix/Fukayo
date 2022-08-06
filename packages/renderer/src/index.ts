@@ -90,11 +90,11 @@ myApp.use(Quasar, {
 });
 
 // localization
-import { findLocales } from './locales/lib';
+import { findLocale } from './locales/lib/findLocale';
 import { setupI18n } from './locales/lib';
 import dayjs from 'dayjs';
 
-const lang = findLocales(navigator.language);
+const lang = findLocale(navigator.language);
 myApp.use(setupI18n({ locale: lang }));
 myApp.provide('dayJS', dayjs);
 

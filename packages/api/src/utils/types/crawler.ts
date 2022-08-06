@@ -8,4 +8,6 @@ export interface ClusterJob extends AxiosRequestConfig {
   cookies?: { name: string, value: string, domain: string, path: string }[]
   /** referer */
   referer?: string;
+  /** type */
+  type?: 'html'|'json'|'string'
 }

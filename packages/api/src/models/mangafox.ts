@@ -82,7 +82,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const covers:string[] = [];
         const coverLink =  $('img.manga-list-4-cover', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          const img = await this.downloadImage(coverLink, 'cover');
           if(img) covers.push(img);
         }
 
@@ -173,7 +173,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const coverLink =  $('img.detail-info-cover-img').attr('src');
       if(coverLink) {
         // mangafox images needs to be downloaded (you can't just link the external url due to cors).
-        const img = await this.downloadImage(coverLink).catch(() => undefined);
+        const img = await this.downloadImage(coverLink, 'cover');
         if(img) covers.push(img);
       }
 
@@ -323,13 +323,13 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
                 pvalue = pvalues.map(img => pix + img + '?cid=' + cid + '&key=' + key);
 
           // download and pass to client
-          const bs64 = await this.downloadImage(pvalue[0].replace(/^\/\//g, 'http://'));
+          const bs64 = await this.downloadImage(pvalue[0].replace(/^\/\//g, 'http://'), 'page');
           if(bs64) {
-            socket.emit('showChapter', id, { index: i, src: bs64, lastpage: i+1 === imagecount });
+            socket.emit('showChapter', id, { index: i, src: bs64, lastpage: retryIndex ? true : i+1 === imagecount });
             continue;
           }
         }
-        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === imagecount });
+        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true : i+1 === imagecount });
       }
       if(cancel) return;
     } catch(e) {
@@ -377,7 +377,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const covers:string[] = [];
         const coverLink =  $('img.manga-list-1-cover', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          const img = await this.downloadImage(coverLink, 'cover');
           if(img) covers.push(img);
         }
 

@@ -1,9 +1,12 @@
+import { findLocale } from './../../renderer/src/locales/lib/findLocale';
 import './security-restrictions';
-import { app, ipcMain, nativeImage, clipboard } from 'electron';
-import { restoreOrCreateWindow } from '/@/mainWindow';
+import { app, ipcMain, nativeImage, clipboard, Tray, Menu } from 'electron';
+import icon from '../../../buildResources/icon_32.png';
+import { restoreOrCreateWindow, showWindow } from '/@/mainWindow';
 import { forkAPI } from './forkAPI';
 import type { Paths } from './../../preload/src/config';
 import type { startPayload } from '../../api/src/app/types';
+
 
 /** API instance */
 let api: forkAPI|undefined;
@@ -18,33 +21,47 @@ if (!isSingleInstance) {
 }
 app.on('second-instance', restoreOrCreateWindow);
 
-
 /**
  * Shout down background process if all windows was closed
  */
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  // for macOS
+  if (process.platform == 'darwin') app.dock.hide();
 });
 
+/**
+ * Stop the api before quitting
+ */
+let isAppQuitting = false;
 app.on('before-quit', async() => {
+  isAppQuitting = true;
   if(!api) return;
   const stop = await api.stop();
-  if(stop.success) console.log('api stopped');
-  else console.error('api stop failed');
+  if(import.meta.env.DEV) {
+    if(stop.success) console.log('api stopped');
+    else console.error('api stop failed');
+  }
 });
+
 /**
  * @see https://www.electronjs.org/docs/v14-x-y/api/app#event-activate-macos Event: 'activate'
  */
 app.on('activate', restoreOrCreateWindow);
-
 
 /**
  * Create app window when background process will be ready
  */
 app.whenReady()
   .then(restoreOrCreateWindow)
+  .then(win => {
+    win.on('close', function (evt) {
+      if (!isAppQuitting) {
+        evt.preventDefault(); // Prevent window from closing
+        win.hide();
+      }
+  });
+  })
   .catch((e) => console.error('Failed create window:', e));
-
 
 /**
  * Install Vue.js or some other devtools in development mode only
@@ -52,11 +69,17 @@ app.whenReady()
 if (import.meta.env.DEV) {
   app.whenReady()
     .then(() => import('electron-devtools-installer'))
-    .then(({default: installExtension, VUEJS3_DEVTOOLS}) => installExtension(VUEJS3_DEVTOOLS, {
-      loadExtensionOptions: {
-        allowFileAccess: true,
+    .then(({default: installExtension}) => installExtension(
+      {
+        id: 'nhdogjmejiglipccpnnnanhbledajbpd',
+        electron: '>=18.0.2',
+      }
+      ,{
+        loadExtensionOptions: {
+          allowFileAccess: true,
+        },
       },
-    }))
+    ))
     .catch(e => console.error('Failed install extension:', e));
 }
 
@@ -70,10 +93,30 @@ if (import.meta.env.PROD) {
     .catch((e) => console.error('Failed check updates:', e));
 }
 
+
+/**
+ * System tray icon
+ */
+let tray = null;
+app.whenReady()
+  .then(() => {
+    const lang = findLocale(app.getLocale());
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    return import(`../../renderer/src/locales/${lang}.json`) as Promise<{ default: typeof import('../../renderer/src/locales/en.json') }>;
+  })
+  .then((l) => {
+    tray = new Tray(nativeImage.createFromDataURL(icon));
+    const contextMenu = Menu.buildFromTemplate([
+      { label: l.default.electron.systemtray.show, click: showWindow, type: 'normal'},
+      { type: 'separator'},
+      { label: l.default.electron.systemtray.quit, role: 'quit', type: 'normal' },
+    ]);
+    tray.setToolTip('Fukayo');
+    tray.setContextMenu(contextMenu);
+});
+
 /** Ignore SSL errors */
 app.commandLine.appendSwitch('ignore-certificate-errors');
-
-/** exposed to main world funtions */
 
 // returns user data path
 ipcMain.handle('get-path', (ev, path:Paths) => {

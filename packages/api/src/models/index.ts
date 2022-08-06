@@ -15,6 +15,7 @@ import type { MirrorConstructor } from './types/constructor';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import type { socketInstance } from '../server/types';
 import type { supportedLangs } from '../../../renderer/src/locales/lib/supportedLangs';
+import { serv } from '../utils/fileserv';
 
 /**
  * The default mirror class
@@ -179,40 +180,41 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * const url = 'https://www.example.com/images/some-image.jpg?token=123';
    * downloadImage(url, false)
    */
-  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig) {
+  protected async downloadImage(url:string, returnType: 'cover'|'page', referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<string|undefined> {
     this.concurrency++;
     const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
 
-    const cache = await this.loadFromCache({identifier, filename});
-    if(cache) return this.returnFetch(cache);
+    const cache = await this.loadFromCache({identifier, filename}, returnType);
+    if(cache) return this.returnFetch(cache, filename);
 
     await this.wait();
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
-      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config });
+      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config, timeout: 5000 });
       buffer = Buffer.from(ab.data);
     } catch {
-      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`}, true);
+      const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`, ...config, timeout: 10000 }, true);
       if(res instanceof Buffer) buffer = res;
     }
 
     // if none of the methods worked, return undefined
     if(!buffer) return this.returnFetch(undefined);
 
-    const mime = await this.getFileMime(buffer);
+    const { mime } = await this.getFileMime(buffer);
     if(mime && mime.startsWith('image/')) {
       if(this.options.cache) this.saveToCache(filename, buffer);
+      if(returnType === 'page') return this.returnFetch(buffer, filename);
       return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
     }
   }
 
-  private async getFileMime(buffer:Buffer, fallback = 'image/jpeg') {
+  private async getFileMime(buffer:Buffer) {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
     const fT = await fileTypeFromBuffer(buffer);
-    if(fT) return fT.mime;
-    return fallback;
+    if(fT) return { mime: fT.mime };
+    else return { mime: 'image/jpeg' };
   }
 
   private async filenamify(string:string) {
@@ -226,7 +228,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.concurrency++;
     await this.wait();
     try {
-      const resp = await axios[type]<RESP>(url, data, { ...config });
+      const resp = await axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
       return resp.data;
     } catch(e) {
       if((e as AxiosError).response) {
@@ -261,7 +263,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     await this.wait();
 
     // fetch the data (try to use axios first, then puppeteer)
-    const res = await this.internalFetch<T>(config);
+    const res = await this.internalFetch<T>(config, type);
 
     // throw an error if both axios and puppeteer failed
     if(typeof res === 'undefined' || res instanceof Error) {
@@ -299,7 +301,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async internalFetch<T>(config: ClusterJob) {
+  private async internalFetch<T>(config: ClusterJob, type: 'html'|'json'|'string') {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
       referer: config.referer || this.host.replace(/http(s?):\/\//g, ''),
@@ -309,8 +311,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
 
     try {
       // try to use axios first
-      const response = await axios.get<string|T>(config.url, config);
-
+      const response = await axios.get<string|T>(config.url, { ...config, timeout: 5000 });
       if(typeof response.data === 'string') {
         if(config.waitForSelector) {
           const $ = this.loadHTML(response.data);
@@ -325,13 +326,18 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     } catch(e) {
       if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
       // if axios fails or the selector is not found, try puppeteer
-      return this.crawler({url: config.url, waitForSelector: config.waitForSelector }, false);
+      return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false, type);
     }
   }
 
-  private returnFetch<T>(data : T) {
+  private returnFetch<T>(data : T, filename?: undefined):T
+  private returnFetch<T>(data : T, filename: string):string
+  private returnFetch<T>(data : T, filename?: string|undefined):T|string {
     this.concurrency--;
     if(this.concurrency < 0) this.concurrency = 0;
+    if(data instanceof Buffer && filename) {
+      return serv(data, filename);
+    }
     return data;
   }
 
@@ -401,20 +407,21 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async loadFromCache(id:{ identifier: string, filename:string }) {
+  private async loadFromCache(id:{ identifier: string, filename:string }, returnType: 'cover' | 'page'):Promise<Buffer|string|undefined> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
-      let cacheResult:{mime: string, buffer:Buffer} | undefined;
+      let cacheResult:{mime: string|undefined, buffer:Buffer} | undefined;
       try {
         const buffer = readFileSync(resolve(env.USER_DATA, '.cache', this.name, id.filename));
-        const mime = await this.getFileMime(buffer);
-        cacheResult = { mime, buffer };
+        if(returnType === 'cover') cacheResult = { mime: (await this.getFileMime(buffer)).mime, buffer };
+        else cacheResult = { mime:undefined, buffer };
       } catch {
         cacheResult = undefined;
       }
       if(cacheResult) {
         this.logger('cache hit', id.filename);
-        return `data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`;
+        if(returnType === 'cover') return `data:${cacheResult.mime};base64,${cacheResult.buffer.toString('base64')}`;
+        else return cacheResult.buffer;
       }
     }
   }

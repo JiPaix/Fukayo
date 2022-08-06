@@ -57,6 +57,8 @@ const content = ref<HTMLElement>();
 const chapterRef = ref<ComponentPublicInstance<HTMLInputElement> | null>(null);
 /** carrousel slides */
 const slide = ref(0);
+/** manga failed to load*/
+const nodata = ref<string[]|null>(null);
 
 type Manga = MangaInDB | MangaPage;
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
@@ -96,7 +98,7 @@ const localSettings = ref<MangaInDB['meta']['options']>({
   longStrip: (manga.value && isMangaInDb(manga.value)) ? manga.value.meta.options.longStrip : settings.reader.longStrip,
 });
 
-/** unread chapters */
+/** list of unread chapters */
 const unreadChaps = computed(() => {
   return chapters.value.filter((c) => !c.read);
 });
@@ -109,18 +111,6 @@ const sortedImages = computed(() => {
   return [];
 });
 
-/** q-virtual-scroll height */
-const virtualScrollHeight = computed(() => {
-  if(content.value && $q.screen.lg) {
-    const size = $q.screen.height - content.value.clientHeight - 100;
-    // turn "size" into a multiple of 52
-    return Math.floor(size / 52) * 52;
-  }
-  const size = $q.screen.height - 100;
-  // turn "size" into a multiple of 52
-  return Math.floor(size / 52) * 52;
-});
-
 /** autofocus chapterRef */
 watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
   if(newManga && newManga.chapters && newManga.chapters.length && newIndex !== null) {
@@ -130,7 +120,15 @@ watch([manga, chapterSelectedIndex], ([newManga, newIndex]) => {
   }
 });
 
-
+/** Turn relative url into absolute */
+function parseImgURL(src: string) {
+  if(src.startsWith('https') || src.startsWith('http')) return src;
+  if(window.apiServer) {
+    const protocol = settings.server.ssl === 'false' ? 'http' : 'https';
+    return `${protocol}://127.0.0.1:${settings.server.port}${src}`;
+  }
+  return src;
+}
 
 /**
  * Sort the chapters pages and pages errors by their index
@@ -143,7 +141,7 @@ function sortImages(images: (ChapterImage | ChapterImageErrorMessage)[]) {
 /**
  * Fetch the chapter images:
  *
- * put them in `images` array and update `nbOfImagesToExpectFromChapter`
+ * put them in `images[]` and update `nbOfImagesToExpectFromChapter`
  */
 async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
   if(!manga.value) return;
@@ -155,12 +153,14 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
+    undefined,
     (nbOfPagesToExpect) => {
       // callback returns the number of pages to expect
       nbOfImagesToExpectFromChapter.value = nbOfPagesToExpect;
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
+          if(isChapterImage(res)) res.src = parseImgURL(res.src);
           images.value.push(res);
           if(res.lastpage) {
             socket?.off('showChapter');
@@ -182,7 +182,7 @@ async function fetchChapter(/** index of the chapter */ chapterIndex:number) {
 /**
  * Fetch the next chapter:
  *
- * put it in `nextChapterBuffer.images`, updates `nextChapterBuffer.nbOfImagesToExpectFromChapter` and `nextChapterBuffer.index`
+ * put it in `nextChapterBuffer.images[]`, updates `nextChapterBuffer.nbOfImagesToExpectFromChapter` and `nextChapterBuffer.index`
  */
 async function fetchNextChapter(/** index of the next chapter */ nextIndex:number) {
   if(!settings.reader.preloadNext) return;
@@ -201,11 +201,13 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[nextIndex].url,
+    undefined,
     (nbOfImagesToExpectFromChapter) => {
       if(nextChapterBuffer.value) nextChapterBuffer.value.nbOfImagesToExpectFromChapter = nbOfImagesToExpectFromChapter;
       socket?.on('showChapter', (id, res) => {
         if (id !== id) return; // should not happen
         if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
+          if(isChapterImage(res)) res.src = parseImgURL(res.src);
           nextChapterBuffer.value?.images.push(res);
           if(res.lastpage) socket?.off('showChapter');
         } else if (isChapterErrorMessage(res)) {
@@ -221,8 +223,8 @@ async function fetchNextChapter(/** index of the next chapter */ nextIndex:numbe
 }
 
 /**
- * Show chapter images dialog
- * @param chapterIndex index of the manga.chapter to show
+ * Show reader's dialog
+ * @param chapterIndex index of the chapter to show
  */
 async function showChapterComp(chapterIndex:number) {
   if(displayChapter.value) cancelChapterFetch();
@@ -236,9 +238,16 @@ async function showChapterComp(chapterIndex:number) {
   startChapterFetch(chapterIndex);
 }
 
-/**
- * Hide chapter images dialog
- */
+/** automatically shows reader's dialog if route has a chapterindex */
+async function showChapterCompInternal() {
+  const { chapterindex } = route.params as { chapterindex: string|undefined };
+  if(!chapterindex) return;
+  const index = parseInt(chapterindex);
+  if(isNaN(index)) return;
+  await showChapterComp(index);
+}
+
+/** hide reader's dialog */
 async function hideChapterComp() {
   displayChapter.value = false;
   chapterSelectedIndex.value = null;
@@ -264,7 +273,10 @@ async function startChapterFetch(chapterIndex: number) {
     nbOfImagesToExpectFromChapter.value = nextChapterBuffer.value.nbOfImagesToExpectFromChapter;
     const res:(ChapterImage | ChapterImageErrorMessage)[] = [];
     nextChapterBuffer.value.images.forEach((c) => {
-      if(isChapterImage(c) || isChapterImageErrorMessage(c)) res.push(c);
+      if(isChapterImage(c) || isChapterImageErrorMessage(c)) {
+        if(isChapterImage(c)) c.src = parseImgURL(c.src);
+        res.push(c);
+      }
     });
     nextChapterBuffer.value = undefined;
     images.value = res;
@@ -274,45 +286,54 @@ async function startChapterFetch(chapterIndex: number) {
 }
 
 /**
- * Request a specific image for a given chapter
+ * Reload a chapter image
+ * @param chapterIndex index of the chapter
+ * @param pageIndex index of the page
  */
-async function reloadChapterImage(chapterIndex: number, pageIndex?: number) {
+async function reloadChapterImage(chapterIndex: number, pageIndex?: string) {
   if (!manga.value) return; // should not happen
-  // prepare and send the request
-  if (!socket) socket = await useSocket(settings.server);
+
   if(!pageIndex) {
     if(chapterSelectedIndex.value) return showChapterComp(chapterSelectedIndex.value);
     return;
   }
+
+  // prepare and send the request
   const id = Date.now();
-  socket?.emit(
+  if (!socket) socket = await useSocket(settings.server);
+  const index = pageIndex && !isNaN(parseInt(pageIndex)) ? parseInt(pageIndex) : undefined;
+
+  socket.emit(
     'showChapter',
     id,
     manga.value.mirror,
     manga.value.lang,
     manga.value.chapters[chapterIndex].url,
+    index,
     () => {
-      socket?.on('showChapter', (id, res) => {
+      socket?.on('showChapter', (id, chap) => {
         if (id !== id) return; // should not happen
-        if (isChapterImage(res) || isChapterImageErrorMessage(res)) {
-          images.value[pageIndex] = res;
+        if (isChapterImage(chap) || isChapterImageErrorMessage(chap)) {
+          if(isChapterImage(chap)) chap.src = parseImgURL(chap.src) + 'XXXXX';
+          images.value[chap.index] = chap;
+          if(chap.lastpage) socket?.off('showChapter');
+        } else if (isChapterErrorMessage(chap)) {
+          chapterError.value = chap.trace || chap.error;
+          socket?.off('showChapter');
         }
-        socket?.off('showChapter');
       });
     },
-    pageIndex,
   );
 }
 
-/**
- * Cancel chapter fetching
- */
+/** tell API to cancel current fetches */
 async function cancelChapterFetch() {
   if (!socket) socket = await useSocket(settings.server);
   socket?.emit('stopShowChapter');
   socket?.off('showChapter');
 }
 
+/** toggle manga in and out of library */
 function toggleInLibrary() {
   if(!manga.value) return;
   if(isManga(manga.value) && !isMangaInDb(manga.value)) {
@@ -323,6 +344,7 @@ function toggleInLibrary() {
   }
 }
 
+/** add manga to library */
 async function add() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
@@ -334,6 +356,7 @@ async function add() {
   });
 }
 
+/** remove manga from library */
 async function remove() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
@@ -344,6 +367,7 @@ async function remove() {
   }
 }
 
+/** upserts manga in database, also updates `mangaRaw` */
 async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -356,6 +380,7 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
   }
 }
 
+/** update reader's settings, also calls `updateManga` if manga is in db */
 function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
   if(!manga.value) return;
   localSettings.value = newSettings;
@@ -364,6 +389,7 @@ function updateReaderSettings(newSettings:MangaInDB['meta']['options']) {
   }
 }
 
+/** Mark a chapter as read */
 async function markAsRead(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -380,6 +406,7 @@ async function markAsRead(index:number) {
   updateManga(updatedManga);
 }
 
+/** Mark a chapter as unread */
 async function markAsUnread(index:number) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
@@ -396,6 +423,7 @@ async function markAsUnread(index:number) {
   updateManga(updatedManga);
 }
 
+/** Mark all previous chapters as read */
 function markPreviousAsRead(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -412,6 +440,7 @@ function markPreviousAsRead(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all previous chapters as unread */
 function markPreviousAsUnread(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -428,6 +457,7 @@ function markPreviousAsUnread(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all next chapters as read */
 function markNextAsRead(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -441,6 +471,7 @@ function markNextAsRead(index: number) {
   updateManga(updatedManga);
 }
 
+/** Mark all next chapters as unread */
 function markNextAsUnread(index: number) {
   if(!manga.value) return;
   const chapNum = chapters.value[index].number;
@@ -454,6 +485,7 @@ function markNextAsUnread(index: number) {
   updateManga(updatedManga);
 }
 
+/** Opens the "change display name" dialog, calls `updateManga` when user press "OK" */
 function changeDisplayName() {
       $q.dialog({
         title: $t('mangas.displayname.title'),
@@ -472,28 +504,21 @@ function changeDisplayName() {
       });
 }
 
-async function autoShowManga() {
-  const { chapterindex } = route.params as { chapterindex: string|undefined };
-  if(!chapterindex) return;
-  const index = parseInt(chapterindex);
-  if(isNaN(index)) return;
-  await showChapterComp(index);
-}
-
+/** parse the "source" link for self-hosted mirrors */
 function getMirrorInfoUrl(link:string) {
   if(!mirrorinfo.value) return;
   let url = '';
-  if(mirrorinfo.value.options.protocol) url += mirrorinfo.value.options.protocol + '://';
-  if(mirrorinfo.value.options.host) url += mirrorinfo.value.options.host;
-  if(mirrorinfo.value.options.port) url += ':' + mirrorinfo.value.options.port;
+  const { protocol, host, port} = mirrorinfo.value.options;
+  if(protocol && host && port) {
+    url += protocol + '://' + host + ':' + port;
+  }
+  else url += mirrorinfo.value.host;
   url += link;
   return url;
 }
 
-/**
- * fetch manga infos
- */
-onBeforeMount(async () => {
+async function startFetch() {
+  nodata.value = null;
   if (!socket) socket = await useSocket(settings.server);
   const { mirror, lang, url } = route.params as {
     mirror: string;
@@ -502,13 +527,33 @@ onBeforeMount(async () => {
   };
   const reqId = Date.now();
 
-  socket?.on('showManga', (id, mg) => {
-    if (id === reqId && (isManga(mg) || isMangaInDb(mg))) {
-      nbOfChapters.value = mg.chapters.length;
-      mangaRaw.value = mg;
-      autoShowManga();
+  socket.once('showManga', (id, mg) => {
+    if (id === reqId) {
+      if((isManga(mg) || isMangaInDb(mg))) {
+        nodata.value = null;
+        nbOfChapters.value = mg.chapters.length;
+        mangaRaw.value = mg;
+        showChapterCompInternal();
+      }
+      else {
+        const msg:string[] = [];
+        let { error, trace } = mg;
+        if(error === 'manga_error_invalid_link') msg.push($t('mangas.errors.invalid_link', {url}));
+        else if(error === 'manga_error_unknown') msg.push($t('mangas.errors.unknown', {url}));
+        else {
+          if(trace) {
+            if(trace.includes('timeout')) msg.push($t('mangas.errors.timeout', {source: mirrorinfo.value?.displayName}));
+            else if(trace.includes('ERR_INVALID_AUTH_CREDENTIALS')) msg.push($t('mangas.errors.invalid_auth'));
+            else if (trace.includes('invalid_json')) msg.push($t('mangas.errors.invalid_json'));
+            else if(trace.includes('bad_request')) msg.push($t('mangas.errors.bad_request', {code: trace.split('bad_request: ')[1]}));
+            else msg.push($t('mangas.errors.unknown', {url}));
+          } else {
+            msg.push($t('mangas.errors.unknown', {url}));
+          }
+        }
+        nodata.value = msg;
+      }
     }
-    socket?.off('showManga');
   });
 
   socket.emit('getMirrors', true, (mirrors) => {
@@ -516,11 +561,12 @@ onBeforeMount(async () => {
     if(m) mirrorinfo.value = m;
     socket?.emit('showManga', reqId, mirror, lang, url);
   });
+}
+
+onBeforeMount(async () => {
+  await startFetch();
 });
 
-/**
- * stop fetching manga infos when component is unmounted
- */
 onBeforeUnmount(() => {
   socket?.emit('stopShowManga');
   socket?.off('showChapter');
@@ -529,7 +575,43 @@ onBeforeUnmount(() => {
 
 </script>
 <template>
+  <div
+    v-if="nodata"
+    class="absolute-full flex column flex-center"
+  >
+    <q-banner
+      class="text-white bg-negative"
+    >
+      <template #avatar>
+        <q-icon
+          name="signal_wifi_off"
+          color="white"
+        />
+      </template>
+      <p class="text-h5">
+        {{ $t('mangas.errors.nodata') }}:
+      </p>
+      <ul>
+        <li
+          v-for="(msg, i) in nodata"
+          :key="i"
+        >
+          <span class="text-caption">{{ msg }}</span>
+        </li>
+      </ul>
+
+      <template #action>
+        <q-btn
+          flat
+          color="white"
+          :label="$t('setup.retry')"
+          @click="startFetch"
+        />
+      </template>
+    </q-banner>
+  </div>
   <q-card
+    v-else
     id="manga-page"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
@@ -746,7 +828,6 @@ onBeforeUnmount(() => {
       <q-virtual-scroll
         v-slot="{ item, index }"
         :items="chapters"
-        :style="'max-height: '+virtualScrollHeight+'px;'"
         :items-size="nbOfChapters"
         :virtual-scroll-item-size="62"
         separator

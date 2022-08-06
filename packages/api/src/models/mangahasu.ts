@@ -74,7 +74,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const covers:string[] = [];
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          const img = await this.downloadImage(coverLink, 'cover', undefined, false);
           if(img) covers.push(img);
         }
 
@@ -152,7 +152,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       // mangahasu images needs to be downloaded.
       const coverLink = $('.info-img > img').attr('src');
       if(coverLink) {
-        const img = await this.downloadImage(coverLink).catch(() => undefined);
+        const img = await this.downloadImage(coverLink, 'cover', undefined, false);
         if(img) covers.push(img);
       }
 
@@ -257,13 +257,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
         const imgLink = $(el).attr('src');
         if(imgLink) {
-          const img = await this.downloadImage(imgLink, `${this.host}${link}`);
+          const img = await this.downloadImage(imgLink, 'page', `${this.host}${link}`, false);
           if(img) {
-            socket.emit('showChapter', id, { index: i, src: img, lastpage: i+1 === nbOfPages });
+            socket.emit('showChapter', id, { index: i, src: img, lastpage: retryIndex ? true : i+1 === nbOfPages });
             continue;
           }
         }
-        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: i+1 === nbOfPages });
+        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true: i+1 === nbOfPages });
       }
       if(cancel) return;
     } catch(e) {
@@ -302,7 +302,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const covers:string[] = [];
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink).catch(() => undefined);
+          const img = await this.downloadImage(coverLink, 'cover', undefined, false);
           if(img) covers.push(img);
         }
         // manga id = "mirror_name/lang/link-of-manga-page"

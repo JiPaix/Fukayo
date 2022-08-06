@@ -25,7 +25,7 @@ const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n())
 /** emit */
 const emit = defineEmits<{
   (event: 'hide'): void
-  (event: 'reload', chapterIndex:number, pageIndex?:number): void
+  (event: 'reload', chapterIndex:number, pageIndex?:string): void
   (event: 'navigate', chapterIndex:number): void
   (event: 'update-manga', manga:MangaInDB|MangaPage): void
   (event: 'update-settings', settings:MangaInDB['meta']['options']): void
@@ -69,7 +69,7 @@ const images = computed(() =>
 );
 
 /** Display/Hide the sidebar */
-const drawerRight = ref($q.platform.has.touch ? false : true);
+const drawerRight = ref($q.screen.lt.md ? false : true);
 
 /**
  * Listen to @update-settings from side-bar and update local settings
@@ -146,7 +146,7 @@ const firstPageNav = computed(() => currentPageIndex.value.index === 0);
  * increment "next-page" event count if the user is on the last page
  */
 function incrementNav() {
-  if(lastPageNav.value) forwardNavCount.value = Math.min(forwardNavCount.value + 1, 2) as 0|1|2;
+  if(lastPageNav.value) forwardNavCount.value = Math.min(forwardNavCount.value + 1, 2) as 1|2;
   else forwardNavCount.value = 0;
   backNavCount.value = 0; // also reset "previous-page" event count
   if(currentPageIndex.value.index < images.value.length - 1) {
@@ -230,6 +230,15 @@ async function markAsReadIfLastPage() {
   }
 }
 
+function toggleDarkMode() {
+  if (settings.theme === 'dark') {
+    settings.theme = 'light';
+    $q.dark.set(false);
+  } else {
+    settings.theme = 'dark';
+    $q.dark.set(true);
+  }
+}
 </script>
 <template>
   <q-layout
@@ -263,7 +272,7 @@ async function markAsReadIfLastPage() {
             v-if="nbOfImagesToExpectFromChapter > 0"
             class="text-subtitle1"
           >
-            {{ manga.displayName || manga.name }} {{ displaySettings.showPageNumber ? `- ${$t('reader.page.count', {current: currentPageIndex.index+1, total: nbOfImagesToExpectFromChapter})}` : '' }}
+            {{ manga.displayName || manga.name }} {{ `- ${$t('reader.page.count', {current: currentPageIndex.index+1, total: nbOfImagesToExpectFromChapter})}` }}
           </span>
           <span v-else-if="!chapterError">
             {{ manga.displayName || manga.name }} - {{ $t('reader.loading') }}
@@ -275,6 +284,13 @@ async function markAsReadIfLastPage() {
             {{ manga.name }}
           </q-tooltip>
         </q-toolbar-title>
+        <q-btn
+          dense
+          flat
+          round
+          icon="contrast"
+          @click="toggleDarkMode"
+        />
         <q-btn
           flat
           round
@@ -341,7 +357,7 @@ async function markAsReadIfLastPage() {
       @update-manga="emit('update-manga', $event)"
     />
     <q-page-container>
-      <q-page>
+      <q-page :style="`background-color:${$q.dark.isActive ? '#1d1d1d' : 'white'}`">
         <image-viewer
           v-if="!chapterError"
           :images="images"

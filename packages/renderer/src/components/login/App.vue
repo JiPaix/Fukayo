@@ -27,8 +27,6 @@ defineProps({
 });
 
 
-/** user login */
-const login = ref(settings.server.login);
 /** user password */
 const password = ref<string|null>(null);
 /** show a loading while connecting to the server */
@@ -38,15 +36,14 @@ const showPassword = ref(false);
 
 /** check the user inputed a login and password */
 function readyToStart() {
-  return login.value && password.value;
+  return settings.server.login && password.value;
 }
 
 /** connect to the server by sending an event to the parent component */
 function connect() {
-  if(!password.value || !login.value) return;
+  if(!password.value || !settings.server.login) return;
   loading.value = true;
-  settings.server.login = login.value;
-  emit('done', { login: login.value, password: password.value });
+  emit('done', { login: settings.server.login, password: password.value });
 }
 </script>
 
