@@ -9,7 +9,7 @@
     "isolatedModules": false,
     "allowSyntheticDefaultImports": true,
     "types" : ["node"],
-
+    "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
       "/@/*": [

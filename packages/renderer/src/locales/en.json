@@ -1,4 +1,10 @@
 {
+  "electron" : {
+    "systemtray" : {
+      "show": "Show",
+      "quit": "Quit"
+    }
+  },
   "app": {
     "description": "A simple electron app to read mangas",
     "name": "Fukayo"

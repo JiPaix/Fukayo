@@ -1,6 +1,7 @@
-import { BrowserWindow, globalShortcut } from 'electron';
+import { BrowserWindow, globalShortcut, nativeImage } from 'electron';
 import {join} from 'path';
 import {URL} from 'url';
+import icon from '../../../buildResources/icon_128.png';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({
@@ -10,7 +11,7 @@ async function createWindow() {
       webviewTag: false, // The webview tag is not recommended. Consider alternatives like iframe or Electron's BrowserView. https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(__dirname, '../../preload/dist/index.cjs'),
     },
-    icon: join(__dirname, '../../../buildResources/icon_128.png'),
+    icon: import.meta.env.MODE === 'test' ? join(__dirname, '../../../buildResources/icon_128.png') : nativeImage.createFromDataURL(icon),
   });
 
   /**
@@ -73,4 +74,21 @@ export async function restoreOrCreateWindow() {
   }
 
   window.focus();
+  return window;
+}
+
+/** hide window instead of closing it */
+export async function hideWindow() {
+  const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+  if (window) {
+    window.hide();
+  }
+}
+
+/** show window instead of reloading it */
+export async function showWindow() {
+  const window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
+  if (window) {
+    window.show();
+  }
 }
