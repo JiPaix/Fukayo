@@ -9,7 +9,7 @@ if (process.env.VITE_APP_VERSION === undefined) {
  * @see https://www.electron.build/configuration/configuration
  */
 const config = {
-  appId: 'com.electron.electronmangasreader',
+  appId: 'com.electron.fukayo',
   productName: 'Fukayo',
   // copyright: '',
   directories: {
