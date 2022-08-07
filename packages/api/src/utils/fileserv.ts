@@ -12,6 +12,7 @@ export class FileServer {
    * @param folder folder to serve files from (relative to %appdata%/.cache)
    */
   constructor(folder:string) {
+    if(!env.USER_DATA) throw new Error('USER_DATA not set');
     this.folder = resolve(env.USER_DATA, '.cache', folder);
     this.timeouts = [];
     this.setup();
