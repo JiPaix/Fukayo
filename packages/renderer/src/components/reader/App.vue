@@ -365,6 +365,7 @@ function toggleDarkMode() {
         <image-viewer
           v-if="!chapterError"
           :images="images"
+          :drawer="drawerRight"
           :nb-of-images-to-expect-from-chapter="props.nbOfImagesToExpectFromChapter"
           :chapter-selected-index="chapterSelectedIndex"
           :reader-settings="displaySettings"

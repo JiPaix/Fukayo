@@ -13,6 +13,7 @@ const { getScrollTarget, setVerticalScrollPosition } = scroll;
 /** props */
 const props = defineProps<{
   images: (ChapterImage | ChapterImageErrorMessage)[]
+  drawer: boolean
   nbOfImagesToExpectFromChapter: number,
   chapterSelectedIndex: number,
   readerSettings: MangaInDB['meta']['options'],
@@ -93,7 +94,7 @@ watch(() => props.currentPage, (nval) => {
     <div
       v-if="props.readerSettings.showPageNumber"
       class="fixed-bottom"
-      style="right:300px!important;"
+      :style="props.drawer ? 'right:300px!important;' : 'right:0!important;'"
     >
       <q-chip
         color="black"
