@@ -213,11 +213,15 @@ async function markAsReadIfLastPage() {
   if(!socket) socket = await useSocket(settings.server);
   if(lastPageNav.value) {
     const chapter = props.manga.chapters[props.chapterSelectedIndex];
+    if(chapter.read || !props.manga.inLibrary) return;
+    // watch if update is needed:
+    let update = true;
     const toUpdate = {
       ...props.manga,
       chapters : props.manga.chapters.map(c => {
         if(c.id === chapter.id) {
-          socket?.emit('markAsRead', {mirror: props.manga.mirror, lang: props.manga.lang, url: props.manga.url, chapterUrl: c.url, read: true});
+          if(c.read) update = false;
+          else socket?.emit('markAsRead', {mirror: props.manga.mirror, lang: props.manga.lang, url: props.manga.url, chapterUrl: c.url, read: true});
           return {
             ...c,
             read: true,
@@ -226,7 +230,7 @@ async function markAsReadIfLastPage() {
         return c;
       }),
     };
-    emit('update-manga', toUpdate);
+    if(update) emit('update-manga', toUpdate);
   }
 }
 
