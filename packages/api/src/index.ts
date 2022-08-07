@@ -6,7 +6,7 @@ import history from 'connect-history-api-fallback';
 import { Fork } from './app';
 import { verify } from './utils/standalone';
 import client from './client';
-import { setupFileServFolder } from './utils/fileserv';
+import { FileServer } from './utils/fileserv';
 import type { ForkEnv } from './types';
 
 export default function useFork(settings: ForkEnv = env):Promise<client> {
@@ -25,12 +25,11 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
   const app = express();
 
   // init the file server directory
-  const fileDirectory = setupFileServFolder();
-
+  const fileServer = FileServer.getInstance('fileserver');
   // serve the files
   app.get('/files/:fileName', (req, res, next) => {
     const options = {
-      root: fileDirectory,
+      root: fileServer.folder,
       dotfiles: 'deny',
       headers: {
         'x-timestamp': Date.now(),

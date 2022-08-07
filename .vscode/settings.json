@@ -32,6 +32,7 @@
       "electron",
       "mirrors",
       "render-reader",
-      "web"
+      "web",
+      "api"
     ],
 }

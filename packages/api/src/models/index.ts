@@ -1,3 +1,4 @@
+import { FileServer } from './../utils/fileserv';
 import { Database } from '../db/index';
 import { MangaDatabase } from '../db/mangas';
 import { SettingsDatabase } from '../db/settings';
@@ -15,7 +16,6 @@ import type { MirrorConstructor } from './types/constructor';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import type { socketInstance } from '../server/types';
 import type { supportedLangs } from '../../../renderer/src/locales/lib/supportedLangs';
-import { serv } from '../utils/fileserv';
 
 /**
  * The default mirror class
@@ -336,7 +336,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.concurrency--;
     if(this.concurrency < 0) this.concurrency = 0;
     if(data instanceof Buffer && filename) {
-      return serv(data, filename);
+      return FileServer.getInstance().serv(data, filename);
     }
     return data;
   }
