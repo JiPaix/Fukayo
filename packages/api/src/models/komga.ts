@@ -251,12 +251,12 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
       const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
-      const nbOfPages = res.media.pagesCount-1;
+      const nbOfPages = res.media.pagesCount;
       if(callback) callback(nbOfPages);
       if(cancel) return;
       // loop for each page
 
-      for(let i = 0; i < res.media.pagesCount; i++) {
+      for(let i = 0; i < nbOfPages; i++) {
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
