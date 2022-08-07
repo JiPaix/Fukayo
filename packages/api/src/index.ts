@@ -1,6 +1,8 @@
 import { env } from 'node:process';
+import { join } from 'node:path';
 import express from 'express';
 import morgan from 'morgan';
+import history from 'connect-history-api-fallback';
 import { Fork } from './app';
 import { verify } from './utils/standalone';
 import client from './client';
@@ -21,11 +23,6 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
 
   // Express config
   const app = express();
-
-  // serve the view if any
-  if(env.VIEW) {
-    app.use(express.static(env.VIEW));
-  }
 
   // init the file server directory
   const fileDirectory = setupFileServFolder();
@@ -65,6 +62,30 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
     }
   });
 
+  // serve the view if any
+  if(env.VIEW) {
+    app.use(express.static(env.VIEW));
+    // proxy requests through a specified index page
+    app.use(history({
+      index: '/',
+      rewrites: [{
+        from: /^.*\/(.*\.\w{2,5})$/, // make sure ressource files are served through /file.ext instead of /requested/path/file.ext
+        to: (context) => {
+          return `/${context.match[1]}`;
+        },
+      }],
+    }));
+    // 2nd load of statics for unhandled history api fallback
+    app.use(express.static(env.VIEW));
+    app.get('*', (_req, res) => {
+      try {
+        if(!env.VIEW) throw new Error('unexpected error');
+        res.sendFile(join(env.VIEW, 'index.html'));
+      } catch (error) {
+        res.json({ success: false, message: 'Something went wrong' });
+      }
+    });
+  }
 
   // enable logging
   if (env.MODE === 'development') {

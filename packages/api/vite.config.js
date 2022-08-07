@@ -59,6 +59,7 @@ const config = {
         'filenamify',
         'user-agents',
         'form-data',
+        'connect-history-api-fallback',
       ],
       output:{
         manualChunks(id) {
