@@ -80,7 +80,7 @@ test('Preload apiServer', async () => {
 
 test('Server start', async () => {
   const page = await electronApp.firstWindow();
-  await page.evaluate( async () => {
+  await page.evaluate(async () => {
     const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
     login.value = 'test';
     login.dispatchEvent(new Event('input'));
@@ -96,4 +96,11 @@ test('Server start', async () => {
     const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
     button.click();
   });
+});
+
+test('Server is running', async () => {
+  await pause(10000);
+  const page = await electronApp.firstWindow();
+  const content = await page.evaluate(() => globalThis.document.querySelector<HTMLDivElement>('.w-100'));
+  expect(content).to.not.be.null;
 });
