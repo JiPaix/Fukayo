@@ -24,7 +24,7 @@ defaults:
 jobs:
 
   draft:
-    runs-on: ubuntu-latest
+    runs-on: ubuntuvm
     outputs:
       release-note: ${{ steps.release-note.outputs.release-note }}
       version: ${{ steps.version.outputs.build-version }}

@@ -29,7 +29,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntuvm
     permissions:
       actions: read
       contents: read

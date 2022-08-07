@@ -27,7 +27,7 @@ jobs:
   e2e:
     strategy:
       matrix:
-        os: [ windows-latest, ubuntu-latest ]
+        os: [ windowsvm, ubuntuvm ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
