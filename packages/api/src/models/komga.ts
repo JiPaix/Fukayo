@@ -131,7 +131,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
         let lang = 'xx';
         if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
-        const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`});
+        const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`, id: result.id}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -186,7 +186,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
 
       if(cancel) return;
-      const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`});
+      const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`, id: result.id}, true);
       const covers:string[] = [];
       const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
@@ -208,8 +208,9 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const release: MangaPage['chapters'][0] = {
           id: this.uuidv5({
             lang: result.metadata.language,
-            url: chaplink+book.id, // if chapters share the same url the same uuid will be generated
-          }),
+            url: chaplink, // if chapters share the same url the same uuid will be generated
+            id: book.id,
+          }, true),
           name: book.metadata.title,
           number: book.metadata.numberSort,
           url: chaplink,
@@ -308,10 +309,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         let lang = 'xx';
         if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;
 
-        const mangaId = this.uuidv5({lang: serie.metadata.language, url: `/series/${serie.id}`});
+        const mangaId = this.uuidv5({lang: serie.metadata.language, url: `/series/${serie.id}`, id: serie.id}, true);
 
         socket.emit('showRecommend', id, {
-          id: mangaId,
+          id: mangaId, // use the same id as komga
           mirrorinfo: this.mirrorInfo,
           name: serie.metadata.title,
           url:link,

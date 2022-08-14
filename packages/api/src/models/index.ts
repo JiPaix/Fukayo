@@ -1,3 +1,4 @@
+import type { uuid } from './../db/uuids';
 import { FileServer } from './../utils/fileserv';
 import { Database } from '../db/index';
 import { MangaDatabase } from '../db/mangas';
@@ -165,16 +166,23 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return MangaDatabase.has(mirror, lang, url);
   }
 
-  uuidv5(options: {
-    lang: string,
-    /**
-     * chapter url
-     *
-     * @important if chapters share the same url the same uuid will be generated
-     * @workaround append the chapter number/index/some other identifier at the end of the url
-     */
-    url: string
-  }): string {
+  uuidv5(options: { lang: string, url: string }, force?:false):string
+  uuidv5(options: { lang: string, url: string, id: string}, force: true):string
+  uuidv5(
+    options: {
+      lang: string,
+      /**
+       * chapter url
+       *
+       * @important if chapters share the same url the same uuid will be generated
+       * @workaround append the chapter number/index/some other identifier at the end of the url
+       */
+      url: string
+      id?: string
+    },
+    skip = false,
+  ): string {
+    if(skip && options.id) uuidgen.generate(options as uuid, true);
     return uuidgen.generate({ mirror: this.name, ...options });
   }
 

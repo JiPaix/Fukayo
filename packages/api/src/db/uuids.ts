@@ -54,9 +54,18 @@ export class UUID extends Database<uuids> {
     return uuid;
   }
 
-  generate(id: Omit<uuid, 'id'>) {
+  generate(id: Omit<uuid, 'id'>): string
+  generate(id: uuid, force:true):string
+  generate(id: Omit<uuid, 'id'> | uuid, force?:boolean):string {
     const find = this.find(id);
     if(find) return find.id;
+    if(force && (id as uuid).id) return this.force(id as uuid);
     return this.save(id);
+  }
+
+  force(id: uuid) {
+    this.data.ids.push(id);
+    this.pending++;
+    return id.id;
   }
 }

@@ -152,7 +152,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
 
           if(!cancel) socket.emit('searchInMirrors', id, {
-            id: this.uuidv5({ lang, url: `/manga/${manga.id}` }),
+            id: this.uuidv5({ lang, url: `/manga/${manga.id}`, id: `${manga.id}` }, true),
             mirrorinfo: this.mirrorInfo,
             name: manga.title,
             url:`/manga/${manga.id}`,
@@ -234,7 +234,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         const name = chapter.name;
         const group = chapter.scanlator || undefined;
         chapters.push({
-          id: this.uuidv5({ lang, url: chapLink }),
+          id: this.uuidv5({ lang, url: chapLink, id: `${chapter.url.replace('/chapter/', '')}` }, true),
           url: chapLink,
           name,
           number,
@@ -245,7 +245,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       }
 
       if(!cancel) socket.emit('showManga', id, {
-        id: this.uuidv5({ lang, url }),
+        id: this.uuidv5({ lang, url, id: `${manga.id}` }, true),
         mirror: this.name,
         name: manga.title,
         url,
