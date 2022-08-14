@@ -1,8 +1,8 @@
 /* eslint-disable no-prototype-builtins */
 import forge from 'node-forge';
-import fs from 'node:fs';
-import path from 'node:path';
-import { env } from 'node:process';
+import fs from 'fs';
+import path from 'path';
+import { env } from 'process';
 
 type ROOTca = {
   certificate: string,

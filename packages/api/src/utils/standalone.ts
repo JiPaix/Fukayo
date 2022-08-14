@@ -1,6 +1,6 @@
-import { env } from 'node:process';
-import fs from 'node:fs';
-import { resolve } from 'node:path';
+import { env } from 'process';
+import fs from 'fs';
+import { resolve } from 'path';
 
 /**
  * Function to check if the environment is valid.

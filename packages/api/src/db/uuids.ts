@@ -1,6 +1,6 @@
 import { Database } from './';
-import { env } from 'node:process';
-import { resolve } from 'node:path';
+import { env } from 'process';
+import { resolve } from 'path';
 import { v5 as uuidv5 } from 'uuid';
 
 export type uuid = {

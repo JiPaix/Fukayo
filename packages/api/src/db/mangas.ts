@@ -1,7 +1,7 @@
 import { SchedulerClass } from './../server/helpers/scheduler';
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { env } from 'node:process';
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { resolve } from 'path';
+import { env } from 'process';
 import { DatabaseIO } from './index';
 import type { MangaInDB, MangaPage } from './../models/types/manga';
 import type { socketInstance } from '../server/types';

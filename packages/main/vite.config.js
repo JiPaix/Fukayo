@@ -25,16 +25,16 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE !== 'development',
     lib: {
-      entry: 'src/index.ts',
-      formats: ['cjs'],
+      entry: './src/index.ts',
       name: 'main',
-      fileName: 'index',
+      formats: ['cjs'],
+      fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
       external: [
         'electron',
         'electron-devtools-installer',
-        ...builtinModules.flatMap(p => [p, `node:${p}`]),
+        ...builtinModules.filter(m => !m.startsWith('_')),
       ],
       output: {
         entryFileNames: '[name].cjs',

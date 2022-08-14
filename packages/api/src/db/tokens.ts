@@ -1,7 +1,7 @@
 import { Database } from './';
-import { resolve } from 'node:path';
-import { env } from 'node:process';
-import crypto from 'node:crypto';
+import { resolve } from 'path';
+import { env } from 'process';
+import crypto from 'crypto';
 
 type RefreshToken = {
   token: string,

@@ -1,5 +1,5 @@
-import { env } from 'node:process';
-import { join } from 'node:path';
+import { env } from 'process';
+import { join } from 'path';
 import express from 'express';
 import morgan from 'morgan';
 import history from 'connect-history-api-fallback';

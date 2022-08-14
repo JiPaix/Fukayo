@@ -1,8 +1,8 @@
 import type { MangaInDB, MangaPage } from '../../models/types/manga';
-import EventEmitter from 'node:events';
-import { resolve, join } from 'node:path';
-import { env } from 'node:process';
-import { readdirSync, statSync, unlinkSync, existsSync } from 'node:fs';
+import EventEmitter from 'events';
+import { resolve, join } from 'path';
+import { env } from 'process';
+import { readdirSync, statSync, unlinkSync, existsSync } from 'fs';
 import mirrors from '../../models/exports';
 import { MangaDatabase } from '../../db/mangas';
 import { SettingsDatabase } from '../../db/settings';

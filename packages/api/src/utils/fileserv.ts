@@ -1,6 +1,6 @@
-import { env } from 'node:process';
-import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { env } from 'process';
+import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
 
 export class FileServer {
   private static _instance: FileServer;

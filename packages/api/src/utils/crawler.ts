@@ -1,6 +1,6 @@
-import { env } from 'node:process';
+import { env } from 'process';
 import { Cluster } from 'puppeteer-cluster';
-import { resolve } from 'node:path';
+import { resolve } from 'path';
 import puppeteer from 'puppeteer-extra';
 import si from 'systeminformation';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';

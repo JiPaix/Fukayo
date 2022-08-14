@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, promises } from 'node:fs';
-import { env } from 'node:process';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, promises } from 'fs';
+import { env } from 'process';
 import semver from 'semver';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve } from 'path';
 import packageJson from '../../../../package.json';
 import { Writer } from '../utils/steno';
 type databaseGeneric<T> = T & { _v: string }

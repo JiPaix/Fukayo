@@ -1,16 +1,16 @@
-import { readFileSync } from 'node:fs';
-import crypto from 'node:crypto';
-import { env, send } from 'node:process';
-import EventEmitter from 'node:events';
-import { createServer as createHttp } from 'node:http';
-import { createServer as createHttps } from 'node:https';
+import { readFileSync } from 'fs';
+import crypto from 'crypto';
+import { env, send } from 'process';
+import EventEmitter from 'events';
+import { createServer as createHttp } from 'http';
+import { createServer as createHttps } from 'https';
 import generateKeyPair from '../utils/certificate';
 import IOWrapper from '../server';
 import type TypedEmitter from 'typed-emitter';
 import type { Buffer } from 'buffer';
 import type { ForkResponse, Message, StartMessage } from './types';
-import type { Server } from 'node:http';
-import type { Server as httpsServer } from 'node:https';
+import type { Server } from 'http';
+import type { Server as httpsServer } from 'https';
 import type { Express } from 'express';
 
 const isMessage = (message: unknown): message is Message => {

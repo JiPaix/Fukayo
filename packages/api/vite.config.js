@@ -1,7 +1,31 @@
 import {node} from '../../.electron-vendors.cache.json';
 import {join} from 'path';
+import { builtinModules } from 'module';
 
 const PACKAGE_ROOT = __dirname;
+
+const externals = [
+  ...builtinModules.filter(m => !m.startsWith('_')),
+  'express',
+  'morgan',
+  'socket.io',
+  'puppeteer',
+  'puppeteer-cluster',
+  'puppeteer-extra',
+  'puppeteer-extra-plugin-stealth',
+  'puppeteer-extra-plugin-adblocker-no-vulnerabilities',
+  'systeminformation',
+  'axios',
+  'cheerio',
+  'file-type',
+  'socket.io-client',
+  'socket.io',
+  'filenamify',
+  'user-agents',
+  'form-data',
+  'connect-history-api-fallback',
+];
+
 
 /**
  * @type {import('vite').UserConfig}
@@ -17,50 +41,21 @@ const config = {
     },
   },
   build: {
-    sourcemap: 'inline',
     target: `node${node}`,
     outDir: 'dist',
     assetsDir: '.',
-    minify: process.env.MODE !== 'development',
+    minify: 'terser',
     lib: {
-      entry: 'src/index.ts',
-      name: 'api',
-      fileName: 'index',
       formats: ['cjs'],
+      entry: './src/index.ts',
+      name: 'api',
+      fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
       onwarn: (warning) => {
         if(warning.code === 'EVAL') return;
       },
-      external: [
-        'express',
-        'morgan',
-        'socket.io',
-        'node:crypto',
-        'node:process',
-        'node:fs',
-        'node:http',
-        'node:https',
-        'node-forge',
-        'node:fs',
-        'node:path',
-        'node:events',
-        'puppeteer',
-        'puppeteer-cluster',
-        'puppeteer-extra',
-        'puppeteer-extra-plugin-stealth',
-        'puppeteer-extra-plugin-adblocker-no-vulnerabilities',
-        'systeminformation',
-        'axios',
-        'cheerio',
-        'file-type',
-        'socket.io-client',
-        'socket.io',
-        'filenamify',
-        'user-agents',
-        'form-data',
-        'connect-history-api-fallback',
-      ],
+      external: externals,
       output:{
         manualChunks(id) {
           const split = id.split('/');
