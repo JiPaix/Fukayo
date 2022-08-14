@@ -93,11 +93,8 @@ class MangaHasu extends Mirror implements MirrorInterface {
           };
         }
 
-        // manga id = "mirror_name/lang/link-of-manga-page"
-        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
-
         socket.emit('searchInMirrors', id, {
-          id: mangaId,
+          id: this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')}),
           mirrorinfo: this.mirrorInfo,
           name,
           url:link,
@@ -137,7 +134,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       return this.stopListening(socket);
     }
 
-    const mangaId = `${this.name}/${this.langs[0]}${link}`;
+    const mangaId = this.uuidv5({lang, url:link.replace(this.host, '')});
 
     try {
       const $ = await this.fetch({
@@ -185,7 +182,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
-            id: `${mangaId}@${chaplink}`,
+            id: this.uuidv5({lang, url: chaplink.replace(this.host, '')}),
             name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
             volume: undefined,
             number: i+1,
@@ -195,7 +192,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           };
         } else {
           release = {
-            id: `${mangaId}@${chaplink}`,
+            id: this.uuidv5({lang, url: chaplink.replace(this.host, '')}),
             name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
             number: i+1,
             volume: undefined,
@@ -306,7 +303,8 @@ class MangaHasu extends Mirror implements MirrorInterface {
           if(img) covers.push(img);
         }
         // manga id = "mirror_name/lang/link-of-manga-page"
-        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+
+        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
 
         if(!cancel) socket.emit('showRecommend', id, {
           id: mangaId,

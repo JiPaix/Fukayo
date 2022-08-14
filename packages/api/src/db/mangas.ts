@@ -97,11 +97,24 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return db.mangas.some(m => m.mirror === mirror && m.lang === lang && m.url === url);
   }
 
-  get(mirror:string, lang:string, url:string):MangaInDB|undefined {
+  get(opts: {id:string}): MangaInDB|undefined
+  get(opts: {mirror: string, lang: string, url: string}): MangaInDB|undefined
+  get(opts: {mirror?:string, lang?:string, url?:string, id?:string}):MangaInDB|undefined {
+    const { mirror, lang, url, id } = opts;
     const db = this.read();
-    const manga = db.mangas.find(m => m.mirror === mirror && m.lang === lang && m.url === url);
-    if(!manga) return;
-    const mangadb = new DatabaseIO(resolve(this.path, `${manga.file}.json`), {} as MangaInDB);
+
+    let mg: {id:string, mirror:string, file:string, url:string} | undefined = undefined;
+    if(id) {
+      mg = db.mangas.find(m => m.id === id);
+    }
+    else if(url && lang && mirror) {
+      mg = db.mangas.find(m => m.mirror === mirror && m.lang === lang && m.url === url);
+    } else {
+      return;
+    }
+
+    if(!mg) return;
+    const mangadb = new DatabaseIO(resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
     const data = mangadb.read();
     return {
       ...data,
@@ -120,7 +133,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     }
     for(const manga of db.mangas) {
       if(cancel) break;
-      const mg = this.get(manga.mirror, manga.lang, manga.url);
+      const mg = this.get({id: manga.id});
       if(mg) socket.emit('showLibrary', id, mg);
     }
   }
@@ -128,7 +141,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
   getAllSync():MangaInDB[] {
     return this.read()
       .mangas.reduce((acc, m) => {
-        const mg = this.get(m.mirror, m.lang, m.url);
+        const mg = this.get({ id: m.id });
         if(mg) acc.push(mg);
         return acc;
       }, [] as MangaInDB[]);

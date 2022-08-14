@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (event: 'show-manga', payload: { mirror: string, url: string, lang: string }): void
+  (event: 'show-manga', payload: { mirror: string, url: string, lang: string, id: string }): void
   (event: 'update-dialog'): void
 }>();
 
@@ -76,7 +76,7 @@ function QMenuLabelColor (unread:number) {
         :key="i"
         v-close-popup
         clickable
-        @click="emit('show-manga', {mirror: manga.mirror, url: manga.url, lang: manga.lang})"
+        @click="emit('show-manga', {mirror: manga.mirror, url: manga.url, lang: manga.lang, id: manga.id})"
       >
         <q-item-section>
           <q-item-label class="flex items-center">
@@ -125,7 +125,7 @@ function QMenuLabelColor (unread:number) {
             v-close-popup
             clickable
             class="q-pa-lg"
-            @click="emit('show-manga', {mirror: manga.mirror, url: manga.url, lang: manga.lang})"
+            @click="emit('show-manga', {mirror: manga.mirror, url: manga.url, lang: manga.lang, id: manga.id})"
           >
             <q-item-section>
               <q-item-label class="flex items-center">

@@ -118,7 +118,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           };
         }
 
-        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+        const mangaId = this.uuidv5({lang: this.langs[0], url: link});
 
         socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -176,7 +176,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           if(img) covers.push(img);
         }
 
-        const mangaId = `${this.name}/${this.langs[0]}${link}`;
+        const mangaId = this.uuidv5({lang: this.langs[0], url: link});
 
         if(!cancel) socket.emit('showRecommend', id, {
           id: mangaId,
@@ -218,7 +218,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       return this.stopListening(socket);
     }
 
-    const mangaId = `${this.name}/${this.langs[0]}${link}`;
+    const mangaId = this.uuidv5({lang: this.langs[0], url: link});
 
     try {
       const $ = await this.fetch({
@@ -280,7 +280,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
             current_chapter = current_chapter.replace(chapterNumber, '').trim();
           }
           release = {
-            id: `${mangaId}@${chaplink}`,
+            id: this.uuidv5({lang: this.langs[0], url: chaplink}),
             name: current_chapter,
             number: chapter,
             date,
@@ -289,7 +289,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           };
         } else {
           release = {
-            id: `${mangaId}@${chaplink}`,
+            id: this.uuidv5({lang: this.langs[0], url: chaplink}),
             name: current_chapter,
             number: i+1,
             date,

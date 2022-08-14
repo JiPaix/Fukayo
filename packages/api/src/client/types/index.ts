@@ -22,7 +22,7 @@ export type ClientToServerEvents = {
   stopShowChapter: () => void;
   stopShowRecommend: () => void;
   stopShowLibrary: () => void;
-  showManga: (id:number, mirror:string, lang:string, url:string) => void;
+  showManga: (id:number, opts: {mirror?:string, lang?:string, id?:string, url?:string }) => void;
   showMangas: (id:number, mirror:string, meta: { lang: string, url: string }[]) => void;
   showChapter: (id:number, mirror:string, lang:string, url:string, retryIndex?:number, callback?: (nbOfPagesToExpect:number)=>void) => void;
   showRecommend: (id:number, mirror:string) => void;

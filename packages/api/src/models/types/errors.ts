@@ -4,7 +4,7 @@ export type ErrorMessage = {
 }
 
 export type MangaErrorMessage = {
-    error:'manga_error'|'manga_error_unknown'|'manga_error_invalid_link'
+    error:'manga_error'|'manga_error_unknown'|'manga_error_invalid_link'|'manga_error_mirror_not_found'
     trace?:string
 }
 

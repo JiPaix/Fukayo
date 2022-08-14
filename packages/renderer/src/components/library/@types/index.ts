@@ -1,4 +1,5 @@
 export type MangaInDBwithLabel = {
+  id: string,
   mirror: string,
   lang:string,
   name: string,

@@ -146,6 +146,7 @@ onMounted(async () => {
           if(chapterIndex === -1) chapterIndex = manga.chapters.length-1;
           const group = mangasRAW.value.find(group => group.name === manga.displayName || group.name === manga.name);
           const mg:MangaInDBwithLabel = {
+            id: manga.id,
             name: manga.name,
             displayName: manga.displayName,
             mirror: mirrorInfo.name,

@@ -16,6 +16,9 @@ import type { MirrorConstructor } from './types/constructor';
 import { SchedulerClass } from '../server/helpers/scheduler';
 import type { socketInstance } from '../server/types';
 import type { supportedLangs } from '../../../renderer/src/locales/lib/supportedLangs';
+import { UUID } from '../db/uuids';
+
+const uuidgen = UUID.getInstance();
 
 /**
  * The default mirror class
@@ -160,6 +163,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   /** check if the fetched manga is part of the library */
   protected isInLibrary(mirror:string, lang:string, url:string) {
     return MangaDatabase.has(mirror, lang, url);
+  }
+
+  uuidv5(options: { lang: string, url: string}): string {
+    return uuidgen.generate({ mirror: this.name, ...options });
   }
 
   /** change the mirror settings */

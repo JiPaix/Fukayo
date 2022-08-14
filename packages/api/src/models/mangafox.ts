@@ -108,8 +108,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           };
         }
 
-        // manga id = "mirror_name/lang/link-of-manga-page"
-        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
 
         // we return the results based on SearchResult model
         socket.emit('searchInMirrors', id, {
@@ -155,8 +154,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     if(cancel) return;
 
     try {
-      // manga id = "mirror_name/lang/link-of-manga-page"
-      const mangaId = `${this.name}/${this.langs[0]}${link}`;
+      const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+
       const $ = await this.fetch({
         url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
@@ -221,7 +220,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
         // pushing the chapter to the chapters array
         chapters.push({
-          id: `${mangaId}@${chapterUrl}`,
+          id: this.uuidv5({lang, url: chapterUrl.replace(this.host, '')}),
           name: chapterNameTrim,
           number: chapterNumberFloat,
           // we test if the volume is a number, sometimes volume number is TBE/TBA or other weird stuff
@@ -381,8 +380,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           if(img) covers.push(img);
         }
 
-        // manga id = "mirror_name/lang/link-of-manga-page"
-        const mangaId = `${this.name}/${this.langs[0]}${link.replace(this.host, '')}`;
+        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
 
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('showRecommend', id, {

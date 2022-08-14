@@ -11,6 +11,11 @@ import type { Server as HttpsServer } from 'https';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 import type { ServerToClientEvents, socketInstance } from './types';
 import type { ClientToServerEvents } from '../client/types';
+import type { MangaInDB } from '../models/types/manga';
+
+import { UUID } from '../db/uuids';
+
+const uuidgen = UUID.getInstance();
 
 /**
  * Initialize a socket.io server
@@ -168,13 +173,26 @@ export default class IOWrapper {
      * if not, we get the manga in the selected mirrors and languages
      * the mirror will reply with a 'showManga' event containing the manga's data
      */
-    socket.on('showManga', (id, mirror, lang, url) => {
-      const indb = MangaDatabase.get(mirror, lang, url);
-      if(indb) {
-        socket.emit('showManga', id, indb);
-      } else {
-        mirrors.find(m=> m.name === mirror)?.manga(url, lang, socket, id);
+    socket.on('showManga', (id, opts) => {
+      let indb: MangaInDB | undefined;
+
+      if(opts.id) indb = MangaDatabase.get({id: opts.id});
+      else if(opts.mirror && opts.lang && opts.url) indb = MangaDatabase.get({mirror: opts.mirror, lang: opts.lang, url: opts.url});
+
+      if(indb) socket.emit('showManga', id, indb);
+      else if(opts.id) {
+        const search = uuidgen.data.ids.find(u => u.id === opts.id);
+        if(search) {
+          const mirror = mirrors.find(m => m.name === search.mirror);
+          if(mirror) mirror.manga(search.url, search.lang, socket, id);
+        }
       }
+      else if(opts.mirror && opts.lang && opts.url) {
+        const mirror = mirrors.find(m => m.name === opts.mirror);
+        if(!mirror) socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
+        else mirror.manga(opts.url, opts.lang, socket, id);
+      }
+      else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     });
 
     /** same as showManga but deducing the mirror by its url */
@@ -182,12 +200,15 @@ export default class IOWrapper {
       try {
         const URI = new URL(url);
         const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port && (m.options.port !== '443' && m.options.port !== '80') ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
-        if(mirror) {
-          const indb = MangaDatabase.get(mirror.name, lang||mirror.langs[0], URI.toString().replace(URI.origin, ''));
-          if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
-          else return mirror.mangaFromChapterURL(socket, id, url, lang);
-        }
-        socket.emit('getMangaURLfromChapterURL', id, undefined);
+        if(!mirror) return socket.emit('getMangaURLfromChapterURL', id, undefined);
+
+        const indb = MangaDatabase.get({ mirror: mirror.name, lang: lang||mirror.langs[0], url: URI.toString().replace(URI.origin, '')});
+        if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
+
+        const search = uuidgen.data.ids.find(u => u.lang === lang && u.mirror === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
+        if(search) return socket.emit('getMangaURLfromChapterURL', id, search);
+
+        return mirror.mangaFromChapterURL(socket, id, url, lang);
       } catch  {
         socket.emit('getMangaURLfromChapterURL', id, undefined);
       }

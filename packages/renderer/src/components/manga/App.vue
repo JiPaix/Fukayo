@@ -520,10 +520,12 @@ function getMirrorInfoUrl(link:string) {
 async function startFetch() {
   nodata.value = null;
   if (!socket) socket = await useSocket(settings.server);
-  const { mirror, lang, url } = route.params as {
+  const { mirror, lang, url, id } = route.params as {
     mirror: string;
     lang: string;
-    url: string;
+    id: string;
+    url: string|undefined;
+    chapterindex: string;
   };
   const reqId = Date.now();
 
@@ -559,7 +561,7 @@ async function startFetch() {
   socket.emit('getMirrors', true, (mirrors) => {
     const m = mirrors.find((m) => m.name === mirror);
     if(m) mirrorinfo.value = m;
-    socket?.emit('showManga', reqId, mirror, lang, url);
+    socket?.emit('showManga', reqId, {mirror, lang, id, url});
   });
 }
 

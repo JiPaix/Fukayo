@@ -75,6 +75,7 @@ function showManga (item:SearchResult) {
       mirror: item.mirrorinfo.name,
       url:item.url,
       lang: item.lang,
+      id: item.id,
     },
   });
 }

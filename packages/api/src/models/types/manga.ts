@@ -37,8 +37,7 @@ export interface MangaPage {
   /** chapters */
   chapters: {
     /**
-     * ID of the chapter
-     * @example 'manga_id/relative-url-of-chapter'
+     * Chapter's uuid
      */
     id: string,
     /**

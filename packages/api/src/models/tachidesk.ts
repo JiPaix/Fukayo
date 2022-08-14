@@ -138,8 +138,6 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
             url: this.path(`/source/${manga.sourceId}`),
           }, 'json')).lang;
 
-          const mangaId = `${this.name}/${lang}${manga.url}`;
-
           const covers: string[] = [];
           const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
           if(img) covers.push(img);
@@ -154,7 +152,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
 
           if(!cancel) socket.emit('searchInMirrors', id, {
-            id: mangaId,
+            id: this.uuidv5({ lang, url: `/manga/${manga.id}` }),
             mirrorinfo: this.mirrorInfo,
             name: manga.title,
             url:`/manga/${manga.id}`,
@@ -211,7 +209,6 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         url: this.path(`/source/${manga.sourceId}`),
       }, 'json')).lang;
 
-      const mangaId = `${this.name}/${lang}${url}`;
       const covers: string[] = [];
       const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
       if(img) covers.push(img);
@@ -237,7 +234,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         const name = chapter.name;
         const group = chapter.scanlator || undefined;
         chapters.push({
-          id: `${mangaId}/${chapLink}`,
+          id: this.uuidv5({ lang, url: chapLink }),
           url: chapLink,
           name,
           number,
@@ -248,7 +245,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       }
 
       if(!cancel) socket.emit('showManga', id, {
-        id: mangaId,
+        id: this.uuidv5({ lang, url }),
         mirror: this.name,
         name: manga.title,
         url,
@@ -358,14 +355,12 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
             url: this.path(`/source/${manga.sourceId}`),
           }, 'json')).lang;
 
-          const mangaId = `${this.name}/${lang}${manga.url}`;
-
           const covers: string[] = [];
           const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
           if(img) covers.push(img);
 
           if(!cancel) socket.emit('showRecommend', id, {
-            id: mangaId,
+            id: this.uuidv5({ lang, url:manga.url }),
             mirrorinfo: this.mirrorInfo,
             name: manga.title,
             url:manga.url,

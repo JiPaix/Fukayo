@@ -37,8 +37,9 @@ const router = createRouter({
       },
       {
         name: 'manga',
-        path: '/manga/:mirror/:lang/:url/:chapterindex?',
+        path: '/manga/:mirror/:lang/:id',
         component: Manga,
+        props: { url: true, chapterindex: true },
       },
       {
         name: 'explore',

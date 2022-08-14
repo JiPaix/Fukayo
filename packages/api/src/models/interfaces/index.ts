@@ -2,6 +2,7 @@ import type { SchedulerClass } from './../../server/helpers/scheduler';
 import type { mirrorInfo } from '../types/shared';
 import type { socketInstance } from '../../server/types';
 import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
+import type { uuid } from '../../db/uuids';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**
@@ -66,6 +67,12 @@ export default interface MirrorInterface {
    * Mirror informations
    */
   get mirrorInfo(): mirrorInfo;
+
+  /**
+   * Generate UUID
+   */
+  uuidv5(options: Omit<uuid, 'id'>): string
+
   /** Change the mirror settings */
   changeSettings(options: Record<string, unknown>): void;
   /**

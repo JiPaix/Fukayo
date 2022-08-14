@@ -63,7 +63,7 @@ function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler[
   if(isMangaLog(log)) {
     const manga = mangas.value.find(m => m.id === log.id);
     if(!manga) return;
-    router.push({ name: 'manga', params: { mirror: manga.mirror, lang: manga.lang, url: manga.url } });
+    router.push({ name: 'manga', params: { mirror: manga.mirror, lang: manga.lang, url: manga.url, id: manga.id } });
   }
 }
 

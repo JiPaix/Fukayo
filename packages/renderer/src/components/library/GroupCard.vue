@@ -74,10 +74,11 @@ function getMirror(mirror:string) {
   return props.mirrors.find(m => m.name === mirror);
 }
 
-function showManga(mangaInfo:{ mirror: string, url:string, lang:string, chapterindex?: number}) {
+function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:string, chapterindex?: number}) {
   router.push({
     name: 'manga',
     params: {
+      id: mangaInfo.id,
       mirror: mangaInfo.mirror,
       url:mangaInfo.url,
       lang: mangaInfo.lang,
@@ -91,7 +92,7 @@ function showManga(mangaInfo:{ mirror: string, url:string, lang:string, chapteri
   <q-card
     v-ripple
     class="q-ma-xs q-my-lg"
-    @click="sortedGroup.length === 1 ? showManga({mirror: sortedGroup[0].mirror, lang: sortedGroup[0].lang, url: sortedGroup[0].url}) : dialog = !dialog"
+    @click="sortedGroup.length === 1 ? showManga({mirror: sortedGroup[0].mirror, lang: sortedGroup[0].lang, url: sortedGroup[0].url, id: sortedGroup[0].id }) : dialog = !dialog"
   >
     <group-menu
       :mirrors="props.mirrors"
@@ -125,7 +126,7 @@ function showManga(mangaInfo:{ mirror: string, url:string, lang:string, chapteri
             :nb-of-unread="manga.unread"
             :mirror-display-name="getMirror(manga.mirror)?.displayName"
             :lang="manga.lang"
-            @show-manga="showManga({mirror: manga.mirror, url: manga.url, lang: manga.lang})"
+            @show-manga="showManga({mirror: manga.mirror, url: manga.url, lang: manga.lang, id: manga.id})"
           />
         </div>
         <div

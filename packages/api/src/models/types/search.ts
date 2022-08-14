@@ -2,9 +2,7 @@ import type { mirrorInfo } from './shared';
 
 export type SearchResult = {
   /**
-   * ID of the manga
-   *
-   * @example 'mirror_name/manga_lang/relative-url-of-manga'
+   * id of the manga
    */
   id:string,
   /**

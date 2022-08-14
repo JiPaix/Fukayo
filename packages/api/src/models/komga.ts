@@ -127,12 +127,11 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(img) covers.push(img);
 
         const synopsis = result.metadata.summary;
-        const mangaId = `${this.name}/${result.metadata.language}${`/series/${result.id}`}`;
-
         const books = await this.fetch<bookContent>({url: this.path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
         let lang = 'xx';
         if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
+        const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`});
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -187,7 +186,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
 
       if(cancel) return;
-      const mangaId = `${this.name}/${result.metadata.language}${`/series/${result.id}`}`;
+      const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`});
       const covers:string[] = [];
       const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
@@ -207,7 +206,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const chaplink = `/books/${book.id}`;
         const read = book.readProgress ? book.readProgress.completed : false;
         const release: MangaPage['chapters'][0] = {
-          id: `${mangaId}@${chaplink}`,
+          id: this.uuidv5({lang: result.metadata.language, url: chaplink}),
           name: book.metadata.title,
           number: book.metadata.numberSort,
           url: chaplink,
@@ -300,13 +299,13 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(cancel) break;
 
         const link = `/series/${serie.id}`;
-        const mangaId = `${this.name}/${serie.metadata.language}${link}`;
-
         const covers: string[] = [];
         const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
         let lang = 'xx';
         if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;
+
+        const mangaId = this.uuidv5({lang: serie.metadata.language, url: `/series/${serie.id}`});
 
         socket.emit('showRecommend', id, {
           id: mangaId,
