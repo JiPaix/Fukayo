@@ -24,7 +24,7 @@ export type ClientToServerEvents = {
   stopShowLibrary: () => void;
   showManga: (id:number, opts: {mirror?:string, lang?:string, id?:string, url?:string }) => void;
   showMangas: (id:number, mirror:string, meta: { lang: string, url: string }[]) => void;
-  showChapter: (id:number, mirror:string, lang:string, url:string, retryIndex?:number, callback?: (nbOfPagesToExpect:number)=>void) => void;
+  showChapter: (id:number, opts: { id?: string, mirror?:string, lang?:string, url?:string, retryIndex?:number, callback?: (nbOfPagesToExpect:number)=>void }) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:number) => void) => void;

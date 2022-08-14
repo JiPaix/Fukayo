@@ -218,8 +218,24 @@ export default class IOWrapper {
      * Get a manga's chapter
      * the mirror will reply with a 'showChapter' event containing the chapter's data
      */
-    socket.on('showChapter', (id, mirror, lang, url, retryIndex, callback) => {
-      mirrors.find(m=>m.name === mirror)?.chapter(url, lang, socket, id, callback, retryIndex);
+    socket.on('showChapter', (id, opts) => {
+      if(!opts.mirror || !opts.lang || !opts.url) {
+        if(opts.id) {
+          const search = uuidgen.data.ids.find(u => u.id === opts.id);
+          if(search) {
+            const mirror = mirrors.find(m => m.name === search.mirror);
+            if(mirror) mirror.chapter(search.url, search.lang, socket, id, opts.callback, opts.retryIndex);
+            else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
+          }
+        } else {
+          socket.emit('showChapter', id, {error: 'chapter_error_unknown', index: 0, lastpage: true});
+        }
+      }
+      else {
+        const mirror = mirrors.find(m => m.name === opts.mirror);
+        if(mirror) mirror.chapter(opts.url, opts.lang, socket, id, opts.callback, opts.retryIndex);
+        else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
+      }
     });
 
     /**
