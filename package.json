@@ -11,7 +11,7 @@
     "node": ">=v16.13",
     "npm": ">=8.1"
   },
-  "main": "packages/main/dist/index.cjs.js",
+  "main": "packages/main/dist/index.cjs",
   "scripts": {
     "build": "npm run build:main && npm run build:preload && npm run build:renderer && npm run build:api",
     "build:api": "cd ./packages/api && vite build",
