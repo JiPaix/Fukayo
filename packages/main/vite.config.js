@@ -38,6 +38,13 @@ const config = {
       ],
       output: {
         entryFileNames: '[name].cjs',
+        manualChunks(id) {
+          if (id.includes('/node_modules/')) {
+            const path = id.split('/node_modules/')[1];
+            const subpath = path.split('/')[0];
+            return `${subpath}/index`;
+          }
+        },
       },
     },
     emptyOutDir: true,

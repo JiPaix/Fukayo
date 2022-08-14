@@ -1,16 +1,12 @@
 import {createApp} from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import App from './App.vue';
-
-const myApp = createApp(App);
+import Root from './App.vue';
 
 // LocalStorage
 import { createPinia } from 'pinia';
 import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);
-
-myApp.use(pinia);
 
 // Router
 const router = createRouter({
@@ -56,8 +52,6 @@ const router = createRouter({
     ],
 });
 
-myApp.use(router);
-
 // Quasar
 import { Quasar, Dialog, Notify, Loading } from 'quasar';
 import('@quasar/extras/roboto-font/roboto-font.css');
@@ -66,8 +60,8 @@ import('@quasar/extras/material-icons-outlined/material-icons-outlined.css');
 import('@quasar/extras/material-icons-round/material-icons-round.css');
 import('quasar/dist/quasar.css');
 
-myApp.use(Quasar, {
-  plugins: {Dialog, Notify, Loading},
+const QuasarConfig = {
+  plugins: { Dialog, Notify, Loading },
   config: {
     brand: {
       primary: '#3d75ad',
@@ -80,7 +74,7 @@ myApp.use(Quasar, {
       warning: '#dbb54d',
     },
   },
-});
+};
 
 // localization
 import { findLocale } from './locales/lib/findLocale';
@@ -88,8 +82,12 @@ import { setupI18n } from './locales/lib';
 import dayjs from 'dayjs';
 
 const lang = findLocale(navigator.language);
-myApp.use(setupI18n({ locale: lang }));
-myApp.provide('dayJS', dayjs);
 
 // init
-myApp.mount('#app');
+const App = createApp(Root);
+App.provide('dayJS', dayjs);
+App.use(setupI18n({ locale: lang }));
+App.use(Quasar, QuasarConfig);
+App.use(pinia);
+App.use(router);
+App.mount('#app');

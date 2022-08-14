@@ -36,6 +36,7 @@ const config = {
     },
   },
   build: {
+    minify: 'terser',
     sourcemap: true,
     target: `chrome${chrome}`,
     outDir: 'dist',
