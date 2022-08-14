@@ -29,7 +29,6 @@ export class UUID extends Database<uuids> {
     this.pending = 0;
     setInterval(async () => {
       if(this.pending > 0) {
-        this.data.ids = this.data.ids.slice(-1000);
         await this.write();
         this.pending = 0;
       }
