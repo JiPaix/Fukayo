@@ -255,6 +255,8 @@ export default class IOWrapper {
      */
     socket.on('addManga', async (payload, callback) => {
       const mg = await MangaDatabase.add(payload);
+      uuidgen.remove(mg.id);
+      mg.chapters.forEach(c => uuidgen.remove(c.id));
       callback(mg);
     });
 
@@ -264,6 +266,9 @@ export default class IOWrapper {
      */
     socket.on('removeManga', async (manga, callback) => {
       const notInDB = await MangaDatabase.remove(manga);
+      const { id, mirror, lang, url, chapters} = notInDB;
+      chapters.forEach(c => uuidgen.generate({ id: c.id, mirror, lang, url }, true));
+      uuidgen.generate({ id, mirror, lang, url}, true);
       callback(notInDB);
     });
 

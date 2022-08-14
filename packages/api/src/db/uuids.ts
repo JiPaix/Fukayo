@@ -29,6 +29,7 @@ export class UUID extends Database<uuids> {
     this.pending = 0;
     setInterval(async () => {
       if(this.pending > 0) {
+        this.data.ids = this.data.ids.slice(-1000);
         await this.write();
         this.pending = 0;
       }
@@ -63,9 +64,15 @@ export class UUID extends Database<uuids> {
     return this.save(id);
   }
 
-  force(id: uuid) {
+  private force(id: uuid) {
     this.data.ids.push(id);
     this.pending++;
     return id.id;
   }
+
+  remove(id: string) {
+    this.data.ids = this.data.ids.filter(i => i.id !== id);
+    this.pending++;
+  }
+
 }
