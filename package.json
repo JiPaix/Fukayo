@@ -97,7 +97,7 @@
     "semver": "^7.3.7",
     "socket.io": "^4.5.1",
     "socket.io-client": "^4.5.1",
-    "systeminformation": "^5.12.3",
+    "systeminformation": "^5.12.5",
     "uuid": "^8.3.2",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.3"
