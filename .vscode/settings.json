@@ -31,8 +31,9 @@
       "i18n",
       "electron",
       "mirrors",
-      "render-reader",
+      "renderer-reader",
       "web",
-      "api"
+      "api",
+      "renderer"
     ],
 }
