@@ -165,7 +165,16 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return MangaDatabase.has(mirror, lang, url);
   }
 
-  uuidv5(options: { lang: string, url: string}): string {
+  uuidv5(options: {
+    lang: string,
+    /**
+     * chapter url
+     *
+     * @important if chapters share the same url the same uuid will be generated
+     * @workaround append the chapter number/index/some other identifier at the end of the url
+     */
+    url: string
+  }): string {
     return uuidgen.generate({ mirror: this.name, ...options });
   }
 

@@ -203,10 +203,13 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(book.created && book.created.length) date = new Date(book.created).getTime();
         if(book.metadata.releaseDate && book.metadata.releaseDate.length) date = new Date(book.metadata.releaseDate).getTime();
         if(cancel) break;
-        const chaplink = `/books/${book.id}`;
+        const chaplink = `/books/${book.id}`; // chapter links aren't unique, so we use the book id
         const read = book.readProgress ? book.readProgress.completed : false;
         const release: MangaPage['chapters'][0] = {
-          id: this.uuidv5({lang: result.metadata.language, url: chaplink}),
+          id: this.uuidv5({
+            lang: result.metadata.language,
+            url: chaplink+book.id, // if chapters share the same url the same uuid will be generated
+          }),
           name: book.metadata.title,
           number: book.metadata.numberSort,
           url: chaplink,
