@@ -254,7 +254,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         tags,
         synopsis,
         lang,
-        chapters: chapters.sort((a,b) => b.number - a.number),
+        chapters: chapters.sort((a,b) => a.number - b.number),
         inLibrary: false,
       });
       if(cancel) return;
