@@ -101,7 +101,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           covers,
           last_release,
           lang: this.langs[0],
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -313,7 +313,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           url:link,
           covers,
           lang: this.langs[0],
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;

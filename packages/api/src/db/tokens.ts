@@ -41,18 +41,18 @@ export class TokenDatabase extends Database<Tokens> {
   areParent(parent:RefreshToken, child:AuthorizedToken) {
     return parent.token === child.parent;
   }
-  generateAccess(refresh: RefreshToken, master = false) {
+  async generateAccess(refresh: RefreshToken, master = false) {
     const token = crypto.randomBytes(32).toString('hex');
     const in5minutes = Date.now() + (5 * 60 * 1000);
     const authorized = { token, expire: in5minutes, parent: refresh.token, master };
-    this.addAccessToken(authorized);
+    await this.addAccessToken(authorized);
     return authorized;
   }
-  generateRefresh(master = false) {
+  async generateRefresh(master = false) {
     const token = crypto.randomBytes(32).toString('hex');
     const in7days = Date.now() + (7 * 24 * 60 * 60 * 1000);
     const refresh = { token, expire: in7days, master };
-    this.addRefreshToken(refresh);
+    await this.addRefreshToken(refresh);
     return refresh;
   }
   findAccessToken(token: string) {
@@ -74,11 +74,11 @@ export class TokenDatabase extends Database<Tokens> {
 
   addAccessToken(token: AuthorizedToken) {
     this.data.authorizedTokens.push(token);
-    this.write();
+    return this.write();
   }
 
   addRefreshToken(token: RefreshToken) {
     this.data.refreshTokens.push(token);
-    this.write();
+    return this.write();
   }
 }

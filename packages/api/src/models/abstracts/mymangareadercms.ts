@@ -129,7 +129,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           synopsis,
           last_release,
           lang: this.langs[0],
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -185,7 +185,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           url:link,
           covers,
           lang: this.langs[0],
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
       if(cancel) return;

@@ -55,7 +55,7 @@ export default class IOWrapper {
   }
 
   use() {
-    this.io.use((socket, next) => {
+    this.io.use(async (socket, next) => {
       // use token to authenticate
       if(socket.handshake.auth.token) {
 
@@ -83,7 +83,7 @@ export default class IOWrapper {
 
         // if the refresh token is valid, we can update the access token
         this.db.removeAccessToken(findAccess);
-        const authorized = this.db.generateAccess(findRefresh);
+        const authorized = await this.db.generateAccess(findRefresh);
         return this.authorize({
           socket,
           next,
@@ -93,8 +93,8 @@ export default class IOWrapper {
       else if(socket.handshake.auth.login && socket.handshake.auth.password) {
         if(socket.handshake.auth.login === this.login && socket.handshake.auth.password === this.password) {
           // generate tokens
-          const refresh = this.db.generateRefresh();
-          const authorized = this.db.generateAccess(refresh);
+          const refresh = await this.db.generateRefresh();
+          const authorized = await this.db.generateAccess(refresh);
 
           return this.authorize({
             socket,
@@ -173,11 +173,11 @@ export default class IOWrapper {
      * if not, we get the manga in the selected mirrors and languages
      * the mirror will reply with a 'showManga' event containing the manga's data
      */
-    socket.on('showManga', (id, opts) => {
+    socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
 
-      if(opts.id) indb = MangaDatabase.get({id: opts.id});
-      else if(opts.mirror && opts.lang && opts.url) indb = MangaDatabase.get({mirror: opts.mirror, lang: opts.lang, url: opts.url});
+      if(opts.id) indb = await MangaDatabase.get({id: opts.id});
+      else if(opts.mirror && opts.lang && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, lang: opts.lang, url: opts.url});
 
       if(indb) socket.emit('showManga', id, indb);
       else if(opts.id) {
@@ -202,7 +202,7 @@ export default class IOWrapper {
         const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port && (m.options.port !== '443' && m.options.port !== '80') ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(!mirror) return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
-        const indb = MangaDatabase.get({ mirror: mirror.name, lang: lang||mirror.langs[0], url: URI.toString().replace(URI.origin, '')});
+        const indb = await MangaDatabase.get({ mirror: mirror.name, lang: lang||mirror.langs[0], url: URI.toString().replace(URI.origin, '')});
         if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
 
         const search = uuidgen.data.ids.find(u => u.lang === lang && u.mirror === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
@@ -243,8 +243,8 @@ export default class IOWrapper {
      * Remove manga from db
      * callback returns the manga-in-db's data (as a mirror would send it)
      */
-    socket.on('removeManga', (manga, callback) => {
-      const notInDB = MangaDatabase.remove(manga);
+    socket.on('removeManga', async (manga, callback) => {
+      const notInDB = await MangaDatabase.remove(manga);
       callback(notInDB);
     });
 

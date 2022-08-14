@@ -185,7 +185,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
-    const mangaByMirror = this.getMangasToUpdate(force);
+    const mangaByMirror = await this.getMangasToUpdate(force);
     // setMaxListeners according to the number of manga to update
     const nbMangas = Object.keys(mangaByMirror).reduce((acc, key) => acc + mangaByMirror[key].length, 0);
     this.setMaxListeners(nbMangas + 1);
@@ -202,9 +202,9 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.restartUpdate();
   }
 
-  private getMangasToUpdate(force?:boolean) {
+  private async getMangasToUpdate(force?:boolean) {
     // filter mangas were lastUpdate + waitBetweenUpdates is less than now
-    const mangas = MangaDatabase.getAllSync()
+    const mangas = (await MangaDatabase.getAll())
       .filter(manga => {
         if(force) return true;
         else if((manga.meta.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;

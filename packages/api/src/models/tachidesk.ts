@@ -163,7 +163,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
             },
             synopsis: manga.description,
             lang,
-            inLibrary: this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
+            inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
           });
         }
       }
@@ -366,7 +366,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
             url:manga.url,
             covers,
             lang,
-            inLibrary: this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
+            inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
           });
         }
       }

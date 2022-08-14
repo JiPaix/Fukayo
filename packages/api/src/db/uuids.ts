@@ -27,10 +27,10 @@ export class UUID extends Database<uuids> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, 'uuid_db.json'), defaultSettings);
     this.pending = 0;
-    setInterval(() => {
+    setInterval(async () => {
       if(this.pending > 0) {
+        await this.write();
         this.pending = 0;
-        this.write();
       }
     }, 1000 * 60);
   }

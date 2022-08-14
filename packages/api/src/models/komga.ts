@@ -142,7 +142,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           synopsis,
           last_release,
           lang,
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, result.metadata.language, link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, result.metadata.language, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -314,7 +314,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           url:link,
           covers,
           lang,
-          inLibrary: this.isInLibrary(this.mirrorInfo.name, serie.metadata.language, link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, serie.metadata.language, link) ? true : false,
         });
       }
       if(cancel) return;

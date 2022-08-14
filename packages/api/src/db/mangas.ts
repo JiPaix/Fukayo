@@ -31,7 +31,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   /** add or update a manga */
   async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
-    const db = this.read();
+    const db = await this.read();
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
     const filename = await this.filenamify(payload.manga.id);
     if(alreadyInDB && isMangaInDB(payload.manga)) return this.upsert(payload.manga, filename, alreadyInDB !== undefined);
@@ -52,8 +52,8 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return this.upsert({...payload.manga, inLibrary: true, meta}, filename);
   }
 
-  remove(manga: MangaInDB) {
-    const db = this.read();
+  async remove(manga: MangaInDB) {
+    const db = await this.read();
     const data = db.mangas.find(m => m.id === manga.id && m.url === manga.url && m.mirror === manga.mirror && m.lang === manga.lang);
     if(data) {
       try {
@@ -92,16 +92,16 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return unDbify;
   }
 
-  has(mirror:string, lang:string, url:string): boolean {
-    const db = this.read();
+  async has(mirror:string, lang:string, url:string):Promise<boolean> {
+    const db = await this.read();
     return db.mangas.some(m => m.mirror === mirror && m.lang === lang && m.url === url);
   }
 
-  get(opts: {id:string}): MangaInDB|undefined
-  get(opts: {mirror: string, lang: string, url: string}): MangaInDB|undefined
-  get(opts: {mirror?:string, lang?:string, url?:string, id?:string}):MangaInDB|undefined {
+  async get(opts: {id:string}): Promise<MangaInDB|undefined>
+  async get(opts: {mirror: string, lang: string, url: string}): Promise<MangaInDB|undefined>
+  async get(opts: {mirror?:string, lang?:string, url?:string, id?:string}):Promise<MangaInDB|undefined> {
     const { mirror, lang, url, id } = opts;
-    const db = this.read();
+    const db = await this.read();
 
     let mg: {id:string, mirror:string, file:string, url:string} | undefined = undefined;
     if(id) {
@@ -115,7 +115,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
     if(!mg) return;
     const mangadb = new DatabaseIO(resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
-    const data = mangadb.read();
+    const data = await mangadb.read();
     return {
       ...data,
       chapters: data.chapters.sort((a, b) => b.number - a.number),
@@ -123,39 +123,35 @@ export class MangasDB extends DatabaseIO<Mangas> {
     };
   }
 
-  getAll(id:number, socket:socketInstance|SchedulerClass) {
-    const db = this.read();
+  async getAll(): Promise<MangaInDB[]>
+  async getAll(id:number, socket: socketInstance|SchedulerClass): Promise<void>
+  async getAll(id?:number, socket?:socketInstance|SchedulerClass): Promise<MangaInDB[]|void> {
+    const db = await this.read();
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(id && socket && !(socket instanceof SchedulerClass)) {
       socket.once('stopShowLibrary', () => {
         cancel = true;
       });
     }
+    const results = [];
     for(const manga of db.mangas) {
       if(cancel) break;
-      const mg = this.get({id: manga.id});
-      if(mg) socket.emit('showLibrary', id, mg);
+      const mg = await this.get({id: manga.id});
+      if(mg && !id && !socket) results.push(mg);
+      if(mg && id && socket) socket.emit('showLibrary', id, mg);
     }
-  }
-
-  getAllSync():MangaInDB[] {
-    return this.read()
-      .mangas.reduce((acc, m) => {
-        const mg = this.get({ id: m.id });
-        if(mg) acc.push(mg);
-        return acc;
-      }, [] as MangaInDB[]);
+    if(!id && !socket) return results;
   }
 
   /** add or update */
-  private upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):MangaInDB {
+  private async upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
     manga.covers = this.saveCovers(manga.covers, filename);
     // then we create the file by instanciating a DatabaseIO
     const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
 
     // if the manga is already in the db we read the file using the DatabaseIO
     if(alreadyInDB) {
-      let data = mangadb.read();
+      let data = await mangadb.read();
       // we check differences between the manga in the db and the manga we want to save
       let hasNewStuff = false;
       let k: keyof typeof manga.meta.options;
