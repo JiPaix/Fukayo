@@ -36,6 +36,7 @@ export class Database<T> {
     }
     this.writeSync();
     this.writer = new Writer(this.file);
+    this.logger('Database loaded', this.file);
   }
 
   protected logger(...args: unknown[]) {
@@ -111,6 +112,7 @@ export class DatabaseIO<T> {
       this.autopatch(defaultData);
     }
     this.writer = new Writer(this.file);
+    this.logger('Database loaded', this.file);
   }
 
   protected logger(...args: unknown[]) {
