@@ -131,7 +131,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
         let lang = 'xx';
         if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
-        const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`, id: result.id}, true);
+        const mangaId = this.uuidv5({lang, url: `/series/${result.id}`, id: result.id}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -186,7 +186,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
 
       if(cancel) return;
-      const mangaId = this.uuidv5({lang: result.metadata.language, url: `/series/${result.id}`, id: result.id}, true);
+      const mangaId = this.uuidv5({lang, url: `/series/${result.id}`, id: result.id}, true);
       const covers:string[] = [];
       const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
@@ -207,7 +207,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const read = book.readProgress ? book.readProgress.completed : false;
         const release: MangaPage['chapters'][0] = {
           id: this.uuidv5({
-            lang: result.metadata.language,
+            lang,
             url: chaplink, // if chapters share the same url the same uuid will be generated
             id: book.id,
           }, true),
@@ -309,7 +309,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         let lang = 'xx';
         if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;
 
-        const mangaId = this.uuidv5({lang: serie.metadata.language, url: `/series/${serie.id}`, id: serie.id}, true);
+        const mangaId = this.uuidv5({lang, url: `/series/${serie.id}`, id: serie.id}, true);
 
         socket.emit('showRecommend', id, {
           id: mangaId, // use the same id as komga
