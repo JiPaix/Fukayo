@@ -180,9 +180,9 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       url: string
       id?: string
     },
-    skip = false,
+    force = false,
   ): string {
-    if(skip && options.id) uuidgen.generate(options as uuid, true);
+    if(force && options.id) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
     return uuidgen.generate({ mirror: this.name, ...options });
   }
 
