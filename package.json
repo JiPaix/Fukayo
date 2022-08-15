@@ -48,7 +48,7 @@
     "@types/node-forge": "^1.0.4",
     "@types/user-agents": "^1.0.2",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "5.33.0",
+    "@typescript-eslint/eslint-plugin": "5.33.1",
     "@typescript-eslint/parser": "^5.33.0",
     "@vitejs/plugin-vue": "3.0.3",
     "@vue/test-utils": "2.0.2",
