@@ -180,7 +180,14 @@ export default class IOWrapper {
       else if(opts.mirror && opts.lang && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, lang: opts.lang, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);
-      else if(opts.id) {
+
+      if(opts.mirror && opts.lang && opts.url) {
+        const mirror = mirrors.find(m => m.name === opts.mirror);
+        if(!mirror) return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
+        else return mirror.manga(opts.url, opts.lang, socket, id);
+      }
+
+      if(opts.id) {
         const search = uuidgen.data.ids.find(u => u.id === opts.id);
         if(search) {
           const mirror = mirrors.find(m => m.name === search.mirror);
@@ -188,12 +195,6 @@ export default class IOWrapper {
           else return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
         }
       }
-      else if(opts.mirror && opts.lang && opts.url) {
-        const mirror = mirrors.find(m => m.name === opts.mirror);
-        if(!mirror) return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
-        else return mirror.manga(opts.url, opts.lang, socket, id);
-      }
-      else return socket.emit('showManga', id, {error: 'manga_error_unknown'});
 
       return socket.emit('showManga', id, {error: 'manga_error_unknown'});
     });
