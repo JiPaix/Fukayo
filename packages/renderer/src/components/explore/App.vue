@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed, onBeforeMount } from 'vue';
+import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSocket } from '../helpers/socket';
 import { useStore as useSettingsStore } from '/@/store/settings';
@@ -64,6 +64,12 @@ onBeforeMount(async () => {
   socket.emit('getMirrors', false, (m) => {
     setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs);
   });
+});
+
+onBeforeUnmount(async () => {
+  if(!socket) socket = await useSocket(settings.server);
+  socket.emit('stopShowRecommend');
+  socket.off('showRecommend');
 });
 
 </script>
