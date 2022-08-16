@@ -265,9 +265,9 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
         const img = await this.downloadImage(this.path(`/books/${res.id}/pages/${i+1}`), 'page', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
-          if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: retryIndex ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         } else {
-          if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         }
       }
       if(cancel) return;

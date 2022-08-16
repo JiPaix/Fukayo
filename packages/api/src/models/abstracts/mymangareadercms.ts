@@ -357,10 +357,10 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(imgLink, 'cover', `${this.host}${link}`);
         if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: retryIndex ? true : i+1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
           continue;
         }
-        socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true : i+1 === nbOfPages });
+        socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
       }
 
       if(cancel) return;

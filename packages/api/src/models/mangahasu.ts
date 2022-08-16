@@ -256,11 +256,11 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(imgLink) {
           const img = await this.downloadImage(imgLink, 'page', `${this.host}${link}`, false);
           if(img) {
-            socket.emit('showChapter', id, { index: i, src: img, lastpage: retryIndex ? true : i+1 === nbOfPages });
+            socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
             continue;
           }
         }
-        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: retryIndex ? true: i+1 === nbOfPages });
+        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true: i+1 === nbOfPages });
       }
       if(cancel) return;
     } catch(e) {
