@@ -27,7 +27,7 @@ jobs:
   e2e:
     strategy:
       matrix:
-        os: [ windowsvm, ubuntuvm ]
+        os: [ ubuntuvm ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -36,5 +36,4 @@ jobs:
           node-version: 16
           cache: 'npm'
       - run: npm ci
-      - run:
-          run: npm run test:e2e
+      - run: npm run test:e2e
