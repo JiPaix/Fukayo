@@ -93,6 +93,7 @@ export interface MangaInDB extends MangaPage {
       zoomMode: 'auto' | 'fit-width' | 'fit-height' | 'custom',
       zoomValue: number,
       longStrip:boolean,
+      overlay: boolean,
     }
   }
 }

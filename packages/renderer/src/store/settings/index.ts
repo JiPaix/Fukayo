@@ -23,6 +23,7 @@ export const useStore = defineStore('settings', {
         zoomValue: 100,
         longStrip: true,
         preloadNext: true,
+        overlay: true,
       },
       library: {
         showUnread: true,

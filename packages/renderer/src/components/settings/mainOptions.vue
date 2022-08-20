@@ -132,6 +132,10 @@ const showPageNumberIcon = computed(() => {
   return settings.reader.showPageNumber ? 'visibility' : 'visibility_off';
 });
 
+const showOverlayIcon = computed(() => {
+  return settings.reader.overlay ? 'layers' : 'layers_clear';
+});
+
 function toggleDarkMode() {
   if (settings.theme === 'dark') {
     settings.theme = 'light';
@@ -547,6 +551,29 @@ onBeforeMount(async () => {
                 <q-toggle
                   v-model="settings.reader.showPageNumber"
                   :icon="showPageNumberIcon"
+                  size="lg"
+                  :dark="$q.dark.isActive"
+                />
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+              clickable
+              @click="settings.reader.overlay = !settings.reader.overlay"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.reader.overlay') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-toggle
+                  v-model="settings.reader.overlay"
+                  :icon="showOverlayIcon"
                   size="lg"
                   :dark="$q.dark.isActive"
                 />

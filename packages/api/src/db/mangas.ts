@@ -47,6 +47,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         zoomMode: 'auto',
         zoomValue: 100,
         longStrip: false,
+        overlay: false,
       },
     };
     return this.upsert({...payload.manga, inLibrary: true, meta}, filename);
