@@ -1,11 +1,12 @@
-import { createI18n } from 'vue-i18n';
-import { Quasar } from 'quasar';
-import { findLocale } from './findLocale';
 import dayjs from 'dayjs';
-import dayjsrelative from 'dayjs/plugin/relativeTime';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
-import type { I18n , I18nOptions } from 'vue-i18n';
+import dayjsrelative from 'dayjs/plugin/relativeTime';
+import type { QuasarLanguage } from 'quasar';
+import { Quasar } from 'quasar';
+import type { I18n, I18nOptions } from 'vue-i18n';
+import { createI18n } from 'vue-i18n';
 import type en from '../en.json';
+import { findLocale } from './findLocale';
 import type { supportedLangsType } from './supportedLangs';
 
 type MessageSchema = typeof en
@@ -31,14 +32,14 @@ export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, tru
 
     /** Quasar */
     const langList = import.meta.glob('../../../../../node_modules/quasar/lang/*.mjs');
-    langList[ `../../../../../node_modules/quasar/lang/${ locale === 'en' ? 'en-US' : locale}.mjs` ]().then(lang => {
-      Quasar.lang.set(lang.default);
+    langList[ `../../../../../node_modules/quasar/lang/${ locale === 'en' ? 'en-US' : locale}.mjs` ]().then(lang  => {
+        Quasar.lang.set((lang as {default: QuasarLanguage }).default);
     });
 
     /** dayjs */
     const list = import.meta.glob('../../../../../node_modules/dayjs/esm/locale/*.js');
     list[ `../../../../../node_modules/dayjs/esm/locale/${ locale }.js` ]().then((c) => {
-      dayjs.locale(c.default);
+      dayjs.locale((c as {default: ILocale}).default);
     });
     dayjs.extend(dayjsrelative);
     dayjs.extend(dayjslocalizedformat);
