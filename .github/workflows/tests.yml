@@ -38,4 +38,5 @@ jobs:
         run: npm ci
       - name: run test
         uses: GabrielBB/xvfb-action@v1
-        with: npm run test:e2e
+        with:
+          run: npm run test:e2e
