@@ -42,4 +42,7 @@
     "conventionalCommits.gitmoji": false,
     "conventionalCommits.lineBreak": "  ",
     "conventionalCommits.showEditor": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    },
 }

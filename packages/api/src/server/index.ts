@@ -1,17 +1,16 @@
-import { SettingsDatabase } from './../db/settings';
-import { Scheduler } from './helpers/scheduler';
-import { SchedulerClass } from './helpers/scheduler';
-import mirrors from '../models/exports';
-import { Server as ioServer } from 'socket.io';
-import { TokenDatabase } from '../db/tokens';
-import { MangaDatabase } from '../db/mangas';
-import { removeAllCacheFiles } from './helpers';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
+import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-import type { ServerToClientEvents, socketInstance } from './types';
 import type { ClientToServerEvents } from '../client/types';
+import { MangaDatabase } from '../db/mangas';
+import { TokenDatabase } from '../db/tokens';
+import mirrors from '../models/exports';
 import type { MangaInDB } from '../models/types/manga';
+import { SettingsDatabase } from './../db/settings';
+import { removeAllCacheFiles } from './helpers';
+import { Scheduler, SchedulerClass } from './helpers/scheduler';
+import type { ServerToClientEvents, socketInstance } from './types';
 
 import { UUID } from '../db/uuids';
 

@@ -1,10 +1,10 @@
-import { SchedulerClass } from './../server/helpers/scheduler';
-import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { env } from 'process';
-import { DatabaseIO } from './index';
-import type { MangaInDB, MangaPage } from './../models/types/manga';
 import type { socketInstance } from '../server/types';
+import { DatabaseIO } from './';
+import type { MangaInDB, MangaPage } from './../models/types/manga';
+import { SchedulerClass } from './../server/helpers/scheduler';
 
 type Mangas = {
   mangas: {

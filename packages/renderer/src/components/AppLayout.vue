@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ref, onBeforeMount } from 'vue';
 import { useQuasar } from 'quasar';
+import { onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import type { socketClientInstance } from '../../../api/src/client/types';
+import { useStore as useSettingsStore } from '../store/settings';
 import QuickAdd from './dialogs/QuickAdd.vue';
 import { useSocket } from './helpers/socket';
-import { useStore as useSettingsStore } from '../store/settings';
-import type { socketClientInstance } from '../../../api/src/client/types';
 
 defineProps<{
   /** App's logo */
