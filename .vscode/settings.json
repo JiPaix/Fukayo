@@ -37,7 +37,8 @@
       "renderer",
       "dev-deps",
       "deps",
-      "vscode"
+      "vscode",
+      "db"
     ],
     "conventionalCommits.gitmoji": false,
     "conventionalCommits.lineBreak": "  ",
