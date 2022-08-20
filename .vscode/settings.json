@@ -46,4 +46,5 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": true
     },
+    "gitlens.statusBar.enabled": false,
 }

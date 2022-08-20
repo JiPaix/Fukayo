@@ -5,10 +5,9 @@
     "formulahendry.auto-rename-tag",
     "naumovs.color-highlight",
     "vivaxy.vscode-conventional-commits",
-    "mikestead.dotenv",
     "editorconfig.editorconfig",
     "cschleiden.vscode-github-actions",
     "lokalise.i18n-ally",
-    "mflo999.lintel"
+    "eamodio.gitlens"
   ]
 }
