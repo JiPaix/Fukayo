@@ -41,7 +41,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
       lastUpdate: Date.now(),
       notify: true,
       update: true,
-      options : payload.settings || {
+      options : isMangaInDB(payload.manga) && !payload.settings ?  payload.manga.meta.options : payload.settings || {
         webtoon: false,
         showPageNumber: true,
         zoomMode: 'auto',
