@@ -1,6 +1,6 @@
-import { Database } from './';
-import { env } from 'process';
+import { Database } from '@api/db';
 import { resolve } from 'path';
+import { env } from 'process';
 import { v5 as uuidv5 } from 'uuid';
 
 export type uuid = {

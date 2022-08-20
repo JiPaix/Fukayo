@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import { ref, onBeforeMount } from 'vue';
+import type { LoginAuth } from '@api/client/types';
+import favicon from '@assets/icon.svg';
+import AppLayout from '@renderer/components/AppLayout.vue';
+import Login from '@renderer/components/login/App.vue';
+import Setup from '@renderer/components/setup/App.vue';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useFavicon } from '@vueuse/core';
 import { useQuasar } from 'quasar';
-import { useStore as useSettingsStore } from '/@/store/settings';
+import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSocket } from './components/helpers/socket';
-import { useFavicon } from '@vueuse/core';
-import Setup from '/@/components/setup/App.vue';
-import Login from '/@/components/login/App.vue';
-import AppLayout from '/@/components/AppLayout.vue';
-import favicon from '../assets/icon.svg';
-import type { LoginAuth } from '../../api/src/client/types';
-import type { supportedLangsType } from './locales/lib/supportedLangs';
 import type en from './locales/en.json';
+import type { supportedLangsType } from './locales/lib/supportedLangs';
 
 const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** load favicon */

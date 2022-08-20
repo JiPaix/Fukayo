@@ -1,4 +1,4 @@
-import type { mirrorInfo } from './shared';
+import type { mirrorInfo } from '@api/models/types/shared';
 
 export type SearchResult = {
   /**

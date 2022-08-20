@@ -1,3 +1,11 @@
+import { MangaDatabase } from '@api/db/mangas';
+import { SettingsDatabase } from '@api/db/settings';
+import mirrors from '@api/models/exports';
+import type MirrorInterface from '@api/models/interfaces';
+import type { MangaErrorMessage } from '@api/models/types/errors';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import { arraysEqual } from '@api/server/helpers/arrayEquals';
+import type { ServerToClientEvents } from '@api/server/types/index';
 import EventEmitter from 'events';
 import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, resolve } from 'path';
@@ -5,14 +13,6 @@ import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
 import type { ClientToServerEvents } from '../../client/types';
-import { MangaDatabase } from '../../db/mangas';
-import { SettingsDatabase } from '../../db/settings';
-import mirrors from '../../models/exports';
-import type MirrorInterface from '../../models/interfaces';
-import type { MangaErrorMessage } from '../../models/types/errors';
-import type { MangaInDB, MangaPage } from '../../models/types/manga';
-import type { ServerToClientEvents } from './../types/index';
-import { arraysEqual } from './arrayEquals';
 
 export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
   private intervals: {

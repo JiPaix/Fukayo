@@ -1,18 +1,18 @@
 <script lang="ts" setup>
-import { computed, ref, onBeforeMount, onBeforeUnmount } from 'vue';
-import { useRoute } from 'vue-router';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
+import type { socketClientInstance } from '@api/client/types';
+import type { SearchResult } from '@api/models/types/search';
+import type { mirrorInfo } from '@api/models/types/shared';
+import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
+import { useSocket } from '@renderer/components/helpers/socket';
+import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
+import SearchResults from '@renderer/components/search/SearchResults.vue';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { isSearchResult, isTaskDone } from '../helpers/typechecker';
-import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '../helpers/mirrorFilters';
-import SearchResults from './SearchResults.vue';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { SearchResult } from '../../../../api/src/models/types/search';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type en from '../../locales/en.json';
-import type { supportedLangsType } from '/@/locales/lib/supportedLangs';
+import { useRoute } from 'vue-router';
 
 /** current route */
 const route = useRoute();

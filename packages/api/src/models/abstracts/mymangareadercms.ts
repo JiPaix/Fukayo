@@ -1,9 +1,9 @@
-import { SchedulerClass } from './../../server/helpers/scheduler';
-import Mirror from '../';
-import type { socketInstance } from '../../server/types';
-import type MirrorInterface from '../interfaces';
-import type { MirrorConstructor } from '../types/constructor';
-import type { MangaPage } from '../types/manga';
+import Mirror from '@api/models';
+import type MirrorInterface from '@api/models/interfaces';
+import type { MirrorConstructor } from '@api/models/types/constructor';
+import type { MangaPage } from '@api/models/types/manga';
+import { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { socketInstance } from '@api/server/types';
 
 type JSONQueryResult = {
   suggestions : {

@@ -1,5 +1,5 @@
-import { MyMangaReaderCMS } from './abstracts/mymangareadercms';
-import icon from './icons/scanfr.png';
+import { MyMangaReaderCMS } from '@api/models/abstracts/mymangareadercms';
+import icon from '@api/models/icons/scanfr.png';
 
 class scanfr extends MyMangaReaderCMS<{ enabled: boolean}> {
   constructor() {

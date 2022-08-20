@@ -1,3 +1,6 @@
+import type en from '@renderer/locales/en.json';
+import { findLocale } from '@renderer/locales/lib/findLocale';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
 import dayjs from 'dayjs';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
 import dayjsrelative from 'dayjs/plugin/relativeTime';
@@ -5,9 +8,6 @@ import type { QuasarLanguage } from 'quasar';
 import { Quasar } from 'quasar';
 import type { I18n, I18nOptions } from 'vue-i18n';
 import { createI18n } from 'vue-i18n';
-import type en from '../en.json';
-import { findLocale } from './findLocale';
-import type { supportedLangsType } from './supportedLangs';
 
 type MessageSchema = typeof en
 
@@ -25,7 +25,7 @@ export function setupI18n(options:I18nOptions<{ message: MessageSchema }, suppor
 export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, true>, locale:string) {
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  (import(`../${locale}.json`) as Promise<{default : typeof import('../en.json') }>).then(messages => {
+  (import(`../${locale}.json`) as Promise<{default : typeof import('@renderer/locales/en.json') }>).then(messages => {
     /** vue-i18n */
     i18n.global.locale = locale;
     i18n.global.setLocaleMessage(locale, messages.default);

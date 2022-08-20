@@ -1,11 +1,11 @@
 <script lang="ts" setup>
+import type { ChapterImage } from '@api/models/types/chapter';
+import type { ChapterErrorMessage, ChapterImageErrorMessage } from '@api/models/types/errors';
+import type { MangaInDB } from '@api/models/types/manga';
+import { isChapterImage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
-import type { ChapterImage } from '../../../../api/src/models/types/chapter';
-import type { ChapterErrorMessage, ChapterImageErrorMessage } from '../../../../api/src/models/types/errors';
-import type { MangaInDB } from '../../../../api/src/models/types/manga';
-import { useStore as useSettingsStore } from '../../store/settings';
-import { isChapterImage, isChapterImageErrorMessage } from '../helpers/typechecker';
 
 const props = defineProps<{
   chapterId: string,

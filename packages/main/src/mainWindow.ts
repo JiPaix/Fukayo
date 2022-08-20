@@ -1,7 +1,7 @@
+import icon from '@buildResources/icon_128.png';
 import { BrowserWindow, globalShortcut, nativeImage } from 'electron';
-import {join} from 'path';
-import {URL} from 'url';
-import icon from '../../../buildResources/icon_128.png';
+import { join } from 'path';
+import { URL } from 'url';
 
 async function createWindow() {
   const browserWindow = new BrowserWindow({

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
-import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
 
 /** props */
 const props = defineProps<{

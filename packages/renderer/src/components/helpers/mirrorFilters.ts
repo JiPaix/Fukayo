@@ -1,4 +1,4 @@
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import type { mirrorInfo } from '@api/models/types/shared';
 import type { Ref } from 'vue';
 
 export function sortMirrorByNames(mirrors:mirrorInfo[], AZ:boolean) {

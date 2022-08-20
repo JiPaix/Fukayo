@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-import { ref, onBeforeMount, inject, computed } from 'vue';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
+import type { socketClientInstance } from '@api/client/types';
+import type { MangaInDB } from '@api/models/types/manga';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { Scheduler } from '@api/server/helpers/scheduler';
+import { useSocket } from '@renderer/components/helpers/socket';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import type dayjs from 'dayjs';
+import { format, useQuasar } from 'quasar';
+import { computed, inject, onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { format, useQuasar } from 'quasar';
-import type { Scheduler } from '../../../../api/src/server/helpers/scheduler';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type dayjs from 'dayjs';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type { MangaInDB } from '../../../../api/src/models/types/manga';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import type en from '../../locales/en.json';
 
 /** quasar */
 const $q = useQuasar();

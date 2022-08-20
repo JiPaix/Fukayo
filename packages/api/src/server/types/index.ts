@@ -1,10 +1,10 @@
+import type { ClientToServerEvents } from '@api/client/types';
+import type { ChapterImage } from '@api/models/types/chapter';
+import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
+import type { TaskDone } from '@api/models/types/shared';
 import type { Socket } from 'socket.io';
-import type { ChapterImage } from '../../models/types/chapter';
-import type { SearchErrorMessage, RecommendErrorMessage, MangaErrorMessage, ChapterImageErrorMessage, ChapterErrorMessage } from '../../models/types/errors';
-import type { MangaInDB, MangaPage } from '../../models/types/manga';
-import type { SearchResult } from '../../models/types/search';
-import type { TaskDone } from '../../models/types/shared';
-import type { ClientToServerEvents } from '../../client/types';
 
 export type ServerToClientEvents = {
   authorized: () => void;

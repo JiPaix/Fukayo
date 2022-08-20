@@ -1,8 +1,8 @@
-import type { SchedulerClass } from './../../server/helpers/scheduler';
-import type { mirrorInfo } from '../types/shared';
-import type { socketInstance } from '../../server/types';
-import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
-import type { uuid } from '../../db/uuids';
+import type { uuid } from '@api/db/uuids';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { socketInstance } from '@api/server/types';
+import type { supportedLangs } from '@renderer/locales/lib/supportedLangs';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**

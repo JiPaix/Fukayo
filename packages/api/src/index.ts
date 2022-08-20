@@ -1,13 +1,13 @@
-import { env } from 'process';
-import { join } from 'path';
+import { Fork } from '@api/app';
+import client from '@api/client';
+import type { ForkEnv } from '@api/types';
+import { FileServer } from '@api/utils/fileserv';
+import { verify } from '@api/utils/standalone';
+import history from 'connect-history-api-fallback';
 import express from 'express';
 import morgan from 'morgan';
-import history from 'connect-history-api-fallback';
-import { Fork } from './app';
-import { verify } from './utils/standalone';
-import client from './client';
-import { FileServer } from './utils/fileserv';
-import type { ForkEnv } from './types';
+import { join } from 'path';
+import { env } from 'process';
 
 export default function useFork(settings: ForkEnv = env):Promise<client> {
   // put settings in global scope

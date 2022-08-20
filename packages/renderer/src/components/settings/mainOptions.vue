@@ -1,13 +1,13 @@
 <script lang="ts" setup>
+import type { socketClientInstance } from '@api/client/types';
+import type { SettingsDB } from '@api/db/settings';
+import { useSocket } from '@renderer/components/helpers/socket';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useStoreSettings } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { SettingsDB } from '../../../../api/src/db/settings';
-import type en from '../../locales/en.json';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import { useSocket } from '../helpers/socket';
-import { useStore as useStoreSettings } from '/@/store/settings';
 
 /** quasar */
 const $q = useQuasar();

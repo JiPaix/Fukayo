@@ -1,4 +1,4 @@
-import { SchedulerClass, Scheduler } from './scheduler';
+import { Scheduler, SchedulerClass } from '@api/server/helpers/scheduler';
 
 export function removeAllCacheFiles() {
   const files = SchedulerClass.getAllCacheFiles();

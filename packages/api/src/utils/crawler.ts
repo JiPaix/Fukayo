@@ -1,13 +1,13 @@
-import { env } from 'process';
-import { Cluster } from 'puppeteer-cluster';
+import type { ClusterJob } from '@api/utils/types/crawler';
 import { resolve } from 'path';
-import puppeteer from 'puppeteer-extra';
-import si from 'systeminformation';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
-import UserAgent from 'user-agents';
+import { env } from 'process';
 import type { Page } from 'puppeteer';
-import type { ClusterJob } from './types/crawler';
+import { Cluster } from 'puppeteer-cluster';
+import puppeteer from 'puppeteer-extra';
+import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import si from 'systeminformation';
+import UserAgent from 'user-agents';
 
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin());

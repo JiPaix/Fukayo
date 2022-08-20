@@ -1,5 +1,5 @@
-import { MyMangaReaderCMS } from './abstracts/mymangareadercms';
-import icon from './icons/fallenangels.png';
+import { MyMangaReaderCMS } from '@api/models/abstracts/mymangareadercms';
+import icon from '@api/models/icons/fallenangels.png';
 
 class FallenAngels extends MyMangaReaderCMS {
   constructor() {

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
+import type { SearchResult } from '@api/models/types/search';
+import { useQuasar } from 'quasar';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useQuasar } from 'quasar';
-import type { SearchResult } from '../../../../api/src/models/types/search';
 
 /** router */
 const router = useRouter();

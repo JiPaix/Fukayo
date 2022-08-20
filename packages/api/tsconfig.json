@@ -13,14 +13,34 @@
     "declaration": true,
     "experimentalDecorators": true,
     "types" : ["node"],
-    "outDir": "dist",
     "baseUrl": ".",
-    "typeRoots": ["./env.d.ts"]
+    "typeRoots": ["./env.d.ts"],
+    "paths": {
+      "@renderer/*": [
+        "../renderer/src/*"
+      ],
+      "@api/*" : [
+        "../api/src/*"
+      ],
+      "@main/*" : [
+        "../main/src/*"
+      ],
+      "@preload/*" : [
+        "../preload/src/*"
+      ],
+      "@assets/*" : [
+        "../renderer/assets/*"
+      ],
+      "@buildResources/*" : [
+        "../../buildResources/*"
+      ]
+    },
   },
   "include": [
     "src/**/*.ts",
-    "../../types/**/*.d.ts"
-, "src/env.d.ts"  ],
+    "../../types/**/*.d.ts",
+    "src/env.d.ts"
+  ],
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts"

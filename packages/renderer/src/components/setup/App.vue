@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import icon from '@assets/icon.svg';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import icon from '../../../assets/icon.svg';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { isLoginValid, isPasswordValid, passwordHint, isPortValid, isHostNameValid, hostNameHint, isProvidedKeyValid, isProvidedCertificateValid, keyColor, certifColor } from '../helpers/login';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
 import type en from '../../locales/en.json';
+import type { supportedLangsType } from '../../locales/lib/supportedLangs';
+import { certifColor, hostNameHint, isHostNameValid, isLoginValid, isPasswordValid, isPortValid, isProvidedCertificateValid, isProvidedKeyValid, keyColor, passwordHint } from '../helpers/login';
 
 const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
 /** quasar */

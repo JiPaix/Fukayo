@@ -1,7 +1,7 @@
-import { Database } from './';
+import { Database } from '@api/db';
+import crypto from 'crypto';
 import { resolve } from 'path';
 import { env } from 'process';
-import crypto from 'crypto';
 
 type RefreshToken = {
   token: string,

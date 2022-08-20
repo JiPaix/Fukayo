@@ -1,18 +1,18 @@
 <script lang="ts" setup>
+import type { ChapterImage } from '@api/models/types/chapter';
+import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage } from '@api/models/types/errors';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import { useSocket } from '@renderer/components/helpers/socket';
+import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDb } from '@renderer/components/helpers/typechecker';
+import chapterScrollBuffer from '@renderer/components/reader/chapterScrollBuffer.vue';
+import { isMouseEvent } from '@renderer/components/reader/helpers';
+import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
+import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
+import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
+import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { scroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref } from 'vue';
-import type { ChapterImage } from '../../../../api/src/models/types/chapter';
-import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage } from '../../../../api/src/models/types/errors';
-import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
-import { useStore as useSettingsStore } from '../../store/settings';
-import { useSocket } from '../helpers/socket';
-import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDb } from '../helpers/typechecker';
-import chapterScrollBuffer from './chapterScrollBuffer.vue';
-import { isMouseEvent } from './helpers';
-import ImagesContainer from './ImagesContainer.vue';
-import NavOverlay from './NavOverlay.vue';
-import ReaderHeader from './ReaderHeader.vue';
-import RightDrawer from './RightDrawer.vue';
 
 /** props */
 const props = defineProps<{

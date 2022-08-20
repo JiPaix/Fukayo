@@ -1,8 +1,8 @@
 <script lang="ts" setup>
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
-import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
-import { useStore as useSettingsStore } from '../../store/settings';
 
 defineProps<{
   manga: MangaPage|MangaInDB

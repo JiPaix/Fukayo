@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { MangaGroup } from '@renderer/components/library/@types';
+import GroupMenu from '@renderer/components/library/GroupMenu.vue';
+import MirrorChips from '@renderer/components/library/MirrorChips.vue';
 import { useQuasar } from 'quasar';
-import type { MangaGroup } from './@types';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import MirrorChips from './MirrorChips.vue';
-import GroupMenu from './GroupMenu.vue';
 
 /** props */
 const props = defineProps<{

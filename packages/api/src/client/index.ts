@@ -1,8 +1,8 @@
-import io from 'socket.io-client';
+import type { ForkResponse, startPayload } from '@api/app/types';
+import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from '@api/client/types';
+import type { ServerToClientEvents } from '@api/server/types';
 import type { Socket } from 'socket.io-client';
-import type { ForkResponse, startPayload } from '../app/types';
-import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from './types';
-import type { ServerToClientEvents } from '../server/types';
+import io from 'socket.io-client';
 
 declare global {
   interface Window {

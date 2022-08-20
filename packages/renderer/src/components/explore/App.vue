@@ -1,15 +1,15 @@
 <script lang="ts" setup>
-import { ref, computed, onBeforeMount, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import { useI18n } from 'vue-i18n';
+import type { socketClientInstance } from '@api/client/types';
+import type { mirrorInfo } from '@api/models/types/shared';
+import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '@renderer/components/helpers/mirrorFilters';
+import { useSocket } from '@renderer/components/helpers/socket';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
-import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '../helpers/mirrorFilters';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import type en from '../../locales/en.json';
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 
 const router = useRouter();
 /** stored settings */

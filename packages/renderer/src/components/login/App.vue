@@ -1,12 +1,12 @@
 <script lang="ts" setup>
+import type { LoginAuth } from '@api/client/types';
+import icon from '@assets/icon.svg';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import icon from '../../../assets/icon.svg';
-import { useQuasar } from 'quasar';
-import type { LoginAuth } from '../../../../api/src/client/types';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import type en from '../../locales/en.json';
 
 /** quasar */
 const $q = useQuasar();

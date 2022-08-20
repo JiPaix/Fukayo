@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import type { socketClientInstance } from '@api/client/types';
+import { mirrorInfo } from '@api/models/types/shared';
+import { useSocket } from '@renderer/components/helpers/socket';
+import type { MangaGroup, MangaInDBwithLabel } from '@renderer/components/library/@types';
+import GroupCard from '@renderer/components/library/GroupCard.vue';
+import GroupFilter from '@renderer/components/library/GroupFilter.vue';
+import { chapterLabel } from '@renderer/components/reader/helpers';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
-import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import { mirrorInfo } from '../../../../api/src/models/types/shared';
-import { useStore as useSettingsStore } from '../../store/settings';
-import { useSocket } from '../helpers/socket';
-import { chapterLabel } from '../reader/helpers';
-import GroupCard from './GroupCard.vue';
-import GroupFilter from './GroupFilter.vue';
-import type { MangaGroup, MangaInDBwithLabel } from './@types';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 /** quasar */
 const $q = useQuasar();

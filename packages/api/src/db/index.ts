@@ -1,9 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, promises } from 'fs';
+import { Writer } from '@api/utils/steno';
+import { existsSync, mkdirSync, promises, readFileSync, writeFileSync } from 'fs';
+import { dirname, resolve } from 'path';
 import { env } from 'process';
 import semver from 'semver';
-import { dirname, resolve } from 'path';
 import packageJson from '../../../../package.json';
-import { Writer } from '../utils/steno';
 type databaseGeneric<T> = T & { _v: string }
 
 export function isPromise<T>(fN: (data: databaseGeneric<T>) => databaseGeneric<T> | Promise<databaseGeneric<T>>): fN is (data: databaseGeneric<T>) => Promise<databaseGeneric<T>> {

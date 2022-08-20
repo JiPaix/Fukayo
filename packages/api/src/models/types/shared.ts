@@ -1,4 +1,4 @@
-import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
+import type { supportedLangs } from '@renderer/locales/lib/supportedLangs';
 
 export type TaskDone = {
   done: boolean;

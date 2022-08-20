@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import type { socketClientInstance } from '@api/client/types';
+import type { mirrorInfo } from '@api/models/types/shared';
+import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
+import { useSocket } from '@renderer/components/helpers/socket';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { format, useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type en from '../../locales/en.json';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import { applyAllFilters, sortLangs, sortMirrorByNames } from '../helpers/mirrorFilters';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
 
 /** stored settings */
 const settings = useSettingsStore();

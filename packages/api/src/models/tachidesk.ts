@@ -1,11 +1,11 @@
-import { supportedLangs } from './../../../renderer/src/locales/lib/supportedLangs';
-import { SchedulerClass } from '../server/helpers/scheduler';
-import Mirror from '.';
-import icon from './icons/tachidesk.png';
+import Mirror from '@api/models';
+import icon from '@api/models/icons/tachidesk.png';
+import type MirrorInterface from '@api/models/interfaces';
+import type { MangaPage } from '@api/models/types/manga';
+import { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { socketInstance } from '@api/server/types';
+import { supportedLangs } from '@renderer/locales/lib/supportedLangs';
 import fd from 'form-data';
-import type MirrorInterface from './interfaces';
-import type { MangaPage } from './types/manga';
-import type { socketInstance } from '../server/types';
 
 type CategoryList = {
   default: boolean;

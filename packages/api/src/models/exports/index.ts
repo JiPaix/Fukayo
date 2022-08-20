@@ -1,10 +1,10 @@
-import mangafox from '../mangafox';
-import mangahasu from '../mangahasu';
-import scanfr from '../scan-fr';
-import fallenangels from '../fallenangels';
-import komga from '../komga';
-import tachidesk from '../tachidesk';
-import type MirrorInterface from '../interfaces';
+import fallenangels from '@api/models/fallenangels';
+import type MirrorInterface from '@api/models/interfaces';
+import komga from '@api/models/komga';
+import mangafox from '@api/models/mangafox';
+import mangahasu from '@api/models/mangahasu';
+import scanfr from '@api/models/scan-fr';
+import tachidesk from '@api/models/tachidesk';
 
 /** Every mirrors */
 const mirrors: MirrorInterface[] = [

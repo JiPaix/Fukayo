@@ -1,7 +1,7 @@
 <script lang="ts" setup>
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { MangaInDBwithLabel } from '@renderer/components/library/@types';
 import { useQuasar } from 'quasar';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type { MangaInDBwithLabel } from './@types';
 
 const props = defineProps<{
   width: string,

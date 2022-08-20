@@ -1,9 +1,9 @@
-import { SchedulerClass } from './../server/helpers/scheduler';
-import type { MangaPage } from './types/manga';
-import Mirror from '.';
-import icon from './icons/mangafox.png';
-import type MirrorInterface from './interfaces/index';
-import type { socketInstance } from '../server/types';
+import Mirror from '@api/models';
+import icon from '@api/models/icons/mangafox.png';
+import type MirrorInterface from '@api/models/interfaces/index';
+import type { MangaPage } from '@api/models/types/manga';
+import { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { socketInstance } from '@api/server/types';
 
 class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 

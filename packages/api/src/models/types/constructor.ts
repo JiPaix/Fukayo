@@ -1,4 +1,4 @@
-import type { supportedLangs } from '../../../../renderer/src/locales/lib/supportedLangs';
+import type { supportedLangs } from '@renderer/locales/lib/supportedLangs';
 
 export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean, cache:boolean }> = {
   /** slug name: `az-_` */

@@ -1,10 +1,10 @@
+import Root from '@renderer/App.vue';
 import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import Root from './App.vue';
 
 // LocalStorage
+import { piniaLocalStorage } from '@renderer/store/localStorage';
 import { createPinia } from 'pinia';
-import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);
 
@@ -15,51 +15,51 @@ const router = createRouter({
       {
         name: 'home',
         path: '/',
-        component: () => import('./components/library/App.vue'),
+        component: () => import('@renderer/components/library/App.vue'),
       },
       {
         name: 'search',
         path: '/search',
-        component: () => import('./components/search/App.vue'),
+        component: () => import('@renderer/components/search/App.vue'),
         props: route => ({ query: route.query.q }),
       },
       {
         name: 'manga',
         path: '/manga/:id',
-        component: () => import('./components/manga/App.vue'),
+        component: () => import('@renderer/components/manga/App.vue'),
         props: true,
       },
       {
         name: 'reader',
         path: '/read/:parentId/:id',
-        component: () => import('./components/reader/App.vue'),
+        component: () => import('@renderer/components/reader/App.vue'),
         props: true,
       },
       {
         name: 'explore',
         path: '/explore',
-        component: () => import('./components/explore/App.vue'),
+        component: () => import('@renderer/components/explore/App.vue'),
       },
       {
         name: 'explore_mirror',
         path: '/explore/:mirror',
-        component: () => import('./components/explore/SourceExplore.vue'),
+        component: () => import('@renderer/components/explore/SourceExplore.vue'),
       },
       {
         name: 'settings',
         path: '/settings',
-        component: () => import('./components/settings/App.vue'),
+        component: () => import('@renderer/components/settings/App.vue'),
       },
       {
         name: 'logs',
         path: '/logs',
-        component: () => import('./components/logs/App.vue'),
+        component: () => import('@renderer/components/logs/App.vue'),
       },
     ],
 });
 
 // Quasar
-import { Quasar, Dialog, Notify, Loading } from 'quasar';
+import { Dialog, Loading, Notify, Quasar } from 'quasar';
 import('@quasar/extras/roboto-font/roboto-font.css');
 import('@quasar/extras/material-icons/material-icons.css');
 import('@quasar/extras/material-icons-outlined/material-icons-outlined.css');
@@ -83,8 +83,8 @@ const QuasarConfig = {
 };
 
 // localization
-import { findLocale } from './locales/lib/findLocale';
-import { setupI18n } from './locales/lib';
+import { setupI18n } from '@renderer/locales/lib';
+import { findLocale } from '@renderer/locales/lib/findLocale';
 import dayjs from 'dayjs';
 
 const lang = findLocale(navigator.language);

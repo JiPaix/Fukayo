@@ -1,9 +1,9 @@
+import type { SettingsDB } from '@api/db/settings';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { Scheduler } from '@api/server/helpers/scheduler';
+import type { ServerToClientEvents } from '@api/server/types';
 import type { Socket } from 'socket.io-client';
-import type { SettingsDB } from '../../db/settings';
-import type { mirrorInfo } from '../../models/types/shared';
-import type { ServerToClientEvents } from '../../server/types';
-import type { MangaInDB, MangaPage } from './../../models/types/manga';
-import type { Scheduler } from './../../server/helpers/scheduler';
 export type SocketClientConstructor = {
   accessToken?: string | null,
   refreshToken?: string | null,

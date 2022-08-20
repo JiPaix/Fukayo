@@ -1,6 +1,6 @@
-import {chrome} from '../../.electron-vendors.cache.json';
-import {join} from 'path';
-import {builtinModules} from 'module';
+import { builtinModules } from 'module';
+import { join } from 'path';
+import { chrome } from '../../.electron-vendors.cache.json';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -14,7 +14,12 @@ const config = {
   envDir: process.cwd(),
   resolve: {
     alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '@renderer/': join(PACKAGE_ROOT, '..', 'renderer', 'src') + '/',
+      '@api/': join(PACKAGE_ROOT, '..', 'api', 'src') + '/',
+      '@main/': join(PACKAGE_ROOT, '..', 'main', 'src') + '/',
+      '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
+      '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
+      '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
     },
   },
   build: {

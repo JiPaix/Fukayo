@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, computed, onBeforeMount } from 'vue';
-import { useQuasar, format } from 'quasar';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { socketClientInstance } from '@api/client/types';
+import { useSocket } from '@renderer/components/helpers/socket';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { format, useQuasar } from 'quasar';
+import { computed, onBeforeMount, ref } from 'vue';
 
 const $q = useQuasar();
 const settings = useSettingsStore();

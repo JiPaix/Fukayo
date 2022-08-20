@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { MangaPage } from '../../../../api/src/models/types/manga';
+import type { MangaPage } from '@api/models/types/manga';
 
 
 const props = defineProps<{

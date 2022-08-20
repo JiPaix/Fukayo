@@ -1,11 +1,11 @@
+import type { ForkResponse, startPayload } from '@api/app/types';
+import type { ForkEnv } from '@api/types';
+import type { ChildProcess } from 'child_process';
 import { fork } from 'child_process';
 import { app } from 'electron';
-import { resolve } from 'path';
-import type { ChildProcess } from 'child_process';
-import type { ForkResponse, startPayload } from '../../api/src/app/types';
-import type { ForkEnv } from '../../api/src/types';
+import { join } from 'path';
 
-const apiPath = resolve(__dirname, '../', '../', 'api', 'dist', 'index.cjs.js');
+const apiPath = join(__dirname, '..', '..', 'api', 'dist', 'index.cjs.js');
 const wait = (s: number) => new Promise(resolve => setTimeout(resolve, s*1000));
 
 export class forkAPI {
@@ -26,7 +26,7 @@ export class forkAPI {
       PORT: payload.port.toString(),
       HOSTNAME: payload.hostname,
       SSL: payload.ssl,
-      VIEW: resolve('./packages', 'renderer', 'dist'),
+      VIEW: join(__dirname, '..', '..', 'renderer', 'dist'),
       CERT: typeof payload.cert === 'string' ? payload.cert : undefined,
       KEY: typeof payload.key  === 'string' ? payload.key : undefined,
       USER_DATA: app.getPath('userData'),

@@ -1,5 +1,5 @@
+import type { startPayload } from '@api/app/types/index';
 import { ipcRenderer } from 'electron';
-import type { startPayload } from '../../api/src/app/types/index';
 
 export async function startServer(payload:startPayload) {
   return ipcRenderer.invoke('start-server', payload);

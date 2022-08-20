@@ -1,11 +1,11 @@
 /* eslint-env node */
 
-import {chrome} from '../../.electron-vendors.cache.json';
-import {join} from 'path';
-import {builtinModules} from 'module';
-import vue from '@vitejs/plugin-vue';
-import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import vueI18n from '@intlify/vite-plugin-vue-i18n';
+import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
+import vue from '@vitejs/plugin-vue';
+import { builtinModules } from 'module';
+import { join } from 'path';
+import { chrome } from '../../.electron-vendors.cache.json';
 // import vuetify from '@vuetify/vite-plugin';
 
 const PACKAGE_ROOT = __dirname;
@@ -19,7 +19,12 @@ const config = {
   root: PACKAGE_ROOT,
   resolve: {
     alias: {
-      '/@/': join(PACKAGE_ROOT, 'src') + '/',
+      '@renderer/': join(PACKAGE_ROOT, '..', 'renderer', 'src') + '/',
+      '@api/': join(PACKAGE_ROOT, '..', 'api', 'src') + '/',
+      '@main/': join(PACKAGE_ROOT, '..', 'main', 'src') + '/',
+      '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
+      '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
+      '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
     },
   },
   plugins: [

@@ -1,5 +1,5 @@
-import socket from '../../api/src/client';
-import type { SocketClientConstructor } from '../../api/src/client/types';
+import socket from '@api/client';
+import type { SocketClientConstructor } from '@api/client/types';
 
 let sock:socket|null = null;
 

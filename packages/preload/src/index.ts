@@ -2,9 +2,9 @@
  * @module preload
  */
 
-import {contextBridge} from 'electron';
-import { getPath } from './config';
-import { startServer, stopServer, copyImageToClipboard } from './apiServer';
+import { copyImageToClipboard, startServer, stopServer } from '@preload/apiServer';
+import { getPath } from '@preload/config';
+import { contextBridge } from 'electron';
 
 
 /**

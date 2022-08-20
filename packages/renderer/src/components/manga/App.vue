@@ -1,22 +1,20 @@
 <script lang="ts" setup>
-import { inject, onBeforeUnmount, onMounted } from 'vue';
-import { onBeforeMount, ref, computed } from 'vue';
-import { useRoute } from 'vue-router';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import { QItem, useQuasar } from 'quasar';
-import { useI18n } from 'vue-i18n';
-import { useSocket } from '../helpers/socket';
-import { useRouter } from 'vue-router';
+import type { socketClientInstance } from '@api/client/types';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { mirrorInfo } from '@api/models/types/shared';
+import { useSocket } from '@renderer/components/helpers/socket';
 import {
-  isManga,
-  isMangaInDb,
-} from '../helpers/typechecker';
+isManga,
+isMangaInDb,
+} from '@renderer/components/helpers/typechecker';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
-import type { socketClientInstance } from '../../../../api/src/client/types';
-import type { MangaInDB, MangaPage } from '../../../../api/src/models/types/manga';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import type en from '../../locales/en.json';
+import { QItem, useQuasar } from 'quasar';
+import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps<{
   url?: string

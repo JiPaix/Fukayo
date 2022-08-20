@@ -1,11 +1,11 @@
-import { findLocale } from './../../renderer/src/locales/lib/findLocale';
+import type { startPayload } from '@api/app/types';
+import icon from '@buildResources/icon_32.png';
+import { forkAPI } from '@main/forkAPI';
+import { restoreOrCreateWindow, showWindow } from '@main/mainWindow';
+import type { Paths } from '@preload/config';
+import { findLocale } from '@renderer/locales/lib/findLocale';
+import { app, clipboard, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import './security-restrictions';
-import { app, ipcMain, nativeImage, clipboard, Tray, Menu } from 'electron';
-import icon from '../../../buildResources/icon_32.png';
-import { restoreOrCreateWindow, showWindow } from '/@/mainWindow';
-import { forkAPI } from './forkAPI';
-import type { Paths } from './../../preload/src/config';
-import type { startPayload } from '../../api/src/app/types';
 
 
 /** API instance */

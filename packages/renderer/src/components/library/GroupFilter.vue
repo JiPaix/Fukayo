@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import type { mirrorInfo } from '@api/models/types/shared';
+import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
+import type en from '@renderer/locales/en.json';
+import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useStore as useSettingsStore } from '../../store/settings';
-import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '../helpers/mirrorFilters';
-import type { mirrorInfo } from '../../../../api/src/models/types/shared';
-import type { supportedLangsType } from '../../locales/lib/supportedLangs';
-import type en from '../../locales/en.json';
 
 /** props */
 const props = defineProps<{

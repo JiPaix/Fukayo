@@ -1,10 +1,10 @@
-import { SchedulerClass } from './../server/helpers/scheduler';
-import Mirror from '.';
-import icon from './icons/mangahasu.png';
-import type MirrorInterface from './interfaces';
-import type { SearchResult } from './types/search';
-import type { MangaPage } from './types/manga';
-import type { socketInstance } from '../server/types';
+import Mirror from '@api/models';
+import icon from '@api/models/icons/mangahasu.png';
+import type MirrorInterface from '@api/models/interfaces';
+import type { MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
+import { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { socketInstance } from '@api/server/types';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
