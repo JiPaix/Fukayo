@@ -103,7 +103,7 @@ function QMenuLabelColor (unread:number) {
             >
               {{ manga.unread }}
             </span>
-            <span :class="QMenuLabelColor(manga.unread)">{{ $t('library.left_to_read', {chapterWord: $t('mangas.chapter', manga.unread).toLocaleLowerCase() }, manga.unread) }}</span>
+            <span :class="QMenuLabelColor(manga.unread)">{{ $t('library.left_to_read', manga.unread) }}</span>
           </q-item-label>
         </q-item-section>
       </q-item>

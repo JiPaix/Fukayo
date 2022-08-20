@@ -1,10 +1,4 @@
 {
-  "electron" : {
-    "systemtray" : {
-      "show": "Show",
-      "quit": "Quit"
-    }
-  },
   "app": {
     "description": "A simple electron app to read mangas",
     "name": "Fukayo"
@@ -16,6 +10,12 @@
       "tab": "Import url",
       "title": "Import a manga by its URL",
       "url": "Manga or Chapter URL"
+    }
+  },
+  "electron": {
+    "systemtray": {
+      "quit": "Quit",
+      "show": "Show"
     }
   },
   "explore": {
@@ -170,10 +170,10 @@
   },
   "library": {
     "filter_by_name": "Search your library",
-    "hide_unread": "Hide mangas for which you have read all the {chapterWord}",
-    "left_to_read": "{chapterWord} left",
+    "hide_unread": "Hide mangas for which you have read all the chapters",
+    "left_to_read": "Chapter left | Chapters left",
     "search": "",
-    "show_unread": "Show manga for which you have read all {chapterWord}",
+    "show_unread": "Show manga for which you have read all chapters",
     "tab": "Library"
   },
   "logs": {
@@ -199,12 +199,12 @@
     },
     "forceupdate": "Update",
     "markasread": {
-      "current": "Mark this {chapterWord} as read",
-      "current_unread": "Mark this {chapterWord} as unread",
-      "next": "Mark next {chapterWord} as read",
-      "next_unread": "Mark next {chapterWord} as unread",
-      "previous": "Mark previous {chapterWord} as read",
-      "previous_unread": "Mark previous {chapterWord} as unread"
+      "current": "Mark this chapter as read",
+      "current_unread": "Mark this chapter as unread",
+      "next": "Mark next chapter as read",
+      "next_unread": "Mark next chapter as unread",
+      "previous": "Mark previous chapter as read",
+      "previous_unread": "Mark previous chapter as unread"
     },
     "original_title": "Original title: {title}",
     "source": "Source | Sources",
@@ -221,7 +221,7 @@
       "value": "Display modes"
     },
     "error": {
-      "chapter": "Couldn't load {chapterWord}",
+      "chapter": "Couldn't load chapter",
       "reload": "Reload"
     },
     "first": "Go back to the first chapter:",
@@ -233,10 +233,13 @@
       "remove": "Remove from the library"
     },
     "next": "Go to the next chapter:",
+    "next_chapter": "Next chapter",
+    "no_next_to_read": "This is the last chapter!",
     "page": {
       "count": "Page {current}/{total}"
     },
     "previous": "Go back to the previous chapter:",
+    "previous_chapter": "Previous chapter",
     "reload": "Reload this page",
     "showpagenumber": "Show page number",
     "webtoon": "Webtoon mode"
@@ -271,6 +274,7 @@
     "logs": "Logs",
     "reader": {
       "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",
+      "overlay": "Enable actions hint (overlay)",
       "preload": "Preload next chapter while reading",
       "title": "Reader"
     },
@@ -311,7 +315,7 @@
       "day": "Day | Days",
       "hour": "Hour | Hours",
       "minute": "Minute | Minutes",
-      "wait": "Update {chapterWord} lists every"
+      "wait": "Update chapters lists every"
     }
   },
   "setup": {

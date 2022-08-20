@@ -270,7 +270,7 @@ onMounted(() => {
           @click="settings.library.showUnread = !settings.library.showUnread"
         >
           <q-tooltip>
-            {{ settings.library.showUnread ? $t('library.hide_unread', {chapterWord: $t('mangas.chapter', 10).toLocaleLowerCase() }) : $t('library.show_unread', {chapterWord: $t('mangas.chapter', 10).toLocaleLowerCase() }) }}
+            {{ settings.library.showUnread ? $t('library.hide_unread') : $t('library.show_unread') }}
           </q-tooltip>
         </q-btn>
       </q-btn-group>
