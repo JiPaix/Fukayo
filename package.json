@@ -28,7 +28,7 @@
     "test:main": "vitest run -r packages/main --passWithNoTests",
     "test:preload": "vitest run -r packages/preload --passWithNoTests",
     "test:renderer": "vitest run -r packages/renderer --passWithNoTests",
-    "watch": "npm run build:api && node scripts/watch.js",
+    "watch": "npm run build && node scripts/watch.js",
     "lint": "eslint . --ext js,ts,vue",
     "typecheck:api": "tsc --noEmit -p packages/api/tsconfig.json",
     "typecheck:main": "tsc --noEmit -p packages/main/tsconfig.json",
