@@ -78,6 +78,7 @@ function toggleDarkMode() {
 <template>
   <q-layout view="hHh LpR fFf">
     <q-header
+      v-if="route.name !== 'reader'"
       elevated
       class="bg-grey-10 text-white"
       height-hint="98"
@@ -111,6 +112,7 @@ function toggleDarkMode() {
     </q-header>
 
     <q-drawer
+      v-if="route.name !== 'reader'"
       v-model="drawer"
       :dark="$q.dark.isActive"
       show-if-above

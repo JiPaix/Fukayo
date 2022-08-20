@@ -25,9 +25,15 @@ const router = createRouter({
       },
       {
         name: 'manga',
-        path: '/manga/:mirror/:lang/:id',
+        path: '/manga/:id',
         component: () => import('./components/manga/App.vue'),
-        props: { url: true },
+        props: true,
+      },
+      {
+        name: 'reader',
+        path: '/read/:parentId/:id',
+        component: () => import('./components/reader/App.vue'),
+        props: true,
       },
       {
         name: 'explore',
