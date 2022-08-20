@@ -4,7 +4,7 @@ import { defineStore } from 'pinia';
 export const useStore = defineStore('settings', {
   state: () => {
     return {
-      theme: 'dark',
+      theme: 'dark' as 'dark' | 'light',
       server : {
         login: 'admin',
         password: null as string | null,
