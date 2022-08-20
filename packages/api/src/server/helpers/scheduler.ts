@@ -38,8 +38,13 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
       updates: setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
-    this.clearcache();
-    this.update();
+
+    // wait 30s on startup to make sure async operations are done
+    setTimeout(() => {
+      this.clearcache();
+      this.update();
+    }, 30*1000);
+
   }
 
   get logs() {
