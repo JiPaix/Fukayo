@@ -538,7 +538,7 @@ onBeforeMount(async () => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
-              @click="settings.reader.webtoon = !settings.reader.webtoon"
+              @click="settings.reader.showPageNumber = !settings.reader.showPageNumber"
             >
               <q-item-section>
                 <q-item-label>
