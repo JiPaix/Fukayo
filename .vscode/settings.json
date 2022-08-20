@@ -22,30 +22,33 @@
   "i18n-ally.extract.autoDetect": true,
   "i18n-ally.review.enabled": false,
   "i18n-ally.review.gutters": false,
-  "auto-close-tag.disableOnLanguage": [
-    "js",
-    "ts",
-    "json",
-    ],
-    "conventionalCommits.scopes": [
-      "i18n",
-      "electron",
-      "mirrors",
-      "renderer-reader",
-      "web",
-      "api",
-      "renderer",
-      "dev-deps",
-      "deps",
-      "vscode",
-      "db"
-    ],
-    "conventionalCommits.gitmoji": false,
-    "conventionalCommits.lineBreak": "  ",
-    "conventionalCommits.showEditor": false,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": true
-    },
-    "gitlens.statusBar.enabled": false,
+  "conventionalCommits.scopes": [
+    "i18n",
+    "electron",
+    "mirrors",
+    "renderer-reader",
+    "web",
+    "api",
+    "renderer",
+    "dev-deps",
+    "deps",
+    "vscode",
+    "db"
+  ],
+  "conventionalCommits.gitmoji": false,
+  "conventionalCommits.lineBreak": "  ",
+  "conventionalCommits.showEditor": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true
+  },
+  "gitlens.statusBar.enabled": false,
   "typescript.tsdk": "node_modules/typescript/lib",
+  "auto-close-tag.activationOnLanguage": [
+    "markdown",
+    "vue",
+  ],
+  "auto-close-tag.disableOnLanguage": [
+    "javascript",
+    "typescript",
+    ],
 }
