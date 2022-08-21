@@ -17,6 +17,7 @@ const PACKAGE_ROOT = __dirname;
 const config = {
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
+  base: '',
   resolve: {
     alias: {
       '@renderer/': join(PACKAGE_ROOT, '..', 'renderer', 'src') + '/',
