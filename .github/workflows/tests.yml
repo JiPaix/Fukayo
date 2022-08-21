@@ -27,9 +27,17 @@ jobs:
   e2e:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntuvm, windowsvm ]
     runs-on: ${{ matrix.os }}
     steps:
+      if: matrix.os == 'ubuntuvm'
+        run: |
+          rm -rf ~/.config/fukayo
+          rm -rf ~/Bureau/actions-runner/_work/Fukayo
+      if: matrix.os == 'windowsvm'
+        run: |
+          Remove-Item 'C:\actions-runner\_work\Fukayo'
+          Remove-Item 'C:\Users\jipai\AppData\Roaming\fukayo'
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
