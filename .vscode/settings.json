@@ -34,7 +34,8 @@
     "deps",
     "vscode",
     "db",
-    "vite"
+    "vite",
+    "e2e"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",

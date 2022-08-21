@@ -1,5 +1,6 @@
-import type {ElectronApplication} from 'playwright';
-import {_electron as electron} from 'playwright';
+import { randomBytes } from 'crypto';
+import type { ElectronApplication } from 'playwright';
+import { _electron as electron } from 'playwright';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 
 let electronApp: ElectronApplication;
@@ -43,14 +44,16 @@ test('Main window web content', async () => {
   // on startup the app tries to directly connect the user to the server
   await page.waitForLoadState('networkidle'); // we wait for the connection to fail
   await pause(1000); // add an extra second in-case vue runs at potato speed
-  const element = await page.$('#app', {strict: true});
-  expect(element, 'Can\'t find root element').toBeDefined();
-  expect((await element.innerHTML()).trim(), 'Window content was empty').not.equal('');
+  const root = await page.$('#app', {strict: true});
+  expect(root).to.not.be.null;
+  if(!root) return;
+  expect((await root.innerHTML()).trim(), 'Window content was empty').not.equal('');
 });
 
 
 test('Preload versions', async () => {
   const page = await electronApp.firstWindow();
+  expect(page.evaluate).to.be.a.toBeDefined();
   const exposedVersions = await page.evaluate(() => globalThis.versions);
   const expectedVersions = await electronApp.evaluate(() => process.versions);
   expect(exposedVersions).toBeDefined();
@@ -78,29 +81,21 @@ test('Preload apiServer', async () => {
   expect(env).toEqual('production');
 });
 
-test('Server start', async () => {
+test('Server setup', async () => {
   const page = await electronApp.firstWindow();
-  await page.evaluate(async () => {
-    const login = globalThis.document.querySelector<HTMLInputElement>('input[name="login"]');
-    login.value = 'test';
-    login.dispatchEvent(new Event('input'));
-    const password = globalThis.document.querySelector<HTMLInputElement>('input[name="password"]');
-    password.value = 'testtest';
-    password.dispatchEvent(new Event('input'));
-    const port = globalThis.document.querySelector<HTMLInputElement>('input[name="port"]');
-    port.value = '3000';
-    port.dispatchEvent(new Event('input'));
-    const ssl = globalThis.document.querySelector<HTMLInputElement>('#no-ssl');
-    ssl.click();
-    ssl.dispatchEvent(new Event('change'));
-    const button = globalThis.document.querySelector<HTMLButtonElement>('button[type=submit]');
-    button.click();
-  });
+  const randomLogin = randomBytes(6).toString('hex');
+  const randomPassword = randomBytes(10).toString('hex');
+
+  await page.locator('input[name="login"]' ).fill(randomLogin);
+  await page.locator('input[name="password"]').fill(randomPassword);
+  await page.locator('input[name="port"]').fill('3000');
+  await page.locator('#no-ssl').click();
+  await page.locator('button[type=submit]').click();
+
 });
 
 test('Server is running', async () => {
-  await pause(10000);
   const page = await electronApp.firstWindow();
-  const content = await page.evaluate(() => globalThis.document.querySelector<HTMLDivElement>('.w-100'));
-  expect(content).to.not.be.null;
+  const library = page.$('.w-100');
+  expect(library).to.not.be.null;
 });
