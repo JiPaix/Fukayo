@@ -46,6 +46,11 @@ const includedLangs = computed(() => {
 
 
 function changeOption(mirrorName:string, property:string, value:unknown) {
+  if(value === '') value = null;
+  if(typeof value === 'string') {
+    const toNb = parseInt(value);
+    if(!isNaN(toNb)) value = toNb;
+  }
   socket?.emit('changeMirrorSettings', mirrorName, { [property]: value }, (sources) => {
     mirrorsRAW.value = sources;
   });
