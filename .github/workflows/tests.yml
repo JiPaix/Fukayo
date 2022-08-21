@@ -30,11 +30,11 @@ jobs:
         os: [ ubuntuvm, windowsvm ]
     runs-on: ${{ matrix.os }}
     steps:
-      if: matrix.os == 'ubuntuvm'
+      - if: matrix.os == 'ubuntuvm'
         run: |
           rm -rf ~/.config/fukayo
           rm -rf ~/Bureau/actions-runner/_work/Fukayo
-      if: matrix.os == 'windowsvm'
+      - if: matrix.os == 'windowsvm'
         run: |
           Remove-Item 'C:\actions-runner\_work\Fukayo'
           Remove-Item 'C:\Users\jipai\AppData\Roaming\fukayo'
