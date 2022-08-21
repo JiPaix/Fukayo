@@ -161,9 +161,6 @@ onBeforeMount(async () => {
               lines="1"
             >
               <span v-html="$t('logs.cache', {size: humanStorageSize(log.size), files: log.files }, log.files)" />
-
-              <!-- <span class="text-weight-bold">{{ getMangaName(log.) }} <i>({{ getMangaLang(log.id) }})</i></span>
-              {{ $t('logs.found_chapter', {number: log.chapter}, log.chapter) }} -->
             </q-item-label>
           </q-item-section>
           <q-item-section
