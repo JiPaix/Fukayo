@@ -27,13 +27,15 @@ jobs:
   e2e:
     strategy:
       matrix:
-        os: [ ubuntuvm ]
+        os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: 18
           cache: 'npm'
       - run: npm ci
-      - run: npm run test:e2e
+      - uses: GabrielBB/xvfb-action@v1
+        with:
+          run: npm test

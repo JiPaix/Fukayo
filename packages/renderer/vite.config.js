@@ -34,7 +34,6 @@ const config = {
     }),
     quasar(),
   ],
-  base: '',
   server: {
     fs: {
       strict: true,
