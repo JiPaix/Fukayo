@@ -4,7 +4,7 @@ import vueI18n from '@intlify/vite-plugin-vue-i18n';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import { builtinModules } from 'module';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { chrome } from '../../.electron-vendors.cache.json';
 // import vuetify from '@vuetify/vite-plugin';
 
@@ -46,7 +46,7 @@ const config = {
     outDir: 'dist',
     assetsDir: '.',
     rollupOptions: {
-      input: 'index.html',
+      input: resolve('index.html'),
       external: [
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
       ],

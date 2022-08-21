@@ -27,7 +27,7 @@ jobs:
   e2e:
     strategy:
       matrix:
-        os: [ ubuntuvm, windowsvm ]
+        os: [ ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -35,13 +35,9 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-      - run: npm ci
-      - run: npm run test:e2e
-      - if: matrix.os == 'ubuntuvm'
-        run: |
-          rm -rf ~/.config/fukayo
-          rm -rf ~/Bureau/actions-runner/_work/Fukayo
-      - if: matrix.os == 'windowsvm'
-        run: |
-          Remove-Item 'C:\actions-runner\_work\Fukayo'
-          Remove-Item 'C:\Users\jipai\AppData\Roaming\fukayo'
+      - name: Clean install
+        run: npm ci
+      - name: Run tests
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          run: npm run test:e2e
