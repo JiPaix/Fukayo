@@ -80,6 +80,13 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     });
   }
 
+  /** needs at least these three options to be enabled */
+  public get enabled(): boolean {
+    const { enabled, host, port, password, login} = this.options;
+    if(enabled && host && port && password && login) return true;
+    return false;
+  }
+
   changeSettings(opts: Record<string, unknown>) {
     this.options = { ...this.options, ...opts };
   }

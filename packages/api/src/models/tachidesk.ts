@@ -81,6 +81,17 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     });
   }
 
+  /** needs at least these three options to be enabled */
+  public get enabled(): boolean {
+    const { enabled, host, port } = this.options;
+    if(enabled && host && port) return true;
+    return false;
+  }
+
+  public set enabled(val: boolean) {
+    this.options.enabled = val;
+  }
+
   changeSettings(opts: Record<string, unknown>) {
     this.options = { ...this.options, ...opts };
   }
