@@ -33,7 +33,8 @@
     "dev-deps",
     "deps",
     "vscode",
-    "db"
+    "db",
+    "vite"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",
