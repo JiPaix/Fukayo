@@ -165,6 +165,7 @@ onBeforeMount(async () => {
         <q-input
           ref="inputRef"
           v-model="query"
+          name="search"
           type="search"
           :placeholder="$t('explore.placeholder')"
           outlined
