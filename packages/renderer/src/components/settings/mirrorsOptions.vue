@@ -47,7 +47,7 @@ const includedLangs = computed(() => {
 
 function changeOption(mirrorName:string, property:string, value:unknown) {
   if(value === '') value = null;
-  if(typeof value === 'string') {
+  if(typeof value === 'string' && property === 'port') {
     const toNb = parseInt(value);
     if(!isNaN(toNb)) value = toNb;
   }
