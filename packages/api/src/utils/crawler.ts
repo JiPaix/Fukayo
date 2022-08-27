@@ -99,11 +99,10 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
     });
 
     page.on('response', async resp => {
-      if(!resp.ok()) {
-        html = new Error(`bad_request: ${resp.status()}`);
-      } else {
-        if(data.type === 'json') html = await resp.text();
-      }
+      if(data.type !== 'json') return;
+      if(!resp.url()) return;
+      if(resp.ok()) html = await resp.text();
+      else new Error(`bad_request: ${resp.status()} @ ${data.url}`);
     });
 
     // go to page and wait for network idle

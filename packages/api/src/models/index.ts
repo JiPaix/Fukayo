@@ -328,15 +328,18 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   private async internalFetch<T>(config: ClusterJob, type: 'html'|'json'|'string') {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
-      referer: config.referer || this.host.replace(/http(s?):\/\//g, ''),
-      'Cookie': config.cookies ? config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '') : '',
       ...config.headers,
     };
+
+    if(type !== 'json') config.headers.referer = config.referer || this.host.replace(/http(s?):\/\//g, '');
+    if(config.cookies) config.headers['Cookie'] = config.cookies.map(c => c.name+'='+c.value+';').join(' ') + ' path=/; domain='+this.host.replace(/http(s?):\/\//g, '');
 
     try {
       // try to use axios first
       const response = await axios.get<string|T>(config.url, { ...config, timeout: 5000 });
+
       if(typeof response.data === 'string') {
+
         if(config.waitForSelector) {
           const $ = this.loadHTML(response.data);
           if($(config.waitForSelector).length) return response.data;
