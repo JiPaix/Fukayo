@@ -1,6 +1,8 @@
+import type { ClientToServerEvents } from '@api/client/types';
 import { MangaDatabase } from '@api/db/mangas';
 import { SettingsDatabase } from '@api/db/settings';
 import { TokenDatabase } from '@api/db/tokens';
+import { UUID } from '@api/db/uuids';
 import mirrors from '@api/models/exports';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
@@ -10,9 +12,6 @@ import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-import type { ClientToServerEvents } from '../client/types';
-
-import { UUID } from '../db/uuids';
 
 const uuidgen = UUID.getInstance();
 

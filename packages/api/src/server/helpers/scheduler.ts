@@ -1,3 +1,4 @@
+import type { ClientToServerEvents } from '@api/client/types';
 import { MangaDatabase } from '@api/db/mangas';
 import { SettingsDatabase } from '@api/db/settings';
 import mirrors from '@api/models/exports';
@@ -12,7 +13,6 @@ import { join, resolve } from 'path';
 import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
-import type { ClientToServerEvents } from '../../client/types';
 
 export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
   private intervals: {

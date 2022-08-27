@@ -2,6 +2,7 @@
 import type { LoginAuth } from '@api/client/types';
 import favicon from '@assets/icon.svg';
 import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
 import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';
@@ -11,7 +12,6 @@ import { useFavicon } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { appLangsType } from '@i18n/index';
 
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** load favicon */
