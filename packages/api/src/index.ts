@@ -3,6 +3,7 @@ import client from '@api/client';
 import type { ForkEnv } from '@api/types';
 import { FileServer } from '@api/utils/fileserv';
 import { verify } from '@api/utils/standalone';
+import compression from 'compression';
 import history from 'connect-history-api-fallback';
 import express from 'express';
 import morgan from 'morgan';
@@ -23,6 +24,15 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
 
   // Express config
   const app = express();
+
+  // compress resources
+  app.use(compression());
+
+  // robots.txt
+  app.get('/robots.txt', function (req, res) {
+    res.type('text/plain');
+    res.send('User-agent: *\nDisallow: /');
+});
 
   // init the file server directory
   const fileServer = FileServer.getInstance('fileserver');
