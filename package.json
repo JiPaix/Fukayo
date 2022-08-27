@@ -83,6 +83,7 @@
     "vue-tsc": "^0.40.1"
   },
   "dependencies": {
+    "@fontsource/roboto": "^4.5.8",
     "@mdi/font": "^7.0.96",
     "@mdi/js": "^7.0.96",
     "@quasar/extras": "^1.15.1",
