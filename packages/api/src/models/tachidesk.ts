@@ -372,7 +372,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
           if(img) covers.push(img);
           if(!cancel) socket.emit('showRecommend', id, {
-            id: this.uuidv5({ lang, url:`/manga/${manga.id}` }),
+            id: this.uuidv5({ lang, url:`/manga/${manga.id}`}),
             mirrorinfo: this.mirrorInfo,
             name: manga.title,
             url:`/manga/${manga.id}`,

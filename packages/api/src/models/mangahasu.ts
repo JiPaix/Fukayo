@@ -96,7 +96,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
 
         socket.emit('searchInMirrors', id, {
-          id: this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')}),
+          id: this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')}, false),
           mirrorinfo: this.mirrorInfo,
           name,
           url:link,
