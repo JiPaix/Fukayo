@@ -1,31 +1,7 @@
-import { builtinModules } from 'module';
 import { join } from 'path';
-import { node } from '../../.electron-vendors.cache.json';
+import { chrome } from '../../.electron-vendors.cache.json';
 
 const PACKAGE_ROOT = __dirname;
-
-const externals = [
-  ...builtinModules.filter(m => !m.startsWith('_')),
-  'express',
-  'morgan',
-  'socket.io',
-  'puppeteer',
-  'puppeteer-cluster',
-  'puppeteer-extra',
-  'puppeteer-extra-plugin-stealth',
-  'puppeteer-extra-plugin-adblocker-no-vulnerabilities',
-  'systeminformation',
-  'axios',
-  'cheerio',
-  'file-type',
-  'socket.io-client',
-  'socket.io',
-  'filenamify',
-  'user-agents',
-  'form-data',
-  'connect-history-api-fallback',
-];
-
 
 /**
  * @type {import('vite').UserConfig}
@@ -44,29 +20,27 @@ const config = {
       '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
       '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
       '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src') + '/',
+      'vue-i18n': 'vue-i18n/dist/vue-i18n.runtime.esm-bundler.js',
     },
   },
   build: {
-    target: `node${node}`,
+    target: `chrome${chrome}`,
     outDir: 'dist',
     assetsDir: '.',
     minify: 'terser',
     lib: {
       formats: ['cjs'],
       entry: './src/index.ts',
-      name: 'api',
+      name: 'i18n',
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
-      onwarn: (warning) => {
-        if(warning.code === 'EVAL') return;
-      },
-      external: externals,
-      output:{
+      output: {
         manualChunks(id) {
-          const split = id.split('/');
-          if(split[split.length -2] === 'icons') {
-            return 'icon.'+[split[split.length -1]];
+          if (id.includes('/node_modules/')) {
+            const modules = ['quasar', '@quasar', 'dayjs'];
+            const chunk = modules.find((module) => id.includes(`/node_modules/${module}`));
+            return chunk ? `vendor-${chunk}` : 'vendor';
           }
         },
       },

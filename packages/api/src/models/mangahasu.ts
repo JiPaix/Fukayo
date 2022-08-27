@@ -1,11 +1,12 @@
 import Mirror from '@api/models';
+import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@api/models/helpers/i18n';
 import icon from '@api/models/icons/mangahasu.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
@@ -328,12 +329,12 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
+  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
     if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
     // if no lang is provided, we will use the default one
-    lang = lang||this.langs[0];
+    lang = ISO3166_1_ALPHA2_TO_ISO639_1( (lang||this.langs[0]) );
     // checking what kind of page this is
     const isMangaPage = this.isMangaPage(url),
           isChapterPage = this.isChapterPage(url);

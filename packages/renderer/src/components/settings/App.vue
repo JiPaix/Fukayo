@@ -1,14 +1,14 @@
 <script lang="ts" setup>
+import type { appLangsType } from '@i18n/index';
 import fileSystem from '@renderer/components/settings/fileSystem.vue';
 import mainOptions from '@renderer/components/settings/mainOptions.vue';
 import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import type en from '@i18n/../locales/en.json';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 const tab = ref<string>('general');
 const $q = useQuasar();
 </script>

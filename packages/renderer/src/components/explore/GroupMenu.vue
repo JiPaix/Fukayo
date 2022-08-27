@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 import { useQuasar } from 'quasar';
 
 const props = defineProps<{

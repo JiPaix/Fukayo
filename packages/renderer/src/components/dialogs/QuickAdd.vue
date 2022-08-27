@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import type en from '@i18n/../locales/en.json';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useDialogPluginComponent } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
@@ -15,7 +15,7 @@ defineEmits([
   ...useDialogPluginComponent.emits,
 ]);
 
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** socket */
@@ -33,7 +33,7 @@ const results = ref<
   }
   >({ mirror: undefined, manga: false, chapter: false});
 /** selected language */
-const selectedLanguage = ref<{label: string, value: string}|null>(null);
+const selectedLanguage = ref<{label: string, value: mirrorsLangsType}|null>(null);
 /** langs in mirror */
 const availableLangs = computed(() => {
   if(results.value.mirror) {
@@ -50,7 +50,7 @@ const availableLangs = computed(() => {
 const isOk = computed(() => {
   if(!results.value.mirror) return false;
   if(!selectedLanguage.value) return false;
-  if(!(results.value.mirror.langs as string[]).includes(selectedLanguage.value.value)) return false;
+  if(!(results.value.mirror.langs).includes(selectedLanguage.value.value)) return false;
   return true;
 });
 

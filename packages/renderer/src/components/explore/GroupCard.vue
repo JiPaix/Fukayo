@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@i18n/index';
 import GroupMenu from '@renderer/components/explore/GroupMenu.vue';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';

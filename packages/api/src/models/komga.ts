@@ -5,8 +5,8 @@ import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
-import { mirrorsLang } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
+import { mirrorsLang } from '@i18n/index';
 
 //  /series?search=word
 type searchContent = {

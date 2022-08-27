@@ -33,7 +33,10 @@
       ],
       "@buildResources/*" : [
         "../../buildResources/*"
-      ]
+      ],
+      "@i18n/*" : [
+        "../i18n/src/*"
+      ],
     },
   },
   "include": [

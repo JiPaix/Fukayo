@@ -10,7 +10,7 @@ import type { socketInstance } from '@api/server/types';
 import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
@@ -167,10 +167,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   uuidv5(options: { lang: mirrorsLangsType, url: string }, force?:false):string
-  uuidv5(options: { lang: mirrorsLangsType, url: string, id: string}, force: true):string
+  uuidv5(options: { url: string, id: string}, force: true):string
   uuidv5(
     options: {
-      lang: mirrorsLangsType,
+      lang?: mirrorsLangsType,
       /**
        * chapter url
        *
@@ -183,7 +183,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     force = false,
   ): string {
     if(force && options.id) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
-    return uuidgen.generate({ mirror: this.name, ...options });
+    if(!force && options.url && options.lang) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
+    throw Error('uuidgen: missing options');
   }
 
   /** change the mirror settings */

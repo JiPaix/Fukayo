@@ -1,9 +1,9 @@
 import type { startPayload } from '@api/app/types';
 import icon from '@buildResources/icon_32.png';
+import { findAppLocale, loadLocale } from '@i18n/index';
 import { forkAPI } from '@main/forkAPI';
 import { restoreOrCreateWindow, showWindow } from '@main/mainWindow';
 import type { Paths } from '@preload/config';
-import { findLocale } from '@renderer/locales/lib/findLocale';
 import { app, clipboard, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import './security-restrictions';
 
@@ -100,16 +100,15 @@ if (import.meta.env.PROD) {
 let tray = null;
 app.whenReady()
   .then(() => {
-    const lang = findLocale(app.getLocale());
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    return import(`../../renderer/src/locales/${lang}.json`) as Promise<{ default: typeof import('../../renderer/src/locales/en.json') }>;
+    const lang = findAppLocale(app.getLocale());
+    return loadLocale(lang);
   })
   .then((l) => {
     tray = new Tray(nativeImage.createFromDataURL(icon));
     const contextMenu = Menu.buildFromTemplate([
-      { label: l.default.electron.systemtray.show, click: showWindow, type: 'normal'},
+      { label: l.electron.systemtray.show, click: showWindow, type: 'normal'},
       { type: 'separator'},
-      { label: l.default.electron.systemtray.quit, role: 'quit', type: 'normal' },
+      { label: l.electron.systemtray.quit, role: 'quit', type: 'normal' },
     ]);
     tray.setToolTip('Fukayo');
     tray.setContextMenu(contextMenu);

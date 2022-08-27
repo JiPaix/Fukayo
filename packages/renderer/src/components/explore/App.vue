@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
 import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
@@ -16,7 +16,7 @@ const router = useRouter();
 const settings = useSettingsStore();
 /** socket */
 let socket:socketClientInstance|undefined;
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** quasar */
 const $q = useQuasar();
 /** search filter */

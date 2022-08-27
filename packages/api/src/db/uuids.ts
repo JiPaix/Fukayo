@@ -1,5 +1,5 @@
 import { Database } from '@api/db';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 import { resolve } from 'path';
 import { env } from 'process';
 import { v5 as uuidv5 } from 'uuid';

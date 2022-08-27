@@ -2,7 +2,7 @@ import type { uuid } from '@api/db/uuids';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**

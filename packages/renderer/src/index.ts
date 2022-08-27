@@ -83,11 +83,11 @@ const QuasarConfig = {
 };
 
 // localization
-import { setupI18n } from '@renderer/locales/lib';
-import { findLocale } from '@renderer/locales/lib/findLocale';
+import { findAppLocale } from '@i18n/index';
+import { setupI18n } from '@renderer/locales';
 import dayjs from 'dayjs';
 
-const lang = findLocale(navigator.language);
+const lang = findAppLocale(navigator.language);
 
 // init
 const App = createApp(Root);

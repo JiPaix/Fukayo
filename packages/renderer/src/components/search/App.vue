@@ -6,9 +6,8 @@ import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
-// import SearchResults from '@renderer/components/search/SearchResults.vue';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import type en from '@i18n/../locales/en.json';
+import type { mirrorsLangsType, appLangsType } from '@i18n/index';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
@@ -22,7 +21,7 @@ const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
 /** vue-i18n */
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** socket */
 let socket:socketClientInstance|undefined;
 
@@ -44,9 +43,9 @@ const done = ref(false);
 /** sort results A-Z or Z-A */
 const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
 /** list of languages available from mirrors */
-const allLangs = ref<string[]>([]);
+const allLangs = ref<mirrorsLangsType[]>([]);
 /** language(s) to include in the query and/or results */
-const includedLangsRAW = ref<string[]>([]);
+const includedLangsRAW = ref<mirrorsLangsType[]>([]);
 /** list of available mirrors */
 const mirrorsList = ref<mirrorInfo[]>([]);
 /** mirror(s) to include in the query and/or results */

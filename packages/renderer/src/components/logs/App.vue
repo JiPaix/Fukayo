@@ -3,9 +3,9 @@ import type { socketClientInstance } from '@api/client/types';
 import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { Scheduler } from '@api/server/helpers/scheduler';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
 import { format, useQuasar } from 'quasar';
@@ -25,7 +25,7 @@ const router = useRouter();
 let socket:socketClientInstance|undefined;
 /** dayJS lib */
 const dayJS = inject<typeof dayjs>('dayJS');
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 const mangaLogs = ref<typeof Scheduler['logs']['manga']>([]);
 
 const cacheLogs = ref<typeof Scheduler['logs']['cache']>([]);

@@ -1,7 +1,7 @@
-import { supportedLangs } from './supportedLangs';
+import { appLangs } from '@i18n/index';
 
-export function findLocale(lang:string) {
-  const locale = supportedLangs.find(locale => {
+export function findAppLocale(lang:string) {
+  const locale = appLangs.find(locale => {
     if (locale === lang) {
       return true;
     }

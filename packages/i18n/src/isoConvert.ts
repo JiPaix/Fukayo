@@ -1,4 +1,4 @@
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n/availableLangs';
 
 export function ISO3166_1_ALPHA2_TO_ISO639_1(input: string): mirrorsLangsType {
   input = input.toLocaleUpperCase();

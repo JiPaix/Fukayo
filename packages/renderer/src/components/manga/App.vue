@@ -2,13 +2,13 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
 import {
 isManga,
 isMangaInDb,
 } from '@renderer/components/helpers/typechecker';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
 import { QItem, useQuasar } from 'quasar';
@@ -22,7 +22,7 @@ const props = defineProps<{
 
 /** quasar */
 const $q = useQuasar();
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** vue-router */
 const router = useRouter();
 /** dayJS lib */

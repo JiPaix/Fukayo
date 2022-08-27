@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type { SettingsDB } from '@api/db/settings';
+import type { appLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import type en from '@i18n/../locales/en.json';
 import { useStore as useStoreSettings } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref, watch } from 'vue';
@@ -11,7 +11,7 @@ import { useI18n } from 'vue-i18n';
 
 /** quasar */
 const $q = useQuasar();
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** settings store */
 const settings = useStoreSettings();
 /** socket */

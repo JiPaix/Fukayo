@@ -21,6 +21,7 @@ const config = {
       '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
       '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
       '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
+      '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src') + '/',
     },
   },
   build: {

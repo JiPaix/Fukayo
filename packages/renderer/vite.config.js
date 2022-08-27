@@ -26,12 +26,13 @@ const config = {
       '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
       '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
       '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
+      '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src') + '/',
     },
   },
   plugins: [
     vue({template: transformAssetUrls}),
     vueI18n({
-      include: join(PACKAGE_ROOT, 'src', 'locales') + '/**',
+      include: join(PACKAGE_ROOT, '..', 'i18n', 'locales') + '/**',
     }),
     quasar(),
   ],
@@ -56,12 +57,19 @@ const config = {
           if (id.includes('/node_modules/')) {
             const modules = ['quasar', '@quasar', 'vue', '@vue', 'dayjs', '@intlify', '@vueuse', 'vue-i18n'];
             const chunk = modules.find((module) => id.includes(`/node_modules/${module}`));
+            if(chunk === 'quasar') {
+              if(id.includes('/quasar/lang/')) return `vendor-${chunk}.locales`;
+            }
+
+            if(chunk === '@vue') {
+              if(id.includes('/devtools-api/lib/')) return `vendor-${chunk}.devtools`;
+              if(id.includes('/@vue/runtime-')) return `vendor-${chunk}.runtimes`;
+            }
             return chunk ? `vendor-${chunk}` : 'vendor';
           }
         },
       },
     },
-
     emptyOutDir: true,
     reportCompressedSize: false,
   },

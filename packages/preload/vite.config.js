@@ -20,6 +20,7 @@ const config = {
       '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
       '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
       '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
+      '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src') + '/',
     },
   },
   build: {
@@ -29,6 +30,7 @@ const config = {
     assetsDir: '.',
     minify: process.env.MODE !== 'development',
     lib: {
+      name: 'preload',
       entry: 'src/index.ts',
       formats: ['cjs'],
     },

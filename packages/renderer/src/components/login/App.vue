@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { LoginAuth } from '@api/client/types';
 import icon from '@assets/icon.svg';
-import type en from '@renderer/locales/en.json';
-import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { appLangsType } from '@i18n/index';
+import type en from '@i18n/../locales/en.json';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 
 /** quasar */
 const $q = useQuasar();
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */

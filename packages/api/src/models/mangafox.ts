@@ -4,7 +4,7 @@ import type MirrorInterface from '@api/models/interfaces/index';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@i18n/index';
 
 class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 

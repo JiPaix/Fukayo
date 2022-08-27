@@ -1,7 +1,9 @@
 <script lang="ts" setup>
 import type { LoginAuth } from '@api/client/types';
 import favicon from '@assets/icon.svg';
+import type en from '@i18n/../locales/en.json';
 import AppLayout from '@renderer/components/AppLayout.vue';
+import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';
 import Setup from '@renderer/components/setup/App.vue';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -9,11 +11,9 @@ import { useFavicon } from '@vueuse/core';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useSocket } from './components/helpers/socket';
-import type en from './locales/en.json';
-import type { supportedLangsType } from './locales/lib/supportedLangs';
+import type { appLangsType } from '@i18n/index';
 
-const $t = useI18n<{message: typeof en}, supportedLangsType>().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** load favicon */
 useFavicon(favicon); // change favicon
 /** stored settings */
