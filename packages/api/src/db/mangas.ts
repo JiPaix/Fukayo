@@ -2,6 +2,7 @@ import { DatabaseIO } from '@api/db';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { env } from 'process';
@@ -12,7 +13,7 @@ type Mangas = {
     mirror:string,
     url: string,
     file: string,
-    lang: string,
+    lang: mirrorsLangsType,
   }[]
 }
 
@@ -93,9 +94,10 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return unDbify;
   }
 
-  async has(mirror:string, lang:string, url:string):Promise<boolean> {
+  async has(mirror:string, lang:mirrorsLangsType | mirrorsLangsType[], url:string):Promise<boolean> {
     const db = await this.read();
-    return db.mangas.some(m => m.mirror === mirror && m.lang === lang && m.url === url);
+    if(typeof lang === 'string') return db.mangas.some(m => m.mirror === mirror && m.lang === lang && m.url === url);
+    else return db.mangas.some(m => m.mirror === mirror && lang.includes(m.lang) && m.url === url);
   }
 
   async get(opts: {id:string}): Promise<MangaInDB|undefined>
@@ -144,7 +146,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
     if(!id && !socket) return results;
   }
 
-  /** add or update */
+  /**
+   * add or upsert
+   * @param manga Manga to compare with the db
+   * @param filename file containing the data
+   * @param alreadyInDB if the manga is already in db
+   */
   private async upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
     manga.covers = this.saveCovers(manga.covers, filename);
     // then we create the file by instanciating a DatabaseIO

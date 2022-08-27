@@ -5,6 +5,7 @@ import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
@@ -100,7 +101,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           url:link,
           covers,
           last_release,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
@@ -115,7 +116,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -215,7 +216,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -312,7 +313,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           name,
           url:link,
           covers,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }

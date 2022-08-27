@@ -1,4 +1,5 @@
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 
 export type SearchResult = {
   /**
@@ -16,7 +17,7 @@ export type SearchResult = {
    *
    * ISO 639-1 codes
    */
-  lang: string,
+  langs: mirrorsLangsType[],
   /** Manga's full name */
   name: string,
   /**

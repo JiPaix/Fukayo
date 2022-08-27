@@ -1,10 +1,12 @@
 import Mirror from '@api/models';
+import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@api/models/helpers/i18n';
 import icon from '@api/models/icons/tachidesk.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import { supportedLangs } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import { mirrorsLang } from '@renderer/locales/lib/supportedLangs';
 import fd from 'form-data';
 
 type CategoryList = {
@@ -60,7 +62,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       host: 'http://localhost',
       name: 'tachidesk',
       displayName: 'Tachidesk',
-      langs: supportedLangs,
+      langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
       waitTime: 100,
       icon,
       meta: {
@@ -145,9 +147,9 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         for(const manga of res) {
           if(cancel) break;
           if(!manga.title.toLowerCase().includes(query.toLowerCase())) continue;
-          const lang = (await this.fetch<Source>({
+          const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
             url: this.path(`/source/${manga.sourceId}`),
-          }, 'json')).lang;
+          }, 'json')).lang);
 
           const covers: string[] = [];
           const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
@@ -173,7 +175,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
               chapter: chapter.chapterNumber,
             },
             synopsis: manga.description,
-            lang,
+            langs: [lang],
             inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
           });
         }
@@ -189,7 +191,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -216,9 +218,9 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
 
       if(cancel) return;
 
-      const lang = (await this.fetch<Source>({
+      const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
         url: this.path(`/source/${manga.sourceId}`),
-      }, 'json')).lang;
+      }, 'json')).lang);
 
       const covers: string[] = [];
       const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
@@ -279,7 +281,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -362,9 +364,9 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
 
         for(const manga of res) {
           if(cancel) break;
-          const lang = (await this.fetch<Source>({
+          const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
             url: this.path(`/source/${manga.sourceId}`),
-          }, 'json')).lang;
+          }, 'json')).lang);
 
           const covers: string[] = [];
           const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
@@ -375,7 +377,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
             name: manga.title,
             url:`/manga/${manga.id}`,
             covers,
-            lang,
+            langs: [lang],
             inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, manga.url) ? true : false,
           });
         }
@@ -391,7 +393,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
+  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
@@ -421,7 +423,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     }
   }
 
-  markAsRead(url:string, lang:string, chapterUrl:string, read:boolean) {
+  markAsRead(url:string, lang:mirrorsLangsType, chapterUrl:string, read:boolean) {
     if(!this.options.host || !this.options.port) return;
     if(!this.options.host.length) return;
     if(!url.length || !lang.length || !chapterUrl.length) return;

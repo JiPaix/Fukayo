@@ -2,14 +2,15 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 
-const router = useRouter();
+/** current route */
 const route = useRoute();
 /** quasar */
 const $q = useQuasar();
@@ -24,6 +25,16 @@ const recommendation = ref<SearchResult[]>([]);
 /** loading state */
 const loading = ref(true);
 
+const mangaGroups = computed(() => {
+  const names = recommendation.value.map(r => r.name);
+  return names.map(name => {
+    return {
+      name,
+      manga: recommendation.value.filter(x => x.name === name )[0],
+      covers: recommendation.value.filter(x => x.name === name ).map(m => m.covers.flat()).flat(),
+    };
+  }).filter(f => typeof f.manga !== 'undefined');
+});
 
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
@@ -54,31 +65,7 @@ onBeforeMount(async () => {
     }
   });
 });
-/** return an array of css classes depending on the screen size */
-const sizes = computed(() => {
-  if($q.screen.xs) return 'height:600px;';
-  else if($q.screen.sm) return 'height:500px;';
-  else if($q.screen.md) return 'height:400px;';
-  else return 'height:300px';
-});
 
-
-
-/**
- * Redirect to the manga's page
- * @param item manga infos
- */
-function showManga (item:SearchResult) {
-  router.push({
-    name: 'manga',
-    params: {
-      mirror: item.mirrorinfo.name,
-      url:item.url,
-      lang: item.lang,
-      id: item.id,
-    },
-  });
-}
 onBeforeUnmount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   socket.emit('stopShowRecommend');
@@ -121,68 +108,19 @@ onBeforeUnmount(async () => {
       <q-page
         class="q-pa-md"
       >
-        <div class="q-pa-md row justify-evenly">
-          <q-intersection
-            v-for="item in recommendation"
-            :key="item.url"
-            class="col-xs-12 col-sm-6 col-md-3 q-mt-xl col-lg-2"
-            margin="500px 500px 500px 500px"
-            transition="fade"
-            :style="sizes"
-          >
-            <div
-              class="row shadow-5 overflow-hidden q-ma-md"
-              :style="sizes"
-            >
-              <div
-                v-if="item.covers.length > 0"
-                class="col-12 cover flex cursor-pointer"
-                :style="'background-image: url('+item.covers[0]+');'"
-                :class="$q.screen.lt.sm ? 'xs-cover' : ''"
-                @click="showManga(item)"
-              >
-                <div
-                  v-if="item.inLibrary"
-                  class="absolute-top-right q-ma-lg q-pa-xs rounded-borders text-white"
-                  :class="$q.dark.isActive ? 'bg-accent' : 'bg-primary' "
-                >
-                  <q-icon name="bookmark" />
-                  <q-tooltip>
-                    {{ $t('explore.inlibrary') }}
-                  </q-tooltip>
-                </div>
-                <div
-                  class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
-                  style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
-                  rounded
-                  dense
-                >
-                  {{ item.name }}
-                  <q-tooltip>
-                    {{ item.name }}
-                  </q-tooltip>
-                </div>
-              </div>
-              <q-skeleton
-                v-else
-                class="col-xs-12 col-sm-6 cover flex cursor-pointer"
-                :class="$q.screen.lt.sm ? 'xs-cover' : ''"
-                @click="showManga(item)"
-              >
-                <div
-                  class="text-center text-white q-pa-md text-h6 self-end w-100 ellipsis"
-                  style="overflow-hidden;bottom:0;background-color:rgb(29 29 29 / 49%)!important;"
-                  rounded
-                  dense
-                >
-                  {{ item.name }}
-                  <q-tooltip>
-                    {{ item.name }}
-                  </q-tooltip>
-                </div>
-              </q-skeleton>
-            </div>
-          </q-intersection>
+        <div
+          v-if="mirror"
+          class="q-pa-md flex flex-center"
+        >
+          <group-card
+            v-for="(group, i) in mangaGroups"
+            :key="i"
+            :group="group.manga"
+            :group-name="group.name"
+            :mirror="mirror"
+            :covers="group.covers"
+            class="q-my-lg"
+          />
         </div>
       </q-page>
     </q-page-container>

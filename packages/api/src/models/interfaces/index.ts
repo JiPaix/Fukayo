@@ -2,7 +2,7 @@ import type { uuid } from '@api/db/uuids';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { supportedLangs } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**
@@ -25,7 +25,7 @@ export default interface MirrorInterface {
    *
    * ISO 639-1 codes
    */
-  langs: string[] | typeof supportedLangs;
+  langs: mirrorsLangsType[];
   /** Meta information */
   meta: {
     /**
@@ -104,7 +104,7 @@ export default interface MirrorInterface {
    * @param {socketInstance|SchedulerClass} socket the request initiator
    * @param {Number} id arbitrary id
    */
-  manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number): void;
+  manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get mangas infos (title, authors, tags, chapters, covers, etc..)
    * @param {String} meta.url Relative url to the manga page
@@ -112,7 +112,7 @@ export default interface MirrorInterface {
    * @param {socketInstance|SchedulerClass} socket the request initiator
    * @param {Number} id arbitrary id
    */
-   mangas?(infos: { url:string, lang:string }[], socket:socketInstance|SchedulerClass, id:number): void;
+   mangas?(infos: { url:string, lang:mirrorsLangsType }[], socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get all images from chapter
    * @param link Relative url of chapter page (any page)
@@ -122,9 +122,9 @@ export default interface MirrorInterface {
    * @param callback callback function to tell the client how many pages to expect
    * @param retryIndex If you don't need the whole chapter, you can pass the index of the page you want to start from (0-based)
    */
-  chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
+  chapter(link:string, lang:mirrorsLangsType, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
 
-  markAsRead?(url:string, lang:string, chapterUrl:string, read:boolean): void;
+  markAsRead?(url:string, lang:mirrorsLangsType, chapterUrl:string, read:boolean): void;
   /**
    *
    * @param socket the request initiator
@@ -132,6 +132,6 @@ export default interface MirrorInterface {
    */
   recommend(socket:socketInstance, id:number): void;
 
-  mangaFromChapterURL(socket:socketInstance, id:number, url: string, lang?:string): void;
+  mangaFromChapterURL(socket:socketInstance, id:number, url: string, lang?:mirrorsLangsType): void;
 // eslint-disable-next-line semi
 }

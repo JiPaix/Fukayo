@@ -10,7 +10,7 @@ import type { socketInstance } from '@api/server/types';
 import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
-import type { supportedLangs } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 import type { AxiosError, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
@@ -51,7 +51,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    *
    * ISO 639-1 codes
    */
-  langs: string[] | typeof supportedLangs;
+  langs: mirrorsLangsType[];
   /** Meta information */
   meta: {
     /**
@@ -162,15 +162,15 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** check if the fetched manga is part of the library */
-  protected isInLibrary(mirror:string, lang:string, url:string) {
+  protected isInLibrary(mirror:string, lang:mirrorsLangsType | mirrorsLangsType[], url:string) {
     return MangaDatabase.has(mirror, lang, url);
   }
 
-  uuidv5(options: { lang: string, url: string }, force?:false):string
-  uuidv5(options: { lang: string, url: string, id: string}, force: true):string
+  uuidv5(options: { lang: mirrorsLangsType, url: string }, force?:false):string
+  uuidv5(options: { lang: mirrorsLangsType, url: string, id: string}, force: true):string
   uuidv5(
     options: {
-      lang: string,
+      lang: mirrorsLangsType,
       /**
        * chapter url
        *

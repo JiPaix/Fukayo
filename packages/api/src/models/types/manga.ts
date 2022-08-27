@@ -1,3 +1,4 @@
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 export interface MangaPage {
   /**
    * ID of the manga
@@ -15,7 +16,7 @@ export interface MangaPage {
    *
    * ISO 639-1 codes
    */
-  lang: string,
+  lang: mirrorsLangsType,
   /** Manga's full name */
   name: string,
   /** Custom manga's name defined by user */

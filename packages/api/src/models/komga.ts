@@ -1,10 +1,12 @@
 import Mirror from '@api/models';
+import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@api/models/helpers/i18n';
 import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
-import { supportedLangs } from '@renderer/locales/lib/supportedLangs';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
+import { mirrorsLang } from '@renderer/locales/lib/supportedLangs';
 
 //  /series?search=word
 type searchContent = {
@@ -59,7 +61,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       host: 'http://localhost',
       name: 'komga',
       displayName: 'Komga',
-      langs: supportedLangs,
+      langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
       waitTime: 100,
       icon,
       meta: {
@@ -136,8 +138,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const synopsis = result.metadata.summary;
         const books = await this.fetch<bookContent>({url: this.path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
-        let lang = 'xx';
-        if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
+
+        let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+        if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
+
         const mangaId = this.uuidv5({lang, url: `/series/${result.id}`, id: result.id}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
@@ -148,8 +152,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           covers,
           synopsis,
           last_release,
-          lang,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, result.metadata.language, link) ? true : false,
+          langs: [lang],
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -163,7 +167,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -189,8 +193,9 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         auth: {username: this.options.login, password: this.options.password},
       }, 'json');
       const name = result.metadata.title;
-      let lang = 'xx';
-      if(result.metadata.language && result.metadata.language.length) lang = result.metadata.language;
+
+      let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+      if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
 
       if(cancel) return;
       const mangaId = this.uuidv5({lang, url: `/series/${result.id}`, id: result.id}, true);
@@ -238,7 +243,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -313,8 +318,9 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         const covers: string[] = [];
         const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
-        let lang = 'xx';
-        if(serie.metadata.language && serie.metadata.language.length) lang = serie.metadata.language;
+
+        let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+        if(serie.metadata.language && serie.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(serie.metadata.language);
 
         const mangaId = this.uuidv5({lang, url: `/series/${serie.id}`, id: serie.id}, true);
 
@@ -324,8 +330,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           name: serie.metadata.title,
           url:link,
           covers,
-          lang,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, serie.metadata.language, link) ? true : false,
+          langs: [lang],
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -339,7 +345,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
+  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
@@ -382,7 +388,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     }
   }
 
-  markAsRead(url:string, lang:string, chapterUrl:string, read:boolean) {
+  markAsRead(url:string, lang:mirrorsLangsType, chapterUrl:string, read:boolean) {
     if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
     if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
     if(!url.length || !lang.length || !chapterUrl.length) return;

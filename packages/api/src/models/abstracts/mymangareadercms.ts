@@ -4,6 +4,7 @@ import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 
 type JSONQueryResult = {
   suggestions : {
@@ -128,7 +129,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           covers,
           synopsis,
           last_release,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
@@ -184,7 +185,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           name,
           url:link,
           covers,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
@@ -199,7 +200,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -312,7 +313,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -374,7 +375,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: string) {
+  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
     if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));

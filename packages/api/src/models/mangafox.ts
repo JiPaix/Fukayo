@@ -4,6 +4,7 @@ import type MirrorInterface from '@api/models/interfaces/index';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 
 class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
@@ -119,7 +120,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           covers,
           synopsis,
           last_release,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
@@ -134,7 +135,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async manga(link:string, lang:string, socket:socketInstance|SchedulerClass, id:number) {
+  async manga(link:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -154,7 +155,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     if(cancel) return;
 
     try {
-      const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+
 
       const $ = await this.fetch({
         url: `${this.host}${link}`,
@@ -193,6 +194,10 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       // chapters table
       const chapters:MangaPage['chapters'] = [];
       const tablesize = $('ul.detail-main-list > li > a').length;
+
+      // generate manga id
+      const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+
       $('ul.detail-main-list > li > a').each((i, el) => {
         if(cancel) return;
         // making sure the link match the pattern we're expecting
@@ -220,7 +225,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
         // pushing the chapter to the chapters array
         chapters.push({
-          id: this.uuidv5({lang, url: chapterUrl.replace(this.host, '')}),
+          id: mangaId,
           name: chapterNameTrim,
           number: chapterNumberFloat,
           // we test if the volume is a number, sometimes volume number is TBE/TBA or other weird stuff
@@ -245,7 +250,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
   }
 
   // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
-  async chapter(link:string, lang:string, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(link:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
 
@@ -389,7 +394,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           name,
           url:link,
           covers,
-          lang: this.langs[0],
+          langs: this.langs,
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
         });
       }
@@ -405,7 +410,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket:socketInstance, id: number, url: string, lang?: string) {
+  async mangaFromChapterURL(socket:socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
     if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
