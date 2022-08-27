@@ -2,6 +2,7 @@
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import GroupMenu from '@renderer/components/explore/GroupMenu.vue';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -16,11 +17,12 @@ const dialog = ref(false);
 const slide = ref(0);
 
 /** props */
-defineProps<{
+const props = defineProps<{
   covers: string[]
   group: SearchResult
   groupName: string
   mirror: mirrorInfo
+  hideLangs?: mirrorsLangsType[]
 }>();
 
 const defaultImageSize = {
@@ -67,13 +69,27 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:Sear
     },
   });
 }
+
+function OpenDialogOrRedirect() {
+  if(!props.hideLangs || !props.hideLangs.length) {
+    if(props.mirror.langs.length > 1) dialog.value = !dialog.value;
+    else showManga({ id: props.group.id, lang: props.mirror.langs[0], url: props.group.url, mirror: props.mirror.name });
+    return;
+  }
+
+  if(props.hideLangs.length > 1) dialog.value = !dialog.value;
+  else showManga({ id: props.group.id, lang: props.mirror.langs[0], url: props.group.url, mirror: props.mirror.name });
+  return;
+
+}
+
 </script>
 
 <template>
   <q-card
     v-ripple
     class="q-ma-xs q-my-lg"
-    @click="mirror.langs.length > 1 ? dialog = !dialog : showManga({ id: group.id, lang: mirror.langs[0], url: group.url, mirror: mirror.name })"
+    @click="OpenDialogOrRedirect"
   >
     <group-menu
       :mirror="mirror"
@@ -81,6 +97,7 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:Sear
       :width="parseInt(size.width.replace('px', ''))"
       :height="parseInt(size.height.replace('px', ''))"
       :dialog="dialog"
+      :hide-langs="hideLangs"
       @show-manga="showManga"
       @update-dialog="dialog = !dialog"
     />
@@ -98,6 +115,12 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:Sear
         :name="i"
         :img-src="cover"
       >
+        <div
+          class="absolute-top-left w-100 ellipsis text-white q-px-sm"
+          style="background-color: rgba(29, 29, 29, 0.49) !important;"
+        >
+          AH
+        </div>
         <div
           class="absolute-bottom w-100 ellipsis text-white text-center q-px-sm"
           style="background-color: rgba(29, 29, 29, 0.49) !important;"

@@ -1,14 +1,16 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useQuasar } from 'quasar';
 
-defineProps<{
+const props = defineProps<{
   width: number,
   height: number,
   sortedGroup: SearchResult
   mirror: mirrorInfo
   dialog: boolean
+  hideLangs?: mirrorsLangsType[]
 }>();
 
 const emit = defineEmits<{
@@ -19,6 +21,7 @@ const emit = defineEmits<{
 const $q = useQuasar();
 
 function sortLangs(langs: SearchResult['langs']) {
+  if(props.hideLangs) langs = langs.filter(x => props.hideLangs?.some(y => x === y));
   return langs.sort((a, b) => a.localeCompare(b));
 }
 

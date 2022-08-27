@@ -2,10 +2,11 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
-import SearchResults from '@renderer/components/search/SearchResults.vue';
+// import SearchResults from '@renderer/components/search/SearchResults.vue';
 import type en from '@renderer/locales/en.json';
 import type { supportedLangsType } from '@renderer/locales/lib/supportedLangs';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -62,11 +63,22 @@ const results = computed(() => {
       };
   })
   .filter(r => includedMirrors.value.includes(r.mirrorinfo.name))
-  .filter(r => includedLangsRAW.value.some(l => (r.mirrorinfo.langs as string[]).includes(l)))
+  .filter(r => includedLangsRAW.value.some(l => r.mirrorinfo.langs.includes(l)))
   .sort((a,b) => {
     if(sortAZ.value) return a.name.localeCompare(b.name);
     return b.name.localeCompare(a.name);
   });
+});
+
+const mangaGroups = computed(() => {
+  const names = results.value.map(r => r.name);
+  return names.map(name => {
+    return {
+      name,
+      manga: results.value.filter(x => x.name === name && x.langs.length)[0],
+      covers: results.value.filter(x => x.name === name ).map(m => m.covers.flat()).flat(),
+    };
+  }).filter(f => typeof f.manga !== 'undefined');
 });
 
 /** return the ordered list of includedLangsRAW */
@@ -202,194 +214,224 @@ onBeforeUnmount(async () => {
 });
 </script>
 <template>
-  <q-card
-    class="w-100"
-    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
+  <q-layout
+    view="lHh lpr lFf"
+    container
+    :style="'height: '+($q.screen.height-50)+'px'"
+    class="shadow-2"
+    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
-    <q-card-section class="row items-center">
-      <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
-        <q-input
-          ref="inputRef"
-          v-model="query"
-          type="text"
-          :placeholder="$t('search.placeholder')"
-          outlined
-          clearable
-          autofocus
-          :dark="$q.dark.isActive"
-          :color="$q.dark.isActive ? 'white': 'primary'"
-          :loading="loading"
-          @keyup.enter="research"
-        >
-          <template
-            #append
-          >
-            <q-icon
-              v-if="!query"
-              :name="'search'"
-              style="cursor:pointer"
-              @click="research"
-            />
-          </template>
-        </q-input>
-      </div>
-      <div class="col-12 q-mt-md text-center">
-        <q-btn-group :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'">
-          <q-btn
-            :ripple="false"
-            text-color="orange"
-            icon="filter_alt"
-            style="cursor:default!important;"
-          />
-          <q-btn
-            :icon="sortAZ ? 'text_rotation_angledown' : 'text_rotation_angleup'"
-            size="1em"
-            @click="sortAZ = !sortAZ"
-          />
-
-          <q-btn-dropdown
-            :text-color="includedAllMirrors ? '' : 'orange'"
-            icon="bookmarks"
-            size="1em"
-          >
-            <q-list
-              :dark="$q.dark.isActive"
-              :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
-            >
-              <q-item
-                dense
-                clickable
-                :dark="$q.dark.isActive"
-                @click="pickallMirrors"
-              >
-                <q-checkbox
-                  v-model="includedAllMirrors"
-                  size="32px"
-                  color="primary"
-                  toggle-indeterminate
-                  class="q-ma-none q-pa-none"
-                  :dark="$q.dark.isActive"
-                />
-                <q-item-section
-                  avatar
-                  class="q-ma-none q-pa-none"
-                  style="min-width:36px!important;"
-                >
-                  <q-avatar
-                    size="36px"
-                    text-color="primary"
-                    icon="o_bookmarks"
-                  />
-                </q-item-section>
-                <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all') }}
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item
-                v-for="mirror in mirrorsList"
-                :key="mirror.name"
-                clickable
-                :dark="$q.dark.isActive"
-                @click="pickMirror(mirror.name)"
-              >
-                <q-checkbox
-                  v-model="includedMirrors"
-                  size="32px"
-                  color="orange"
-                  :val="mirror.name"
-                  class="q-ma-none q-pa-none"
-                  :dark="$q.dark.isActive"
-                />
-                <q-item-section
-                  avatar
-                  class="q-ma-none q-pa-none"
-                  style="min-width: 32px!important;"
-                >
-                  <q-avatar
-                    size="32px"
-                    :icon="'img:'+mirror.icon"
-                  />
-                </q-item-section>
-                <q-item-section>
-                  {{ mirror.displayName }} {{
-                    rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length ?
-                      '('+rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length+')' : ''
-                  }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-          <q-btn-dropdown
-            icon="translate"
-            size="1em"
-          >
-            <q-list
-              :dark="$q.dark.isActive"
-              :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
-            >
-              <q-item
-                dense
-                clickable
-                :dark="$q.dark.isActive"
-                @click="pickAllLangs"
-              >
-                <q-checkbox
-                  v-model="includedAllLanguage"
-                  size="32px"
-                  color="primary"
-                  class="q-ma-none q-pa-none"
-                  toggle-indeterminate
-                  :dark="$q.dark.isActive"
-                />
-                <q-item-section
-                  avatar
-                  class="q-ma-none q-pa-none"
-                  style="min-width:36px!important;"
-                >
-                  <q-avatar
-                    size="36px"
-                    text-color="primary"
-                    icon="o_language"
-                  />
-                </q-item-section>
-                <q-item-section class="text-uppercase text-bold">
-                  {{ $t('search.all') }}
-                </q-item-section>
-              </q-item>
-              <q-separator />
-              <q-item
-                v-for="lang in allLangs"
-                :key="lang"
-                clickable
-                :dark="$q.dark.isActive"
-                @click="pickLang(lang)"
-              >
-                <q-checkbox
-                  :model-value="includedLangs"
-                  size="32px"
-                  color="orange"
-                  :val="lang"
-                  class="q-ma-none q-pa-none"
-                  :dark="$q.dark.isActive"
-                  @update:model-value="pickLang(lang)"
-                />
-                <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'.value') }}
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-btn-dropdown>
-        </q-btn-group>
-      </div>
-    </q-card-section>
-    <q-card-section v-if="results.length">
-      <search-results
-        :results="results"
+    <q-footer class="bg-dark">
+      <q-linear-progress
+        v-if="loading"
+        size="4px"
+        color="orange"
+        animation-speed="500"
+        indeterminate
       />
-    </q-card-section>
-    <q-card-section v-else-if="!results.length && done">
-      {{ $t('search.no_results', {query: currentQuery}) }}
-    </q-card-section>
-  </q-card>
+    </q-footer>
+    <q-page-container>
+      <q-page
+        class="q-pa-md"
+      >
+        <q-form
+          class="text-center"
+          @submit="research"
+        >
+          <q-input
+            ref="inputRef"
+            v-model="query"
+            type="search"
+            autocomplete="off"
+            :placeholder="$t('search.placeholder')"
+            outlined
+            clearable
+            autofocus
+            :dark="$q.dark.isActive"
+            :color="$q.dark.isActive ? 'white': 'primary'"
+            :loading="loading"
+            :rules="[
+              val => (val !== null && val !== '') || 'Please type something',
+              val => (val && val.length > 3) || 'Not enought characters',
+            ]"
+            lazy-rules
+          >
+            <template
+              #append
+            >
+              <q-icon
+                v-if="!query"
+                :name="'search'"
+                style="cursor:pointer"
+                @click="research"
+              />
+            </template>
+          </q-input>
+
+          <q-btn-group
+            :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+            class="q-mt-sm"
+          >
+            <q-btn
+              :ripple="false"
+              text-color="orange"
+              icon="filter_alt"
+              style="cursor:default!important;"
+            />
+            <q-btn
+              :icon="sortAZ ? 'text_rotation_angledown' : 'text_rotation_angleup'"
+              size="1em"
+              @click="sortAZ = !sortAZ"
+            />
+
+            <q-btn-dropdown
+              :text-color="includedAllMirrors ? '' : 'orange'"
+              icon="bookmarks"
+              size="1em"
+            >
+              <q-list
+                :dark="$q.dark.isActive"
+                :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+              >
+                <q-item
+                  dense
+                  clickable
+                  :dark="$q.dark.isActive"
+                  @click="pickallMirrors"
+                >
+                  <q-checkbox
+                    v-model="includedAllMirrors"
+                    size="32px"
+                    color="primary"
+                    toggle-indeterminate
+                    class="q-ma-none q-pa-none"
+                    :dark="$q.dark.isActive"
+                  />
+                  <q-item-section
+                    avatar
+                    class="q-ma-none q-pa-none"
+                    style="min-width:36px!important;"
+                  >
+                    <q-avatar
+                      size="36px"
+                      text-color="primary"
+                      icon="o_bookmarks"
+                    />
+                  </q-item-section>
+                  <q-item-section class="text-uppercase text-bold">
+                    {{ $t('search.all') }}
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item
+                  v-for="mirror in mirrorsList"
+                  :key="mirror.name"
+                  clickable
+                  :dark="$q.dark.isActive"
+                  @click="pickMirror(mirror.name)"
+                >
+                  <q-checkbox
+                    v-model="includedMirrors"
+                    size="32px"
+                    color="orange"
+                    :val="mirror.name"
+                    class="q-ma-none q-pa-none"
+                    :dark="$q.dark.isActive"
+                  />
+                  <q-item-section
+                    avatar
+                    class="q-ma-none q-pa-none"
+                    style="min-width: 32px!important;"
+                  >
+                    <q-avatar
+                      size="32px"
+                      :icon="'img:'+mirror.icon"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    {{ mirror.displayName }} {{
+                      rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length ?
+                        '('+rawResults.filter(r=> r.mirrorinfo.name === mirror.name).length+')' : ''
+                    }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+            <q-btn-dropdown
+              icon="translate"
+              size="1em"
+            >
+              <q-list
+                :dark="$q.dark.isActive"
+                :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+              >
+                <q-item
+                  dense
+                  clickable
+                  :dark="$q.dark.isActive"
+                  @click="pickAllLangs"
+                >
+                  <q-checkbox
+                    v-model="includedAllLanguage"
+                    size="32px"
+                    color="primary"
+                    class="q-ma-none q-pa-none"
+                    toggle-indeterminate
+                    :dark="$q.dark.isActive"
+                  />
+                  <q-item-section
+                    avatar
+                    class="q-ma-none q-pa-none"
+                    style="min-width:36px!important;"
+                  >
+                    <q-avatar
+                      size="36px"
+                      text-color="primary"
+                      icon="o_language"
+                    />
+                  </q-item-section>
+                  <q-item-section class="text-uppercase text-bold">
+                    {{ $t('search.all') }}
+                  </q-item-section>
+                </q-item>
+                <q-separator />
+                <q-item
+                  v-for="lang in allLangs"
+                  :key="lang"
+                  clickable
+                  :dark="$q.dark.isActive"
+                  @click="pickLang(lang)"
+                >
+                  <q-checkbox
+                    :model-value="includedLangs"
+                    size="32px"
+                    color="orange"
+                    :val="lang"
+                    class="q-ma-none q-pa-none"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="pickLang(lang)"
+                  />
+                  <q-item-section class="q-ma-none">
+                    {{ $t('languages.'+lang+'.value') }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
+          </q-btn-group>
+        </q-form>
+        <div class="flex flex-center">
+          <group-card
+            v-for="(group, i) in mangaGroups"
+            :key="i"
+            :group="group.manga"
+            :group-name="group.name"
+            :mirror="group.manga.mirrorinfo"
+            :hide-langs="includedLangsRAW"
+            :covers="group.covers"
+            class="q-my-lg"
+          />
+        </div>
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>
