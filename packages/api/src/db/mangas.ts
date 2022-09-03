@@ -250,8 +250,6 @@ export class MangasDB extends DatabaseIO<Mangas> {
         res.push(readFileSync(path).toString());
       }
     });
-    this.logger('FILENAMES:', filenames);
-    this.logger('FETCHED', res.length, 'COVERS');
     return res;
   }
 
