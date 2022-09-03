@@ -35,6 +35,20 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
+  /**
+   * does the mirror treats different languages for the same manga as different entries
+   * @default true
+   * @example
+   * ```js
+   * // multipleLangsOnSameEntry = false
+   * manga_from_mangadex = { title: 'A', url: `/manga/xyz`, langs: ['en', 'jp'] }
+   *
+   * // multipleLangsOnSameEntry = true
+   * manga_from_tachidesk = { title: 'B', url: `/manga/yz`, langs: ['en'] }
+   * manga_from_tachidesk2 = { title: 'B', url: `/manga/xyz`, langs: ['jp'] }
+   * ```
+   */
+  entryLanguageHasItsOwnURL = true;
   /** slug name */
   name: string;
   /** full name */
@@ -95,6 +109,9 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
     this.meta = opts.meta;
+
+    if(typeof opts.entryLanguageHasItsOwnURL === 'boolean') this.entryLanguageHasItsOwnURL = opts.entryLanguageHasItsOwnURL;
+
     if(this.cacheEnabled) {
       const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
@@ -150,6 +167,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       langs: this.langs,
       meta: this.meta,
       options: options,
+      entryLanguageHasItsOwnURL: this.entryLanguageHasItsOwnURL,
     };
   }
 
@@ -162,15 +180,15 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** check if the fetched manga is part of the library */
-  protected isInLibrary(mirror:string, lang:mirrorsLangsType | mirrorsLangsType[], url:string) {
-    return MangaDatabase.has(mirror, lang, url);
+  protected isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
+    return MangaDatabase.has(mirror, langs, url);
   }
 
-  uuidv5(options: { lang: mirrorsLangsType, url: string }, force?:false):string
-  uuidv5(options: { url: string, id: string}, force: true):string
+  uuidv5(options: { langs: mirrorsLangsType[], url: string }, force?:false):string
+  uuidv5(options: { url: string, id: string }, force: true):string
   uuidv5(
     options: {
-      lang?: mirrorsLangsType,
+      langs?: mirrorsLangsType[],
       /**
        * chapter url
        *
@@ -183,7 +201,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     force = false,
   ): string {
     if(force && options.id) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
-    if(!force && options.url && options.lang) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
+    if(!force && options.url && options.langs) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
     throw Error('uuidgen: missing options');
   }
 

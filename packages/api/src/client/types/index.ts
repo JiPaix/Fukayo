@@ -23,15 +23,14 @@ export type ClientToServerEvents = {
   stopShowChapter: () => void;
   stopShowRecommend: () => void;
   stopShowLibrary: () => void;
-  showManga: (id:number, opts: {mirror?:string, lang?:mirrorsLangsType, id?:string, url?:string }) => void;
-  showMangas: (id:number, mirror:string, meta: { lang: mirrorsLangsType, url: string }[]) => void;
-  showChapter: (id:number, opts: { id?: string, mirror?:string, lang?:mirrorsLangsType, url?:string, retryIndex?:number }, callback?: (nbOfPagesToExpect:number)=>void) => void;
+  showManga: (id:number, opts: {mirror?:string, langs?:mirrorsLangsType[], id?:string, url?:string }) => void;
+  showChapter: (id:number, opts: { id?: string, mirror?:string, lang:mirrorsLangsType, url?:string, retryIndex?:number }, callback?: (nbOfPagesToExpect:number)=>void) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:number) => void) => void;
   emptyCache: (files?:string[]) => void;
   addManga: ( payload: { manga:MangaPage|MangaInDB, settings?:MangaInDB['meta']['options'] }, callback:(dbManga: MangaInDB)=>void) => void;
-  removeManga: (dbManga:MangaInDB, callback:(manga: MangaPage)=>void) => void;
+  removeManga: (dbManga:MangaInDB, lang:mirrorsLangsType, callback:(manga: MangaPage)=>void) => void;
   showLibrary:(id:number) => void;
   findMirrorByURL: (url:string, callback:(m: mirrorInfo|undefined, isMangaPage: boolean, isChapterPage: boolean)=>void) => void;
   getMangaURLfromChapterURL: (id:number, url:string, lang?:mirrorsLangsType) => void;

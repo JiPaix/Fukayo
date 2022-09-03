@@ -1,4 +1,3 @@
-import type { uuid } from '@api/db/uuids';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
@@ -71,7 +70,20 @@ export default interface MirrorInterface {
   /**
    * Generate UUID
    */
-  uuidv5(options: Omit<uuid, 'id'>): string
+   uuidv5(
+    options: {
+      lang?: mirrorsLangsType,
+      /**
+       * chapter url
+       *
+       * @important if chapters share the same url the same uuid will be generated
+       * @workaround append the chapter number/index/some other identifier at the end of the url
+       */
+      url: string
+      id?: string
+    },
+    force: boolean,
+  ): string
 
   /** Change the mirror settings */
   changeSettings(options: Record<string, unknown>): void;
@@ -96,23 +108,15 @@ export default interface MirrorInterface {
    * @param {socketInstance} socket user socket
    * @param {Number} id request's uid
    */
-  search(query: string, socket:socketInstance, id:number): void;
+  search(query: string, langs: mirrorsLangsType[] ,socket:socketInstance, id:number): void;
   /**
    * Get manga infos (title, authors, tags, chapters, covers, etc..)
-   * @param {String} url Relative url to the manga page
-   * @param {String} lang ISO-639-1 language code
-   * @param {socketInstance|SchedulerClass} socket the request initiator
-   * @param {Number} id arbitrary id
+   * @param url Relative url to the manga page
+   * @param langs ISO-639-1 language code
+   * @param socket the request initiator
+   * @param id arbitrary id
    */
-  manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number): void;
-  /**
-   * Get mangas infos (title, authors, tags, chapters, covers, etc..)
-   * @param {String} meta.url Relative url to the manga page
-   * @param {String} meta.lang ISO-639-1 language code
-   * @param {socketInstance|SchedulerClass} socket the request initiator
-   * @param {Number} id arbitrary id
-   */
-   mangas?(infos: { url:string, lang:mirrorsLangsType }[], socket:socketInstance|SchedulerClass, id:number): void;
+  manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get all images from chapter
    * @param link Relative url of chapter page (any page)

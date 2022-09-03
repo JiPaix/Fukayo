@@ -228,128 +228,78 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   private async updateMangas(mirror:MirrorInterface, mangas: MangaInDB[]) {
     const res:MangaInDB[] = [];
     const now = Date.now();
-    if(mirror.mangas) {
+    for(const manga of mangas) {
+      this.logger('updating', manga.name, '@', manga.mirror);
       try {
-        const fetched = await this.updateManyMangas(mirror, mangas);
-        for(const mangaPage of fetched) {
-          let countNewChaps = 0;
-          let countNewReadStatus = 0;
-          let countNewMetadata = 0;
+        const fetched = await this.fetch(mirror, manga);
+        let countNewChaps = 0;
+        let countNewReadStatus = 0;
+        let countNewMetadata = 0;
 
-          const manga = mangas.find(m => m.id === mangaPage.id);
-          if(!manga) {
-            this.addMangaLog('chapter_error', mirror.name, mangaPage.id, countNewChaps);
-            continue;
-          }
-          // check if some keys changed
-          if(manga.name !== mangaPage.name) {
-            manga.name = mangaPage.name;
-            countNewMetadata++;
-          }
-          if(manga.lang !== mangaPage.lang) {
-            manga.lang = mangaPage.lang;
-            countNewMetadata++;
-          }
-          if(manga.synopsis !== mangaPage.synopsis) {
-            manga.synopsis = mangaPage.synopsis;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.authors, mangaPage.authors)) {
-            manga.authors = mangaPage.authors;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.covers, mangaPage.covers)) {
-            manga.covers = mangaPage.covers;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.tags, mangaPage.tags)) {
-            manga.tags = mangaPage.tags;
-            countNewMetadata++;
-          }
-          mangaPage.chapters.forEach(chapter => {
-            const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
-            if(chapterInDB) {
-              if(!chapterInDB.read && chapter.read) {
-                chapterInDB.read = false;
-                countNewReadStatus++;
-              }
-            } else {
-              manga.chapters.push(chapter);
-              countNewChaps++;
-            }
-          });
-          if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
-          if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
-          if(countNewReadStatus > 0) this.addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
+        // check if some keys changed
+        if(manga.name !== fetched.name) {
+          manga.name = fetched.name;
+          countNewMetadata++;
         }
-      } catch {
-        // do nothing
-      }
 
-    } else {
-      for(const manga of mangas) {
-        this.logger('updating', manga.name, '@', manga.mirror);
-        try {
-          const fetched = await this.updateSingleManga(mirror, manga);
-          let countNewChaps = 0;
-          let countNewReadStatus = 0;
-          let countNewMetadata = 0;
-
-          // check if some keys changed
-          if(manga.name !== fetched.name) {
-            manga.name = fetched.name;
+        // For mirror which only have 1 lang, which might change
+        if(mirror.langs.length === 1 || mirror.mirrorInfo.entryLanguageHasItsOwnURL) {
+          if(manga.langs[0] !== fetched.langs[0]) {
+            manga.langs = fetched.langs;
             countNewMetadata++;
+            fetched.chapters.map(x => {
+              return { ...x, lang: fetched.langs[0] };
+            });
           }
-          if(manga.lang !== fetched.lang) {
-            manga.lang = fetched.lang;
-            countNewMetadata++;
-          }
-          if(manga.synopsis !== fetched.synopsis) {
-            manga.synopsis = fetched.synopsis;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.authors, fetched.authors)) {
-            manga.authors = fetched.authors;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.covers, fetched.covers)) {
-            manga.covers = fetched.covers;
-            countNewMetadata++;
-          }
-          if(!arraysEqual(manga.tags, fetched.tags)) {
-            manga.tags = fetched.tags;
-            countNewMetadata++;
-          }
-
-          // if fetched has chapters not in manga add them if they don't already exist
-          fetched.chapters.forEach(chapter => {
-            const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
-            if(chapterInDB) {
-              if(!chapterInDB.read && chapter.read) {
-                chapterInDB.read = true;
-                countNewReadStatus++;
-              }
-            } else {
-              manga.chapters.push(chapter);
-              countNewChaps++;
-            }
-          });
-          if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
-          if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
-          if(countNewReadStatus > 0) this.addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
-        } catch(e) {
-          this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
         }
-        res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
+
+        if(manga.synopsis !== fetched.synopsis) {
+          manga.synopsis = fetched.synopsis;
+          countNewMetadata++;
+        }
+        if(!arraysEqual(manga.authors, fetched.authors)) {
+          manga.authors = fetched.authors;
+          countNewMetadata++;
+        }
+        if(!arraysEqual(manga.covers, fetched.covers)) {
+          manga.covers = fetched.covers;
+          countNewMetadata++;
+        }
+        if(!arraysEqual(manga.tags, fetched.tags)) {
+          manga.tags = fetched.tags;
+          countNewMetadata++;
+        }
+
+        // if fetched has chapters not in manga add them if they don't already exist
+        fetched.chapters
+          .forEach(chapter => {
+          const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
+          if(chapterInDB) {
+            if(!chapterInDB.read && chapter.read) {
+              chapterInDB.read = true;
+              countNewReadStatus++;
+            }
+          } else {
+            manga.chapters.push(chapter);
+            countNewChaps++;
+          }
+        });
+        if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
+        if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
+        if(countNewReadStatus > 0) this.addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
+      } catch(e) {
+        this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
       }
-      res.forEach(async (m) => {
-        await MangaDatabase.add({ manga: m });
-      });
+      res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
     }
+    res.forEach(async (m) => {
+      await MangaDatabase.add({ manga: m });
+    });
+
 
   }
 
-  private async updateSingleManga(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
+  private async fetch(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
@@ -365,25 +315,8 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       };
 
       this.on('showManga', listener.bind(this));
-      mirror.manga(manga.url, manga.lang, this, reqId);
+      mirror.manga(manga.url, manga.langs, this, reqId);
     });
-  }
-
-  private async updateManyMangas(mirror:MirrorInterface, mangas: MangaInDB[]):Promise<MangaPage[]> {
-    return new Promise((resolve, reject) => {
-      const reqId = Date.now();
-      const listener = (id:number, mangasFromMirrors:(MangaInDB | MangaPage | MangaErrorMessage)[]) => {
-        if(id !== reqId) return;
-        const res = mangasFromMirrors.filter(isMangaPage);
-        if(res.length) resolve(res);
-        else reject(mangasFromMirrors);
-      };
-      this.on('showMangas', listener.bind(this));
-      const meta = mangas.map(m => { return { url: m.url, lang: m.lang }; });
-      if(mirror.mangas) mirror.mangas(meta, this, reqId);
-      else throw new Error('mirror does not have mangas() function');
-    });
-
   }
 }
 

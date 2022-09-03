@@ -159,7 +159,7 @@ export default class IOWrapper {
       .filter(m => selectedMirrors.includes(m.name))
       .filter(m => m.enabled);
       callback(filtered.length);
-      filtered.forEach(m => m.search(query, socket, id));
+      filtered.forEach(m => m.search(query, selectedLangs, socket, id));
     });
 
     /**
@@ -175,21 +175,21 @@ export default class IOWrapper {
       let indb: MangaInDB | undefined;
 
       if(opts.id) indb = await MangaDatabase.get({id: opts.id});
-      else if(opts.mirror && opts.lang && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, lang: opts.lang, url: opts.url});
+      else if(opts.mirror && opts.langs && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);
 
-      if(opts.mirror && opts.lang && opts.url) {
+      if(opts.mirror && opts.langs && opts.url) {
         const mirror = mirrors.find(m => m.name === opts.mirror);
         if(!mirror) return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
-        else return mirror.manga(opts.url, opts.lang, socket, id);
+        else return mirror.manga(opts.url, opts.langs, socket, id);
       }
 
       if(opts.id) {
         const search = uuidgen.data.ids.find(u => u.id === opts.id);
         if(search) {
           const mirror = mirrors.find(m => m.name === search.mirror);
-          if(mirror) return mirror.manga(search.url, search.lang, socket, id);
+          if(mirror) return mirror.manga(search.url, search.langs, socket, id);
           else return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
         }
       }
@@ -204,10 +204,10 @@ export default class IOWrapper {
         const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port && (m.options.port !== '443' && m.options.port !== '80') ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(!mirror) return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
-        const indb = await MangaDatabase.get({ mirror: mirror.name, lang: lang||mirror.langs[0], url: URI.toString().replace(URI.origin, '')});
+        const indb = await MangaDatabase.get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
         if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
 
-        const search = uuidgen.data.ids.find(u => u.lang === lang && u.mirror === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
+        const search = uuidgen.data.ids.find(u => u.langs.some(l => lang === l) && u.mirror === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
         if(search) return socket.emit('getMangaURLfromChapterURL', id, search);
 
         return mirror.mangaFromChapterURL(socket, id, url, lang);
@@ -223,10 +223,10 @@ export default class IOWrapper {
     socket.on('showChapter', (id, opts, callback) => {
       if(!opts.mirror || !opts.lang || !opts.url) {
         if(opts.id) {
-          const search = uuidgen.data.ids.find(u => u.id === opts.id);
+          const search = uuidgen.data.ids.find(u => u.id === opts.id && u.langs.some(l => l === opts.lang));
           if(search) {
             const mirror = mirrors.find(m => m.name === search.mirror);
-            if(mirror) mirror.chapter(search.url, search.lang, socket, id, callback, opts.retryIndex);
+            if(mirror) mirror.chapter(search.url, opts.lang, socket, id, callback, opts.retryIndex);
             else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
           }
         } else {
@@ -263,11 +263,8 @@ export default class IOWrapper {
      * Remove manga from db
      * callback returns the manga-in-db's data (as a mirror would send it)
      */
-    socket.on('removeManga', async (manga, callback) => {
-      const notInDB = await MangaDatabase.remove(manga);
-      const { id, mirror, lang, url, chapters} = notInDB;
-      chapters.forEach(c => uuidgen.generate({ id: c.id, mirror, lang, url }, true));
-      uuidgen.generate({ id, mirror, lang, url}, true);
+    socket.on('removeManga', async (manga, lang, callback) => {
+      const notInDB = await MangaDatabase.remove(manga, lang);
       callback(notInDB);
     });
 

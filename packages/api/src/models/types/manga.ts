@@ -16,7 +16,7 @@ export interface MangaPage {
    *
    * ISO 639-1 codes
    */
-  lang: mirrorsLangsType,
+  langs: mirrorsLangsType[],
   /** Manga's full name */
   name: string,
   /** Custom manga's name defined by user */
@@ -46,6 +46,10 @@ export interface MangaPage {
      * @example '/manga/manga-name/chapter-name'
      */
     url: string
+    /**
+     * chapter language
+     */
+    lang: mirrorsLangsType
     /** fetch date */
     date: number
     /**

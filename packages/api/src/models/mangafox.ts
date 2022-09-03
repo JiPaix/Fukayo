@@ -50,7 +50,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return res;
   }
 
-  async search(query:string, socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -109,7 +109,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           };
         }
 
-        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
 
         // we return the results based on SearchResult model
         socket.emit('searchInMirrors', id, {
@@ -121,7 +121,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           synopsis,
           last_release,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -135,7 +135,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async manga(link:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number) {
+  async manga(link:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof SchedulerClass)) {
@@ -196,7 +196,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const tablesize = $('ul.detail-main-list > li > a').length;
 
       // generate manga id
-      const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+      const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
 
       $('ul.detail-main-list > li > a').each((i, el) => {
         if(cancel) return;
@@ -233,12 +233,13 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           url: chapterUrl,
           date,
           read: false,
+          lang: this.langs[0],
         });
 
       });
       // emitting the manga page based on MangaPage model
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name});
+      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name});
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -385,7 +386,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           if(img) covers.push(img);
         }
 
-        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
 
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('showRecommend', id, {
@@ -395,7 +396,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           url:link,
           covers,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -425,7 +426,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       return this.stopListening(socket);
     }
     if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror: this.name});
       return this.stopListening(socket);
     }
     if(isChapterPage) {
@@ -437,7 +438,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         }, 'html');
 
         const pageURL = $('.reader-header-title-1 > a[href^="/manga"]').attr('href');
-        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), lang, mirror: this.name});
+        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), langs: [lang], mirror: this.name});
         else return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch {
         return socket.emit('getMangaURLfromChapterURL', id, undefined);

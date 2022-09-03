@@ -32,6 +32,20 @@ export type mirrorInfo = {
    */
   langs: mirrorsLangsType[],
   /**
+   * does the mirror treats different languages for the same manga as different entries
+   * @default true
+   * @example
+   * ```js
+   * // multipleLangsOnSameEntry = false
+   * manga_from_mangadex = { title: 'A', url: `/manga/xyz`, langs: ['en', 'jp'] }
+   *
+   * // multipleLangsOnSameEntry = true
+   * manga_from_tachidesk = { title: 'B', url: `/manga/yz`, langs: ['en'] }
+   * manga_from_tachidesk2 = { title: 'B', url: `/manga/xyz`, langs: ['jp'] }
+   * ```
+   */
+   entryLanguageHasItsOwnURL: boolean,
+  /**
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */

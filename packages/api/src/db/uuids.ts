@@ -7,7 +7,7 @@ import { v5 as uuidv5 } from 'uuid';
 export type uuid = {
   id: string;
   mirror: string;
-  lang: mirrorsLangsType;
+  langs: mirrorsLangsType[];
   url: string;
 }
 
@@ -45,11 +45,11 @@ export class UUID extends Database<uuids> {
   }
 
   private find(id: Omit<uuid, 'id'>) {
-    return this.data.ids.find(i => i.mirror === id.mirror && i.lang === id.lang && i.url === id.url);
+    return this.data.ids.find(i => i.mirror === id.mirror && i.langs.some(l => id.langs.includes(l)) && i.url === id.url);
   }
 
   private save(id: Omit<uuid, 'id'>) {
-    const uuid = uuidv5(id.mirror + id.lang + id.url, this.NAMESPACE);
+    const uuid = uuidv5(id.mirror + id.langs.join() + id.url, this.NAMESPACE);
     this.data.ids.push({id: uuid, ...id});
     this.pending++;
     return uuid;

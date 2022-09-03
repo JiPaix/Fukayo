@@ -1,5 +1,4 @@
 import Mirror from '@api/models';
-import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@api/models/helpers/i18n';
 import icon from '@api/models/icons/mangahasu.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
@@ -7,6 +6,7 @@ import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
+import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@i18n/index';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
@@ -47,7 +47,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return res;
   }
 
-  async search(query:string, socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
     try {
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
@@ -96,14 +96,14 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
 
         socket.emit('searchInMirrors', id, {
-          id: this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')}, false),
+          id: this.uuidv5({langs: this.langs, url: link.replace(this.host, '')}, false),
           mirrorinfo: this.mirrorInfo,
           name,
           url:link,
           covers,
           last_release,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -117,7 +117,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number) {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -136,7 +136,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       return this.stopListening(socket);
     }
 
-    const mangaId = this.uuidv5({lang, url:link.replace(this.host, '')});
+    const mangaId = this.uuidv5({langs, url:link.replace(this.host, '')});
 
     try {
       const $ = await this.fetch({
@@ -184,29 +184,31 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(match && typeof match === 'object') {
           const [, , , , , , , chapterName] = match;
           release = {
-            id: this.uuidv5({lang, url: chaplink.replace(this.host, '')}),
+            id: this.uuidv5({langs, url: chaplink.replace(this.host, '')}),
             name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
             volume: undefined,
             number: i+1,
             url: chaplink,
             date,
             read: false,
+            lang: this.langs[0],
           };
         } else {
           release = {
-            id: this.uuidv5({lang, url: chaplink.replace(this.host, '')}),
+            id: this.uuidv5({langs, url: chaplink.replace(this.host, '')}),
             name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
             number: i+1,
             volume: undefined,
             url: chaplink,
             date,
             read:false,
+            lang: this.langs[0],
           };
         }
         if(release) chapters.push(release);
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, lang: this.langs[0], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name });
+      socket.emit('showManga', id, {id: mangaId, url: link, langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -306,7 +308,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         }
         // manga id = "mirror_name/lang/link-of-manga-page"
 
-        const mangaId = this.uuidv5({lang: this.langs[0], url: link.replace(this.host, '')});
+        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
 
         if(!cancel) socket.emit('showRecommend', id, {
           id: mangaId,
@@ -315,7 +317,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           url:link,
           covers,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs[0], link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
       }
       if(cancel) return;
@@ -344,7 +346,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       return this.stopListening(socket);
     }
     if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, lang, mirror: this.name});
+      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror: this.name});
       return this.stopListening(socket);
     }
     if(isChapterPage) {
@@ -354,7 +356,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           waitForSelector: 'body',
         }, 'html');
         const chapterPageURL = $('a[itemprop="url"][href*=html]').attr('href');
-        if(chapterPageURL) socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, lang, mirror: this.name });
+        if(chapterPageURL) socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, langs: [lang], mirror: this.name });
         else socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch {
         socket.emit('getMangaURLfromChapterURL', id, undefined);

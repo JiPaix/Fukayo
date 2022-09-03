@@ -1,12 +1,11 @@
 import Mirror from '@api/models';
-import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@api/models/helpers/i18n';
 import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
-import { mirrorsLang } from '@i18n/index';
+import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
 
 //  /series?search=word
 type searchContent = {
@@ -111,7 +110,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return res;
   }
 
-  async search(query:string, socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
@@ -142,6 +141,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
         if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
 
+        if(!langs.some(l => l === lang)) return;
+
         const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
@@ -153,7 +154,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           synopsis,
           last_release,
           langs: [lang],
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, [lang], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -167,7 +168,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async manga(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
@@ -223,6 +224,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
             id: book.id,
           }, true),
           name: book.metadata.title,
+          lang,
           number: book.metadata.numberSort,
           url: chaplink,
           date: date,
@@ -231,7 +233,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         chapters.push(release);
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url, lang, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name });
+      socket.emit('showManga', id, {id: mangaId, url, langs: [lang], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name });
     } catch(e) {
       this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them
@@ -330,7 +332,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           url:link,
           covers,
           langs: [lang],
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, lang, link) ? true : false,
+          inLibrary: await this.isInLibrary(this.mirrorInfo.name, [lang], link) ? true : false,
         });
       }
       if(cancel) return;
@@ -377,7 +379,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
           mangaPageURL += res.seriesId;
         }
-        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, lang, mirror: this.name });
+        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, langs: [lang], mirror: this.name });
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch(e) {
         if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
