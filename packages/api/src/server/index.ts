@@ -174,7 +174,7 @@ export default class IOWrapper {
     socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
 
-      if(opts.id) indb = await MangaDatabase.get({id: opts.id});
+      if(opts.id && opts.langs) indb = await MangaDatabase.get({id: opts.id, langs: opts.langs});
       else if(opts.mirror && opts.langs && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);

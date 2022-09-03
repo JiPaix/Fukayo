@@ -117,9 +117,9 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return db.mangas.some(m => m.mirror === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
   }
 
-  async get(opts: {id:string}): Promise<MangaInDB|undefined>
+  async get(opts: {id:string,  langs: mirrorsLangsType[] }): Promise<MangaInDB|undefined>
   async get(opts: {mirror: string, langs: mirrorsLangsType[], url: string}): Promise<MangaInDB|undefined>
-  async get(opts: {mirror?:string, langs?:mirrorsLangsType[], url?:string, id?:string}):Promise<MangaInDB|undefined> {
+  async get(opts: {mirror?:string, langs:mirrorsLangsType[], url?:string, id?:string}):Promise<MangaInDB|undefined> {
     const { mirror, langs, url, id } = opts;
     const db = await this.read();
     let mg: {id:string, mirror:string, file:string, url:string} | undefined = undefined;
@@ -156,7 +156,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const results = [];
     for(const manga of db.mangas) {
       if(cancel) break;
-      const mg = await this.get({id: manga.id});
+      const mg = await this.get({id: manga.id, langs: manga.langs});
       if(mg && !id && !socket) results.push(mg);
       if(mg && id && socket) socket.emit('showLibrary', id, mg);
     }
