@@ -135,7 +135,6 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const mangadb = new DatabaseIO(resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
     const covers = this.getCovers(data.covers);
-    this.logger('GOT', covers.length, 'covers');
     return {
       ...data,
       chapters: data.chapters.sort((a, b) => b.number - a.number),
