@@ -1,13 +1,29 @@
-import type { PiniaPluginContext } from 'pinia';
+import type { PiniaCustomStateProperties, PiniaPluginContext, StateTree } from 'pinia';
+
+function iterate(store: StateTree & PiniaCustomStateProperties<StateTree>, local: StateTree & PiniaCustomStateProperties<StateTree>) {
+  Object.keys(store).forEach(key => {
+    if (typeof store[key] === 'object' && store[key] !== null) {
+      if(!local[key]) local[key] = {};
+      return iterate(store[key], local[key]);
+    }
+    if(!local[key]) {
+      local[key] = store[key];
+    }
+  });
+  return local;
+}
 
 export function piniaLocalStorage(context: PiniaPluginContext) {
   if(typeof localStorage[context.store.$id] === 'undefined') {
     localStorage.setItem(context.store.$id, JSON.stringify(context.store.$state));
   } else {
-    context.store.$patch(JSON.parse(localStorage.getItem(context.store.$id) || '{}'));
+    const local = JSON.parse(localStorage.getItem(context.store.$id) || '{}');
+    const store = Object.assign(context.store.$state, {});
+
+    const merge = iterate(store, local);
+    context.store.$patch(merge);
   }
   context.store.$subscribe((mutation) => {
-    console.log(`[🍍 ${mutation.storeId}]: ${mutation.type}.`);
     localStorage.setItem(mutation.storeId, JSON.stringify(context.store.$state));
   });
 }

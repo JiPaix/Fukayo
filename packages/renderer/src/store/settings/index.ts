@@ -16,6 +16,12 @@ export const useStore = defineStore('settings', {
         accessToken: null as string | null,
         refreshToken: null as string | null,
       },
+      mangaPage: {
+        chapters: {
+          sort: 'ASC' as 'ASC' | 'DESC',
+          hideRead: false,
+        },
+      },
       reader : {
         webtoon: false,
         showPageNumber: true,
