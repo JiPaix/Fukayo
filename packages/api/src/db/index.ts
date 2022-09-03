@@ -34,8 +34,8 @@ export class Database<T> {
     else {
       this.data = { ...defaultData, _v: packageJson.version };
     }
-    this.writeSync();
     this.writer = new Writer(this.file);
+    this.write();
     this.logger('Database loaded', this.file);
   }
 
@@ -98,20 +98,23 @@ export class DatabaseIO<T> {
   private file:string;
   private writer: Writer;
   constructor(filePath: string, defaultData: T) {
+
     // check if path exists
     const path = dirname(resolve(filePath));
     if (!existsSync(path)) {
       mkdirSync(path, { recursive: true });
     }
-    // check if file exists
+    // resolve file and init writer
     const pathToFile = resolve(filePath);
     this.file = pathToFile;
-    if (!existsSync(pathToFile)) {
-      this.writeSync({ ...defaultData, _v: packageJson.version });
-    } else {
-      this.autopatch(defaultData);
-    }
     this.writer = new Writer(this.file);
+
+    // write data if file is new
+    if (!existsSync(pathToFile)) {
+      writeFileSync(pathToFile, JSON.stringify({ ...defaultData, _v: packageJson.version }));
+    }
+    // patch (if needed)
+    this.autopatch(defaultData);
     this.logger('Database loaded', this.file);
   }
 
@@ -134,23 +137,12 @@ export class DatabaseIO<T> {
     return this.writer.write(JSON.stringify(data));
   }
 
-
-  private readSync():databaseGeneric<T> {
-    return JSON.parse(readFileSync(this.file, 'utf8'));
-  }
-
-  private writeSync(data: T) {
-    if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
-    writeFileSync(this.file, JSON.stringify(data));
-    return data as databaseGeneric<T>;
-  }
-
   /**
    * checks if the database is outdated and if so, it will automatically update it
    * @param defaultData the default data to use if the database is not up to date
    */
-  autopatch(defaultData: T) {
-    const oldData = this.readSync();
+  async autopatch(defaultData: T) {
+    const oldData = await this.read();
     if(semver.gt(packageJson.version, oldData._v)) {
       this.logger('Updating database version');
       const newData = Object.keys(defaultData).reduce((acc, key) => {
@@ -161,7 +153,7 @@ export class DatabaseIO<T> {
       }
       , {} as Partial<T>);
       // write the data anyway so we update _v and don't trigger the autopatch again
-      this.writeSync({ ...oldData, ...newData, _v: packageJson.version });
+      this.write({ ...oldData, ...newData, _v: packageJson.version });
     }
   }
 }
