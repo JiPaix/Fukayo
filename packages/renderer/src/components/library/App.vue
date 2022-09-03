@@ -159,7 +159,7 @@ onMounted(async () => {
                 read: c.read,
               };
             }),
-            lang: manga.lang,
+            lang: manga.langs.join(''),
           };
           if(!group) {
             mangasRAW.value.push({
@@ -215,6 +215,7 @@ onBeforeUnmount(() => {
           :mirrors="mirrors"
           :group-unread="group.unread"
         />
+        <pre>{{ mangas[0] }}</pre>
       </div>
     </q-infinite-scroll>
   </div>

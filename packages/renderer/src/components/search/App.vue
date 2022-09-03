@@ -2,12 +2,12 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
-import type en from '@i18n/../locales/en.json';
-import type { mirrorsLangsType, appLangsType } from '@i18n/index';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
@@ -70,14 +70,13 @@ const results = computed(() => {
 });
 
 const mangaGroups = computed(() => {
-  const names = results.value.map(r => r.name);
-  return names.map(name => {
+return results.value.map(r => {
     return {
-      name,
-      manga: results.value.filter(x => x.name === name && x.langs.length)[0],
-      covers: results.value.filter(x => x.name === name ).map(m => m.covers.flat()).flat(),
+      name: r.name,
+      manga: r,
+      covers: r.covers,
     };
-  }).filter(f => typeof f.manga !== 'undefined');
+  });
 });
 
 /** return the ordered list of includedLangsRAW */

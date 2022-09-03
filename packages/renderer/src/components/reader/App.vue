@@ -252,7 +252,7 @@ async function getChapter(chapterId = props.id, url = props.url, opts: { scrollu
   socket.emit('showChapter', reqId, {
     id: chapterId,
     mirror: manga.value.mirror,
-    lang: manga.value.lang,
+    lang: props.lang,
     url: url,
     retryIndex: opts.reloadIndex,
   }, (length) => {
