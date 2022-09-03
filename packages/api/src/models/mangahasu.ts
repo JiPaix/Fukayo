@@ -90,7 +90,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
           const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
           last_release = {
             name: chapterName ? chapterName.trim() : undefined,
-            volume: volumeNumber ? parseInt(volumeNumber) : undefined,
+            volume: volumeNumber ? parseFloat(volumeNumber) : undefined,
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         }

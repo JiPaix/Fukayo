@@ -98,7 +98,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
           last_release = {
             name: chapterName ? chapterName.trim() : undefined,
-            volume: volumeNumber && !isNaN(parseInt(volumeNumber)) ? parseInt(volumeNumber) : undefined,
+            volume: volumeNumber && !isNaN(parseFloat(volumeNumber)) ? parseFloat(volumeNumber) : undefined,
             chapter: chapterNumber ? parseFloat(chapterNumber) : 0,
           };
         } else {
@@ -212,7 +212,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const [, , volumeNumber, chapterNumber, , , , chapterName] = match;
 
         // parsing the values
-        const volumeNumberInt = volumeNumber !== undefined ? parseInt(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
+        const volumeNumberInt = volumeNumber !== undefined ? parseFloat(volumeNumber) : undefined; // if no volume number is given, we set it to undefined
         const chapterNumberFloat = chapterNumber !== undefined ? parseFloat(chapterNumber) : tablesize-i; // if no chapter number is found we fallback to the position in the table
         const chapterNameTrim = chapterName !== undefined ? chapterName.trim() : undefined; // if no chapter name is given, we set it to undefined
         const chapterUrl = chapterHref.trim();
