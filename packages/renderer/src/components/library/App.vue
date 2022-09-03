@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@i18n/availableLangs';
 import { useSocket } from '@renderer/components/helpers/socket';
 import type { MangaGroup, MangaInDBwithLabel } from '@renderer/components/library/@types';
 import GroupCard from '@renderer/components/library/GroupCard.vue';
@@ -93,7 +94,7 @@ function filterByMirrorAndLang(group: MangaGroup[]) {
     if (curr.mirrors.length && !g.mangas.some(m => curr.mirrors.includes(m.mirror))) {
       return false;
     }
-    if (curr.langs.length && !g.mangas.some(m => curr.langs.includes(m.lang))) {
+    if (curr.langs.length && !g.mangas.some(m => m.langs.some(l => curr.langs.includes(l)))) {
       return false;
     }
     return true;
@@ -122,11 +123,9 @@ const mirrorList = computed(() => {
 });
 
 const langs = computed(() => {
-  return Array.from(
-    new Set(
-      mangasRAW.value.map(m => m.mangas.map(mm => mm.lang)).flat(),
-    ),
-  );
+  const set:Set<mirrorsLangsType> = new Set();
+  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.langs.forEach(l => set.add(l))));
+  return Array.from(set);
 });
 
 onMounted(async () => {
@@ -157,9 +156,10 @@ onMounted(async () => {
                 label: chapterLabel(c.number, c.name),
                 value: i,
                 read: c.read,
+                lang: c.lang,
               };
             }),
-            lang: manga.langs.join(''),
+            langs: manga.langs,
           };
           if(!group) {
             mangasRAW.value.push({

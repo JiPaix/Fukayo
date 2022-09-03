@@ -1,7 +1,9 @@
+import type { mirrorsLangsType } from '@i18n/availableLangs';
+
 export type MangaInDBwithLabel = {
   id: string,
   mirror: string,
-  lang:string,
+  langs:mirrorsLangsType[],
   name: string,
   displayName?: string,
   url: string,
@@ -10,6 +12,7 @@ export type MangaInDBwithLabel = {
     label: string | number;
     value: number;
     read:boolean
+    lang: mirrorsLangsType
   }[]
 };
 

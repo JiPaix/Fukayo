@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import type { mirrorsLangsType } from '@i18n/availableLangs';
 import { useQuasar } from 'quasar';
+import { computed, ref } from 'vue';
 
 /** props */
 const props = defineProps<{
   icon?: string
-  nbOfUnread: number
-  mirrorDisplayName?: string
-  lang: string
+  nbOfUnread: number,
+  mirrorDisplayName?: string,
+  langs: mirrorsLangsType[]
 }>();
-/** emit */
-const emit = defineEmits<{ (event: 'showManga'): void }>();
+
 /** quasar */
 const $q = useQuasar();
 /** hover */
@@ -51,7 +51,6 @@ const QChipColor = computed(() => {
     :size="QChipSize"
     class="q-mb-xs flex flex-center justify-between text-white shadow-3 rounded-borders"
     :class="QChipColor+' '+QChipSize"
-    @click="emit('showManga')"
     @mouseenter="hover=true"
     @mouseleave="hover=false"
   >
@@ -71,7 +70,16 @@ const QChipColor = computed(() => {
     </span>
     <q-tooltip>
       <span>{{ mirrorDisplayName }}</span>
-      <span class="q-ml-xs">({{ $t(`languages.${lang}.value`) }})</span>
+      <span class="q-ml-xs">
+        (
+        <span
+          v-for="(lang, i) in langs"
+          :key="i"
+        >
+          {{ $t(`languages.${lang}.value`) }}{{ i < langs.length-1 ? ', ' : '' }}
+        </span>
+        )
+      </span>
     </q-tooltip>
   </div>
 </template>

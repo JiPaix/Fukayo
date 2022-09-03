@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@i18n/availableLangs';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import type { MangaGroup } from '@renderer/components/library/@types';
 import GroupMenu from '@renderer/components/library/GroupMenu.vue';
 import MirrorChips from '@renderer/components/library/MirrorChips.vue';
@@ -75,16 +77,14 @@ function getMirror(mirror:string) {
 }
 
 function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:string, chapterindex?: number}) {
-  router.push({
-    name: 'manga',
-    params: {
-      id: mangaInfo.id,
-      mirror: mangaInfo.mirror,
-      url:mangaInfo.url,
-      lang: mangaInfo.lang,
-      chapterindex: mangaInfo.chapterindex,
-    },
+
+  const opts = routeTypeHelper('manga', {
+    id: mangaInfo.id,
+    url: mangaInfo.url,
+    lang: mangaInfo.lang as mirrorsLangsType,
+    mirror: mangaInfo.mirror,
   });
+  router.push(opts);
 }
 </script>
 
@@ -92,7 +92,7 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:stri
   <q-card
     v-ripple
     class="q-ma-xs q-my-lg"
-    @click="sortedGroup.length === 1 ? showManga({mirror: sortedGroup[0].mirror, lang: sortedGroup[0].lang, url: sortedGroup[0].url, id: sortedGroup[0].id }) : dialog = !dialog"
+    @click="sortedGroup.length === 1 && sortedGroup[0].langs.length === 1 ? showManga({ mirror: sortedGroup[0].mirror, url: sortedGroup[0].url, lang: sortedGroup[0].langs[0], id:sortedGroup[0].id }) : dialog = !dialog"
   >
     <group-menu
       :mirrors="props.mirrors"
@@ -125,8 +125,7 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:stri
             :icon="getMirror(manga.mirror)?.icon"
             :nb-of-unread="manga.unread"
             :mirror-display-name="getMirror(manga.mirror)?.displayName"
-            :lang="manga.lang"
-            @show-manga="showManga({mirror: manga.mirror, url: manga.url, lang: manga.lang, id: manga.id})"
+            :langs="manga.langs"
           />
         </div>
         <div
