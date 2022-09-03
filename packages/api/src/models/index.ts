@@ -185,10 +185,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   uuidv5(options: { langs: mirrorsLangsType[], url: string }, force?:false):string
-  uuidv5(options: { url: string, id: string }, force: true):string
+  uuidv5(options: { url: string, id: string, langs: mirrorsLangsType[] }, force: true):string
   uuidv5(
     options: {
-      langs?: mirrorsLangsType[],
+      langs: mirrorsLangsType[],
       /**
        * chapter url
        *

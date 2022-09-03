@@ -39,9 +39,26 @@ export class MangasDB extends DatabaseIO<Mangas> {
     // if manga is already in DB update its data
     if(alreadyInDB && isMangaInDB(payload.manga)) return this.upsert(payload.manga, filename, alreadyInDB !== undefined);
 
-    // save manga in the manga index table
-    db.mangas.push({ id: payload.manga.id, url: payload.manga.url, mirror: payload.manga.mirror, langs: payload.manga.langs, file: filename });
-    this.write(db);
+    // case were manga is in db, but you add an additional language
+    if(alreadyInDB && !isMangaInDB(payload.manga)) {
+
+      if(!alreadyInDB.langs.every(l => payload.manga.langs.includes(l))) {
+        alreadyInDB.langs = Array.from(new Set(alreadyInDB.langs.concat(payload.manga.langs)));
+      }
+    }
+
+    if(!isMangaInDB(payload.manga)) {
+      // new manga, add it to database index
+      if(!alreadyInDB) db.mangas.push({ id: payload.manga.id, url: payload.manga.url, mirror: payload.manga.mirror, langs: payload.manga.langs, file: filename });
+      // manga already in db but with new languages
+      else {
+        if(!alreadyInDB.langs.every(l => payload.manga.langs.includes(l))) {
+          alreadyInDB.langs = Array.from(new Set(alreadyInDB.langs.concat(payload.manga.langs)));
+        }
+      }
+      this.write(db);
+    }
+
 
     // define manga's options and metadatas
     const meta:MangaInDB['meta'] = {
@@ -59,40 +76,39 @@ export class MangasDB extends DatabaseIO<Mangas> {
     };
 
     // save manga data in its own table
-    return this.upsert({...payload.manga, inLibrary: true, meta}, filename);
+    return this.upsert({...payload.manga, inLibrary: true, meta}, filename, alreadyInDB !== undefined);
   }
 
   async remove(manga: MangaInDB, lang:mirrorsLangsType):Promise<MangaPage> {
     const db = await this.read();
-
+    const index = db.mangas.find(x => x.id === manga.id);
     // we "un-db-ify" the manga so we can return results to user later
     const unDBify:MangaPage = {...manga, inLibrary: false };
-
-    const linkToFile = db.mangas.find(m => m.id === manga.id && m.url === manga.url && m.mirror === manga.mirror);
-    if(linkToFile) {
+    if(index) {
       try {
-        const mangadb = new DatabaseIO(resolve(this.path, `${linkToFile.file}.json`), manga);
-        const data = await mangadb.read();
+        // update the database index
+        index.langs = index.langs.filter(l => l !== lang);
+        if(index.langs.length === 0) db.mangas = db.mangas.filter(m => m.id !== m.id);
+        await this.write(db);
 
-        // removing data related to the language
+        // update the manga database
+        const mangadb = new DatabaseIO(resolve(this.path, `${index.file}.json`), manga);
+        const data = await mangadb.read();
         data.langs = data.langs.filter(l => l !== lang);
         data.chapters = data.chapters.filter(c => c.lang !== lang);
+        await mangadb.write(data);
 
-        // if there's still data related to other language: update the file
-        if(data.langs.length && data.chapters.length) {
-          mangadb.write(data);
-          return data;
+        if(!data.langs.length && !data.chapters.length) {
+          // remove manga database file if there's nothing in.
+          unlinkSync(resolve(this.path, `${index.file}.json`));
+          data.covers.forEach(c => unlinkSync(resolve(this.path, c)));
         }
 
-        // else remove covers and the database file
-        data.covers.forEach(c => unlinkSync(resolve(this.path, c)));
-        unlinkSync(resolve(this.path, `${linkToFile.file}.json`));
+        return {...data, covers: manga.covers, inLibrary: false };
       } catch {
-        // => ignore errors
+        // ignore
       }
     }
-    db.mangas = db.mangas.filter(m => m.id !== manga.id);
-    this.write(db);
     return unDBify;
   }
 
@@ -109,8 +125,9 @@ export class MangasDB extends DatabaseIO<Mangas> {
     let mg: {id:string, mirror:string, file:string, url:string} | undefined = undefined;
 
     // check if we have a matching manga in the database
-    if(id) mg = db.mangas.find(m => m.id === id);
-    else if(url && langs && mirror) mg = db.mangas.find(m => m.mirror === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
+
+    if(url && langs && mirror) mg = db.mangas.find(m => m.mirror === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
+    else if(id && langs) mg = db.mangas.find(m => m.id === id && m.langs.some(l => langs.includes(l)));
     else return;
     if(!mg) return;
 
@@ -140,7 +157,6 @@ export class MangasDB extends DatabaseIO<Mangas> {
     for(const manga of db.mangas) {
       if(cancel) break;
       const mg = await this.get({id: manga.id});
-      if(mg) console.log('COVERS:', mg.covers.length);
       if(mg && !id && !socket) results.push(mg);
       if(mg && id && socket) socket.emit('showLibrary', id, mg);
     }
@@ -168,6 +184,20 @@ export class MangasDB extends DatabaseIO<Mangas> {
     // we check differences between the manga in the db and the manga we want to save
     let hasNewStuff = false;
     let k: keyof typeof manga.meta.options;
+
+    // if manga is already in db we will check if we added new languages
+    if(alreadyInDB) {
+      if(!data.langs.every(l => manga.langs.includes(l))) {
+        manga.langs = Array.from(new Set(data.langs.concat(manga.langs)));
+        // retrieve languages of chapters in the database
+        const chapterLanguagesInDB = Array.from(new Set(data.chapters.map(x => x.lang)));
+        // we only keep chapters with languages NOT in the database
+        const chapter2add = manga.chapters.filter(c => !chapterLanguagesInDB.includes(c.lang));
+        // concat
+        manga.chapters = data.chapters.concat(chapter2add);
+        hasNewStuff = true;
+      }
+    }
 
     // check if the manga has new options
     for (k in manga.meta.options) {  // const k: string

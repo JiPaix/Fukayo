@@ -5,10 +5,16 @@ import { env } from 'process';
 import { v5 as uuidv5 } from 'uuid';
 
 export type uuid = {
-  id: string;
   mirror: string;
-  langs: mirrorsLangsType[];
-  url: string;
+  langs: mirrorsLangsType[],
+  /**
+   * chapter url
+   *
+   * @important if chapters share the same url the same uuid will be generated
+   * @workaround append the chapter number/index/some other identifier at the end of the url
+   */
+  url: string
+  id?: string
 }
 
 type uuids = {
@@ -55,19 +61,19 @@ export class UUID extends Database<uuids> {
     return uuid;
   }
 
-  generate(id: Omit<uuid, 'id'>): string
-  generate(id: uuid, force:true):string
-  generate(id: Omit<uuid, 'id'> | uuid, force?:boolean):string {
-    const find = this.find(id);
-    if(find) return find.id;
-    if(force && (id as uuid).id) return this.force(id as uuid);
-    return this.save(id);
+  generate(uuid: Omit<uuid, 'id'>): string
+  generate(uuid: uuid, force:true):string
+  generate(uuid: Omit<uuid, 'id'> | uuid, force?:boolean):string {
+    const find = this.find(uuid);
+    if(find && find.id) return find.id;
+    if(force && (uuid as uuid).id) return this.force(uuid as uuid & { id: string });
+    return this.save(uuid);
   }
 
-  private force(id: uuid) {
-    this.data.ids.push(id);
+  private force(uuid: uuid & { id: string }):string {
+    this.data.ids.push(uuid);
     this.pending++;
-    return id.id;
+    return uuid.id;
   }
 
   remove(id: string) {
