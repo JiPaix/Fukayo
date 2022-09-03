@@ -4,7 +4,7 @@ import type { RouteParamsRaw } from 'vue-router';
 export type mangaRoute = {
   id: string,
   url?: string,
-  lang?: mirrorsLangsType
+  lang: mirrorsLangsType
   mirror: string,
 }
 

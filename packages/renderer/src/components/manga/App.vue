@@ -14,13 +14,13 @@ import type dayjs from 'dayjs';
 import { useQuasar } from 'quasar';
 import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute, useRouter } from 'vue-router';
-import { mangaRoute, routeTypeHelper } from '../helpers/routePusher';
+import { useRouter } from 'vue-router';
+import { routeTypeHelper } from '../helpers/routePusher';
 
 const props = defineProps<{
   id: string,
   url?: string,
-  lang?: mirrorsLangsType
+  lang: mirrorsLangsType
   mirror: string,
 }>();
 
@@ -31,8 +31,6 @@ const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 const router = useRouter();
 /** dayJS lib */
 const dayJS = inject<typeof dayjs>('dayJS');
-/** current route */
-const route = useRoute();
 /** stored settings */
 const settings = useSettingsStore();
 /** web socket */
@@ -40,18 +38,14 @@ let socket: socketClientInstance | undefined;
 /** manga filter dialog */
 const showFilterDialog = ref(false);
 /** selected language */
-const selectedLanguage = ref((route.params as mangaRoute).lang);
-/** show language select dialog */
-const showLangsDialog = ref(false);
+const selectedLanguage = ref(props.lang);
 /** mirror info */
 const mirrorinfo = ref<mirrorInfo|undefined>();
 /** the number of chapters */
 const nbOfChapters = computed(() => {
   if(!mangaRaw.value) return 0;
   if(!mangaRaw.value.chapters) return 0;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return 0;
-  return mangaRaw.value.chapters.filter(c => c.lang === lang).length;
+  return mangaRaw.value.chapters.filter(c => c.lang === props.lang).length;
 });
 /** carrousel slides */
 const slide = ref(0);
@@ -142,12 +136,9 @@ async function add() {
 /** remove manga from library */
 async function remove() {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
   if (!socket) socket = await useSocket(settings.server);
-
   if(isMangaInDb(manga.value)) {
-    socket.emit('removeManga', manga.value, lang, (res) => {
+    socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
       mangaRaw.value = res;
     });
   }
@@ -169,8 +160,7 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
 /** Mark a chapter as read */
 async function markAsRead(index:number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
+  const lang = selectedLanguage.value;
   if(!socket) socket = await useSocket(settings.server);
   const updatedChapters = chapters.value.map(c => {
     if(c.number === chapters.value[index].number) {
@@ -188,7 +178,7 @@ async function markAsRead(index:number) {
 /** Mark a chapter as unread */
 async function markAsUnread(index:number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
+  const lang = selectedLanguage.value;
   if(!lang) return;
   if(!socket) socket = await useSocket(settings.server);
   const updatedChapters = chapters.value.map(c => {
@@ -207,8 +197,7 @@ async function markAsUnread(index:number) {
 /** Mark all previous chapters as read */
 function markPreviousAsRead(index: number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
+  const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
   const updatedChapters = chapters.value.map(c => {
     if(c.number < chapNum) {
@@ -226,9 +215,7 @@ function markPreviousAsRead(index: number) {
 /** Mark all previous chapters as unread */
 function markPreviousAsUnread(index: number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
-
+  const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
   const updatedChapters = chapters.value.map(c => {
     if(c.number < chapNum) {
@@ -246,8 +233,7 @@ function markPreviousAsUnread(index: number) {
 /** Mark all next chapters as read */
 function markNextAsRead(index: number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
+  const lang = selectedLanguage.value;
 
   const chapNum = chapters.value[index].number;
   const updatedChapters = chapters.value.map((c) => {
@@ -263,8 +249,7 @@ function markNextAsRead(index: number) {
 /** Mark all next chapters as unread */
 function markNextAsUnread(index: number) {
   if(!manga.value) return;
-  const lang = (route.params as mangaRoute).lang;
-  if(!lang) return;
+  const lang = selectedLanguage.value;
 
   const chapNum = chapters.value[index].number;
   const updatedChapters = chapters.value.map((c) => {
@@ -304,7 +289,6 @@ function getMirrorInfoUrl(link:string) {
 async function startFetch() {
   nodata.value = null;
   const reqId = Date.now();
-  if(!props.lang) return;
   if (!socket) socket = await useSocket(settings.server);
 
   socket.once('showManga', (id, mg) => {
@@ -312,7 +296,7 @@ async function startFetch() {
       if((isManga(mg) || isMangaInDb(mg))) {
         nodata.value = null;
         mangaRaw.value = mg;
-        if(!selectedLanguage.value || !props.lang) {
+        if(!selectedLanguage.value) {
           selectedLanguage.value = mg.langs[0];
         }
         socket?.emit('getMirrors', true, (mirrors) => {
@@ -351,7 +335,7 @@ async function startFetch() {
 }
 
 onBeforeMount(async () => {
-  await startFetch();
+  startFetch();
 });
 
 onMounted(() => {
@@ -364,7 +348,8 @@ onBeforeUnmount(async () => {
 });
 
 function changeRouteLang(lang: mirrorsLangsType) {
-  route.params.lang = lang;
+  const newURL = window.location.href.replace(/\/\w+\/$/gi, `/${lang}/`);
+  history.pushState({}, '', newURL);
   selectedLanguage.value = lang;
 }
 
@@ -521,7 +506,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   style="margin:0!important"
                 >
                   <q-btn
-                    v-if="manga && route.params.lang"
+                    v-if="manga"
                     class="w-100"
                     :icon="isMangaInDb(manga) ? 'o_delete_forever': 'o_library_add'"
                     :color="isMangaInDb(manga) ? 'negative' : 'orange'"
@@ -551,68 +536,28 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 class="flex items-center"
               >
                 <span
-                  v-if="route.params.lang"
                   class="text-bold"
                 >
                   LANGUE:
                 </span>
-                <q-skeleton
-                  v-else
-                  :dark="$q.dark.isActive"
-                  type="text"
-                  class="text-weight-medium q-ml-sm q-my-none"
-                  width="50px"
-                />
                 <div
                   v-if="manga"
                   class="text-weight-medium q-ml-sm"
                 >
-                  <div v-if="manga.langs.length > 1">
-                    <q-btn-group>
-                      <q-btn
-                        v-for="(currLang, i) in manga.langs"
-                        :key="i"
-                        dense
-                        :outline="currLang !== selectedLanguage"
-                        size="sm"
-                        :color="$q.dark.isActive ? 'orange' : 'dark'"
-                        :text-color="$q.dark.isActive && currLang === selectedLanguage ? 'white' : 'orange'"
-                        @click="changeRouteLang(currLang)"
-                      >
-                        {{ currLang }}
-                      </q-btn>
-                    </q-btn-group>
-                    <q-dialog
-                      v-model="showLangsDialog"
-                      :options="manga.langs"
+                  <q-btn-group>
+                    <q-btn
+                      v-for="(currLang, i) in manga.langs"
+                      :key="i"
+                      dense
+                      :outline="currLang !== selectedLanguage"
+                      size="sm"
+                      :color="$q.dark.isActive ? 'orange' : 'dark'"
+                      :text-color="$q.dark.isActive && currLang === selectedLanguage ? 'white' : 'orange'"
+                      @click="changeRouteLang(currLang)"
                     >
-                      <q-card style="min-width: 350px">
-                        <q-card-section>
-                          <div class="text-h6">
-                            Select a language:
-                          </div>
-                        </q-card-section>
-
-                        <q-card-section class="q-pt-none">
-                          <q-select
-                            :model-value="(route.params as mangaRoute).lang"
-                            :options="manga.langs"
-                            autofocus
-                            @update:model-value="(v) => changeRouteLang(v)"
-                          />
-                        </q-card-section>
-                        <q-card-actions align="right">
-                          <q-btn
-                            color="primary"
-                            @click="showLangsDialog = false"
-                          >
-                            CLOSE
-                          </q-btn>
-                        </q-card-actions>
-                      </q-card>
-                    </q-dialog>
-                  </div>
-                  <span v-else-if="route.params.lang">{{ (route.params as mangaRoute).lang }}</span>
+                      {{ currLang }}
+                    </q-btn>
+                  </q-btn-group>
                 </div>
                 <q-skeleton
                   v-else
@@ -695,7 +640,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
           </div>
         </div>
         <div
-          v-if="manga && route.params.lang"
+          v-if="manga"
           class="row"
         >
           <q-virtual-scroll
