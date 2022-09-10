@@ -143,7 +143,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
 
         if(!langs.some(l => l === lang)) return;
 
-        const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id}, true);
+        const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id, langs: [lang]}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
@@ -199,7 +199,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
 
       if(cancel) return;
-      const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id}, true);
+      const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id, langs: [lang]}, true);
       const covers:string[] = [];
       const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
@@ -222,6 +222,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           id: this.uuidv5({
             url: chaplink, // if chapters share the same url the same uuid will be generated
             id: book.id,
+            langs: [lang],
           }, true),
           name: book.metadata.title,
           lang,
@@ -323,7 +324,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
         if(serie.metadata.language && serie.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(serie.metadata.language);
 
-        const mangaId = this.uuidv5({url: `/series/${serie.id}`, id: serie.id}, true);
+        const mangaId = this.uuidv5({url: `/series/${serie.id}`, id: serie.id, langs: [lang]}, true);
 
         socket.emit('showRecommend', id, {
           id: mangaId, // use the same id as komga
