@@ -237,8 +237,7 @@ type Routes = {
   }
 }
 
-
-class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean}> implements MirrorInterface {
+class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean}> implements MirrorInterface {
   sessionToken: string|null = null;
   authToken: string|null = null;
   sessionInterval: NodeJS.Timer|null = null;
@@ -263,8 +262,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         login: null,
         password: null,
         dataSaver: false,
+        markAsRead: false,
       },
     });
+    this.login();
   }
 
   private get headers() {
@@ -283,9 +284,14 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return langs.map(x => 'originalLanguage[]=' + x).join('&');
   }
 
-  private async login(username: string, password:string) {
+  private async login() {
     this.clearIntervals();
     this.nullTokens();
+    if(!this.options.login || !this.options.password) return this.logger('no credentials');
+    if(!this.options.enabled) return this.logger('mirror is disabled');
+
+    const username = this.options.login,
+          password = this.options.password;
 
     try {
       const resp = await this.post<
@@ -300,15 +306,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(resp.result === 'ok') {
         this.authToken = resp.token.refresh;
         this.sessionToken = resp.token.session;
-        this.loginLoop(username, password);
-        this.refreshLoop(username, password);
+        this.loginLoop();
+        this.refreshLoop();
+        this.logger('logged in!');
         return true;
       } else {
         this.logger(resp.errors);
         return false;
       }
     } catch(e) {
-      this.logger(e);
+      if(e instanceof Error) this.logger('not logged in:', e.message);
+      else this.logger('not logged in:', e);
       return false;
     }
   }
@@ -345,22 +353,28 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     this.sessionToken = null;
   }
 
-  private loginLoop(username: string, password: string) {
-    this.authInterval = setInterval(async () => {
-      const res = await this.login(username, password);
-      if(!res) {
-        this.clearIntervals();
-        this.nullTokens();
-      }
-    }, 29 * 24 * 60 * 60 * 1000); // 29 days
+  private loginLoop() {
+    // 86400 seconds in a day
+    const msInDay = 86400*1000;
+    let dayCount = 0;
+    if(this.authInterval) clearInterval(this.authInterval);
+
+    this.authInterval = setInterval(() => {
+        dayCount++;  // a day has passed
+
+        if (dayCount === 29) {
+          if(this.authInterval) clearInterval(this.authInterval);
+          this.login();
+        }
+    }, msInDay);
   }
 
-  private refreshLoop(username: string, password: string) {
+  private refreshLoop() {
     this.sessionInterval = setInterval(async () => {
       const res = await this.refresh();
       if(!res) {
         // login will clear all intervals and null tokens
-        this.login(username, password);
+        this.login();
       }
     }, 14 * 60 * 1000); // 14 minutes
   }
@@ -750,6 +764,23 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
     }
     else return socket.emit('getMangaURLfromChapterURL', id, undefined);
+  }
+
+  async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURL: string, read: boolean) {
+    if(!this.options.login || !this.options.password || !this.options.markAsRead) return;
+    try {
+      const chapterId = chapterURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
+      if(!chapterId) return;
+
+      const type = read ? 'post' : 'delete';
+      const resp = await this.post<undefined, {result: 'ok'}>(this.path(`/chapter/${chapterId[0]}/read`), undefined, type, { headers: this.headers });
+
+      if(resp && resp.result == 'ok') this.logger('read status changed to', read);
+
+    } catch(e) {
+      if(e instanceof Error) this.logger('ERROR markAsRead', e.message);
+      else this.logger('ERROR markAsRead', e);
+    }
   }
 }
 

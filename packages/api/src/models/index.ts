@@ -267,7 +267,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return filenamify(string);
   }
 
-  protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put' = 'post', config?:AxiosRequestConfig) {
+  protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:AxiosRequestConfig) {
     this.concurrency++;
     await this.wait();
     try {
@@ -277,13 +277,13 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if((e as AxiosError).response) {
         this.logger({
           type: 'post error',
-          message: (e as AxiosError).response?.data,
+          message: JSON.stringify((e as AxiosError).response?.data,null,2),
           url,
         });
       } else if(e instanceof Error){
         this.logger({
           type: 'post error',
-          message: e.message,
+          message: JSON.stringify(e.message,null,2),
           url,
         });
       } else {
