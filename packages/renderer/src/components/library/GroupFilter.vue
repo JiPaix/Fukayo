@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
+import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
-import type en from '@i18n/../locales/en.json';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -258,7 +258,7 @@ onMounted(() => {
                 @update:model-value="pickLang(lang)"
               />
               <q-item-section class="q-ma-none">
-                {{ $t('languages.'+lang+'.value') }}
+                {{ $t('languages.'+lang) }}
               </q-item-section>
             </q-item>
           </q-list>

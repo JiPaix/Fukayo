@@ -25,7 +25,7 @@ export function applyAllFilters(mirrors:mirrorInfo[], query: string|null, includ
 
 /** sort langs by their i18n-translated value */
 export function sortLangs(langs:string[], $t:(string:string)=>string) {
-  return langs.sort((a, b) => $t(`languages.${a}.value`).localeCompare($t(`languages.${b}.value`)));
+  return langs.sort((a, b) => $t(`languages.${a}`).localeCompare($t(`languages.${b}`)));
 }
 
 /** include/exclude all languages from the filter */

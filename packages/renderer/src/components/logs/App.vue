@@ -50,7 +50,7 @@ function getMangaName (mangaId:string) {
 function getMangaLang (mangaId:string) {
   const manga = mangas.value.find(m => m.id === mangaId);
   if(!manga) return '';
-  return $t(`languages.${manga.lang}.value`);
+  return manga.langs.map(l =>  $t(`languages.${l}`)).join(', ');
 }
 
 function getMirror(name:string) {

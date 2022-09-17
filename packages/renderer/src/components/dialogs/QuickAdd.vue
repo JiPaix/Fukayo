@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@i18n/../locales/en.json';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useDialogPluginComponent } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
@@ -39,7 +39,7 @@ const availableLangs = computed(() => {
   if(results.value.mirror) {
     return results.value.mirror.langs.map((lang) => {
       return {
-        label: $t(`languages.${lang}.value`),
+        label: $t(`languages.${lang}`),
         value: lang,
       };
     });
@@ -78,7 +78,7 @@ async function findMirrorbyUrl() {
     };
     if(mirror) {
       selectedLanguage.value = {
-        label: $t(`languages.${mirror.langs[0]}.value`),
+        label: $t(`languages.${mirror.langs[0]}`),
         value: mirror.langs[0],
       };
     }
@@ -111,7 +111,7 @@ async function showManga() {
   socket.emit('getMangaURLfromChapterURL', reqId, input.value, selectedLanguage.value.value);
 }
 
-function closeAndRedirect(o:{ mirror: string, lang:string, url:string}) {
+function closeAndRedirect(o:{ mirror: string, lang:mirrorsLangsType, url:string}) {
   const { mirror, lang, url} = o;
   onDialogOK({mirror, lang, url});
 }
@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
           <q-select
             v-model="selectedLanguage"
             transition-show="jump-left"
-            :label="$t('languages.language.value', availableLangs.length)"
+            :label="$t('languages.language', availableLangs.length)"
             filled
             dense
             options-dense

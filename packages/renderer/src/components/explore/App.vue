@@ -172,7 +172,7 @@ onBeforeUnmount(async () => {
                   :dark="$q.dark.isActive"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'.value') }}
+                  {{ $t('languages.'+lang) }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -224,7 +224,7 @@ onBeforeUnmount(async () => {
                   color="orange"
                   :dark="$q.dark.isActive"
                 >
-                  {{ $t(`languages.${lang}.value`) }}
+                  {{ $t(`languages.${lang}`) }}
                 </q-chip>
               </div>
             </q-item-label>

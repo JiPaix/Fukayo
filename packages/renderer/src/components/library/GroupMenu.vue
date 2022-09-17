@@ -96,7 +96,7 @@ function QMenuLabelColor (unread:number) {
             v-if="manga.langs.length === 1"
             class="text-caption text-grey"
           >
-            {{ manga.langs[0] }}
+            {{ $t(`languages.${manga.langs[0]}`) }}
           </q-item-label>
           <q-item-label v-if="manga.langs.length === 1">
             <span
@@ -137,7 +137,7 @@ function QMenuLabelColor (unread:number) {
 
                   class="text-caption text-grey"
                 >
-                  {{ lang }}
+                  {{ $t(`languages.${lang}`) }}
                 </q-item-label>
                 <q-item-label>
                   <span
@@ -154,45 +154,6 @@ function QMenuLabelColor (unread:number) {
       </q-item>
     </q-list>
   </q-menu>
-  <!-- <q-menu
-    v-if="$q.screen.gt.sm"
-    anchor="center middle"
-    self="center middle"
-  >
-    <q-list
-      :style="'min-width:'+ width"
-      separator
-    >
-      <q-item
-        v-for="(manga, i) in sortedGroup"
-        :key="i"
-        v-close-popup
-      >
-        <q-item-section>
-          <q-item-label class="flex items-center">
-            <q-img
-              :src="getMirror(manga.mirror)?.icon"
-              height="16px"
-              width="16px"
-              class="q-mr-xs"
-            />
-            <span class="text-bold">{{ getMirror(manga.mirror)?.displayName }}</span>
-          </q-item-label>
-          <q-item-label
-            v-for="(lang, li) in manga.langs"
-            :key="li"
-          >
-            <div class="flex items-center">
-              <span class="text-orange">{{ lang }}</span>
-            </div>
-            <div class="flex items-center">
-              <span>unread chapters: {{ manga.chapters.filter(c => c.lang === lang).length - manga.chapters.filter(c => c.read && c.lang === lang).length }}</span>
-            </div>
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </q-list>
-  </q-menu> -->
   <q-dialog
     v-else
     :model-value="dialog"
@@ -260,7 +221,7 @@ function QMenuLabelColor (unread:number) {
 
                         class="text-caption text-grey"
                       >
-                        {{ lang }}
+                        {{ $t(`languages.${lang}`) }}
                       </q-item-label>
                       <q-item-label>
                         <span
@@ -274,40 +235,6 @@ function QMenuLabelColor (unread:number) {
                   </q-item>
                 </q-list>
               </q-card>
-              <!-- <q-menu
-                v-if="manga.langs.length > 1"
-                :model-value="mouseOver === i"
-                anchor="top end"
-                self="top start"
-              >
-                <q-list
-                  separator
-                >
-                  <q-item
-                    v-for="(lang, n) in manga.langs"
-                    :key="n"
-                    dense
-                    clickable
-                  >
-                    <q-item-section @click="emit('show-manga', { mirror: manga.mirror, url: manga.url, lang, id: manga.id})">
-                      <q-item-label
-
-                        class="text-caption text-grey"
-                      >
-                        {{ lang }}
-                      </q-item-label>
-                      <q-item-label>
-                        <span
-                          class="text-caption"
-                          :class="QMenuLabelColor(manga.chapters.filter(c => c.lang === lang).length - manga.chapters.filter(c => c.lang === lang && c.read).length)"
-                        >
-                          {{ manga.chapters.filter(c => c.lang === lang && c.read).length }} / {{ manga.chapters.filter(c => c.lang === lang).length }}
-                        </span>
-                      </q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu> -->
             </q-dialog>
           </q-item>
         </q-list>

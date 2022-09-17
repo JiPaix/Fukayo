@@ -76,7 +76,7 @@ const QChipColor = computed(() => {
           v-for="(lang, i) in langs"
           :key="i"
         >
-          {{ $t(`languages.${lang}.value`) }}{{ i < langs.length-1 ? ', ' : '' }}
+          {{ $t(`languages.${lang}`) }}{{ i < langs.length-1 ? ', ' : '' }}
         </span>
         )
       </span>

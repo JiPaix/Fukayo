@@ -257,7 +257,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                 />
                 <q-item-section class="q-ma-none">
-                  {{ $t('languages.'+lang+'.value') }}
+                  {{ $t('languages.'+lang) }}
                 </q-item-section>
               </q-item>
             </q-list>

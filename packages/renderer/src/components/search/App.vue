@@ -410,7 +410,7 @@ onBeforeUnmount(async () => {
                     @update:model-value="pickLang(lang)"
                   />
                   <q-item-section class="q-ma-none">
-                    {{ $t('languages.'+lang+'.value') }}
+                    {{ $t('languages.'+lang) }}
                   </q-item-section>
                 </q-item>
               </q-list>
