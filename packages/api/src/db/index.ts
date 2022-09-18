@@ -145,7 +145,7 @@ export class DatabaseIO<T> {
     const oldData = await this.read();
     if(semver.gt(packageJson.version, oldData._v)) {
       this.logger('Updating database version');
-      const newData = Object.keys(defaultData).reduce((acc, key) => {
+      const newData = Object.keys(defaultData as object).reduce((acc, key) => {
         if(oldData[key as keyof T] === undefined || typeof oldData[key as keyof T] !== typeof defaultData[key as keyof T]) {
           acc[key as keyof T] = defaultData[key as keyof T];
         }

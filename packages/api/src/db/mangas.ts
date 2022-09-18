@@ -36,47 +36,50 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
     const filename = await this.filenamify(payload.manga.id);
 
-    // if manga is already in DB update its data
-    if(alreadyInDB && isMangaInDB(payload.manga)) return this.upsert(payload.manga, filename, alreadyInDB !== undefined);
-
-    // case were manga is in db, but you add an additional language
-    if(alreadyInDB && !isMangaInDB(payload.manga)) {
-
-      if(!alreadyInDB.langs.every(l => payload.manga.langs.includes(l))) {
-        alreadyInDB.langs = Array.from(new Set(alreadyInDB.langs.concat(payload.manga.langs)));
-      }
-    }
-
+    // New manga || Manga/lang combo
     if(!isMangaInDB(payload.manga)) {
-      // new manga, add it to database index
-      if(!alreadyInDB) db.mangas.push({ id: payload.manga.id, url: payload.manga.url, mirror: payload.manga.mirror, langs: payload.manga.langs, file: filename });
-      // manga already in db but with new languages
-      else {
-        if(!alreadyInDB.langs.every(l => payload.manga.langs.includes(l))) {
-          alreadyInDB.langs = Array.from(new Set(alreadyInDB.langs.concat(payload.manga.langs)));
-        }
-      }
-      this.write(db);
+
+      // make sure inLibrary is true if the manga is totally new
+      payload.manga.inLibrary = true;
+
+      // If manga exists but lang isn't registered we get the reader's settings from the database
+      let alreadyInDB_DATA = undefined;
+      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(resolve(this.path, `${filename}.json`), {} as MangaInDB).read();
+
+      // We define "meta" for this new entry:
+      // and past "meta.options" from either the payload, the database (if any), or use default settings
+      (payload.manga as MangaInDB).meta = {
+        lastUpdate: Date.now(),
+        notify: true,
+        update: true,
+        options : payload.settings || alreadyInDB_DATA?.meta.options || {
+          webtoon: false,
+          showPageNumber: true,
+          zoomMode: 'auto',
+          zoomValue: 100,
+          longStrip: false,
+          overlay: false,
+        },
+      };
     }
 
+    // previous statement made sure "payload.manga" is of type "MangaInDB"
+    // this line is only for typescript convenience
+    const mangadata = payload.manga as MangaInDB;
 
-    // define manga's options and metadatas
-    const meta:MangaInDB['meta'] = {
-      lastUpdate: Date.now(),
-      notify: true,
-      update: true,
-      options : isMangaInDB(payload.manga) && !payload.settings ?  payload.manga.meta.options : payload.settings || {
-        webtoon: false,
-        showPageNumber: true,
-        zoomMode: 'auto',
-        zoomValue: 100,
-        longStrip: false,
-        overlay: false,
-      },
-    };
-
-    // save manga data in its own table
-    return this.upsert({...payload.manga, inLibrary: true, meta}, filename, alreadyInDB !== undefined);
+    // now only "alreadyInDB" is able to tell us if the manga is actually in the db or not.
+    if(alreadyInDB) {
+      this.logger('updating manga');
+      return this.upsert(mangadata, filename, true);
+    }
+    else {
+      this.logger('new manga added');
+      // save manga data in its own table
+      const manga = await this.upsert(mangadata, filename, false);
+      db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, langs: manga.langs, file: filename });
+      await this.write(db);
+      return manga;
+    }
   }
 
   async remove(manga: MangaInDB, lang:mirrorsLangsType):Promise<MangaPage> {
@@ -171,12 +174,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
   private async upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
     // create or get file
     const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
-
-    if(!alreadyInDB) {
-      manga.covers = this.saveCovers(manga.covers, filename);
-      mangadb.write(manga);
-      return manga;
-    }
+    const db = await this.read();
 
     let data = await mangadb.read();
 
@@ -187,7 +185,13 @@ export class MangasDB extends DatabaseIO<Mangas> {
     // if manga is already in db we will check if we added new languages
     if(alreadyInDB) {
       if(!data.langs.every(l => manga.langs.includes(l))) {
+        // new languages must also be saved in the index db
         manga.langs = Array.from(new Set(data.langs.concat(manga.langs)));
+        const find = db.mangas.find(m => m.id === manga.id);
+        if(find) {
+          find.langs = manga.langs;
+          await this.write(db);
+        }
         // retrieve languages of chapters in the database
         const chapterLanguagesInDB = Array.from(new Set(data.chapters.map(x => x.lang)));
         // we only keep chapters with languages NOT in the database
@@ -215,12 +219,11 @@ export class MangasDB extends DatabaseIO<Mangas> {
     if(data.displayName !== manga.displayName) hasNewStuff = true;
 
     // save base64 covers in to files
-    manga.covers = this.saveCovers(manga.covers, filename);
-
+    manga.covers = this.saveCovers(Array.from(new Set([...manga.covers, ...data.covers])), filename);
     // we check if the manga has been updated by previous operations OR by the Scheduler
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
-    if(updatedByScheduler || hasNewStuff) {
-      data = {...manga, covers: [...data.covers, ...manga.covers], _v: data._v };
+    if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
+      data = {...manga, covers: manga.covers, _v: data._v };
       mangadb.write(data);
     }
 
