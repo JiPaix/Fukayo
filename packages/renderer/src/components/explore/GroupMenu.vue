@@ -89,7 +89,7 @@ const itemSize = 32;
           >
             <q-item-section>
               <q-item-label class="flex items-center">
-                <span class="text-caption">{{ $t(`languages.${sortedGroup}`) }}</span>
+                <span class="text-caption">{{ $t(`languages.${lang}`) }}</span>
               </q-item-label>
             </q-item-section>
           </q-item>

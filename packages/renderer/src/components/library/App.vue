@@ -215,7 +215,6 @@ onBeforeUnmount(() => {
           :mirrors="mirrors"
           :group-unread="group.unread"
         />
-        <pre>{{ mangas[0] }}</pre>
       </div>
     </q-infinite-scroll>
   </div>
