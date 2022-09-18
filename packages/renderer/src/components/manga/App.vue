@@ -137,9 +137,14 @@ async function add() {
 async function remove() {
   if(!manga.value) return;
   if (!socket) socket = await useSocket(settings.server);
+  // get the language index
+  const langIndex = manga.value.langs.findIndex(i => i === selectedLanguage.value);
+
   if(isMangaInDb(manga.value)) {
     socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
       mangaRaw.value = res;
+      // automatically select another language when current is deleted
+      changeRouteLang(langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex]);
     });
   }
 }

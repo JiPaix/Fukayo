@@ -86,12 +86,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const db = await this.read();
     const index = db.mangas.find(x => x.id === manga.id);
     // we "un-db-ify" the manga so we can return results to user later
-    const unDBify:MangaPage = {...manga, inLibrary: false };
+    const unDBify:MangaPage = {...manga, inLibrary: true };
     if(index) {
       try {
         // update the database index
         index.langs = index.langs.filter(l => l !== lang);
-        if(index.langs.length === 0) db.mangas = db.mangas.filter(m => m.id !== m.id);
+        if(index.langs.length === 0) db.mangas = db.mangas.filter(m => m.id !== index.id);
         await this.write(db);
 
         // update the manga database
@@ -104,15 +104,16 @@ export class MangasDB extends DatabaseIO<Mangas> {
         if(!data.langs.length && !data.chapters.length) {
           // remove manga database file if there's nothing in.
           unlinkSync(resolve(this.path, `${index.file}.json`));
+          unDBify.covers = data.covers.map(c => readFileSync(resolve(this.path, c)).toString());
           data.covers.forEach(c => unlinkSync(resolve(this.path, c)));
+          unDBify.inLibrary = false;
+          return unDBify;
         }
-
-        return {...data, covers: manga.covers, inLibrary: false };
+        return {...data, covers: manga.covers, inLibrary: unDBify.inLibrary };
       } catch {
         // ignore
       }
     }
-    return unDBify;
   }
 
   async has(mirror:string, langs:mirrorsLangsType[], url:string):Promise<boolean> {
