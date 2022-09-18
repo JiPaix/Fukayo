@@ -240,6 +240,7 @@
   },
   "mangas": {
     "chapter": "Chapitre | Chapitres",
+    "chapter_order": "Ordre des chapitres",
     "displayname": {
       "title": "Changer le titre de ce manga"
     },
@@ -253,6 +254,7 @@
       "unknown": "Erreur inattendue"
     },
     "forceupdate": "Mettre à jour",
+    "hide_unread": "Masquer les chapitres lus",
     "markasread": {
       "current": "Marquer ce {chapterWord} comme lu",
       "current_unread": "Marquer ce {chapterWord} comme non-lu",
@@ -263,6 +265,8 @@
     },
     "original_title": "Titre d'origine : {title}",
     "source": "Source | Sources",
+    "synopsis": "Synopsis",
+    "tags": "Tags",
     "volume": "Volume | Volumes"
   },
   "reader": {

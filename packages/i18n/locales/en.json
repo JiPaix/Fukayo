@@ -240,6 +240,7 @@
   },
   "mangas": {
     "chapter": "Chapter | Chapters",
+    "chapter_order": "Chapter order",
     "displayname": {
       "title": "Change this manga's title"
     },
@@ -253,6 +254,7 @@
       "unknown": "Unexpected error"
     },
     "forceupdate": "Update",
+    "hide_unread": "Hide read chapters",
     "markasread": {
       "current": "Mark this chapter as read",
       "current_unread": "Mark this chapter as unread",
@@ -263,6 +265,8 @@
     },
     "original_title": "Original title: {title}",
     "source": "Source | Sources",
+    "synopsis": "Synopsis",
+    "tags": "Tags",
     "volume": "Volume | Volumes"
   },
   "reader": {

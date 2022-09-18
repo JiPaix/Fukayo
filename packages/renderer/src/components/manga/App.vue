@@ -543,7 +543,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 <span
                   class="text-bold"
                 >
-                  LANGUE:
+                  {{ $t('languages.language').toLocaleUpperCase() }}:
                 </span>
                 <div
                   v-if="manga"
@@ -560,7 +560,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                       :text-color="$q.dark.isActive && currLang === selectedLanguage ? 'white' : 'orange'"
                       @click="changeRouteLang(currLang)"
                     >
-                      {{ currLang }}
+                      {{ $t(`languages.${currLang}`) }}
                     </q-btn>
                   </q-btn-group>
                 </div>
@@ -581,7 +581,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 v-if="manga.tags.length"
                 class="flex items-center"
               >
-                <span class="text-bold q-mr-sm">TAGS: </span>
+                <span class="text-bold q-mr-sm">{{ $t('mangas.tags').toLocaleUpperCase() }}</span>
                 <span
                   v-for="(tag, i) in manga.tags"
                   :key="i"
@@ -592,7 +592,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
               </div>
             </div>
             <div v-if="manga">
-              <span class="text-bold">DESCRIPTION:</span>
+              <span class="text-bold">{{ $t('mangas.synopsis').toLocaleUpperCase() }}</span>
               {{ manga?.synopsis }}
             </div>
             <div v-else>
@@ -622,7 +622,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
               <q-card style="width: 350px;margin-top:50px;">
                 <q-card-section class="flex justify-between items-center">
                   <div class="text-weight-bold">
-                    Chapter Order:
+                    {{ $t('mangas.chapter_order') }}:
                   </div>
                   <q-btn
                     flat
@@ -633,7 +633,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 </q-card-section>
                 <q-card-section class="flex justify-between items-center">
                   <div class="text-weight-bold">
-                    hide read chapters:
+                    {{ $t('mangas.hide_unread') }}:
                   </div>
                   <q-toggle
                     :model-value="settings.mangaPage.chapters.hideRead"
