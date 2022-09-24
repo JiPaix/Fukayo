@@ -114,6 +114,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         // ignore
       }
     }
+    return unDBify;
   }
 
   async has(mirror:string, langs:mirrorsLangsType[], url:string):Promise<boolean> {
