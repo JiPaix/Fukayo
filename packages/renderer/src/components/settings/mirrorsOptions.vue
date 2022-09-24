@@ -6,7 +6,7 @@ import type { appLangsType } from '@i18n/index';
 import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { format, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -74,36 +74,32 @@ function toggleButtonColor(propertyName: string) {
   return 'orange';
 }
 
-function optionLabel(propertyName:string, value:unknown) {
-  if(typeof value === 'boolean') {
-    switch (propertyName) {
-      case 'enabled':
-         return format.capitalize($t('settings.source.enable', { sourceWord: $t('mangas.source', 1) }).toLocaleLowerCase());
-      case 'adult':
-        return $t('settings.source.adult');
-      case 'cache':
-        return $t('settings.source.cache');
-      case 'markAsRead':
-        return $t('settings.source.markAsRead');
-      default:
-        return value ? $t('settings.enable')  : $t('settings.disable');
-    }
+function optionLabel(propertyName:string) {
+
+  switch (propertyName) {
+    case 'enabled':
+      return $t('settings.source.enabled');
+    case 'cache':
+      return $t('settings.cache');
+    case 'adult':
+      return $t('settings.source.adult');
+    case 'markAsRead':
+      return $t('settings.source.markAsRead');
+    case 'login':
+      return $t('setup.login');
+    case 'password':
+      return $t('setup.password');
+    case 'host':
+      return $t('settings.source.host');
+    case 'port':
+      return $t('setup.port');
+    case 'protocol':
+      return $t('settings.source.protocol');
+    case 'dataSaver':
+      return $t('settings.source.dataSaver');
+    default:
+      return `"${propertyName}"`;
   }
-  if(typeof value === 'string' || typeof value === 'number') {
-    switch (propertyName) {
-      case 'login':
-        return $t('settings.source.login');
-      case 'password':
-        return $t('settings.source.password');
-      case 'host':
-        return $t('settings.source.host');
-      case 'port':
-        return $t('settings.source.port');
-      case 'protocol':
-        return $t('settings.source.protocol');
-    }
-  }
-  return `${$t('settings.change')} ${propertyName}`;
 }
 
 function omit<T extends Record<string, unknown>>(obj: T, keys: string[]) {
@@ -285,8 +281,37 @@ onBeforeMount(async () => {
               separator
               :dark="$q.dark.isActive"
             >
+              <!-- Customized Enable -->
+              <q-item
+                class="flex items-center"
+                clickable
+                :dark="$q.dark.isActive"
+                style="background:rgba(255, 255, 255, 0.3)"
+                :class="$q.dark.isActive ? '' : 'bg-white'"
+                @click="changeOption(mirror.name, 'enabled', !mirror.options.enabled)"
+              >
+                <q-item-section>
+                  <q-item-label>
+                    {{ optionLabel('enabled') }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section
+                  side
+                >
+                  <q-toggle
+                    :color="toggleButtonColor('enabled')"
+                    :checked-icon="toggleButtonIconChecked('enabled')"
+                    :unchecked-icon="toggleButtonIconUnchecked('enabled')"
+                    :model-value="mirror.options.enabled"
+                    size="lg"
+                    :dark="$q.dark.isActive"
+                    @update:model-value="(v) => changeOption(mirror.name, 'enabled', v)"
+                  />
+                </q-item-section>
+              </q-item>
+              <!-- We exclude some properties so we can customize them -->
               <div
-                v-for="(value, propertyName) in omit(mirror.options, ['login', 'password', 'host', 'port', 'protocol'])"
+                v-for="(value, propertyName) in omit(mirror.options, ['enabled', 'login', 'password', 'host', 'port', 'protocol'])"
                 :key="propertyName"
               >
                 <q-item
@@ -299,7 +324,7 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel(propertyName, value) }}
+                      {{ optionLabel(propertyName) }}
                     </q-item-label>
                   </q-item-section>
                   <q-item-section
@@ -321,6 +346,7 @@ onBeforeMount(async () => {
                     side
                   >
                     <q-input
+                      :debounce="500"
                       :type="typeof value === 'number' ? 'number' : 'text'"
                       dense
                       :model-value="value"
@@ -339,6 +365,7 @@ onBeforeMount(async () => {
                   </q-item-section>
                 </q-item>
               </div>
+              <!-- Customized Login -->
               <div v-if="mirror.options.hasOwnProperty('login')">
                 <q-item
                   :dark="$q.dark.isActive"
@@ -347,18 +374,20 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel('login', mirror.options.login) }}
+                      {{ optionLabel('login') }}
                     </q-item-label>
                   </q-item-section>
                   <q-input
                     type="text"
                     dense
+                    :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v) => changeOption(mirror.name, 'login', v)"
                   />
                 </q-item>
               </div>
+              <!-- Customized Password -->
               <div v-if="mirror.options.hasOwnProperty('password')">
                 <q-item
                   :dark="$q.dark.isActive"
@@ -367,18 +396,20 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel('password', mirror.options.password) }}
+                      {{ optionLabel('password') }}
                     </q-item-label>
                   </q-item-section>
                   <q-input
                     type="password"
                     dense
+                    :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v) => changeOption(mirror.name, 'password', v)"
                   />
                 </q-item>
               </div>
+              <!-- Customized host -->
               <div v-if="mirror.options.hasOwnProperty('host')">
                 <q-item
                   :dark="$q.dark.isActive"
@@ -387,18 +418,20 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel('host', mirror.options.host) }}
+                      {{ optionLabel('host') }}
                     </q-item-label>
                   </q-item-section>
                   <q-input
                     type="text"
                     dense
+                    :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v) => changeOption(mirror.name, 'host', v)"
                   />
                 </q-item>
               </div>
+              <!-- Customized port -->
               <div v-if="mirror.options.hasOwnProperty('port')">
                 <q-item
                   :dark="$q.dark.isActive"
@@ -407,18 +440,20 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel('port', mirror.options.port) }}
+                      {{ optionLabel('port') }}
                     </q-item-label>
                   </q-item-section>
                   <q-input
                     type="number"
                     dense
+                    :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v) => changeOption(mirror.name, 'port', v)"
                   />
                 </q-item>
               </div>
+              <!-- Customized protocol -->
               <div v-if="mirror.options.hasOwnProperty('protocol')">
                 <q-item
                   :dark="$q.dark.isActive"
@@ -427,7 +462,7 @@ onBeforeMount(async () => {
                 >
                   <q-item-section>
                     <q-item-label>
-                      {{ optionLabel('protocol', mirror.options.protocol) }}
+                      {{ optionLabel('protocol') }}
                     </q-item-label>
                   </q-item-section>
                   <q-select

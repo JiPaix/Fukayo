@@ -356,14 +356,11 @@
       }
     },
     "source": {
-      "adult": "Activer le contenu pour adultes",
-      "cache": "Activer le cache",
-      "enable": "Désactiver cette {sourceWord}",
-      "host": "Nom d'hôte (par exemple \"localhost\")",
-      "login": "Login",
-      "markAsRead": "Marquer les chapitres comme lus/non lus sur le site web ou l'application",
-      "password": "Mot de passe",
-      "port": "Port",
+      "adult": "Contenu pour adulte",
+      "dataSaver": "Économiser de la bande passante",
+      "enabled": "Activée",
+      "host": "Nom d'hôte",
+      "markAsRead": "Marquer les chapitres comme lu sur le site de la source",
       "protocol": "Protocole"
     },
     "tab": "Configuration",

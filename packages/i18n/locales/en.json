@@ -356,14 +356,11 @@
       }
     },
     "source": {
-      "adult": "Enable adult content",
-      "cache": "Enable cache",
-      "enable": "Disable this {sourceWord}",
-      "host": "Hostname (eg. \"localhost\")",
-      "login": "Login",
-      "markAsRead": "Mark chapters as read/unread on the website or the app",
-      "password": "Password",
-      "port": "Port",
+      "adult": "Adult content",
+      "dataSaver": "Save bandwidth",
+      "enabled": "Enabled",
+      "host": "Hostname",
+      "markAsRead": "Mark chapters as read on source website",
       "protocol": "Protocol"
     },
     "tab": "Configuration",
