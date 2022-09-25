@@ -338,10 +338,13 @@ async function startFetch() {
     if (id === reqId) {
       if((isManga(mg) || isMangaInDb(mg))) {
         nodata.value = null;
-        mangaRaw.value = mg;
-        if(!selectedLanguage.value) {
-          selectedLanguage.value = mg.langs[0];
+        // When the manga is fetched from recommendation no language filter is applied we have to this ourself
+        if(!mg.inLibrary) { // making sure we don't hide something that might be in the user's library
+          mg.langs = mg.langs.filter(l => !settings.i18n.ignored.includes(l));
+          mg.chapters = mg.chapters.filter(c => !settings.i18n.ignored.includes(c.lang));
         }
+        if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
+        mangaRaw.value = mg;
         socket?.emit('getMirrors', true, (mirrors) => {
           const m = mirrors.find((m) => m.name === mg.mirror);
           if(m) mirrorinfo.value = m;
