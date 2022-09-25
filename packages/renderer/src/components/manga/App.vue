@@ -68,9 +68,21 @@ const chapters = computed(() => {
 
 function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
   if(settings.mangaPage.chapters.sort === 'ASC') {
-    return chapters.sort((a, b) => a.number - b.number);
+    return chapters.sort((a, b) => {
+      if(a.volume && b.volume) {
+        const diff = a.volume - b.volume;
+        if (diff) return diff;
+      }
+      return a.number - b.number;
+    });
   }
-  return chapters.sort((a, b) => b.number - a.number);
+  return chapters.sort((a, b) => {
+    if(a.volume && b.volume) {
+      const diff = b.volume - a.volume;
+      if (diff) return diff;
+    }
+    return b.number - a.number;
+  });
 }
 /** manga infos */
 const manga = computed(() => {
