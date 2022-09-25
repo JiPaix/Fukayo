@@ -5,6 +5,7 @@ import type { mirrorInfo } from '@api/models/types/shared';
 import type { Scheduler } from '@api/server/helpers/scheduler';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
@@ -63,7 +64,8 @@ function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler[
   if(isMangaLog(log)) {
     const manga = mangas.value.find(m => m.id === log.id);
     if(!manga) return;
-    router.push({ name: 'manga', params: { mirror: manga.mirror, lang: manga.lang, url: manga.url, id: manga.id } });
+    const params = routeTypeHelper('manga', { mirror: manga.mirror, url: manga.url, id: manga.id, lang: manga.langs[0] });
+    router.push(params);
   }
 }
 
