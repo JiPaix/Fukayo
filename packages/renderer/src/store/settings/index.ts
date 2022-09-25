@@ -1,4 +1,4 @@
-
+import type { mirrorsLangsType } from '@i18n/index';
 import { defineStore } from 'pinia';
 
 export const useStore = defineStore('settings', {
@@ -34,6 +34,9 @@ export const useStore = defineStore('settings', {
       library: {
         showUnread: true,
         sort: 'AZ' as 'AZ' | 'ZA' | 'unread' | 'read',
+      },
+      i18n: {
+        ignored: [] as mirrorsLangsType[],
       },
     };
   },

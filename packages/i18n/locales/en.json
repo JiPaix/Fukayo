@@ -328,6 +328,11 @@
     "globalSettings": {
       "save": "Click here to save changes"
     },
+    "language": {
+      "description": "Choose the languages you want to read in",
+      "selectall": "Select All",
+      "unselectall": "Unselect All"
+    },
     "logs": "Logs",
     "reader": {
       "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",

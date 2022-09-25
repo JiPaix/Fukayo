@@ -1,4 +1,5 @@
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@i18n/index';
 import type { Ref } from 'vue';
 
 export function sortMirrorByNames(mirrors:mirrorInfo[], AZ:boolean) {
@@ -78,11 +79,22 @@ export function toggleMirror(mirror:string, mirrorsRAW: mirrorInfo[], includedMi
 }
 
 
-export function setupMirrorFilters(mirrors:mirrorInfo[], mirrorsRAW: Ref<mirrorInfo[]>, includedLangsRAW: Ref<string[]>, allLangs: Ref<string[]>|string[], includedMirrors?: Ref<string[]>) {
+export function setupMirrorFilters(mirrors:mirrorInfo[], mirrorsRAW: Ref<mirrorInfo[]>, includedLangsRAW: Ref<mirrorsLangsType[]>, allLangs: Ref<mirrorsLangsType[]>|mirrorsLangsType[], includedMirrors?: Ref<string[]>, globallyIgnored?: mirrorsLangsType[]) {
+  // set enabled mirrors list
   mirrorsRAW.value = mirrors.sort((a, b) => a.name.localeCompare(b.name));
+  // get list of languages based of mirrors
   includedLangsRAW.value = Array.from(new Set(mirrors.map(m => m.langs).flat()));
-  if((allLangs as Ref<string[]>).value) {
-    (allLangs as Ref<string[]>).value = includedLangsRAW.value;
+  // If list of language to ignore is provided:
+  if(globallyIgnored) {
+    // remove said language from list
+    includedLangsRAW.value = includedLangsRAW.value.filter(l => !globallyIgnored.includes(l));
+    // remove mirror that don't match the new language list
+    mirrorsRAW.value = mirrorsRAW.value.filter(m => m.langs.some(l => includedLangsRAW.value.includes(l)));
   }
+  // copy includedLangs to allLangs
+  if((allLangs as Ref<mirrorsLangsType[]>).value) {
+    (allLangs as Ref<mirrorsLangsType[]>).value = includedLangsRAW.value;
+  }
+  // if a list of mirror is provided add them to the included list
   if(includedMirrors) includedMirrors.value = mirrors.map(m => m.name);
 }

@@ -1,15 +1,16 @@
 <script lang="ts" setup>
+import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
 import fileSystem from '@renderer/components/settings/fileSystem.vue';
+import languageList from '@renderer/components/settings/languageList.vue';
 import mainOptions from '@renderer/components/settings/mainOptions.vue';
 import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
-import type en from '@i18n/../locales/en.json';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-const tab = ref<string>('general');
+const tab = ref<'general' | 'sources' | 'languages' | 'files'>('general');
 const $q = useQuasar();
 </script>
 
@@ -34,13 +35,19 @@ const $q = useQuasar();
         :label="$t('mangas.source', 20)"
       />
       <q-tab
+        name="languages"
+        icon="travel_explore"
+        :label="$t('languages.language', 20)"
+      />
+      <q-tab
         name="files"
         icon="storage"
         :label="$t('settings.files.tab')"
       />
     </q-tabs>
     <main-options v-if="tab === 'general'" />
-    <mirrors-options v-if="tab === 'sources'" />
-    <file-system v-if="tab === 'files'" />
+    <mirrors-options v-else-if="tab === 'sources'" />
+    <language-list v-else-if="tab === 'languages'" />
+    <file-system v-else />
   </div>
 </template>

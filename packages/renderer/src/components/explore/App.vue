@@ -2,7 +2,7 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -24,9 +24,9 @@ const query = ref<string|null>('');
 /** sort ascending/descending sorting */
 const sortAZ = ref(true);
 /** list of languages available from mirrors */
-const allLangs = ref<string[]>([]);
+const allLangs = ref<mirrorsLangsType[]>([]);
 /** language(s) to include in the  results */
-const includedLangsRAW = ref<string[]>([]);
+const includedLangsRAW = ref<mirrorsLangsType[]>([]);
 /** Mirrors info as retrieved from the server */
 const mirrorsRAW = ref<mirrorInfo[]>([]);
 
@@ -62,7 +62,7 @@ function pick(lang:string) {
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   socket.emit('getMirrors', false, (m) => {
-    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs);
+    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, settings.i18n.ignored);
   });
 });
 
@@ -217,7 +217,7 @@ onBeforeUnmount(async () => {
               </div>
               <div class="flex q-mt-xs">
                 <q-chip
-                  v-for="lang in mirror.langs"
+                  v-for="lang in mirror.langs.filter(l => !settings.i18n.ignored.includes(l))"
                   :key="lang"
                   dense
                   size="sm"

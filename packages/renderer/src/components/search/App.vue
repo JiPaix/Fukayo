@@ -198,7 +198,7 @@ onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   const queryParam = route.query.q as string;
   socket?.emit('getMirrors', false, (mirrors) => {
-    setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors);
+    setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, settings.i18n.ignored);
     if(queryParam) {
       query.value = queryParam;
       research();
