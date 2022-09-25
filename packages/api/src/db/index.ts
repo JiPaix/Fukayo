@@ -14,7 +14,7 @@ export function isPromise<T>(fN: (data: databaseGeneric<T>) => databaseGeneric<T
 /**
  * In memory database which can be saved to disk
  */
-export class Database<T> {
+export class Database<T extends object> {
   data: databaseGeneric<T>;
   private file:string;
   private writer: Writer;
@@ -94,7 +94,7 @@ export class Database<T> {
 /**
  * File system only database
  */
-export class DatabaseIO<T> {
+export class DatabaseIO<T extends object> {
   private file:string;
   private writer: Writer;
   constructor(filePath: string, defaultData: T) {
@@ -145,7 +145,7 @@ export class DatabaseIO<T> {
     const oldData = await this.read();
     if(semver.gt(packageJson.version, oldData._v)) {
       this.logger('Updating database version');
-      const newData = Object.keys(defaultData as object).reduce((acc, key) => {
+      const newData = Object.keys(defaultData).reduce((acc, key) => {
         if(oldData[key as keyof T] === undefined || typeof oldData[key as keyof T] !== typeof defaultData[key as keyof T]) {
           acc[key as keyof T] = defaultData[key as keyof T];
         }
