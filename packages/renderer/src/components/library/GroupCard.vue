@@ -80,7 +80,6 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:stri
 
   const opts = routeTypeHelper('manga', {
     id: mangaInfo.id,
-    url: mangaInfo.url,
     lang: mangaInfo.lang as mirrorsLangsType,
     mirror: mangaInfo.mirror,
   });

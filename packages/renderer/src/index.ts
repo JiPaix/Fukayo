@@ -25,7 +25,7 @@ const router = createRouter({
       },
       {
         name: 'manga',
-        path: '/manga/:id/:lang',
+        path: '/manga/:mirror/:id/:lang',
         component: () => import('@renderer/components/manga/App.vue'),
         props: true,
       },

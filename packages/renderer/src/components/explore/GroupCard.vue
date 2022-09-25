@@ -62,7 +62,6 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:Sear
 
   const opts = routeTypeHelper('manga', {
     id: mangaInfo.id,
-    url: mangaInfo.url,
     lang: mangaInfo.lang,
     mirror: mangaInfo.mirror,
   });
