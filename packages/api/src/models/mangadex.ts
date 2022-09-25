@@ -247,7 +247,9 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       host: 'https://mangadex.org',
       name: 'mangadex',
       displayName: 'MangaDex',
-      langs: mirrorsLang.map(x=>x), // makes mirrorsLangs mutable
+      langs: mirrorsLang
+        .map(x=>x) // makes mirrorsLangs mutable
+        .filter(x=>x!=='xx'), // remove "unknown" from lang list
       icon,
       waitTime: 500,
       entryLanguageHasItsOwnURL: false,
