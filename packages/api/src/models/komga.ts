@@ -390,17 +390,20 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     }
   }
 
-  markAsRead(url:string, lang:mirrorsLangsType, chapterUrl:string, read:boolean) {
+  async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
     if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
     if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
-    if(!url.length || !lang.length || !chapterUrl.length) return;
+    if(!mangaURL.length || !lang.length || !chapterURLs.length) return;
     if(!this.options.markAsRead) return;
-    try {
-      this.logger('toggling read status of chapter', chapterUrl);
-      const payload = read ? { completed: true } : { completed: false, page: 1 };
-      this.post(this.path(chapterUrl+'/read-progress'), payload, 'patch', {auth: {username: this.options.login, password: this.options.password}});
-    } catch(e) {
-      this.logger('error while marking chapter as read', e);
+
+    for(const chapterUrl of chapterURLs) {
+      try {
+        const payload = read ? { completed: true } : { completed: false, page: 1 };
+        await this.post(this.path(chapterUrl+'/read-progress'), payload, 'patch', {auth: {username: this.options.login, password: this.options.password}});
+      } catch(e) {
+        if(e instanceof Error) this.logger('markAsRead:', e.message);
+        else this.logger('markAsRead:', e);
+      }
     }
   }
 }

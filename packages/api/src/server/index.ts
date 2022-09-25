@@ -272,7 +272,7 @@ export default class IOWrapper {
     socket.on('markAsRead', payload => {
       const mirror = mirrors.find(m => m.name === payload.mirror);
       if(mirror && mirror.markAsRead) {
-        mirror.markAsRead(payload.url, payload.lang, payload.chapterUrl, payload.read);
+        mirror.markAsRead(payload.url, payload.lang, payload.chapterUrls, payload.read);
       }
     });
     /**

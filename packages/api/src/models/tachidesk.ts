@@ -423,19 +423,22 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     }
   }
 
-  markAsRead(url:string, lang:mirrorsLangsType, chapterUrl:string, read:boolean) {
+  async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
     if(!this.options.host || !this.options.port) return;
     if(!this.options.host.length) return;
-    if(!url.length || !lang.length || !chapterUrl.length) return;
+    if(!mangaURL.length || !lang.length || !chapterURLs.length) return;
     if(!this.options.markAsRead) return;
-    try {
-      this.logger('toggling read status of chapter', chapterUrl);
-      const body = new fd();
-      body.append('read', read ? 'true': 'false');
-      body.append('lastPageRead', '1');
-      this.post(this.path(chapterUrl), body, 'patch', {withCredentials: true});
-    } catch(e) {
-      this.logger('error while marking chapter as read', e);
+
+    for(const chapterURL of chapterURLs) {
+      try {
+        const body = new fd();
+        body.append('read', read ? 'true': 'false');
+        body.append('lastPageRead', '1');
+        await this.post(this.path(chapterURL), body, 'patch', { withCredentials: true});
+      } catch(e) {
+        if(e instanceof Error) this.logger('markAsRead:', e.message);
+        else this.logger('markAsRead:', e);
+      }
     }
   }
 }

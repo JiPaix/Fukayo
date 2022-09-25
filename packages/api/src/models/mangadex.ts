@@ -766,20 +766,32 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     else return socket.emit('getMangaURLfromChapterURL', id, undefined);
   }
 
-  async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURL: string, read: boolean) {
-    if(!this.options.login || !this.options.password || !this.options.markAsRead) return;
+  async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
+    if(!this.options.login || !this.options.password || !this.options.markAsRead || chapterURLs.length) return;
+
+    const mangaIdMatchArray = mangaURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
+    if(!mangaIdMatchArray) return this.logger('markAsRead: incorrect manga id');
+    const mangaId = mangaIdMatchArray[0];
+
+    // check each of the chapter urls
+    const chapters:Set<string> = new Set();
+    for(const chapter of chapterURLs) {
+      const chapterId = chapter.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
+      if(chapterId) chapters.add(chapterId[0]);
+      else continue;
+    }
+
+    const payload =  read ? { 'chapterIdsRead': Array.from(chapters) } : { 'chapterIdsUnread': Array.from(chapters) };
+    if(chapters.size === 0) return this.logger('markAsRead: no chapter were selected');
+
     try {
-      const chapterId = chapterURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
-      if(!chapterId) return;
-
-      const type = read ? 'post' : 'delete';
-      const resp = await this.post<undefined, {result: 'ok'}>(this.path(`/chapter/${chapterId[0]}/read`), undefined, type, { headers: this.headers });
-
-      if(resp && resp.result == 'ok') this.logger('read status changed to', read);
-
+      const resp = await this.post<typeof payload, { result: 'ok'}|Routes['/auth/login']['err']>(this.path(`/manga/${mangaId}/read`), payload, 'post', { headers: this.headers });
+      if(!resp) return this.logger('markAsRead: no response');
+      if(resp.result === 'error') return this.logger('markAsRead:', resp.errors[0].title, resp.errors[0].detail);
+      else return this.logger(`markAsRead: read status successfully changed x${chapters.size}`);
     } catch(e) {
-      if(e instanceof Error) this.logger('ERROR markAsRead', e.message);
-      else this.logger('ERROR markAsRead', e);
+      if(e instanceof Error) return this.logger('markAsRead:', e.message);
+      else return this.logger('markAsRead:', e);
     }
   }
 }
