@@ -242,6 +242,7 @@
     "chapter": "Chapitre | Chapitres",
     "chapter_order": "Ordre des chapitres",
     "displayname": {
+      "reset": "Réinitialiser le nom du manga à sa valeur par défaut",
       "title": "Changer le titre de ce manga"
     },
     "errors": {

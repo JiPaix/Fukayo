@@ -462,7 +462,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                     @click="manga ? changeDisplayName(manga.name) : null"
                   >
                     <q-tooltip>
-                      Reset manga name to default
+                      {{ $t('mangas.displayname.reset') }}
                     </q-tooltip>
                   </q-icon>
                 </template>
