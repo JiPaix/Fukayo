@@ -677,7 +677,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
             v-slot="{ item, index }"
             :items="chapters.filter(c => c.lang === selectedLanguage)"
             :items-size="nbOfChapters"
-            :virtual-scroll-item-size="62"
+            :virtual-scroll-item-size="80"
             separator
             class="w-100"
           >
@@ -685,30 +685,25 @@ function changeRouteLang(lang: mirrorsLangsType) {
               :key="index"
               :dark="$q.dark.isActive"
               clickable
-              style="max-height:62px;"
+              style="height:80px;"
             >
               <q-item-section
                 :class="item.read ? 'text-grey-9' : ''"
                 @click="showChapter(item)"
               >
                 <q-item-label>
-                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }}</span>
-                  <span v-if="item.volume !== undefined && item.number !== undefined">
-                    -
-                  </span>
-                  <span
-                    v-if="item.number !== undefined"
-                  >{{ $t("mangas.chapter") }} {{ item.number }}</span>
-                  <span v-if="item.volume === undefined && item.number === undefined">{{
-                    item.name
-                  }}</span>
+                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }} - </span>
+                  <span>{{ $t("mangas.chapter") }} {{ item.number }}</span>
                 </q-item-label>
                 <q-item-label
-                  v-if="item.number !== undefined"
                   caption
-                  lines="1"
                 >
-                  <span class="text-grey-6">{{ item.name }}</span>
+                  <span class="text-orange">{{ item.name || '--' }}</span>
+                </q-item-label>
+                <q-item-label
+                  caption
+                >
+                  <span class="text-grey-6 text-caption">{{ item.group }}</span>
                 </q-item-label>
               </q-item-section>
               <q-item-section
