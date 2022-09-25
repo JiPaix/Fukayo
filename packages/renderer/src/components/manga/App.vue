@@ -7,7 +7,8 @@ import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
 import {
 isManga,
-isMangaInDb,
+// eslint-disable-next-line comma-dangle
+isMangaInDb
 } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
