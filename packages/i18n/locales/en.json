@@ -258,10 +258,10 @@
     "markasread": {
       "current": "Mark this chapter as read",
       "current_unread": "Mark this chapter as unread",
-      "next": "Mark next chapter as read",
-      "next_unread": "Mark next chapter as unread",
-      "previous": "Mark previous chapter as read",
-      "previous_unread": "Mark previous chapter as unread"
+      "next": "Mark next chapters as read",
+      "next_unread": "Mark next chapters as unread",
+      "previous": "Mark previous chapters as read",
+      "previous_unread": "Mark previous chapters as unread"
     },
     "original_title": "Original title: {title}",
     "source": "Source | Sources",

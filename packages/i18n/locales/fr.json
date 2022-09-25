@@ -256,12 +256,12 @@
     "forceupdate": "Mettre à jour",
     "hide_unread": "Masquer les chapitres lus",
     "markasread": {
-      "current": "Marquer ce {chapterWord} comme lu",
-      "current_unread": "Marquer ce {chapterWord} comme non-lu",
-      "next": "Marquer le {chapterWord} suivant comme lu | Marquer les {chapterWord} suivants comme lu",
-      "next_unread": "Marquer le {chapterWord} suivant comme non lu | Marquer les {chapterWord} suivants comme non lu",
-      "previous": "Marquer le {chapterWord} précédent comme lu | Marquer les {chapterWord} précedents comme lu",
-      "previous_unread": "Marquer le {chapterWord} précedent comme non lu | Marquer les {chapterWord} précedents comme non lu"
+      "current": "Marquer ce chapitre comme lu",
+      "current_unread": "Marquer ce chapitre comme non lu",
+      "next": "Marquer les chapitres suivants comme lus",
+      "next_unread": "Marquer les chapitres suivants comme non lus",
+      "previous": "Marquer les chapitres précédents comme lus",
+      "previous_unread": "Marquer les chapitres précédents comme non lus"
     },
     "original_title": "Titre d'origine : {title}",
     "source": "Source | Sources",

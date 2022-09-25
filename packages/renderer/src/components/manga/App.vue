@@ -735,7 +735,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.next', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                        {{ $t('mangas.markasread.next') }}
                       </q-item>
                       <q-item
                         v-else-if="index > 0"
@@ -756,7 +756,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.next_unread', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                        {{ $t('mangas.markasread.next_unread') }}
                       </q-item>
                       <q-item
                         v-if="item.read"
@@ -777,7 +777,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                        {{ $t('mangas.markasread.current_unread') }}
                       </q-item>
                       <q-item
                         v-else
@@ -798,7 +798,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter').toLocaleLowerCase() } ) }}
+                        {{ $t('mangas.markasread.current') }}
                       </q-item>
                       <q-item
                         v-if="index < nbOfChapters - 1 && item.hasPrevUnread"
@@ -819,7 +819,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.previous', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                        {{ $t('mangas.markasread.previous') }}
                       </q-item>
                       <q-item
                         v-else-if="index < nbOfChapters - 1"
@@ -840,7 +840,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                           size="sm"
                           class="q-ml-none"
                         />
-                        {{ $t('mangas.markasread.previous_unread', { chapterWord: $t('mangas.chapter', nbOfChapters).toLocaleLowerCase() }, nbOfChapters) }}
+                        {{ $t('mangas.markasread.previous_unread') }}
                       </q-item>
                     </q-list>
                   </q-btn-dropdown>
