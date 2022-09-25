@@ -237,7 +237,7 @@ type Routes = {
   }
 }
 
-class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean}> implements MirrorInterface {
+class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean, excludedGroups:string[], excludedUploaders:string[]}> implements MirrorInterface {
   sessionToken: string|null = null;
   authToken: string|null = null;
   sessionInterval: NodeJS.Timer|null = null;
@@ -263,6 +263,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         password: null,
         dataSaver: false,
         markAsRead: false,
+        excludedGroups: [],
+        excludedUploaders: [],
       },
     });
     this.login();
@@ -398,7 +400,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     if(cancel) return;
     try {
       // limit to 8 results as mangas with multiple langs will be shown twice
-      const url = this.path('/chapter?limit=32&offset=0&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[readableAt]=desc');
+      let url = this.path('/chapter?limit=32&offset=0&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[readableAt]=desc');
+      if(this.options.excludedGroups.length) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
+      if(this.options.excludedUploaders) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
+
       const res = await this.fetch<Routes['/chapter']['ok']|Routes['/chapter']['err']>({
         url,
         headers: this.headers,
@@ -607,12 +612,16 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if(cancel) break;
 
+        let reqURL = this.path(
+          `${url}/feed?limit=500&offset=${page*500}&${requestLangs}&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`,
+        );
+        if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
+        if(this.options.excludedUploaders) reqURL += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
+
         const res = await this.fetch<
           Routes['/manga/{id}/feed']['ok']|Routes['/manga/{id}/feed']['err']
         >({
-          url: this.path(
-            `${url}/feed?limit=500&offset=${page*500}&${requestLangs}&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`,
-          ),
+          url: reqURL,
           headers: this.headers,
         }, 'json');
 

@@ -359,9 +359,13 @@
       "adult": "Contenu pour adulte",
       "dataSaver": "Économiser de la bande passante",
       "enabled": "Activée",
+      "excludedGroups": "Groupes de scanlators à ignorer",
+      "excludedGroupsHints": "Tapez un ID et appuyez sur Entrée pour l'ajouter",
+      "excludedUploaders": "Uploaders à ignorer",
       "host": "Nom d'hôte",
       "markAsRead": "Marquer les chapitres comme lu sur le site de la source",
-      "protocol": "Protocole"
+      "protocol": "Protocole",
+      "validUUID": "Veuillez utiliser un UUID valide"
     },
     "tab": "Configuration",
     "update": {

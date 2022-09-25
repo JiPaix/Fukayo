@@ -97,6 +97,10 @@ function optionLabel(propertyName:string) {
       return $t('settings.source.protocol');
     case 'dataSaver':
       return $t('settings.source.dataSaver');
+    case 'excludedGroups':
+      return $t('settings.source.excludedGroups');
+      case 'excludedUploaders':
+      return $t('settings.source.excludedUploaders');
     default:
       return `"${propertyName}"`;
   }
@@ -113,6 +117,14 @@ function omit<T extends Record<string, unknown>>(obj: T, keys: string[]) {
 function asTypeOrUndefined<T>(value: T): T|undefined {
   if(value) return value;
   return undefined;
+}
+
+function isValidUUI(ids:string[]) {
+  let res = true;
+  ids.forEach(i => {
+    if(!i.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/)) res = false;
+  });
+  return res;
 }
 
 /** include/exclude all languages from the filter */
@@ -311,7 +323,7 @@ onBeforeMount(async () => {
               </q-item>
               <!-- We exclude some properties so we can customize them -->
               <div
-                v-for="(value, propertyName) in omit(mirror.options, ['enabled', 'login', 'password', 'host', 'port', 'protocol'])"
+                v-for="(value, propertyName) in omit(mirror.options, ['enabled', 'login', 'password', 'host', 'port', 'protocol', 'excludedGroups', 'excludedUploaders'])"
                 :key="propertyName"
               >
                 <q-item
@@ -471,6 +483,66 @@ onBeforeMount(async () => {
                     :dark="$q.dark.isActive"
                     :options="['http', 'https']"
                     @update:model-value="(v) => changeOption(mirror.name, 'protocol', v)"
+                  />
+                </q-item>
+              </div>
+              <!-- Excluded Groups -->
+              <div v-if="mirror.options.hasOwnProperty('excludedGroups')">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('excludedGroups') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-select
+                    dense
+                    :model-value="mirror.options.excludedGroups"
+                    :label="$t('settings.source.excludedGroupsHints')"
+                    filled
+                    use-input
+                    use-chips
+                    multiple
+                    hide-dropdown-icon
+                    input-debounce="0"
+                    new-value-mode="add-unique"
+                    style="width: 250px"
+                    :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
+                    @update:model-value="(v) => changeOption(mirror.name, 'excludedGroups', v)"
+                  />
+                </q-item>
+              </div>
+              <!-- Excluded Uploaders -->
+              <div v-if="mirror.options.hasOwnProperty('excludedUploaders')">
+                <q-item
+                  :dark="$q.dark.isActive"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  :class="$q.dark.isActive ? '' : 'bg-white'"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ optionLabel('excludedUploaders') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-select
+                    color="orange"
+                    dense
+                    :model-value="mirror.options.excludedUploaders"
+                    :label="$t('settings.source.excludedGroupsHints')"
+                    filled
+                    use-input
+                    use-chips
+                    multiple
+                    hide-dropdown-icon
+                    input-debounce="0"
+                    new-value-mode="add-unique"
+                    style="width: 250px"
+                    reactive-rules
+                    :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
+                    @update:model-value="(v) => changeOption(mirror.name, 'excludedUploaders', v)"
                   />
                 </q-item>
               </div>
