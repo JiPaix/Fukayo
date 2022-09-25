@@ -285,7 +285,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   private includeLangs(langs: mirrorsLangsType[]) {
-    return langs.map(x => 'originalLanguage[]=' + x).join('&');
+    return langs.map(x => 'availableTranslatedLanguage[]=' + x).join('&');
   }
 
   private async login() {
@@ -470,7 +470,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     }
   }
 
-  async search(query:string, langs: mirrorsLangsType[] ,socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs: mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
     try {
       let cancel = false;
       if(!(socket instanceof SchedulerClass)) {
@@ -505,13 +505,13 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const langs = result.attributes.availableTranslatedLanguages;
 
-        const mangaId = this.uuidv5({id: result.id, url, langs}, true);
+        const mangaId = this.uuidv5({id: result.id, url: `/manga/${result.id}`, langs}, true);
         // we return the results based on SearchResult model
         if(!cancel) socket.emit('searchInMirrors', id, {
           id: mangaId,
           mirrorinfo: this.mirrorInfo,
           name,
-          url:link,
+          url:`/manga/${mangaId}`,
           covers: [cover],
           synopsis,
           last_release,
