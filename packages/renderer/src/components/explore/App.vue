@@ -53,8 +53,8 @@ function pickall() {
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
-function pick(lang:string) {
-  return toggleLang(lang, includedLangsRAW);
+function pick(lang:mirrorsLangsType) {
+  return toggleLang(lang, includedLangsRAW, undefined, undefined, settings.i18n.ignored);
 }
 
 

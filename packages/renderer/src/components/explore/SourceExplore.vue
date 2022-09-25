@@ -120,6 +120,7 @@ onBeforeUnmount(async () => {
             :mirror="mirror"
             :covers="group.covers"
             class="q-my-lg"
+            :hide-langs="settings.i18n.ignored"
           />
         </div>
       </q-page>

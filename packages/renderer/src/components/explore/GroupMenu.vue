@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const $q = useQuasar();
 
 function sortLangs(langs: SearchResult['langs']) {
-  if(props.hideLangs) langs = langs.filter(x => props.hideLangs?.some(y => x === y));
+  if(props.hideLangs) langs = langs.filter(x => !props.hideLangs?.some(y => x === y));
   return langs.sort((a, b) => a.localeCompare(b));
 }
 
@@ -80,7 +80,7 @@ const itemSize = 32;
           separator
         >
           <q-item
-            v-for="(lang, i) in sortedGroup.langs"
+            v-for="(lang, i) in sortLangs(sortedGroup.langs)"
             :key="i"
             v-close-popup
             clickable

@@ -114,7 +114,7 @@ const includedAllLanguage = computed({
 
 /** include/exclude a mirror from the filter, also affects the language filter */
 function pickMirror(mirror:string) {
-  toggleMirror(mirror, mirrorsList.value, includedMirrors, includedLangsRAW);
+  toggleMirror(mirror, mirrorsList.value, includedMirrors, includedLangsRAW, settings.i18n.ignored);
 }
 
 /** include/exclude all mirrors from the filter */
@@ -123,8 +123,8 @@ function pickallMirrors() {
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
-function pickLang(lang:string) {
-  toggleLang(lang, includedLangsRAW, mirrorsList.value, includedMirrors);
+function pickLang(lang:mirrorsLangsType) {
+  toggleLang(lang, includedLangsRAW, mirrorsList.value, includedMirrors, settings.i18n.ignored);
 }
 
 /** include/exclude all languages from the filter */
@@ -149,7 +149,7 @@ async function research() {
 
   if(!socket) socket = await useSocket(settings.server);
   // stop any ongoing search requests
-  socket?.emit('stopSearchInMirrors');
+  socket.emit('stopSearchInMirrors');
 
   // reset previous results
   display.value = false;
@@ -159,8 +159,7 @@ async function research() {
 
   /** helper to keep track of on going query */
   const task = { id: Date.now(), dones: 0, nbOfDonesToExpect: 0 };
-
-  socket?.emit(
+  socket.emit(
     'searchInMirrors',
     query.value,
     task.id,
@@ -424,7 +423,7 @@ onBeforeUnmount(async () => {
             :group="group.manga"
             :group-name="group.name"
             :mirror="group.manga.mirrorinfo"
-            :hide-langs="includedLangsRAW"
+            :hide-langs="settings.i18n.ignored"
             :covers="group.covers"
             class="q-my-lg"
           />

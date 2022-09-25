@@ -71,16 +71,10 @@ function showManga(mangaInfo:{ id: string, mirror: string, url:string, lang:Sear
 }
 
 function OpenDialogOrRedirect() {
-  if(!props.hideLangs || !props.hideLangs.length) {
-    if(props.mirror.langs.length > 1) dialog.value = !dialog.value;
-    else showManga({ id: props.group.id, lang: props.mirror.langs[0], url: props.group.url, mirror: props.mirror.name });
-    return;
-  }
-
-  if(props.hideLangs.length > 1) dialog.value = !dialog.value;
-  else showManga({ id: props.group.id, lang: props.mirror.langs[0], url: props.group.url, mirror: props.mirror.name });
-  return;
-
+  let langs = props.group.langs;
+  if(props.hideLangs && props.hideLangs.length) langs = props.group.langs.filter(l => !props.hideLangs?.includes(l));
+  if(langs.length > 1) dialog.value = !dialog.value;
+  else showManga({ id: props.group.id, lang: langs[0], url: props.group.url, mirror: props.mirror.name });
 }
 
 </script>
