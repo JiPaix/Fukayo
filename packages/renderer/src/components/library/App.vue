@@ -137,7 +137,7 @@ onMounted(async () => {
 
     socket.on('showLibrary', (resid, manga) => {
       if(resid === id) {
-        const mirrorInfo = m.find(mirror => mirror.name === manga.mirror);
+        const mirrorInfo = m.find(mirror => mirror.name === manga.mirror.name);
         if(mirrorInfo) {
           manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
           const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);

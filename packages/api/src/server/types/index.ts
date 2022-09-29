@@ -18,7 +18,7 @@ export type ServerToClientEvents = {
   showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB) => void;
-  getMangaURLfromChapterURL: (id:number, infos: { mirror:string, langs:mirrorsLangsType[], url:string } | undefined) => void;
+  getMangaURLfromChapterURL: (id:number, infos: { mirror: {name: string, version: number }, langs:mirrorsLangsType[], url:string } | undefined) => void;
   finishedMangasUpdate: () => void;
   startMangasUpdate: () => void;
 }

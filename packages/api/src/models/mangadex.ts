@@ -244,6 +244,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   authInterval: NodeJS.Timer|null = null;
   constructor() {
     super({
+      version: 1,
       host: 'https://mangadex.org',
       name: 'mangadex',
       displayName: 'MangaDex',
@@ -652,7 +653,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const mg:MangaPage = {
           id: url.replace('/manga/', ''),
-          mirror: this.name,
+          mirror: { name: this.name, version: this.version },
           url,
           langs: requestedLangs,
           covers: [cover],
@@ -753,7 +754,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     if(isMangaPage) {
       const mangaId = url.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/);
       if(!mangaId) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId[0]}`, langs: [lang], mirror:this.name});
+      return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId[0]}`, langs: [lang], mirror:{name: this.name, version: this.version}});
     }
     else if(isChapterPage) {
       try {
@@ -769,7 +770,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(!find) return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
         const mangaId = find.id;
-        return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId}`, langs: [lang], mirror:this.name});
+        return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId}`, langs: [lang], mirror:{name: this.name, version: this.version}});
       } catch {
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       }

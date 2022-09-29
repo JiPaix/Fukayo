@@ -78,7 +78,11 @@ export interface MangaPage {
     read: boolean
   }[]
   /** mirror name */
-  mirror: string
+  mirror: {
+    name: string,
+    /** mirror's implementation version `Integer` */
+    version: number
+  }
 }
 
 export interface MangaInDB extends MangaPage {

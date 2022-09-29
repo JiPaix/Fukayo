@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
+import type { mirrorsLangsType } from '@i18n/availableLangs';
 import QuickAdd from '@renderer/components/dialogs/QuickAdd.vue';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -32,10 +34,10 @@ function quickadd() {
   })
   .onCancel(()=> quick.value = false)
   .onDismiss(()=> quick.value = false)
-  .onOk((manga:{mirror:string, lang:string, url:string}) => {
-    const { mirror, lang, url } = manga;
-    if(route.name === 'manga') router.replace({ name: 'manga', params: { mirror, lang, url } });
-    else router.push({ name: 'manga', params: { mirror, lang, url } });
+  .onOk((manga:{mirror:string, lang:mirrorsLangsType, url:string}) => {
+    // TODO: mangas found by url don't have ids
+    const params = routeTypeHelper('manga', {  url: manga.url, lang: manga.lang, mirror: manga.mirror, id: ''  });
+    router.push(params);
   });
 }
 

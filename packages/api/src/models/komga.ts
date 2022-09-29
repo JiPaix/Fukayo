@@ -57,6 +57,7 @@ type book = {
 class Komga extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
   constructor() {
     super({
+      version: 1,
       host: 'http://localhost',
       name: 'komga',
       displayName: 'Komga',
@@ -234,7 +235,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         chapters.push(release);
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url, langs: [lang], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name });
+      socket.emit('showManga', id, {id: mangaId, url, langs: [lang], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version } });
     } catch(e) {
       this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them
@@ -380,7 +381,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
           mangaPageURL += res.seriesId;
         }
-        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, langs: [lang], mirror: this.name });
+        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, langs: [lang], mirror: {name: this.name, version: this.version} });
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch(e) {
         if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);

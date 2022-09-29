@@ -193,7 +193,7 @@ async function markAsRead(index:number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: true});
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true });
 }
 
 /** Mark a chapter as unread */
@@ -214,7 +214,7 @@ async function markAsUnread(index:number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: false});
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false });
 }
 
 /** Mark all previous chapters as read */
@@ -236,7 +236,7 @@ async function markPreviousAsRead(index: number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: true});
+  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true});
 }
 
 /** Mark all previous chapters as unread */
@@ -258,7 +258,7 @@ async function markPreviousAsUnread(index: number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: false});
+  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false});
 }
 
 /** Mark all next chapters as read */
@@ -280,7 +280,7 @@ async function markNextAsRead(index: number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: true});
+  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true});
 }
 
 /** Mark all next chapters as unread */
@@ -302,7 +302,7 @@ async function markNextAsUnread(index: number) {
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
   await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror, lang, url: manga.value.url, chapterUrls, read: false});
+  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false});
 }
 
 /** Opens the "change display name" dialog, calls `updateManga` when user press "OK" */
@@ -346,7 +346,7 @@ async function startFetch() {
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
         mangaRaw.value = mg;
         socket?.emit('getMirrors', true, (mirrors) => {
-          const m = mirrors.find((m) => m.name === mg.mirror);
+          const m = mirrors.find((m) => m.name === mg.mirror.name);
           if(m) mirrorinfo.value = m;
         });
       }

@@ -188,7 +188,7 @@ export default class IOWrapper {
       if(opts.id) {
         const search = uuidgen.data.ids.find(u => u.id === opts.id);
         if(search) {
-          const mirror = mirrors.find(m => m.name === search.mirror);
+          const mirror = mirrors.find(m => m.name === search.mirror.name);
           if(mirror) return mirror.manga(search.url, search.langs, socket, id);
           else return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
         }
@@ -207,7 +207,7 @@ export default class IOWrapper {
         const indb = await MangaDatabase.get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
         if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
 
-        const search = uuidgen.data.ids.find(u => u.langs.some(l => lang === l) && u.mirror === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
+        const search = uuidgen.data.ids.find(u => u.langs.some(l => lang === l) && u.mirror.name === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
         if(search) return socket.emit('getMangaURLfromChapterURL', id, search);
 
         return mirror.mangaFromChapterURL(socket, id, url, lang);
@@ -225,7 +225,7 @@ export default class IOWrapper {
         if(opts.id) {
           const search = uuidgen.data.ids.find(u => u.id === opts.id && u.langs.some(l => l === opts.lang));
           if(search) {
-            const mirror = mirrors.find(m => m.name === search.mirror);
+            const mirror = mirrors.find(m => m.name === search.mirror.name);
             if(mirror) mirror.chapter(search.url, opts.lang, socket, id, callback, opts.retryIndex);
             else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
           }

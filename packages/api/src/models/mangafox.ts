@@ -10,6 +10,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
   constructor() {
     super({
+      version: 1,
       host: 'https://fanfox.net',
       althost: [
         'http://fanfox.net',
@@ -239,7 +240,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       });
       // emitting the manga page based on MangaPage model
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: this.name});
+      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version }});
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -426,7 +427,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       return this.stopListening(socket);
     }
     if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror: this.name});
+      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
       return this.stopListening(socket);
     }
     if(isChapterPage) {
@@ -438,7 +439,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         }, 'html');
 
         const pageURL = $('.reader-header-title-1 > a[href^="/manga"]').attr('href');
-        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), langs: [lang], mirror: this.name});
+        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), langs: [lang], mirror:{name: this.name, version: this.version}});
         else return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch {
         return socket.emit('getMangaURLfromChapterURL', id, undefined);

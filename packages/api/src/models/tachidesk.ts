@@ -58,6 +58,7 @@ type Chapter = {
 export class Tachidesk extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
   constructor() {
     super({
+      version: 1,
       host: 'http://localhost',
       name: 'tachidesk',
       displayName: 'Tachidesk',
@@ -259,7 +260,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
 
       if(!cancel) socket.emit('showManga', id, {
         id: this.uuidv5({ langs, url:`/manga/${manga.id}` }),
-        mirror: this.name,
+        mirror: {name: this.name, version: this.version },
         name: manga.title,
         url: `/manga/${manga.id}`,
         covers,
@@ -414,7 +415,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         if(!this.options.host || !this.options.port) throw 'no credentials';
         if(!this.options.host.length) throw 'no credentials';
         url = url.replace(/chapter\/\w+(\/)?/, '');
-        return socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:this.name});
+        return socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
       } catch(e) {
         if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
         else this.logger('error while fetching manga from chapter url', e);

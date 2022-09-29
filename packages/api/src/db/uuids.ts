@@ -5,7 +5,7 @@ import { env } from 'process';
 import { v5 as uuidv5 } from 'uuid';
 
 export type uuid = {
-  mirror: string;
+  mirror: { name: string, version: number };
   langs: mirrorsLangsType[],
   /**
    * chapter url

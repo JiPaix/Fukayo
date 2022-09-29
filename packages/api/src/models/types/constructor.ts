@@ -1,6 +1,8 @@
 import type { mirrorsLangsType } from '@i18n/index';
 
 export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean, cache:boolean }> = {
+  /** mirror's implementation version `Integer` */
+  version: number,
   /** slug name: `az-_` */
   name: string,
   /** full name */

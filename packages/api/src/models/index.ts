@@ -35,6 +35,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   private concurrency = 0;
   protected crawler = crawler;
   private _icon;
+  /** mirror's implementation version */
+  version: number;
   /**
    * does the mirror treats different languages for the same manga as different entries
    * @default true
@@ -109,6 +111,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.waitTime = opts.waitTime || 200;
     this._icon = opts.icon;
     this.meta = opts.meta;
+    this.version = opts.version;
 
     if(typeof opts.entryLanguageHasItsOwnURL === 'boolean') this.entryLanguageHasItsOwnURL = opts.entryLanguageHasItsOwnURL;
 
@@ -159,6 +162,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { _v, ...options } = allOptions;
     return {
+      version: this.version,
       name: this.name,
       displayName: this.displayName,
       host: this.host,
@@ -200,8 +204,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     },
     force = false,
   ): string {
-    if(force && options.id) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
-    if(!force && options.url && options.langs) return uuidgen.generate({ mirror: this.name, ...options } as uuid, true);
+    if(force && options.id) return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
+    if(!force && options.url && options.langs) return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
     throw Error('uuidgen: missing options');
   }
 

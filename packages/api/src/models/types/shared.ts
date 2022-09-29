@@ -7,6 +7,8 @@ export type TaskDone = {
  * Mirror information
  */
 export type mirrorInfo = {
+  /** mirror's implementation version `Integer`*/
+  version: number,
   /** Mirror's slug */
   name:string,
   /** Mirror's full name */

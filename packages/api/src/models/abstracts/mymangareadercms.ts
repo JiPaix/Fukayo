@@ -304,7 +304,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       }
 
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, mirror: this.name, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number) });
+      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, mirror: {name: this.name, version: this.version }, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number) });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -392,7 +392,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       return this.stopListening(socket);
     }
     if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror: this.name});
+      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
       return this.stopListening(socket);
     }
     if(isChapterPage) {
@@ -402,7 +402,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           waitForSelector: 'body',
         }, 'html');
         const chapterPageURL = $('.nav li a[href*=manga]').first().attr('href');
-        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, langs: [lang], mirror: this.name });
+        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, langs: [lang], mirror:{name: this.name, version: this.version} });
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       } catch {
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
