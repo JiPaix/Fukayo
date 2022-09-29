@@ -256,6 +256,7 @@
     },
     "forceupdate": "Mettre à jour",
     "hide_unread": "Masquer les chapitres lus",
+    "inlibrary": "bibliothèque",
     "markasread": {
       "current": "Marquer ce chapitre comme lu",
       "current_unread": "Marquer ce chapitre comme non lu",

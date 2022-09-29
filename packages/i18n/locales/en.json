@@ -256,6 +256,7 @@
     },
     "forceupdate": "Update",
     "hide_unread": "Hide read chapters",
+    "inlibrary": "library",
     "markasread": {
       "current": "Mark this chapter as read",
       "current_unread": "Mark this chapter as unread",

@@ -127,7 +127,7 @@ function OpenDialogOrRedirect() {
               v-if="group.inLibrary"
               color="red"
             >
-              in library
+              {{ $t('mangas.inlibrary') }}
             </q-badge>
           </div>
         </div>

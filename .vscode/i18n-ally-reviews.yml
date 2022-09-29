@@ -145,3 +145,5 @@ reviews:
     description: short text
   reader.page.count:
     description: text
+  mangas.inlibrary:
+    description: badge
