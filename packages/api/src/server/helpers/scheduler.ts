@@ -232,7 +232,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     for(const manga of mangas) {
       this.logger('updating', manga.name, '@', manga.mirror);
       try {
-        const fetched = await this.fetch(mirror, manga);
+        const fetched = await this.#fetch(mirror, manga);
         let countNewChaps = 0;
         let countNewReadStatus = 0;
         let countNewMetadata = 0;
@@ -300,7 +300,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
 
   }
 
-  private async fetch(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
+  async #fetch(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
