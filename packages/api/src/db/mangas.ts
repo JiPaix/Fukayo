@@ -10,7 +10,7 @@ import { env } from 'process';
 type Mangas = {
   mangas: {
     id: string,
-    mirror:string,
+    mirror:{ name: string, version: number },
     url: string,
     file: string,
     langs: mirrorsLangsType[],
@@ -21,20 +21,19 @@ function isMangaInDB(res: MangaPage | MangaInDB ): res is MangaInDB {
   return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
 }
 
-
 export class MangasDB extends DatabaseIO<Mangas> {
-  private path: string;
+  #path: string;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
-    this.path = resolve(env.USER_DATA, '.mangasdb');
+    this.#path = resolve(env.USER_DATA, '.mangasdb');
   }
 
   /** add or update a manga */
   async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
     const db = await this.read();
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
-    const filename = await this.filenamify(payload.manga.id);
+    const filename = await this.#filenamify(payload.manga.id);
 
     // New manga || Manga/lang combo
     if(!isMangaInDB(payload.manga)) {
@@ -44,7 +43,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
       // If manga exists but lang isn't registered we get the reader's settings from the database
       let alreadyInDB_DATA = undefined;
-      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(resolve(this.path, `${filename}.json`), {} as MangaInDB).read();
+      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(resolve(this.#path, `${filename}.json`), {} as MangaInDB).read();
 
       // We define "meta" for this new entry:
       // and past "meta.options" from either the payload, the database (if any), or use default settings
@@ -70,12 +69,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
     // now only "alreadyInDB" is able to tell us if the manga is actually in the db or not.
     if(alreadyInDB) {
       this.logger('updating manga');
-      return this.upsert(mangadata, filename, true);
+      return this.#upsert(mangadata, filename, true);
     }
     else {
       this.logger('new manga added');
       // save manga data in its own table
-      const manga = await this.upsert(mangadata, filename, false);
+      const manga = await this.#upsert(mangadata, filename, false);
       db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, langs: manga.langs, file: filename });
       await this.write(db);
       return manga;
@@ -95,7 +94,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         await this.write(db);
 
         // update the manga database
-        const mangadb = new DatabaseIO(resolve(this.path, `${index.file}.json`), manga);
+        const mangadb = new DatabaseIO(resolve(this.#path, `${index.file}.json`), manga);
         const data = await mangadb.read();
         data.langs = data.langs.filter(l => l !== lang);
         data.chapters = data.chapters.filter(c => c.lang !== lang);
@@ -103,9 +102,9 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
         if(!data.langs.length && !data.chapters.length) {
           // remove manga database file if there's nothing in.
-          unlinkSync(resolve(this.path, `${index.file}.json`));
-          unDBify.covers = data.covers.map(c => readFileSync(resolve(this.path, c)).toString());
-          data.covers.forEach(c => unlinkSync(resolve(this.path, c)));
+          unlinkSync(resolve(this.#path, `${index.file}.json`));
+          unDBify.covers = data.covers.map(c => readFileSync(resolve(this.#path, c)).toString());
+          data.covers.forEach(c => unlinkSync(resolve(this.#path, c)));
           unDBify.inLibrary = false;
           return unDBify;
         }
@@ -119,7 +118,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   async has(mirror:string, langs:mirrorsLangsType[], url:string):Promise<boolean> {
     const db = await this.read();
-    return db.mangas.some(m => m.mirror === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
+    return db.mangas.some(m => m.mirror.name === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
   }
 
   async get(opts: {id:string,  langs: mirrorsLangsType[] }): Promise<MangaInDB|undefined>
@@ -127,19 +126,19 @@ export class MangasDB extends DatabaseIO<Mangas> {
   async get(opts: {mirror?:string, langs:mirrorsLangsType[], url?:string, id?:string}):Promise<MangaInDB|undefined> {
     const { mirror, langs, url, id } = opts;
     const db = await this.read();
-    let mg: {id:string, mirror:string, file:string, url:string} | undefined = undefined;
+    let mg: typeof db.mangas[0] | undefined = undefined;
 
     // check if we have a matching manga in the database
 
-    if(url && langs && mirror) mg = db.mangas.find(m => m.mirror === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
+    if(url && langs && mirror) mg = db.mangas.find(m => m.mirror.name === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
     else if(id && langs) mg = db.mangas.find(m => m.id === id && m.langs.some(l => langs.includes(l)));
     else return;
     if(!mg) return;
 
     // return the manga
-    const mangadb = new DatabaseIO(resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
-    const covers = this.getCovers(data.covers);
+    const covers = this.#getCovers(data.covers);
     return {
       ...data,
       chapters: data.chapters.sort((a, b) => b.number - a.number),
@@ -173,9 +172,9 @@ export class MangasDB extends DatabaseIO<Mangas> {
    * @param filename file containing the data
    * @param alreadyInDB if the manga is already in db
    */
-  private async upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
+  async #upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
     // create or get file
-    const mangadb = new DatabaseIO(resolve(this.path, `${filename}.json`), manga);
+    const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), manga);
     const db = await this.read();
 
     let data = await mangadb.read();
@@ -221,7 +220,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     if(data.displayName !== manga.displayName) hasNewStuff = true;
 
     // save base64 covers in to files
-    manga.covers = this.saveCovers(Array.from(new Set([...manga.covers, ...data.covers])), filename);
+    manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])), filename);
     // we check if the manga has been updated by previous operations OR by the Scheduler
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
     if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
@@ -233,10 +232,10 @@ export class MangasDB extends DatabaseIO<Mangas> {
   }
 
   /** save base64 images to files and returns their filenames */
-  private saveCovers(covers:string[], filename:string) {
+  #saveCovers(covers:string[], filename:string) {
     const coversAlreadySaved:{filename: string, data: string}[] = [];
 
-    const path = resolve(this.path);
+    const path = resolve(this.#path);
     const files = readdirSync(path, {withFileTypes: true})
       .filter(item => !item.isDirectory() && !item.name.endsWith('.json'))
       .map(item => item.name);
@@ -254,7 +253,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
       // new cover, save to file
       const coverFileName = `${i}_cover_${filename}`;
-      const path = resolve(this.path, coverFileName);
+      const path = resolve(this.#path, coverFileName);
       if(!existsSync(path)) {
         const data = c;
         writeFileSync(path, data);
@@ -265,10 +264,10 @@ export class MangasDB extends DatabaseIO<Mangas> {
   }
 
   /** reads files and return their content into an array */
-  private getCovers(filenames: string[]) {
+  #getCovers(filenames: string[]) {
     const res:string[] = [];
     filenames.forEach(f => {
-      const path = resolve(this.path, f);
+      const path = resolve(this.#path, f);
       if(existsSync(path)) {
         res.push(readFileSync(path).toString());
       }
@@ -276,7 +275,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     return res;
   }
 
-  private async filenamify(string:string) {
+  async #filenamify(string:string) {
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
     const filenamify = imp.default;

@@ -16,27 +16,27 @@ export function isPromise<T>(fN: (data: databaseGeneric<T>) => databaseGeneric<T
  */
 export class Database<T extends object> {
   data: databaseGeneric<T>;
-  private file:string;
-  private writer: Writer;
+  #file:string;
+  #writer: Writer;
   constructor(filePath: string, defaultData: T) {
     // Get the directory and filename
     const path = dirname(resolve(filePath));
-    this.file = resolve(filePath);
+    this.#file = resolve(filePath);
 
     // Create the directory if it doesn't exist
     if(!existsSync(path)) mkdirSync(path, { recursive: true });
 
     // Read or create the database
-    if(existsSync(this.file)) {
-      this.data = this.readNoAssign();
-      this.autopatch(defaultData);
+    if(existsSync(this.#file)) {
+      this.data = this.#readNoAssign();
+      this.#autopatch(defaultData);
     }
     else {
       this.data = { ...defaultData, _v: packageJson.version };
     }
-    this.writer = new Writer(this.file);
+    this.#writer = new Writer(this.#file);
     this.write();
-    this.logger('Database loaded', this.file);
+    this.logger('Database loaded', this.#file);
   }
 
   protected logger(...args: unknown[]) {
@@ -47,7 +47,7 @@ export class Database<T extends object> {
    * checks if the database is outdated and if so, it will automatically update it
    * @param defaultData the default data to use if the database is not up to date
    */
-  private async autopatch(defaultData: T) {
+  async #autopatch(defaultData: T) {
     if(semver.gt(packageJson.version, this.data._v)) {
       const newData = Object.keys(defaultData).reduce((acc, key) => {
         if(this.data[key as keyof T] === undefined) {
@@ -67,7 +67,7 @@ export class Database<T extends object> {
    */
   async read() {
     try {
-      const data = await promises.readFile(this.file, 'utf8');
+      const data = await promises.readFile(this.#file, 'utf8');
       this.data = JSON.parse(data);
       return this.data;
     } catch(e) {
@@ -77,17 +77,20 @@ export class Database<T extends object> {
   }
 
   /** read the database from disk without updating in memory data */
-  private readNoAssign() {
-    return JSON.parse(readFileSync(this.file, 'utf8'));
+  #readNoAssign() {
+    return JSON.parse(readFileSync(this.#file, 'utf8'));
   }
   /**
    * Write the database to disk
    */
   async write() {
-    return this.writer.write(JSON.stringify(this.data));
+    return this.#writer.write(JSON.stringify(this.data));
   }
+  /**
+   * Write (sync) the database to disk
+   */
   writeSync() {
-    return writeFileSync(this.file, JSON.stringify(this.data));
+    return writeFileSync(this.#file, JSON.stringify(this.data));
   }
 }
 
@@ -95,8 +98,8 @@ export class Database<T extends object> {
  * File system only database
  */
 export class DatabaseIO<T extends object> {
-  private file:string;
-  private writer: Writer;
+  #file:string;
+  #writer: Writer;
   constructor(filePath: string, defaultData: T) {
 
     // check if path exists
@@ -106,16 +109,16 @@ export class DatabaseIO<T extends object> {
     }
     // resolve file and init writer
     const pathToFile = resolve(filePath);
-    this.file = pathToFile;
-    this.writer = new Writer(this.file);
+    this.#file = pathToFile;
+    this.#writer = new Writer(this.#file);
 
     // write data if file is new
     if (!existsSync(pathToFile)) {
       writeFileSync(pathToFile, JSON.stringify({ ...defaultData, _v: packageJson.version }));
     }
     // patch (if needed)
-    this.autopatch(defaultData);
-    this.logger('Database loaded', this.file);
+    this.#autopatch(defaultData);
+    this.logger('Database loaded', this.#file);
   }
 
   protected logger(...args: unknown[]) {
@@ -124,7 +127,7 @@ export class DatabaseIO<T extends object> {
 
   async read():Promise<databaseGeneric<T>> {
     try {
-      const data = await promises.readFile(this.file, 'utf8');
+      const data = await promises.readFile(this.#file, 'utf8');
       return JSON.parse(data);
     } catch(e) {
       this.logger(e);
@@ -134,14 +137,14 @@ export class DatabaseIO<T extends object> {
 
   async write(data: T) {
     if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
-    return this.writer.write(JSON.stringify(data));
+    return this.#writer.write(JSON.stringify(data));
   }
 
   /**
    * checks if the database is outdated and if so, it will automatically update it
    * @param defaultData the default data to use if the database is not up to date
    */
-  async autopatch(defaultData: T) {
+  async #autopatch(defaultData: T) {
     const oldData = await this.read();
     if(semver.gt(packageJson.version, oldData._v)) {
       this.logger('Updating database version');

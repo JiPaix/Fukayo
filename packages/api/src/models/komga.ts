@@ -89,11 +89,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return false;
   }
 
-  changeSettings(opts: Record<string, unknown>) {
-    this.options = { ...this.options, ...opts };
-  }
-
-  private path(path:string) {
+  #path(path:string) {
     if(!this.options.protocol || !this.options.host || !this.options.port) throw new Error('missing credentials');
     return `${this.options.protocol}://${this.options.host}:${this.options.port}/api/v1${path}`;
   }
@@ -125,18 +121,18 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         });
       }
 
-      const url = this.path(`/series?search=${query}`);
+      const url = this.#path(`/series?search=${query}`);
       const res = await this.fetch<searchContent>({url, auth: {username: this.options.login, password: this.options.password}}, 'json');
       for(const result of res.content) {
         if(cancel) break;
         const name = result.metadata.title;
         const link = `/series/${result.id}`;
         const covers: string[] = [];
-        const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
 
         const synopsis = result.metadata.summary;
-        const books = await this.fetch<bookContent>({url: this.path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
+        const books = await this.fetch<bookContent>({url: this.#path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
         const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
 
         let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
@@ -191,7 +187,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
 
       const result = await this.fetch<searchContent['content'][0]>({
-        url: this.path(`${url}`),
+        url: this.#path(`${url}`),
         auth: {username: this.options.login, password: this.options.password},
       }, 'json');
       const name = result.metadata.title;
@@ -202,7 +198,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       if(cancel) return;
       const mangaId = this.uuidv5({url: `/series/${result.id}`, id: result.id, langs: [lang]}, true);
       const covers:string[] = [];
-      const img = await this.downloadImage(this.path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+      const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
 
       const synopsis = result.metadata.summary;
@@ -211,7 +207,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
 
       const chapters:MangaPage['chapters'] = [];
 
-      const books = await this.fetch<bookContent>({url: this.path(`/series/${result.id}/books?size=2000&sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
+      const books = await this.fetch<bookContent>({url: this.#path(`/series/${result.id}/books?size=2000&sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
       for(const book of books.content) {
         let date:number = Date.now();
         if(book.created && book.created.length) date = new Date(book.created).getTime();
@@ -268,7 +264,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-      const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
+      const res = await this.fetch<book>({url: this.#path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
       const nbOfPages = res.media.pagesCount;
       if(callback) callback(nbOfPages);
       if(cancel) return;
@@ -278,7 +274,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
-        const img = await this.downloadImage(this.path(`/books/${res.id}/pages/${i+1}`), 'page', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.#path(`/books/${res.id}/pages/${i+1}`), 'page', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
           if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         } else {
@@ -308,7 +304,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           cancel = true;
         });
       }
-      const url = this.path('/series?size=2000');
+      const url = this.#path('/series?size=2000');
       const $ = await this.fetch<searchContent>({
         url,
         auth: {username: this.options.login, password: this.options.password},
@@ -319,7 +315,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
 
         const link = `/series/${serie.id}`;
         const covers: string[] = [];
-        const img = await this.downloadImage(this.path(`/series/${serie.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+        const img = await this.downloadImage(this.#path(`/series/${serie.id}/thumbnail`), 'cover', undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
 
         let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
@@ -378,7 +374,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if(match) {
           mangaPageURL += match[1];
         } else {
-          const res = await this.fetch<book>({url: this.path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
+          const res = await this.fetch<book>({url: this.#path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
           mangaPageURL += res.seriesId;
         }
         if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, langs: [lang], mirror: {name: this.name, version: this.version} });
@@ -400,7 +396,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     for(const chapterUrl of chapterURLs) {
       try {
         const payload = read ? { completed: true } : { completed: false, page: 1 };
-        await this.post(this.path(chapterUrl+'/read-progress'), payload, 'patch', {auth: {username: this.options.login, password: this.options.password}});
+        await this.post(this.#path(chapterUrl+'/read-progress'), payload, 'patch', {auth: {username: this.options.login, password: this.options.password}});
       } catch(e) {
         if(e instanceof Error) this.logger('markAsRead:', e.message);
         else this.logger('markAsRead:', e);

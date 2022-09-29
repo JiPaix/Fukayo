@@ -1,12 +1,11 @@
-import { env } from 'process';
 import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
+import { env } from 'process';
 
 export class FileServer {
-  private static _instance: FileServer;
-
+  static #instance: FileServer;
   folder: string;
-  private timeouts: {filename: string, timeout: NodeJS.Timeout}[];
+  #timeouts: {filename: string, timeout: NodeJS.Timeout}[];
   /**
    *
    * @param folder folder to serve files from (relative to %appdata%/.cache)
@@ -14,18 +13,18 @@ export class FileServer {
   constructor(folder:string) {
     if(!env.USER_DATA) throw new Error('USER_DATA not set');
     this.folder = resolve(env.USER_DATA, '.cache', folder);
-    this.timeouts = [];
+    this.#timeouts = [];
     this.setup();
     this.empty();
   }
 
   static getInstance(folder?:string) {
-    if (this._instance) {
-        return this._instance;
+    if (this.#instance) {
+        return this.#instance;
     }
     if(!folder) throw new Error('couldn\'t create instance, no folder given');
-    this._instance = new FileServer(folder);
-    return this._instance;
+    this.#instance = new FileServer(folder);
+    return this.#instance;
   }
 
   setup() {
@@ -52,12 +51,12 @@ export class FileServer {
     }
   }
 
-  private resolveFile(filename: string) {
+  #resolveFile(filename: string) {
     return resolve(this.folder, filename);
   }
 
-  private resetFile(filename: string, lifetime: number) {
-    const find = this.timeouts.find(({filename: f}) => f === filename);
+  #resetFile(filename: string, lifetime: number) {
+    const find = this.#timeouts.find(({filename: f}) => f === filename);
     if(find) {
       clearTimeout(find.timeout);
       find.timeout = setTimeout(() => {
@@ -68,10 +67,10 @@ export class FileServer {
     return false;
   }
 
-  private initFile(filename: string, buffer:Buffer, lifetime = 600) {
+  #initFile(filename: string, buffer:Buffer, lifetime = 600) {
     try {
-      writeFileSync(this.resolveFile(filename), buffer);
-      this.timeouts.push({filename, timeout: setTimeout(() => {
+      writeFileSync(this.#resolveFile(filename), buffer);
+      this.#timeouts.push({filename, timeout: setTimeout(() => {
         this.delete(filename);
       }, lifetime * 1000)});
       return true;
@@ -82,10 +81,10 @@ export class FileServer {
 
   serv (data: Buffer, filename:string, lifetime = 600) {
 
-    const exist = this.resetFile(filename, lifetime);
+    const exist = this.#resetFile(filename, lifetime);
     if(exist) return `/files/${filename}`;
 
-    const create = this.initFile(filename, data, lifetime);
+    const create = this.#initFile(filename, data, lifetime);
     if(create) return `/files/${filename}`;
 
     return `/files/${filename}`;
@@ -93,10 +92,10 @@ export class FileServer {
 
   delete (filename: string) {
     try {
-      const find = this.timeouts.find(({filename: f}) => f === filename);
+      const find = this.#timeouts.find(({filename: f}) => f === filename);
       if(find) clearTimeout(find.timeout);
-      this.timeouts = this.timeouts.filter(({filename: f}) => f !== filename);
-      unlinkSync(this.resolveFile(filename));
+      this.#timeouts = this.#timeouts.filter(({filename: f}) => f !== filename);
+      unlinkSync(this.#resolveFile(filename));
       return true;
     } catch(e) {
       return false;

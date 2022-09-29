@@ -1,6 +1,7 @@
 import type { ClientToServerEvents } from '@api/client/types';
 import { MangaDatabase } from '@api/db/mangas';
 import { SettingsDatabase } from '@api/db/settings';
+import type Mirror from '@api/models';
 import mirrors from '@api/models/exports';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaErrorMessage } from '@api/models/types/errors';
@@ -15,13 +16,13 @@ import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
 
 export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
-  private intervals: {
+  #intervals: {
     updates: NodeJS.Timer;
     nextupdate: number;
     cache: NodeJS.Timer;
     nextcache: number;
   };
-  private ongoing = {
+  #ongoing = {
     updates: false,
     cache: false,
   };
@@ -31,17 +32,17 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   io?: ioServer<ClientToServerEvents, ServerToClientEvents>;
   constructor() {
     super();
-    this.intervals = {
+    this.#intervals = {
       // we should perform checks every minute
       nextcache: Date.now() + 60000,
       cache: setTimeout(this.update.bind(this), 60000),
       nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
-      updates: setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates),
+      updates: setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates),
     };
 
     // wait 30s on startup to make sure async operations are done
     setTimeout(() => {
-      this.clearcache();
+      this.#clearcache();
       this.update();
     }, 30*1000);
 
@@ -64,14 +65,14 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   get isUpdatingMangas() {
-    return this.ongoing.updates;
+    return this.#ongoing.updates;
   }
 
   registerIO(io:ioServer) {
     this.io = io;
   }
 
-  private addMangaLog(message:'chapter'|'chapter_error'|'chapter_read'|'manga_metadata', mirror:string, id: string, nbOfUpdates:number):void {
+  #addMangaLog(message:'chapter'|'chapter_error'|'chapter_read'|'manga_metadata', mirror:string, id: string, nbOfUpdates:number):void {
     if(!this.settings.library.logs.enabled) return;
     this.mangaLogs.push({date: Date.now(), message, mirror, id, nbOfUpdates});
     if(this.mangaLogs.length > this.settings.library.logs.max) {
@@ -91,7 +92,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     if(env.MODE === 'development') console.log('[api]', `(\x1b[35m${this.constructor.name}\x1b[0m)` ,...args);
   }
 
-  private clearcache() {
+  #clearcache() {
     if(this.cacheEnabled) {
       const { age, size } = this.cache;
       let cacheFiles = SchedulerClass.getAllCacheFiles();
@@ -154,27 +155,27 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   restart() {
-    clearTimeout(this.intervals.cache);
-    clearTimeout(this.intervals.updates);
+    clearTimeout(this.#intervals.cache);
+    clearTimeout(this.#intervals.updates);
     if(this.cacheEnabled) {
-      this.intervals.cache = setTimeout(this.update.bind(this), 300000);
-      this.intervals.nextcache = Date.now() + 300000;
+      this.#intervals.cache = setTimeout(this.update.bind(this), 300000);
+      this.#intervals.nextcache = Date.now() + 300000;
     }
-    this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
-    this.intervals.updates = setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.#intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
+    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates);
   }
 
   restartUpdate() {
-    clearTimeout(this.intervals.updates);
-    this.intervals.updates = setTimeout(this.clearcache.bind(this), this.settings.library.waitBetweenUpdates);
-    this.intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
+    clearTimeout(this.#intervals.updates);
+    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.#intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
   }
 
   restartCache() {
-    clearTimeout(this.intervals.cache);
+    clearTimeout(this.#intervals.cache);
     if(this.cacheEnabled) {
-      this.intervals.cache = setTimeout(this.update.bind(this), 300000);
-      this.intervals.nextcache = Date.now() + 300000;
+      this.#intervals.cache = setTimeout(this.update.bind(this), 300000);
+      this.#intervals.nextcache = Date.now() + 300000;
     }
   }
 
@@ -185,29 +186,29 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   async update(force?:boolean) {
     this.logger('updating');
     // if we are already updating, return
-    if(this.ongoing.updates) return;
+    if(this.#ongoing.updates) return;
     // emit to all the clients that we are updating
-    this.ongoing.updates = true;
+    this.#ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
-    const mangaByMirror = await this.getMangasToUpdate(force);
+    const mangaByMirror = await this.#getMangasToUpdate(force);
     // setMaxListeners according to the number of manga to update
     const nbMangas = Object.keys(mangaByMirror).reduce((acc, key) => acc + mangaByMirror[key].length, 0);
     this.setMaxListeners(nbMangas + 1);
     // update the mangas
     for(const mirrorName of Object.keys(mangaByMirror)) {
       const mirror = mirrors.find(m => m.name === mirrorName);
-      if(mirror) await this.updateMangas(mirror, mangaByMirror[mirrorName]);
+      if(mirror) await this.#updateMangas(mirror, mangaByMirror[mirrorName]);
     }
     // emit to all the clients that we are done updating
-    this.ongoing.updates = false;
+    this.#ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
     this.logger('done updating');
     // restart update intervals/timeouts
     this.restartUpdate();
   }
 
-  private async getMangasToUpdate(force?:boolean) {
+  async #getMangasToUpdate(force?:boolean) {
     // filter mangas were lastUpdate + waitBetweenUpdates is less than now
     const mangas = (await MangaDatabase.getAll())
       .filter(manga => {
@@ -218,14 +219,14 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     // groups mangas by mirror
     const mangasByMirror: sortedMangas<typeof mangas[0]> = {};
     mangas.forEach(manga => {
-      if(!mangasByMirror[manga.mirror]) mangasByMirror[manga.mirror] = [];
-      mangasByMirror[manga.mirror].push(manga);
+      if(!mangasByMirror[manga.mirror.name]) mangasByMirror[manga.mirror.name] = [];
+      mangasByMirror[manga.mirror.name].push(manga);
     });
     return mangasByMirror;
   }
 
 
-  private async updateMangas(mirror:MirrorInterface, mangas: MangaInDB[]) {
+  async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
     const res:MangaInDB[] = [];
     const now = Date.now();
     for(const manga of mangas) {
@@ -284,11 +285,11 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
             countNewChaps++;
           }
         });
-        if(countNewChaps > 0) this.addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
-        if(countNewReadStatus > 0) this.addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
-        if(countNewReadStatus > 0) this.addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
+        if(countNewChaps > 0) this.#addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
+        if(countNewReadStatus > 0) this.#addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
+        if(countNewReadStatus > 0) this.#addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
       } catch(e) {
-        this.addMangaLog('chapter_error', mirror.name, manga.id, 0);
+        this.#addMangaLog('chapter_error', mirror.name, manga.id, 0);
       }
       res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
     }

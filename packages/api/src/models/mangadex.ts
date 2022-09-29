@@ -270,10 +270,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         excludedUploaders: [],
       },
     });
-    this.login();
+    this.#login();
   }
 
-  private get headers() {
+  get #headers() {
     const headers = {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -285,13 +285,13 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   }
 
-  private includeLangs(langs: mirrorsLangsType[]) {
+  #includeLangs(langs: mirrorsLangsType[]) {
     return langs.map(x => 'availableTranslatedLanguage[]=' + x).join('&');
   }
 
-  private async login() {
-    this.clearIntervals();
-    this.nullTokens();
+  async #login() {
+    this.#clearIntervals();
+    this.#nullTokens();
     if(!this.options.login || !this.options.password) return this.logger('no credentials');
     if(!this.options.enabled) return this.logger('mirror is disabled');
 
@@ -301,7 +301,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     try {
       const resp = await this.post<
         Routes['/auth/login']['payload'], Routes['/auth/login']['ok'] | Routes['/auth/login']['err']
-      >(this.path('/auth/login'), { username, password }, 'post', { headers: this.headers });
+      >(this.#path('/auth/login'), { username, password }, 'post', { headers: this.#headers });
 
       if(!resp) {
         this.logger('no response', '/auth/login');
@@ -311,8 +311,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(resp.result === 'ok') {
         this.authToken = resp.token.refresh;
         this.sessionToken = resp.token.session;
-        this.loginLoop();
-        this.refreshLoop();
+        this.#loginLoop();
+        this.#refreshLoop();
         this.logger('logged in!');
         return true;
       } else {
@@ -326,11 +326,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     }
   }
 
-  private async refresh():Promise<boolean> {
+  async #refresh():Promise<boolean> {
     if(this.authToken) {
       const resp = await this.post<
         Routes['/auth/refresh']['payload'], Routes['/auth/refresh']['ok']|Routes['/auth/refresh']['err']
-      >(this.path('/auth/refresh'), { token: this.authToken }, 'post', { headers: this.headers } );
+      >(this.#path('/auth/refresh'), { token: this.authToken }, 'post', { headers: this.#headers } );
 
       if(!resp) {
         this.logger('no response', '/auth/refresh');
@@ -348,17 +348,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return false;
   }
 
-  private clearIntervals() {
+  #clearIntervals() {
     if(this.authInterval) clearInterval(this.authInterval);
     if(this.authInterval) clearInterval(this.authInterval);
   }
 
-  private nullTokens() {
+  #nullTokens() {
     this.authToken = null;
     this.sessionToken = null;
   }
 
-  private loginLoop() {
+  #loginLoop() {
     // 86400 seconds in a day
     const msInDay = 86400*1000;
     let dayCount = 0;
@@ -369,22 +369,22 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if (dayCount === 29) {
           if(this.authInterval) clearInterval(this.authInterval);
-          this.login();
+          this.#login();
         }
     }, msInDay);
   }
 
-  private refreshLoop() {
+  #refreshLoop() {
     this.sessionInterval = setInterval(async () => {
-      const res = await this.refresh();
+      const res = await this.#refresh();
       if(!res) {
         // login will clear all intervals and null tokens
-        this.login();
+        this.#login();
       }
     }, 14 * 60 * 1000); // 14 minutes
   }
 
-  private path(path:string) {
+  #path(path:string) {
     if(!path.startsWith('/')) path = '/'+path;
     return 'https://api.mangadex.org'+path;
   }
@@ -403,13 +403,13 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     if(cancel) return;
     try {
       // limit to 8 results as mangas with multiple langs will be shown twice
-      let url = this.path('/chapter?limit=32&offset=0&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[readableAt]=desc');
+      let url = this.#path('/chapter?limit=32&offset=0&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[readableAt]=desc');
       if(this.options.excludedGroups.length) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
       if(this.options.excludedUploaders) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
 
       const res = await this.fetch<Routes['/chapter']['ok']|Routes['/chapter']['err']>({
         url,
-        headers: this.headers,
+        headers: this.#headers,
       }, 'json');
 
       if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
@@ -431,8 +431,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const manga = await this.fetch<
           Routes['/manga/{id}']['ok']|Routes['/manga/{id}']['err']
         >({
-          url: this.path(`${url}?includes[]=artist&includes[]=author&includes[]=cover_art`),
-          headers: this.headers,
+          url: this.#path(`${url}?includes[]=artist&includes[]=author&includes[]=cover_art`),
+          headers: this.#headers,
         }, 'json');
 
         if(manga.result !== 'ok') return this.logger('error', manga.errors[0]);
@@ -483,7 +483,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
 
       const url =
-        this.path(`/manga?title=${query}&limit=16&${this.includeLangs(langs)}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
+        this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(langs)}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
       const res = await this.fetch<Routes['/manga/{search}']['ok']|Routes['/manga/{search}']['err']>({url}, 'json');
       if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
@@ -550,7 +550,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const stringIDs = chunkOfIDs.map(x => `ids[]=${x}`).join('&');
         const res = await this.fetch<Routes['/group']['ok']|Routes['/group']['err']>({
-          url: this.path(`/group?${stringIDs}`),
+          url: this.#path(`/group?${stringIDs}`),
         }, 'json');
 
         if(res.result !== 'ok') continue;
@@ -580,10 +580,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const manga = await this.fetch<
       Routes['/manga/{id}']['ok']|Routes['/manga/{id}']['err']
       >({
-        url: this.path(
+        url: this.#path(
           `${url}?contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&includes[]=artist&includes[]=author`,
         ),
-        headers: this.headers,
+        headers: this.#headers,
       }, 'json');
 
       if(manga.result !== 'ok') throw new Error(`${manga.errors[0].title}: ${manga.errors[0].detail}`);
@@ -615,7 +615,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if(cancel) break;
 
-        let reqURL = this.path(
+        let reqURL = this.#path(
           `${url}/feed?limit=500&offset=${page*500}&${requestLangs}&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`,
         );
         if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
@@ -625,7 +625,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           Routes['/manga/{id}/feed']['ok']|Routes['/manga/{id}/feed']['err']
         >({
           url: reqURL,
-          headers: this.headers,
+          headers: this.#headers,
         }, 'json');
 
         if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
@@ -704,7 +704,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
       const resp = await this.fetch<
         Routes['/at-home/server/{id}']['ok'] | Routes['/at-home/server/{id}']['err']
-      >({url: this.path(`/at-home/server/${match[0]}`)}, 'json');
+      >({url: this.#path(`/at-home/server/${match[0]}`)}, 'json');
 
       if(resp.result !== 'ok') throw new Error(`${resp.errors[0].title}: ${resp.errors[0].detail}`);
       if(callback) callback(resp.chapter.data.length);
@@ -762,7 +762,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const res = await this.fetch<
           Routes['/chapter/{id}']['ok'] | Routes['/chapter/{id}']['err']
-        >({ url: this.path(`/chapter/${chapterId}?includes[]=manga`), headers: this.headers }, 'json');
+        >({ url: this.#path(`/chapter/${chapterId}?includes[]=manga`), headers: this.#headers }, 'json');
 
         if(res.result !== 'ok') return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
@@ -797,7 +797,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     if(chapters.size === 0) return this.logger('markAsRead: no chapter were selected');
 
     try {
-      const resp = await this.post<typeof payload, { result: 'ok'}|Routes['/auth/login']['err']>(this.path(`/manga/${mangaId}/read`), payload, 'post', { headers: this.headers });
+      const resp = await this.post<typeof payload, { result: 'ok'}|Routes['/auth/login']['err']>(this.#path(`/manga/${mangaId}/read`), payload, 'post', { headers: this.#headers });
       if(!resp) return this.logger('markAsRead: no response');
       if(resp.result === 'error') return this.logger('markAsRead:', resp.errors[0].title, resp.errors[0].detail);
       else return this.logger(`markAsRead: read status successfully changed x${chapters.size}`);

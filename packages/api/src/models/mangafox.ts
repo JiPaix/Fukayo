@@ -317,7 +317,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           const args = [match[1], match[3], match[4], match[5].split('|'), 0, {}];
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          let sc = this.unpack(...args); // call the unpack function
+          let sc = this.#unpack(...args); // call the unpack function
           sc = sc.replace(/\\'/g, '\'');
 
 
@@ -450,7 +450,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  private unpack(p, a, c, k, e, d):string {
+  #unpack(p, a, c, k, e, d):string {
     // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
     // the retrieved data is packed through an obfuscator
     // dm5 is unpacking the images url through an eval

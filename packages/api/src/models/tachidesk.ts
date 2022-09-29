@@ -84,21 +84,17 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
   }
 
   /** needs at least these three options to be enabled */
-  public get enabled(): boolean {
+  get enabled(): boolean {
     const { enabled, host, port } = this.options;
     if(enabled && host && port) return true;
     return false;
   }
 
-  public set enabled(val: boolean) {
+  set enabled(val: boolean) {
     this.options.enabled = val;
   }
 
-  changeSettings(opts: Record<string, unknown>) {
-    this.options = { ...this.options, ...opts };
-  }
-
-  private path(path:string) {
+  #path(path:string) {
     if(!this.options.protocol || !this.options.host || !this.options.port) throw new Error('missing credentials');
     if(this.options.login && this.options.password) return `${this.options.protocol}://${this.options.login}:${this.options.password}@${this.options.host}:${this.options.port}/api/v1${path}`;
     return `${this.options.protocol}://${this.options.host}:${this.options.port}/api/v1${path}`;
@@ -131,7 +127,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         });
       }
 
-      const catUrl = this.path('/category');
+      const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
         url: catUrl,
         withCredentials: true,
@@ -140,7 +136,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       for(const cat of categories) {
         if(cancel) break;
         const res = await this.fetch<CategoryManga[]>({
-          url: this.path(`/category/${cat.id}`),
+          url: this.#path(`/category/${cat.id}`),
           withCredentials: true,
         }, 'json');
 
@@ -148,16 +144,16 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           if(cancel) break;
           if(!manga.title.toLowerCase().includes(query.toLowerCase())) continue;
           const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-            url: this.path(`/source/${manga.sourceId}`),
+            url: this.#path(`/source/${manga.sourceId}`),
           }, 'json')).lang);
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
           if(img) covers.push(img);
 
 
           const chapters = await this.fetch<Chapter[]>({
-            url:this.path(`/manga/${manga.id}/chapters`),
+            url:this.#path(`/manga/${manga.id}/chapters`),
             withCredentials: true,
           }, 'json');
 
@@ -212,18 +208,18 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       if(!this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.host.length) throw 'no credentials';
       const manga = await this.fetch<Manga>({
-        url: this.path(url),
+        url: this.#path(url),
         withCredentials: true,
       }, 'json');
 
       if(cancel) return;
 
       const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-        url: this.path(`/source/${manga.sourceId}`),
+        url: this.#path(`/source/${manga.sourceId}`),
       }, 'json')).lang);
 
       const covers: string[] = [];
-      const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
       if(img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
@@ -232,7 +228,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       const chapters:MangaPage['chapters'] = [];
 
       const chaptersRes = await this.fetch<Chapter[]>({
-        url: this.path(`/manga/${manga.id}/chapters`),
+        url: this.#path(`/manga/${manga.id}/chapters`),
         withCredentials: true,
       }, 'json');
 
@@ -307,7 +303,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       if(!this.options.host.length) throw 'no credentials';
 
       const res = await this.fetch<Chapter>({
-        url: this.path(url),
+        url: this.#path(url),
         withCredentials: true,
       }, 'json');
       const nbOfPages = res.pageCount;
@@ -317,7 +313,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
 
-        const img = await this.downloadImage(this.path(url+'/page/'+i), 'page', undefined, false, { withCredentials: true });
+        const img = await this.downloadImage(this.#path(url+'/page/'+i), 'page', undefined, false, { withCredentials: true });
 
         if(img) {
           socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
@@ -350,7 +346,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         });
       }
 
-      const catUrl = this.path('/category');
+      const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
         url: catUrl,
         withCredentials: true,
@@ -359,18 +355,18 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       for(const cat of categories) {
         if(cancel) break;
         const res = await this.fetch<CategoryManga[]>({
-          url: this.path(`/category/${cat.id}`),
+          url: this.#path(`/category/${cat.id}`),
           withCredentials: true,
         }, 'json');
 
         for(const manga of res) {
           if(cancel) break;
           const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-            url: this.path(`/source/${manga.sourceId}`),
+            url: this.#path(`/source/${manga.sourceId}`),
           }, 'json')).lang);
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
           if(img) covers.push(img);
           if(!cancel) socket.emit('showRecommend', id, {
             id: this.uuidv5({ langs: [lang], url:`/manga/${manga.id}`}),
@@ -435,7 +431,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         const body = new fd();
         body.append('read', read ? 'true': 'false');
         body.append('lastPageRead', '1');
-        await this.post(this.path(chapterURL), body, 'patch', { withCredentials: true});
+        await this.post(this.#path(chapterURL), body, 'patch', { withCredentials: true});
       } catch(e) {
         if(e instanceof Error) this.logger('markAsRead:', e.message);
         else this.logger('markAsRead:', e);

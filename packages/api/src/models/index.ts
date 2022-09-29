@@ -32,9 +32,9 @@ const uuidgen = UUID.getInstance();
  * class myMirror extends Mirror<undefined> {}
  */
 export default class Mirror<T extends Record<string, unknown> = Record<string, unknown>> {
-  private concurrency = 0;
+  #concurrency = 0;
   protected crawler = crawler;
-  private _icon;
+  #icon;
   /** mirror's implementation version */
   version: number;
   /**
@@ -98,7 +98,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   /**
    * mirror specific options
    */
-  private db: Database<MirrorConstructor<T>['options']>;
+  #db: Database<MirrorConstructor<T>['options']>;
 
 
   constructor(opts: MirrorConstructor<T>) {
@@ -109,7 +109,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.althost = opts.althost;
     this.langs = opts.langs;
     this.waitTime = opts.waitTime || 200;
-    this._icon = opts.icon;
+    this.#icon = opts.icon;
     this.meta = opts.meta;
     this.version = opts.version;
 
@@ -119,26 +119,26 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
-    this.db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+    this.#db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
   }
 
   public get enabled() {
-    return this.db.data.enabled;
+    return this.#db.data.enabled;
   }
 
   public set enabled(val:boolean) {
     this.options.enabled = val;
-    this.db.write();
+    this.#db.write();
   }
 
   public get options() {
-    return this.db.data;
+    return this.#db.data;
   }
 
   public set options(opts: MirrorConstructor<T>['options']) {
-    this.db.data = { ...this.db.data, ...opts };
+    this.#db.data = { ...this.#db.data, ...opts };
     this.logger('options changed', opts);
-    this.db.write();
+    this.#db.write();
   }
 
   public get cacheEnabled() {
@@ -154,7 +154,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       const resolved = resolve(__dirname, '../', 'icons', `${this.name}.png`);
       return `file://${resolved}`;
     }
-    return this._icon;
+    return this.#icon;
   }
 
   public get mirrorInfo():mirrorInfo {
@@ -175,8 +175,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     };
   }
 
-  private async wait() {
-    return new Promise(resolve => setTimeout(resolve, this.waitTime*this.concurrency));
+  async #wait() {
+    return new Promise(resolve => setTimeout(resolve, this.waitTime*this.#concurrency));
   }
 
   protected logger(...args: unknown[]) {
@@ -188,9 +188,9 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return MangaDatabase.has(mirror, langs, url);
   }
 
-  uuidv5(options: { langs: mirrorsLangsType[], url: string }, force?:false):string
-  uuidv5(options: { url: string, id: string, langs: mirrorsLangsType[] }, force: true):string
-  uuidv5(
+  protected uuidv5(options: { langs: mirrorsLangsType[], url: string }, force?:false):string
+  protected uuidv5(options: { url: string, id: string, langs: mirrorsLangsType[] }, force: true):string
+  protected uuidv5(
     options: {
       langs: mirrorsLangsType[],
       /**
@@ -228,13 +228,13 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * downloadImage(url, false)
    */
   protected async downloadImage(url:string, returnType: 'cover'|'page', referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<string|undefined> {
-    this.concurrency++;
-    const {identifier, filename} = await this.generateCacheFilename(url, dependsOnParams);
+    this.#concurrency++;
+    const {identifier, filename} = await this.#generateCacheFilename(url, dependsOnParams);
 
-    const cache = await this.loadFromCache({identifier, filename}, returnType);
-    if(cache) return this.returnFetch(cache, filename);
+    const cache = await this.#loadFromCache({identifier, filename}, returnType);
+    if(cache) return this.#returnFetch(cache, filename);
 
-    await this.wait();
+    await this.#wait();
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
@@ -246,13 +246,13 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
 
     // if none of the methods worked, return undefined
-    if(!buffer) return this.returnFetch(undefined);
+    if(!buffer) return this.#returnFetch(undefined);
 
     const { mime } = await this.getFileMime(buffer);
     if(mime && mime.startsWith('image/')) {
-      if(this.options.cache) this.saveToCache(filename, buffer);
-      if(returnType === 'page') return this.returnFetch(buffer, filename);
-      return this.returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
+      if(this.options.cache) this.#saveToCache(filename, buffer);
+      if(returnType === 'page') return this.#returnFetch(buffer, filename);
+      return this.#returnFetch(`data:${mime};charset=utf-8;base64,`+buffer.toString('base64'));
     }
   }
 
@@ -272,8 +272,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:AxiosRequestConfig) {
-    this.concurrency++;
-    await this.wait();
+    this.#concurrency++;
+    await this.#wait();
     try {
       const resp = await axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
       return resp.data;
@@ -306,49 +306,49 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   protected async fetch(config: ClusterJob, type:'string'):Promise<string>
   protected async fetch<T>(config: ClusterJob, type: 'html'|'json'|'string'): Promise<T|CheerioAPI|string> {
     // wait for the previous request to finish (this.waitTime * this.concurrency)
-    this.concurrency++;
-    await this.wait();
+    this.#concurrency++;
+    await this.#wait();
 
     // fetch the data (try to use axios first, then puppeteer)
-    const res = await this.internalFetch<T>(config, type);
+    const res = await this.#internalFetch<T>(config, type);
 
     // throw an error if both axios and puppeteer failed
     if(typeof res === 'undefined' || res instanceof Error) {
-      this.concurrency--;
+      this.#concurrency--;
       throw res || new Error('no_response');
     }
     // parse the data into the requested type
     else if(typeof res === 'string') {
-      if(type === 'string') return this.returnFetch(res);
-      if(type === 'html') return this.returnFetch(this.loadHTML(res));
+      if(type === 'string') return this.#returnFetch(res);
+      if(type === 'html') return this.#returnFetch(this.#loadHTML(res));
       if(type === 'json') {
         try {
-          return this.returnFetch<T>(JSON.parse(res));
+          return this.#returnFetch<T>(JSON.parse(res));
         } catch {
-          this.concurrency--;
+          this.#concurrency--;
           throw new Error('invalid_json');
         }
       }
-      this.concurrency--;
+      this.#concurrency--;
       throw new Error(`unknown_type: ${type}`);
     }
     // if the data is a JSON object, parse it into the requested type
     else if(typeof res === 'object') {
-      if(type === 'json') return this.returnFetch(res);
-      if(type === 'string') return this.returnFetch(JSON.stringify(res));
-      this.concurrency--;
+      if(type === 'json') return this.#returnFetch(res);
+      if(type === 'string') return this.#returnFetch(JSON.stringify(res));
+      this.#concurrency--;
       if(type === 'html') {
         throw new Error('cant_parse_json_to_html');
       }
       throw new Error(`unknown_type: ${type}`);
     }
     else {
-      this.concurrency--;
+      this.#concurrency--;
       throw new Error('unknown_fetch_error');
     }
   }
 
-  private async internalFetch<T>(config: ClusterJob, type: 'html'|'json'|'string') {
+  async #internalFetch<T>(config: ClusterJob, type: 'html'|'json'|'string') {
     // prepare the config for both Axios and Puppeteer
     config.headers = {
       ...config.headers,
@@ -364,7 +364,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(typeof response.data === 'string') {
 
         if(config.waitForSelector) {
-          const $ = this.loadHTML(response.data);
+          const $ = this.#loadHTML(response.data);
           if($(config.waitForSelector).length) return response.data;
           else throw new Error('selector_not_found');
         }
@@ -380,11 +380,11 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private returnFetch<T>(data : T, filename?: undefined):T
-  private returnFetch<T>(data : T, filename: string):string
-  private returnFetch<T>(data : T, filename?: string|undefined):T|string {
-    this.concurrency--;
-    if(this.concurrency < 0) this.concurrency = 0;
+  #returnFetch<T>(data : T, filename?: undefined):T
+  #returnFetch<T>(data : T, filename: string):string
+  #returnFetch<T>(data : T, filename?: string|undefined):T|string {
+    this.#concurrency--;
+    if(this.#concurrency < 0) this.#concurrency = 0;
     if(data instanceof Buffer && filename) {
       return FileServer.getInstance().serv(data, filename);
     }
@@ -398,7 +398,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * @param {boolean | undefined} isDocument
    * @returns {CheerioAPI}
    */
-  protected loadHTML(content: string | Buffer | AnyNode | AnyNode[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
+  #loadHTML(content: string | Buffer | AnyNode | AnyNode[], options?: CheerioOptions | null | undefined, isDocument?: boolean | undefined): CheerioAPI {
     return load(content, options, isDocument);
   }
 
@@ -449,7 +449,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return res;
   }
 
-  private async saveToCache(filename:string, buffer:Buffer) {
+  async #saveToCache(filename:string, buffer:Buffer) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       writeFileSync(resolve(env.USER_DATA, '.cache', this.name, filename), buffer);
@@ -457,7 +457,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async loadFromCache(id:{ identifier: string, filename:string }, returnType: 'cover' | 'page'):Promise<Buffer|string|undefined> {
+  async #loadFromCache(id:{ identifier: string, filename:string }, returnType: 'cover' | 'page'):Promise<Buffer|string|undefined> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       let cacheResult:{mime: string|undefined, buffer:Buffer} | undefined;
@@ -476,7 +476,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  private async generateCacheFilename(url:string, dependsOnParams:boolean) {
+  async #generateCacheFilename(url:string, dependsOnParams:boolean) {
     const uri = new URL(url);
     const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
     const filename = await this.filenamify(identifier);
