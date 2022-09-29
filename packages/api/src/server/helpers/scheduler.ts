@@ -180,7 +180,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   /**
-   *
+   * List all mangas that needs to be updated and start updates
    * @param force if true, will force the update of all the mangas
    */
   async update(force?:boolean) {
@@ -208,6 +208,10 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.restartUpdate();
   }
 
+  /**
+   * Get a list of manga that need to be updated, grouped by mirrors
+   * @param force if true, will force the update of all the mangas
+   */
   async #getMangasToUpdate(force?:boolean) {
     // filter mangas were lastUpdate + waitBetweenUpdates is less than now
     const mangas = (await MangaDatabase.getAll())
@@ -225,7 +229,9 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     return mangasByMirror;
   }
 
-
+  /**
+   * Fetch the data, check if there's any difference and update accordingly
+   */
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
     const res:MangaInDB[] = [];
     const now = Date.now();
@@ -300,7 +306,10 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
 
   }
 
-  async #fetch(mirror:MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
+  /**
+   * Fetch data directly from the mirror
+   */
+  async #fetch(mirror:Mirror & MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
@@ -314,14 +323,11 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
           reject(manga);
         }
       };
-
       this.on('showManga', listener.bind(this));
       mirror.manga(manga.url, manga.langs, this, reqId);
     });
   }
 }
-
-
 
 export const Scheduler = new SchedulerClass();
 

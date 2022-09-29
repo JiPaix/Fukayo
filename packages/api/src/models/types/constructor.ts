@@ -1,7 +1,13 @@
 import type { mirrorsLangsType } from '@i18n/index';
 
 export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean, cache:boolean }> = {
-  /** mirror's implementation version `Integer` */
+  /**
+   * mirror's implementation version
+   *
+   * ⚠️ Mirror version must be incremented ONLY IF the mirror changed all of its mangas/chapter urls.
+   *
+   * or you introduce some changes that breaks previous version of mangas in db
+   */
   version: number,
   /** slug name: `az-_` */
   name: string,
