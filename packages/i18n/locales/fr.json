@@ -226,9 +226,9 @@
   },
   "library": {
     "filter_by_name": "Recherche dans votre bibliothèque",
-    "hide_unread": "Cacher les mangas dont vous avez lu tous les {chapterWord}",
+    "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
     "left_to_read": "{chapterWord} restant | {chapterWord} restants",
-    "show_unread": "Afficher les mangas pour lesquels vous avez lu tous les {chapterWord}",
+    "show_unread": "Afficher les mangas pour lesquels vous avez lu tous les chapitres",
     "tab": "Bibliothèque"
   },
   "logs": {
@@ -239,6 +239,8 @@
     "read_chapter": "le status de lecture de {number} chapitre ont été mis à jour | les status de lecture de {number} chapitres ont été mis à jour"
   },
   "mangas": {
+    "add_new_category": "Ajouter une nouvelle catégorie",
+    "categories": "Catégories",
     "chapter": "Chapitre | Chapitres",
     "chapter_order": "Ordre des chapitres",
     "displayname": {

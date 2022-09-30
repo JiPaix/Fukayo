@@ -35,6 +35,8 @@ export interface MangaPage {
   authors: string[],
   /** Is the manga saved in db */
   inLibrary: boolean
+  /** user categories */
+  categories: string[]
   /** chapters */
   chapters: {
     /**

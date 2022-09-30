@@ -209,7 +209,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(release) chapters.push(release);
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version } });
+      socket.emit('showManga', id, {id: mangaId, url: link, langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version }, categories: [] });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them

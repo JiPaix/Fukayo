@@ -26,10 +26,12 @@ const search = ref<string|null>(null);
 /** filters */
 const filters = ref<{
   mirrors: string[],
-  langs: string[],
+  langs: mirrorsLangsType[],
+  categories: string[]
 }>({
   mirrors: [],
   langs: [],
+  categories: [],
 });
 // sort groups with most unread first
 function sortByMostUnread(group: MangaGroup[]) {
@@ -97,6 +99,9 @@ function filterByMirrorAndLang(group: MangaGroup[]) {
     if (curr.langs.length && !g.mangas.some(m => m.langs.some(l => curr.langs.includes(l)))) {
       return false;
     }
+    if (curr.categories.length && !g.mangas.some(m => m.categories.some(c => curr.categories.includes(c)))) {
+      return false;
+    }
     return true;
   });
 }
@@ -128,6 +133,12 @@ const langs = computed(() => {
   return Array.from(set);
 });
 
+const categories = computed(() => {
+  const set:Set<string> = new Set();
+  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.categories.forEach(l => set.add(l))));
+  return Array.from(set);
+});
+
 onMounted(async () => {
   if (!socket) socket = await useSocket(settings.server);
   const id = Date.now();
@@ -150,6 +161,7 @@ onMounted(async () => {
             displayName: manga.displayName,
             mirror: mirrorInfo.name,
             url: manga.url,
+            categories: manga.categories,
             unread: manga.chapters.filter(c => !c.read).length,
             chapters: manga.chapters.map((c, i) => {
               return {
@@ -196,8 +208,9 @@ onBeforeUnmount(() => {
       v-if="mirrorList.length"
       :mirror-list="(mirrorList as mirrorInfo[])"
       :lang-list="langs"
+      :categories="categories"
       @search="(input) => search = input"
-      @filter="(mirrors, langs) => filters = {mirrors, langs}"
+      @filter="(mirrors, langs, categories) => filters = {mirrors, langs, categories}"
     />
 
     <q-infinite-scroll

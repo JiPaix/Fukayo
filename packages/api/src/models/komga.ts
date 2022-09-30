@@ -231,7 +231,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         chapters.push(release);
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url, langs: [lang], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version } });
+      socket.emit('showManga', id, {id: mangaId, url, langs: [lang], name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version }, categories: [] });
     } catch(e) {
       this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them

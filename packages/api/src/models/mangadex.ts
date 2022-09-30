@@ -661,6 +661,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           synopsis,
           tags,
           authors,
+          categories: [],
           inLibrary: await this.isInLibrary(this.mirrorInfo.name, requestedLangs, url) ? true : false,
           chapters,
         };

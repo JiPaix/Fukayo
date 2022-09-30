@@ -11,11 +11,12 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps<{
   mirrorList: mirrorInfo[]
   langList: mirrorsLangsType[]
+  categories?: string[]
 }>();
 /** emits */
 const emit = defineEmits<{
   (event: 'search', input: typeof search.value): void
-  (event: 'filter', mirror: string[], langs:string[]): void
+  (event: 'filter', mirror: string[], langs:mirrorsLangsType[], categories:string[]): void
 }>();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** settings */
@@ -46,10 +47,7 @@ const includedAllMirrors = computed({
 /** all langs are included? */
 const includedAllLanguage = computed({
   get() {
-    if(includedLangsRAW.value.length < props.langList.length) {
-      if(includedLangsRAW.value.length === 0) return false;
-      return null;
-    }
+    if(includedLangsRAW.value.length < props.langList.length) return false;
     return true;
   },
   set() {
@@ -57,28 +55,54 @@ const includedAllLanguage = computed({
   },
 });
 
+const selectedCategories = ref<string[]>([]);
+
+const includedAllCategories = computed({
+  get() {
+    if(!props.categories) return false;
+    if(selectedCategories.value.length !== props.categories.length) return false;
+    return true;
+  },
+  set() {
+    pickAllCategories();
+  },
+});
+
+function pickAllCategories() {
+  if(!props.categories) return;
+  if(selectedCategories.value.length === props.categories.length) selectedCategories.value = [];
+  else selectedCategories.value = props.categories;
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
+}
+
+function toggleCategory(cat:string) {
+  if(selectedCategories.value.includes(cat)) selectedCategories.value = selectedCategories.value.filter(c => c !== cat);
+  else selectedCategories.value.push(cat);
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
+}
+
 /** include/exclude a mirror from the filter, also affects the language filter */
 function pickMirror(mirror:string) {
   toggleMirror(mirror, props.mirrorList, includedMirrors, includedLangsRAW);
-  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
 /** include/exclude all mirrors from the filter */
 function pickallMirrors() {
   toggleAllMirrors(props.mirrorList, includedAllMirrors.value, includedMirrors, includedLangsRAW);
-  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
 function pickLang(lang:mirrorsLangsType) {
   toggleLang(lang, includedLangsRAW, props.mirrorList, includedMirrors);
-  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
 /** include/exclude all languages from the filter */
 function pickAllLangs() {
   toggleAllLanguages(includedAllLanguage.value, props.langList, includedLangsRAW);
-  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
+  emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
 watch(() => props.mirrorList, (mirrors) => {
@@ -101,9 +125,9 @@ onMounted(() => {
   const langs = new Set<mirrorsLangsType>();
   const mirrors = new Set<string>();
   props.mirrorList.forEach(m => {
-    m.langs.forEach(l => langs.add(l));
     mirrors.add(m.name);
   });
+  props.langList.forEach(l => langs.add(l));
   includedLangsRAW.value = Array.from(langs);
   includedMirrors.value = Array.from(mirrors);
 });
@@ -131,6 +155,11 @@ onMounted(() => {
           :icon="settings.library.sort === 'AZ' ? 'text_rotation_angledown' : 'text_rotation_angleup'"
           size="1em"
           @click="settings.library.sort === 'AZ' ? settings.library.sort = 'ZA' : settings.library.sort = 'AZ'"
+        />
+        <q-btn
+          :icon="settings.library.sort === 'unread' ? 'trending_up' : 'trending_down'"
+          size="1em"
+          @click="settings.library.sort === 'unread' ? settings.library.sort = 'read' : settings.library.sort = 'unread'"
         />
         <q-btn-dropdown
           :text-color="includedAllMirrors || includedMirrors.length === 0 ? '' : 'orange'"
@@ -233,7 +262,7 @@ onMounted(() => {
                 <q-avatar
                   size="36px"
                   text-color="primary"
-                  icon="o_language"
+                  icon="o_translate"
                 />
               </q-item-section>
               <q-item-section class="text-uppercase text-bold">
@@ -259,6 +288,68 @@ onMounted(() => {
               />
               <q-item-section class="q-ma-none">
                 {{ $t('languages.'+lang) }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+        <q-btn-dropdown
+          v-if="categories && categories.length"
+          icon="category"
+          size="1em"
+          :text-color="selectedCategories.length === categories.length ? '' : 'orange'"
+        >
+          <q-list
+            :dark="$q.dark.isActive"
+            :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+          >
+            <q-item
+              dense
+              clickable
+              :dark="$q.dark.isActive"
+              @click="pickAllCategories"
+            >
+              <q-checkbox
+                v-model="includedAllCategories"
+                size="32px"
+                color="primary"
+                class="q-ma-none q-pa-none"
+                toggle-indeterminate
+                :dark="$q.dark.isActive"
+              />
+              <q-item-section
+                avatar
+                class="q-ma-none q-pa-none"
+                style="min-width:36px!important;"
+              >
+                <q-avatar
+                  size="36px"
+                  text-color="primary"
+                  icon="o_category"
+                />
+              </q-item-section>
+              <q-item-section class="text-uppercase text-bold">
+                {{ $t('search.all') }}
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item
+              v-for="cat in props.categories"
+              :key="cat"
+              clickable
+              :dark="$q.dark.isActive"
+              @click="toggleCategory(cat)"
+            >
+              <q-checkbox
+                :model-value="selectedCategories.includes(cat)"
+                size="32px"
+                color="orange"
+                :val="cat"
+                class="q-ma-none q-pa-none"
+                :dark="$q.dark.isActive"
+                @update:model-value="toggleCategory(cat)"
+              />
+              <q-item-section class="q-ma-none">
+                {{ cat }}
               </q-item-section>
             </q-item>
           </q-list>

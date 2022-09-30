@@ -304,7 +304,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       }
 
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, mirror: {name: this.name, version: this.version }, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number) });
+      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, mirror: {name: this.name, version: this.version }, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), categories: [] });
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them

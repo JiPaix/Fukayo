@@ -1,5 +1,6 @@
 import { DatabaseIO } from '@api/db';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
@@ -201,6 +202,11 @@ export class MangasDB extends DatabaseIO<Mangas> {
         manga.chapters = data.chapters.concat(chapter2add);
         hasNewStuff = true;
       }
+    }
+
+    // check if categories changed
+    if(!arraysEqual(data.categories.sort(), manga.categories.sort())) {
+      hasNewStuff = true;
     }
 
     // check if the manga has new options

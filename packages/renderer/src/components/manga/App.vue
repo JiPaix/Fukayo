@@ -329,6 +329,42 @@ function getMirrorInfoUrl(link:string) {
   return url;
 }
 
+const userCategories = ref<string[]>([]);
+
+/** remove category */
+function removeCategory(catName:string) {
+  if(!manga.value) return;
+  userCategories.value = userCategories.value.filter(cat => cat !== catName);
+  if(isMangaInDb(manga.value)) {
+    manga.value.categories = userCategories.value;
+    updateManga(manga.value);
+  }
+}
+
+function addCategory(catName: string) {
+  catName = catName.trim();
+  if(!manga.value) return;
+  if(userCategories.value.includes(catName)) return;
+  userCategories.value.push(catName);
+  if(isMangaInDb(manga.value)) {
+    manga.value.categories = userCategories.value;
+    updateManga(manga.value);
+  }
+}
+
+function categoryPrompt() {
+  $q.dialog({
+    title: $t('mangas.add_new_category'),
+    prompt: {
+      model: '',
+      type: 'text', // optional
+    },
+    cancel: true,
+  }).onOk(data => {
+    addCategory(data);
+  });
+}
+
 async function startFetch() {
   nodata.value = null;
   const reqId = Date.now();
@@ -345,6 +381,9 @@ async function startFetch() {
         }
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
         mangaRaw.value = mg;
+        // user categories have to be stored in a Ref in order to be reactive
+        userCategories.value = mg.categories;
+
         socket?.emit('getMirrors', true, (mirrors) => {
           const m = mirrors.find((m) => m.name === mg.mirror.name);
           if(m) mirrorinfo.value = m;
@@ -577,20 +616,27 @@ function changeRouteLang(lang: mirrorsLangsType) {
           <div
             class="col-sm-9 col-xs-12 q-px-lg q-my-lg"
           >
-            <div class="q-mb-lg">
-              <div
-                class="flex items-center"
-              >
-                <span
-                  class="text-bold"
+            <q-list
+              v-if="manga"
+              padding
+            >
+              <q-item>
+                <q-item-section
+                  top
+                  avatar
                 >
-                  {{ $t('languages.language').toLocaleUpperCase() }}:
-                </span>
-                <div
-                  v-if="manga"
-                  class="text-weight-medium q-ml-sm"
-                >
-                  <q-btn-group>
+                  <q-avatar
+                    color="primary"
+                    text-color="white"
+                    icon="translate"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label>{{ $t('languages.language', manga.langs) }}</q-item-label>
+                  <q-item-label
+                    caption
+                  >
                     <q-btn
                       v-for="(currLang, i) in manga.langs"
                       :key="i"
@@ -599,271 +645,342 @@ function changeRouteLang(lang: mirrorsLangsType) {
                       size="sm"
                       :color="$q.dark.isActive ? 'orange' : 'dark'"
                       :text-color="$q.dark.isActive && currLang === selectedLanguage ? 'white' : 'orange'"
+                      class="q-mr-sm q-mb-sm"
                       @click="changeRouteLang(currLang)"
                     >
                       {{ $t(`languages.${currLang}`) }}
                     </q-btn>
-                  </q-btn-group>
-                </div>
-                <q-skeleton
-                  v-else
-                  :dark="$q.dark.isActive"
-                  type="text"
-                  class="text-weight-medium q-ml-sm q-my-none"
-                  width="50px"
-                />
-              </div>
-            </div>
-            <div
-              v-if="manga"
-              class="q-mb-md"
-            >
-              <div
-                v-if="manga.tags.length"
-                class="flex items-center"
-              >
-                <span class="text-bold q-mr-sm">{{ $t('mangas.tags').toLocaleUpperCase() }}</span>
-                <span
-                  v-for="(tag, i) in manga.tags"
-                  :key="i"
-                  class="self-center"
-                >
-                  {{ tag }}{{ i === manga.tags.length-1 ? '' : ',&nbsp;' }}
-                </span>
-              </div>
-            </div>
-            <div v-if="manga">
-              <span class="text-bold">{{ $t('mangas.synopsis').toLocaleUpperCase() }}</span>
-              {{ manga?.synopsis }}
-            </div>
-            <div v-else>
-              <q-skeleton
-                v-for="i in 5"
-                :key="i"
-                :dark="$q.dark.isActive"
-                type="text"
-                width="100%"
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator
+                spaced
+                inset="item"
               />
+              <q-item>
+                <q-item-section
+                  top
+                  avatar
+                >
+                  <q-avatar
+                    color="primary"
+                    text-color="white"
+                    icon="category"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label>{{ $t('mangas.categories') }}</q-item-label>
+                  <q-item-label
+                    caption
+                  >
+                    <span
+                      v-for="cat in userCategories"
+                      :key="cat"
+                      class="self-center"
+                    >
+                      <q-chip
+                        removable
+                        size="sm"
+                        :color="$q.dark.isActive ? 'orange' : 'dark'"
+                        :text-color="$q.dark.isActive ? 'white' : 'orange'"
+                        :label="cat"
+                        :title="cat"
+                        @remove="removeCategory(cat)"
+                      />
+                    </span>
+                    <q-btn
+                      flat
+                      size="sm"
+                      :color="$q.dark.isActive ? 'white' : 'dark'"
+                      :text-color="$q.dark.isActive ? 'white' : 'dark'"
+                      @click="categoryPrompt"
+                    >
+                      +
+                    </q-btn>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator
+                spaced
+                inset="item"
+              />
+              <q-item>
+                <q-item-section
+                  top
+                  avatar
+                >
+                  <q-avatar
+                    color="primary"
+                    text-color="white"
+                    icon="tag"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label>{{ $t('mangas.tags') }}</q-item-label>
+                  <q-item-label
+                    caption
+                  >
+                    <span
+                      v-for="(tag, i) in manga.tags"
+                      :key="i"
+                      class="self-center"
+                    >
+                      {{ tag }}{{ i === manga.tags.length-1 ? '' : ',&nbsp;' }}
+                    </span>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator
+                spaced
+                inset="item"
+              />
+              <q-item>
+                <q-item-section
+                  top
+                  avatar
+                >
+                  <q-avatar
+                    color="primary"
+                    text-color="white"
+                    icon="description"
+                  />
+                </q-item-section>
+
+                <q-item-section>
+                  <q-item-label>{{ $t('mangas.synopsis') }}</q-item-label>
+                  <q-item-label
+                    caption
+                  >
+                    {{ manga.synopsis }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator
+                spaced
+                inset="item"
+              />
+            </q-list>
+          </div>
+          <div class="row q-ml-auto">
+            <div class="">
+              <q-btn
+                :color="$q.dark.isActive ? 'white' : 'dark'"
+                :text-color="$q.dark.isActive ? 'dark' : 'white'"
+                round
+                icon="filter_list"
+                @click="showFilterDialog = !showFilterDialog"
+              />
+              <q-dialog
+                v-model="showFilterDialog"
+                position="standard"
+              >
+                <q-card style="width: 350px;margin-top:50px;">
+                  <q-card-section class="flex justify-between items-center">
+                    <div class="text-weight-bold">
+                      {{ $t('mangas.chapter_order') }}:
+                    </div>
+                    <q-btn
+                      flat
+                      round
+                      :icon="settings.mangaPage.chapters.sort === 'DESC' ? 'arrow_upward' : 'arrow_downward' "
+                      @click="settings.mangaPage.chapters.sort === 'ASC' ? settings.mangaPage.chapters.sort = 'DESC' : settings.mangaPage.chapters.sort = 'ASC'"
+                    />
+                  </q-card-section>
+                  <q-card-section class="flex justify-between items-center">
+                    <div class="text-weight-bold">
+                      {{ $t('mangas.hide_unread') }}:
+                    </div>
+                    <q-toggle
+                      :model-value="settings.mangaPage.chapters.hideRead"
+                      @update:model-value="settings.mangaPage.chapters.hideRead = !settings.mangaPage.chapters.hideRead"
+                    />
+                  </q-card-section>
+                </q-card>
+              </q-dialog>
             </div>
           </div>
-        </div>
-        <div class="row q-mb-md">
-          <div class="col-xs-3 offset-xs-9 col-sm-2 offset-sm-10 q-ml-auto col-lg-1 offset-lg-11 text-center">
-            <q-btn
-              :color="$q.dark.isActive ? 'white' : 'dark'"
-              :text-color="$q.dark.isActive ? 'dark' : 'white'"
-              round
-              icon="filter_list"
-              @click="showFilterDialog = !showFilterDialog"
-            />
-            <q-dialog
-              v-model="showFilterDialog"
-              position="standard"
-            >
-              <q-card style="width: 350px;margin-top:50px;">
-                <q-card-section class="flex justify-between items-center">
-                  <div class="text-weight-bold">
-                    {{ $t('mangas.chapter_order') }}:
-                  </div>
-                  <q-btn
-                    flat
-                    round
-                    :icon="settings.mangaPage.chapters.sort === 'DESC' ? 'arrow_upward' : 'arrow_downward' "
-                    @click="settings.mangaPage.chapters.sort === 'ASC' ? settings.mangaPage.chapters.sort = 'DESC' : settings.mangaPage.chapters.sort = 'ASC'"
-                  />
-                </q-card-section>
-                <q-card-section class="flex justify-between items-center">
-                  <div class="text-weight-bold">
-                    {{ $t('mangas.hide_unread') }}:
-                  </div>
-                  <q-toggle
-                    :model-value="settings.mangaPage.chapters.hideRead"
-                    @update:model-value="settings.mangaPage.chapters.hideRead = !settings.mangaPage.chapters.hideRead"
-                  />
-                </q-card-section>
-              </q-card>
-            </q-dialog>
-          </div>
-        </div>
-        <div
-          v-if="manga"
-          class="row"
-        >
-          <q-virtual-scroll
-            v-slot="{ item, index }"
-            :items="chapters.filter(c => c.lang === selectedLanguage)"
-            :items-size="nbOfChapters"
-            :virtual-scroll-item-size="80"
-            separator
-            class="w-100"
+          <div
+            v-if="manga"
+            class="row w-100"
           >
-            <q-item
-              :key="index"
-              :dark="$q.dark.isActive"
-              clickable
-              style="height:80px;"
+            <q-virtual-scroll
+              v-slot="{ item, index }"
+              :items="chapters.filter(c => c.lang === selectedLanguage)"
+              :items-size="nbOfChapters"
+              :virtual-scroll-item-size="80"
+              separator
+              class="w-100"
             >
-              <q-item-section
-                :class="item.read ? 'text-grey-9' : ''"
-                @click="showChapter(item)"
+              <q-item
+                :key="index"
+                :dark="$q.dark.isActive"
+                clickable
+                style="height:80px;"
               >
-                <q-item-label>
-                  <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }} - </span>
-                  <span>{{ $t("mangas.chapter") }} {{ item.number }}</span>
-                </q-item-label>
-                <q-item-label
-                  caption
+                <q-item-section
+                  :class="item.read ? 'text-grey-9' : ''"
+                  @click="showChapter(item)"
                 >
-                  <span class="text-orange">{{ item.name || '--' }}</span>
-                </q-item-label>
-                <q-item-label
-                  caption
-                >
-                  <span class="text-grey-6 text-caption">{{ item.group }}</span>
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-item-label caption>
-                  {{ dayJS ? dayJS(item.date).fromNow() : item.date }}
-                  <q-btn-dropdown
-                    dropdown-icon="more_vert"
-                    flat
+                  <q-item-label>
+                    <span v-if="item.volume !== undefined">{{ $t("mangas.volume") }} {{ item.volume }} - </span>
+                    <span>{{ $t("mangas.chapter") }} {{ item.number }}</span>
+                  </q-item-label>
+                  <q-item-label
+                    caption
                   >
-                    <q-list separator>
-                      <q-item
-                        v-if="index > 0 && item.hasNextUnread"
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markNextAsRead(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_up"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.next') }}
-                      </q-item>
-                      <q-item
-                        v-else-if="index > 0"
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markNextAsUnread(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_up"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility_off"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.next_unread') }}
-                      </q-item>
-                      <q-item
-                        v-if="item.read"
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markAsUnread(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_right"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility_off"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.current_unread') }}
-                      </q-item>
-                      <q-item
-                        v-else
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markAsRead(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_right"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.current') }}
-                      </q-item>
-                      <q-item
-                        v-if="index < nbOfChapters - 1 && item.hasPrevUnread"
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markPreviousAsRead(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_down"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.previous') }}
-                      </q-item>
-                      <q-item
-                        v-else-if="index < nbOfChapters - 1"
-                        v-close-popup
-                        class="flex items-center"
-                        clickable
-                        @click="markPreviousAsUnread(index)"
-                      >
-                        <q-icon
-                          left
-                          name="keyboard_double_arrow_down"
-                          size="sm"
-                          class="q-mx-none"
-                        />
-                        <q-icon
-                          left
-                          name="visibility_off"
-                          size="sm"
-                          class="q-ml-none"
-                        />
-                        {{ $t('mangas.markasread.previous_unread') }}
-                      </q-item>
-                    </q-list>
-                  </q-btn-dropdown>
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-virtual-scroll>
+                    <span class="text-orange">{{ item.name || '--' }}</span>
+                  </q-item-label>
+                  <q-item-label
+                    caption
+                  >
+                    <span class="text-grey-6 text-caption">{{ item.group }}</span>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section
+                  side
+                >
+                  <q-item-label caption>
+                    {{ dayJS ? dayJS(item.date).fromNow() : item.date }}
+                    <q-btn-dropdown
+                      dropdown-icon="more_vert"
+                      flat
+                    >
+                      <q-list separator>
+                        <q-item
+                          v-if="index > 0 && item.hasNextUnread"
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markNextAsRead(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_up"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.next') }}
+                        </q-item>
+                        <q-item
+                          v-else-if="index > 0"
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markNextAsUnread(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_up"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility_off"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.next_unread') }}
+                        </q-item>
+                        <q-item
+                          v-if="item.read"
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markAsUnread(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_right"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility_off"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.current_unread') }}
+                        </q-item>
+                        <q-item
+                          v-else
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markAsRead(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_right"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.current') }}
+                        </q-item>
+                        <q-item
+                          v-if="index < nbOfChapters - 1 && item.hasPrevUnread"
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markPreviousAsRead(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_down"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.previous') }}
+                        </q-item>
+                        <q-item
+                          v-else-if="index < nbOfChapters - 1"
+                          v-close-popup
+                          class="flex items-center"
+                          clickable
+                          @click="markPreviousAsUnread(index)"
+                        >
+                          <q-icon
+                            left
+                            name="keyboard_double_arrow_down"
+                            size="sm"
+                            class="q-mx-none"
+                          />
+                          <q-icon
+                            left
+                            name="visibility_off"
+                            size="sm"
+                            class="q-ml-none"
+                          />
+                          {{ $t('mangas.markasread.previous_unread') }}
+                        </q-item>
+                      </q-list>
+                    </q-btn-dropdown>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-virtual-scroll>
+          </div>
         </div>
       </q-page>
     </q-page-container>
