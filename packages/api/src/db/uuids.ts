@@ -14,7 +14,7 @@ export type uuid = {
    * @workaround append the chapter number/index/some other identifier at the end of the url
    */
   url: string
-  id?: string
+  id: string
 }
 
 type uuids = {
@@ -71,7 +71,12 @@ export class UUID extends Database<uuids> {
   }
 
   #force(uuid: uuid & { id: string }):string {
-    this.data.ids.push(uuid);
+    const find = this.data.ids.find(i => i.id === uuid.id);
+    if(!find) this.data.ids.push(uuid);
+    else {
+      find.langs = Array.from(new Set(find.langs.concat(uuid.langs)));
+      find.url = uuid.url;
+    }
     this.#pending++;
     return uuid.id;
   }

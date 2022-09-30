@@ -202,10 +202,17 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       url: string
       id?: string
     },
-    force = false,
-  ): string {
-    if(force && options.id) return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
-    if(!force && options.url && options.langs) return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
+  ): Promise<string> {
+    if(force && options.id) {
+      const mg = await MangaDatabase.get({id: options.id, langs: options.langs});
+      if(mg) return mg.id;
+      return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
+    }
+    if(!force && options.url && options.langs) {
+      const mg = await MangaDatabase.get({ mirror: this.name, langs: options.langs, url: options.url });
+      if(mg) return mg.id;
+      return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
+    }
     throw Error('uuidgen: missing options');
   }
 
