@@ -40,6 +40,7 @@
   "conventionalCommits.lineBreak": "  ",
   "conventionalCommits.showEditor": false,
   "editor.codeActionsOnSave": {
+    "source.fixAll": true,
     "source.organizeImports": true
   },
   "gitlens.statusBar.enabled": false,
@@ -52,4 +53,7 @@
     "javascript",
     "typescript",
     ],
+    "eslint.codeActionsOnSave.mode": "all",
+    "eslint.alwaysShowStatus": true,
+    "files.autoSave": "onFocusChange",
 }
