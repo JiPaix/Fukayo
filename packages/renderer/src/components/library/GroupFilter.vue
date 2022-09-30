@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -10,7 +10,7 @@ import { useI18n } from 'vue-i18n';
 /** props */
 const props = defineProps<{
   mirrorList: mirrorInfo[]
-  langList: string[]
+  langList: mirrorsLangsType[]
 }>();
 /** emits */
 const emit = defineEmits<{
@@ -25,7 +25,7 @@ const search = ref<string|null>(null);
 /** mirror filter */
 const includedMirrors = ref<string[]>([]);
 /** lang filter */
-const includedLangsRAW = ref<string[]>([]);
+const includedLangsRAW = ref<mirrorsLangsType[]>([]);
 /** return the ordered list of includedLangsRAW */
 const includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
@@ -70,7 +70,7 @@ function pickallMirrors() {
 }
 
 /** include/exclude a language from the filter, also affects the mirror filter */
-function pickLang(lang:string) {
+function pickLang(lang:mirrorsLangsType) {
   toggleLang(lang, includedLangsRAW, props.mirrorList, includedMirrors);
   emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l));
 }
@@ -98,7 +98,7 @@ watch(() => props.langList, (langs) => {
 });
 
 onMounted(() => {
-  const langs = new Set<string>();
+  const langs = new Set<mirrorsLangsType>();
   const mirrors = new Set<string>();
   props.mirrorList.forEach(m => {
     m.langs.forEach(l => langs.add(l));
