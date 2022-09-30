@@ -2,11 +2,11 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/mangahasu.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@i18n/index';
+import type { SearchResult } from './types/search';
 
 class MangaHasu extends Mirror implements MirrorInterface {
 
@@ -42,7 +42,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     if(!res) this.logger('not a chapter page:', url);
     return res;
   }
-  getChapterInfoFromString(str:string) {
+  #getChapterInfoFromString(str:string) {
     const res = /(Vol\s(\d+)\s)?Chapter\s([0-9]+(\.)?([0-9]+)?)(:\s(.*))?/gmi.exec(str);
     if(!res) this.logger('not a chapter string:', str);
     return res;
@@ -83,7 +83,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
         let last_release: SearchResult['last_release'];
         const last_chapter = $('a.name-chapter > span', el).text().trim();
-        const match = this.getChapterInfoFromString(last_chapter);
+        const match = this.#getChapterInfoFromString(last_chapter);
 
         if(!match) last_release = {name: last_chapter.replace(/Chapter/gi, '').trim()};
 
@@ -96,16 +96,15 @@ class MangaHasu extends Mirror implements MirrorInterface {
           };
         }
 
-        socket.emit('searchInMirrors', id, {
-          id: this.uuidv5({langs: this.langs, url: link.replace(this.host, '')}, false),
-          mirrorinfo: this.mirrorInfo,
+        const searchResults = await this.searchResultsBuilder({
           name,
           url:link,
           covers,
           last_release,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+
+        socket.emit('searchInMirrors', id, searchResults);
       }
       if(cancel) return;
     } catch(e) {
@@ -136,8 +135,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
       socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
       return this.stopListening(socket);
     }
-
-    const mangaId = this.uuidv5({langs, url:link.replace(this.host, '')});
 
     try {
       const $ = await this.fetch({
@@ -174,42 +171,35 @@ class MangaHasu extends Mirror implements MirrorInterface {
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {
         if(cancel) break;
-        const current_chapter = $(el).text().trim();
+
         const chaplink = $(el).attr('href');
         if(!chaplink) continue;
 
-        let release: MangaPage['chapters'][0] | undefined;
-        const date = Date.now(); // dates in manga pages aren't reliable so we use the fetch date instead
-        const match = this.getChapterInfoFromString(current_chapter);
+        const current_line = $(el).text().trim();
+        const match = this.#getChapterInfoFromString(current_line);
+        const [, , , , , , , chapterName] = match || [];
+        const name = chapterName ? chapterName.trim() : current_line.replace(/chapter|chap|chaps/gi, '').trim();
+        if(!name || !name.length) continue;
 
-        if(match && typeof match === 'object') {
-          const [, , , , , , , chapterName] = match;
-          release = {
-            id: this.uuidv5({langs, url: chaplink.replace(this.host, '')}),
-            name: chapterName ? chapterName.trim() : current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
-            volume: undefined,
-            number: i+1,
-            url: chaplink,
-            date,
-            read: false,
-            lang: this.langs[0],
-          };
-        } else {
-          release = {
-            id: this.uuidv5({langs, url: chaplink.replace(this.host, '')}),
-            name: current_chapter.replace(/chapter|chap|chaps/gi, '').trim(),
-            number: i+1,
-            volume: undefined,
-            url: chaplink,
-            date,
-            read:false,
-            lang: this.langs[0],
-          };
-        }
-        if(release) chapters.push(release);
+        chapters.push(await this.chaptersBuilder({
+          name,
+          number: i+1,
+          url: chaplink,
+          lang: this.langs[0],
+        }));
       }
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version }, userCategories: [] });
+      const mg = await this.mangaPageBuilder({
+        url: link,
+        langs,
+        name,
+        synopsis,
+        covers,
+        authors,
+        tags,
+        chapters,
+      });
+      socket.emit('showManga', id, mg);
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -307,19 +297,15 @@ class MangaHasu extends Mirror implements MirrorInterface {
           const img = await this.downloadImage(coverLink, 'cover', undefined, false);
           if(img) covers.push(img);
         }
-        // manga id = "mirror_name/lang/link-of-manga-page"
 
-        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
-
-        if(!cancel) socket.emit('showRecommend', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
           name,
           url:link,
           covers,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+
+        if(!cancel) socket.emit('showRecommend', id, searchResult);
       }
       if(cancel) return;
     } catch(e) {

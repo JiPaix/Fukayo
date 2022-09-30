@@ -119,19 +119,15 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           };
         }
 
-        const mangaId = this.uuidv5({langs: this.langs, url: link});
-
-        socket.emit('searchInMirrors', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
           name,
           url:link,
           covers,
           synopsis,
           last_release,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+        if(!cancel) socket.emit('searchInMirrors', id, searchResult);
       }
       if(cancel) return;
     } catch(e) {
@@ -177,17 +173,14 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
           if(img) covers.push(img);
         }
 
-        const mangaId = this.uuidv5({langs: this.langs, url: link});
 
-        if(!cancel) socket.emit('showRecommend', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
           name,
           url:link,
           covers,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+        if(!cancel) socket.emit('showRecommend', id, searchResult);
       }
       if(cancel) return;
     } catch(e) {
@@ -218,8 +211,6 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
       return this.stopListening(socket);
     }
-
-    const mangaId = this.uuidv5({langs, url: link});
 
     try {
       const $ = await this.fetch({
@@ -262,49 +253,39 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
 
       for(const [i, el] of $(this.chapter_selector).toArray().reverse().entries()) {
         if(cancel) break;
-        let current_chapter = $(el).text().trim().replace(name, '').trim();
+        const current_chapter = $(el).text().trim().replace(name, '').trim();
         const chaplink = $(el).attr('href')?.replace(this.host, '');
         if(!chaplink) continue;
 
-        let release: MangaPage['chapters'][0] | undefined;
-
-
         const match = this.getChapterInfoFromString(current_chapter);
-        const date = Date.now(); // dates in manga pages aren't reliable so we use the fetch date instead
+        const [ ,chapterNumber] = match || [];
 
-        if(match && typeof match === 'object') {
-          const [ ,chapterNumber] = match;
-          let chapter:number = parseFloat(chapterNumber.replace(/(-|_)/, '.'));
-          if(isNaN(chapter)) {
-            chapter = i+1;
-          } else {
-            current_chapter = current_chapter.replace(chapterNumber, '').trim();
-          }
-          release = {
-            id: this.uuidv5({langs: this.langs, url: chaplink}),
-            name: current_chapter,
-            number: chapter,
-            date,
-            url: chaplink,
-            read: false,
-            lang: this.langs[0],
-          };
-        } else {
-          release = {
-            id: this.uuidv5({langs: this.langs, url: chaplink}),
-            name: current_chapter,
-            number: i+1,
-            date,
-            url: chaplink,
-            read: false,
-            lang: this.langs[0],
-          };
-        }
-        if(release) chapters.push(release);
+        const chapter =
+          chapterNumber && !isNaN(parseFloat(chapterNumber.replace(/(-|_)/, '.')))
+            ?
+              parseFloat(chapterNumber.replace(/(-|_)/, '.'))
+            :
+              i+1;
+
+        chapters.push(await this.chaptersBuilder({
+          name: current_chapter,
+          number: chapter,
+          url: chaplink,
+          lang: this.langs[0],
+        }));
       }
 
-      if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, mirror: {name: this.name, version: this.version }, inLibrary: false, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), userCategories: [] });
+      const mg = await this.mangaPageBuilder({
+        name,
+        url: link,
+        langs: this.langs,
+        synopsis,
+        tags,
+        chapters,
+        covers,
+        authors,
+      });
+      if(!cancel) socket.emit('showManga', id, mg);
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them

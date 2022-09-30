@@ -1,11 +1,11 @@
 import Mirror from '@api/models';
 import icon from '@api/models/icons/mangadex.png';
 import type MirrorInterface from '@api/models/interfaces';
+import type { MangaPage } from '@api/models/types/manga';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { mirrorsLang } from '@i18n/index';
-import type { MangaPage } from './types/manga';
 
 type MangaAttributes = {
   title: {
@@ -446,19 +446,16 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(!coverURL) return this.logger('no coverURL');
 
         const cover = await this.downloadImage(`${this.host}/covers/${mangadata.id}/${coverURL}.512.jpg`, 'cover');
-        if(!cover) return this.logger('no cover'); // TODO default cover when mirror doesn't have one?
 
-        const mangaId = this.uuidv5({id: manga.data.id, url, langs}, true);
-
-        socket.emit('showRecommend', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
+          id: manga.data.id,
           name,
           url,
           langs: langs,
-          covers: [cover],
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, langs, url) ? true : false,
+          covers: cover ? [cover] : [],
         });
+
+        socket.emit('showRecommend', id, searchResult);
       }
       socket.emit('showRecommend', id, { done: true });
       if(cancel) return;
@@ -490,14 +487,12 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       for(const result of res.data) {
         if(cancel) break;
         const name = result.attributes.title[Object.keys(result.attributes.title)[0]];
-        const link = `/manga/${result.id}`;
 
         let coverURL: undefined | string = undefined;
         const coverData = result.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
         const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`, 'cover');
-        if(!cover) return; // TODO default cover when mirror doesn't have one?
 
         const synopsis = result.attributes.description[Object.keys(result.attributes.description)[0]] || undefined;
         const last_release =
@@ -506,19 +501,18 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const langs = result.attributes.availableTranslatedLanguages;
 
-        const mangaId = this.uuidv5({id: result.id, url: `/manga/${result.id}`, langs}, true);
-        // we return the results based on SearchResult model
-        if(!cancel) socket.emit('searchInMirrors', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
+          id: result.id,
           name,
-          url:`/manga/${mangaId}`,
-          covers: [cover],
+          url: `/manga/${result.id}`,
+          covers: cover ? [cover] : [],
           synopsis,
           last_release,
           langs: langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, langs, link) ? true : false,
         });
+
+        // we return the results based on SearchResult model
+        if(!cancel) socket.emit('searchInMirrors', id, searchResult);
       }
       if(cancel) return;
     } catch(e) {
@@ -604,7 +598,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
       if(!coverURL) return;
       const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`, 'cover');
-      if(!cover) return; // TODO default cover when mirror doesn't have one?
 
       const requestLangs = requestedLangs.map(x => `translatedLanguage[]=${x}`).join('&');
 
@@ -635,10 +628,12 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const scanlators = await this.#findGroup(groups.filter(x => typeof x !== 'undefined') as string[]);
         scanlators.forEach(s => scanlationGroups.add(s));
 
-        const chapters:MangaPage['chapters'] = res.data
+        const chapters:MangaPage['chapters'] = [];
+
+        res.data
           .filter(x => !x.attributes.externalUrl || !x.attributes.chapter)
-          .map(x => {
-            return {
+          .forEach(async x => {
+            chapters.push(await this.chaptersBuilder({
               id: x.id,
               url: '/chapter/'+x.id,
               lang: x.attributes.translatedLanguage,
@@ -648,23 +643,20 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
               name: x.attributes.title ? x.attributes.title : undefined,
               read: false,
               group: Array.from(scanlationGroups).find(s => s.id === x.relationships.find(r => r.type === 'scanlation_group')?.id)?.name,
-            };
+            }));
           });
 
-        const mg:MangaPage = {
+        const mg = await this.mangaPageBuilder({
           id: url.replace('/manga/', ''),
-          mirror: { name: this.name, version: this.version },
           url,
           langs: requestedLangs,
-          covers: [cover],
+          covers: cover ? [cover] : [],
           name,
           synopsis,
           tags,
           authors,
-          userCategories: [],
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, requestedLangs, url) ? true : false,
           chapters,
-        };
+        });
 
         socket.emit('showManga', id, mg);
 

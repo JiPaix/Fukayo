@@ -4,6 +4,8 @@ import { SettingsDatabase } from '@api/db/settings';
 import type { uuid } from '@api/db/uuids';
 import { UUID } from '@api/db/uuids';
 import type { MirrorConstructor } from '@api/models/types/constructor';
+import type { MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import { SchedulerClass } from '@api/server/helpers/scheduler';
 import type { socketInstance } from '@api/server/types';
@@ -184,13 +186,75 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** check if the fetched manga is part of the library */
-  protected isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
+  #isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
     return MangaDatabase.has(mirror, langs, url);
   }
 
-  protected uuidv5(options: { langs: mirrorsLangsType[], url: string }, force?:false):string
-  protected uuidv5(options: { url: string, id: string, langs: mirrorsLangsType[] }, force: true):string
-  protected uuidv5(
+  /**
+   * Manga Page builder
+   */
+  protected async mangaPageBuilder(mg:Omit<MangaPage , 'userCategories'|'inLibrary'|'mirror'|'id'> &
+  {
+    /** force a specific id */
+    id?: string
+  }):Promise<MangaPage> {
+    let id: string;
+    if(mg.id) id = await this.#uuidv5(true, { langs: mg.langs, url: mg.url, id: mg.id });
+    else id = await this.#uuidv5(false, { langs: mg.langs, url: mg.url });
+    return {
+      ...mg,
+      id: id,
+      chapters: mg.chapters.sort((a, b) => a.number - b.number),
+      mirror: { name: this.name, version: this.version },
+      inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
+      userCategories: [],
+    };
+  }
+
+  /**
+   * Manga Page chapter builder
+   */
+  protected async chaptersBuilder(chapter:Omit<MangaPage['chapters'][0], 'id'|'date'|'read'> &
+  {
+    /** force a specific id */
+    id?: string,
+    /** force a date */
+    date?: number,
+    /** force read status */
+    read?: boolean
+  }):Promise<MangaPage['chapters'][0]> {
+    let id: string;
+    if(chapter.id) id = await this.#uuidv5(true, { langs: [chapter.lang], url: chapter.url, id: chapter.id });
+    else id = await this.#uuidv5(false, { langs: [chapter.lang], url: chapter.url });
+    return {
+      ...chapter,
+      id,
+      date: chapter.date || Date.now(),
+      read: chapter.read || false,
+    };
+  }
+
+  /**
+   * Search results and Recommendation builder
+   */
+  protected async searchResultsBuilder(mg:Omit<SearchResult, 'mirrorinfo'|'inLibrary'|'id'> &
+  {
+    /** force a specific id */
+    id?: string
+  }):Promise<SearchResult> {
+    let id: string;
+    if(mg.id) id = await this.#uuidv5(true, { langs: mg.langs, url: mg.url, id: mg.id });
+    else id = await this.#uuidv5(false, { langs: mg.langs, url: mg.url });
+    return {
+      ...mg,
+      id,
+      mirrorinfo: this.mirrorInfo,
+      inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
+    };
+  }
+
+  async #uuidv5(
+    force:boolean,
     options: {
       langs: mirrorsLangsType[],
       /**

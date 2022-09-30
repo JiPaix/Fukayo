@@ -110,20 +110,16 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           };
         }
 
-        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
-
-        // we return the results based on SearchResult model
-        socket.emit('searchInMirrors', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResults = await this.searchResultsBuilder({
           name,
-          url:link,
+          url: link,
           covers,
           synopsis,
           last_release,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+        // we return the results based on SearchResult model
+        socket.emit('searchInMirrors', id, searchResults);
       }
       if(cancel) return;
     } catch(e) {
@@ -196,11 +192,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const chapters:MangaPage['chapters'] = [];
       const tablesize = $('ul.detail-main-list > li > a').length;
 
-      // generate manga id
-      const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
-
-      $('ul.detail-main-list > li > a').each((i, el) => {
-        if(cancel) return;
+      for(const [i, el] of $('ul.detail-main-list > li > a').toArray().reverse().entries()) {
+        if(cancel) break;
         // making sure the link match the pattern we're expecting
         const chapterHref = $(el).attr('href')?.replace(this.host, '');
         if(!chapterHref || !this.isChapterPage(chapterHref)) return;
@@ -221,26 +214,29 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         // ensure we at least have a chapter number OR a chapter name
         if(chapterNameTrim === undefined && chapterNumberFloat === undefined) return;
 
-        // dates in manga pages aren't reliable so we use the fetch date instead
-        const date = Date.now();
-
-        // pushing the chapter to the chapters array
-        chapters.push({
-          id: mangaId,
+        chapters.push(await this.chaptersBuilder({
           name: chapterNameTrim,
           number: chapterNumberFloat,
-          // we test if the volume is a number, sometimes volume number is TBE/TBA or other weird stuff
           volume: volumeNumberInt ? isNaN(volumeNumberInt) ? undefined : volumeNumberInt : undefined,
           url: chapterUrl,
-          date,
-          read: false,
           lang: this.langs[0],
-        });
-
-      });
+        }));
+      }
       // emitting the manga page based on MangaPage model
       if(cancel) return;
-      socket.emit('showManga', id, {id: mangaId, url: link, langs: this.langs, name, synopsis, covers, authors, tags, chapters: chapters.sort((a,b) => a.number - b.number), inLibrary: false, mirror: {name: this.name, version: this.version }, userCategories: [] });
+
+      const mg = await this.mangaPageBuilder({
+        url: link,
+        langs: this.langs,
+        name,
+        synopsis,
+        covers,
+        authors,
+        tags,
+        chapters: chapters.sort((a,b) => a.number - b.number),
+      });
+
+      socket.emit('showManga', id, mg);
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -387,18 +383,15 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           if(img) covers.push(img);
         }
 
-        const mangaId = this.uuidv5({langs: this.langs, url: link.replace(this.host, '')});
-
-        // we return the results based on SearchResult model
-        if(!cancel) socket.emit('showRecommend', id, {
-          id: mangaId,
-          mirrorinfo: this.mirrorInfo,
+        const searchResult = await this.searchResultsBuilder({
           name,
           url:link,
           covers,
           langs: this.langs,
-          inLibrary: await this.isInLibrary(this.mirrorInfo.name, this.langs, link) ? true : false,
         });
+
+        // we return the results based on SearchResult model
+        if(!cancel) socket.emit('showRecommend', id, searchResult);
       }
       if(cancel) return;
     } catch(e) {
