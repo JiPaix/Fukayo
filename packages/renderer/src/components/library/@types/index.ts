@@ -7,7 +7,7 @@ export type MangaInDBwithLabel = {
   name: string,
   displayName?: string,
   url: string,
-  categories: string[],
+  userCategories: string[],
   unread: number,
   chapters: {
     label: string | number;

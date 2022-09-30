@@ -205,7 +205,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
     }
 
     // check if categories changed
-    if(!arraysEqual(data.categories.sort(), manga.categories.sort())) {
+    if(!arraysEqual(data.userCategories.sort(), manga.userCategories.sort())) {
       hasNewStuff = true;
     }
 

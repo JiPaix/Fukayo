@@ -11,12 +11,12 @@ import { useI18n } from 'vue-i18n';
 const props = defineProps<{
   mirrorList: mirrorInfo[]
   langList: mirrorsLangsType[]
-  categories?: string[]
+  userCategories?: string[]
 }>();
 /** emits */
 const emit = defineEmits<{
   (event: 'search', input: typeof search.value): void
-  (event: 'filter', mirror: string[], langs:mirrorsLangsType[], categories:string[]): void
+  (event: 'filter', mirror: string[], langs:mirrorsLangsType[], userCategories:string[]): void
 }>();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** settings */
@@ -59,8 +59,8 @@ const selectedCategories = ref<string[]>([]);
 
 const includedAllCategories = computed({
   get() {
-    if(!props.categories) return false;
-    if(selectedCategories.value.length !== props.categories.length) return false;
+    if(!props.userCategories) return false;
+    if(selectedCategories.value.length !== props.userCategories.length) return false;
     return true;
   },
   set() {
@@ -69,9 +69,9 @@ const includedAllCategories = computed({
 });
 
 function pickAllCategories() {
-  if(!props.categories) return;
-  if(selectedCategories.value.length === props.categories.length) selectedCategories.value = [];
-  else selectedCategories.value = props.categories;
+  if(!props.userCategories) return;
+  if(selectedCategories.value.length === props.userCategories.length) selectedCategories.value = [];
+  else selectedCategories.value = props.userCategories;
   emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
@@ -293,10 +293,10 @@ onMounted(() => {
           </q-list>
         </q-btn-dropdown>
         <q-btn-dropdown
-          v-if="categories && categories.length"
+          v-if="userCategories && userCategories.length"
           icon="category"
           size="1em"
-          :text-color="selectedCategories.length === categories.length ? '' : 'orange'"
+          :text-color="selectedCategories.length === userCategories.length ? '' : 'orange'"
         >
           <q-list
             :dark="$q.dark.isActive"
@@ -333,7 +333,7 @@ onMounted(() => {
             </q-item>
             <q-separator />
             <q-item
-              v-for="cat in props.categories"
+              v-for="cat in props.userCategories"
               :key="cat"
               clickable
               :dark="$q.dark.isActive"

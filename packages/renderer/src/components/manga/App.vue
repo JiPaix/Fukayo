@@ -336,7 +336,7 @@ function removeCategory(catName:string) {
   if(!manga.value) return;
   userCategories.value = userCategories.value.filter(cat => cat !== catName);
   if(isMangaInDb(manga.value)) {
-    manga.value.categories = userCategories.value;
+    manga.value.userCategories = userCategories.value;
     updateManga(manga.value);
   }
 }
@@ -347,7 +347,7 @@ function addCategory(catName: string) {
   if(userCategories.value.includes(catName)) return;
   userCategories.value.push(catName);
   if(isMangaInDb(manga.value)) {
-    manga.value.categories = userCategories.value;
+    manga.value.userCategories = userCategories.value;
     updateManga(manga.value);
   }
 }
@@ -382,7 +382,7 @@ async function startFetch() {
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
         mangaRaw.value = mg;
         // user categories have to be stored in a Ref in order to be reactive
-        userCategories.value = mg.categories;
+        userCategories.value = mg.userCategories;
 
         socket?.emit('getMirrors', true, (mirrors) => {
           const m = mirrors.find((m) => m.name === mg.mirror.name);

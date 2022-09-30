@@ -27,11 +27,11 @@ const search = ref<string|null>(null);
 const filters = ref<{
   mirrors: string[],
   langs: mirrorsLangsType[],
-  categories: string[]
+  userCategories: string[]
 }>({
   mirrors: [],
   langs: [],
-  categories: [],
+  userCategories: [],
 });
 // sort groups with most unread first
 function sortByMostUnread(group: MangaGroup[]) {
@@ -99,7 +99,7 @@ function filterByMirrorAndLang(group: MangaGroup[]) {
     if (curr.langs.length && !g.mangas.some(m => m.langs.some(l => curr.langs.includes(l)))) {
       return false;
     }
-    if (curr.categories.length && !g.mangas.some(m => m.categories.some(c => curr.categories.includes(c)))) {
+    if (curr.userCategories.length && !g.mangas.some(m => m.userCategories.some(c => curr.userCategories.includes(c)))) {
       return false;
     }
     return true;
@@ -133,9 +133,9 @@ const langs = computed(() => {
   return Array.from(set);
 });
 
-const categories = computed(() => {
+const userCategories = computed(() => {
   const set:Set<string> = new Set();
-  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.categories.forEach(l => set.add(l))));
+  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.userCategories.forEach(l => set.add(l))));
   return Array.from(set);
 });
 
@@ -161,7 +161,7 @@ onMounted(async () => {
             displayName: manga.displayName,
             mirror: mirrorInfo.name,
             url: manga.url,
-            categories: manga.categories,
+            userCategories: manga.userCategories,
             unread: manga.chapters.filter(c => !c.read).length,
             chapters: manga.chapters.map((c, i) => {
               return {
@@ -208,9 +208,9 @@ onBeforeUnmount(() => {
       v-if="mirrorList.length"
       :mirror-list="(mirrorList as mirrorInfo[])"
       :lang-list="langs"
-      :categories="categories"
+      :user-categories="userCategories"
       @search="(input) => search = input"
-      @filter="(mirrors, langs, categories) => filters = {mirrors, langs, categories}"
+      @filter="(mirrors, langs, userCategories) => filters = {mirrors, langs, userCategories}"
     />
 
     <q-infinite-scroll
