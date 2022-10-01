@@ -193,18 +193,40 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   /**
    * Manga Page builder
    */
-  protected async mangaPageBuilder(mg:Omit<MangaPage , 'userCategories'|'inLibrary'|'mirror'|'id'> &
+  protected async mangaPageBuilder(mg:Partial<Omit<MangaPage , 'userCategories'|'inLibrary'|'mirror'|'id'> &
   {
     /** force a specific id */
     id?: string
-  }):Promise<MangaPage> {
+  }>):Promise<MangaPage> {
+
+    // check data integrity
+    if(!mg) throw new Error('mirror_might_be_outdated');
+    if(!mg.langs || !mg.langs.length) throw new Error('mirror_might_be_outdated');
+    if(!mg.chapters || !mg.chapters.length) throw new Error('mirror_might_be_outdated');
+    if(!mg.url || !mg.url.length) throw new Error('mirror_might_be_outdated');
+    if(!mg.name || !mg.name.length) throw new Error('mirror_might_be_outdated');
+    // these can be empty arrays
+    if(!mg.covers) throw new Error('mirror_might_be_outdated');
+    if(!mg.tags) throw new Error('mirror_might_be_outdated');
+    if(!mg.authors) throw new Error('mirror_might_be_outdated');
+
+    const { url, langs, name, displayName, covers, synopsis, tags, authors, chapters } = mg;
+
     let id: string;
-    if(mg.id) id = await this.#uuidv5(true, { langs: mg.langs, url: mg.url, id: mg.id });
-    else id = await this.#uuidv5(false, { langs: mg.langs, url: mg.url });
+    if(mg.id) id = await this.#uuidv5(true, { langs, url, id: mg.id });
+    else id = await this.#uuidv5(false, { langs, url });
+
     return {
-      ...mg,
-      id: id,
-      chapters: mg.chapters.sort((a, b) => a.number - b.number),
+      id,
+      url,
+      langs,
+      name,
+      displayName,
+      covers,
+      synopsis,
+      tags,
+      authors,
+      chapters: chapters.sort((a, b) => a.number - b.number),
       mirror: { name: this.name, version: this.version },
       inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
       userCategories: [],
@@ -214,7 +236,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   /**
    * Manga Page chapter builder
    */
-  protected async chaptersBuilder(chapter:Omit<MangaPage['chapters'][0], 'id'|'date'|'read'> &
+  protected async chaptersBuilder(chapter:Partial<Omit<MangaPage['chapters'][0], 'id'|'date'|'read'> &
   {
     /** force a specific id */
     id?: string,
@@ -222,32 +244,62 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     date?: number,
     /** force read status */
     read?: boolean
-  }):Promise<MangaPage['chapters'][0]> {
+  }>):Promise<MangaPage['chapters'][0]> {
+
+    // check data integrity
+    if(!chapter) throw new Error('mirror_might_be_outdated');
+    if(!chapter.lang || !chapter.lang.length) throw new Error('mirror_might_be_outdated');
+    if(!chapter.url || !chapter.url.length) throw new Error('mirror_might_be_outdated');
+    if(!chapter.number || isNaN(chapter.number)) throw new Error('mirror_might_be_outdated');
+
+    const { url, lang, date, number, name, volume, group, read } = chapter;
+
     let id: string;
-    if(chapter.id) id = await this.#uuidv5(true, { langs: [chapter.lang], url: chapter.url, id: chapter.id });
-    else id = await this.#uuidv5(false, { langs: [chapter.lang], url: chapter.url });
+    if(chapter.id) id = await this.#uuidv5(true, { langs: [lang], url, id: chapter.id });
+    else id = await this.#uuidv5(false, { langs: [lang], url });
     return {
-      ...chapter,
       id,
-      date: chapter.date || Date.now(),
-      read: chapter.read || false,
+      url,
+      lang,
+      date: date || Date.now(),
+      number,
+      name,
+      volume,
+      group,
+      read: typeof read === 'undefined' ? false : read,
     };
   }
 
   /**
    * Search results and Recommendation builder
    */
-  protected async searchResultsBuilder(mg:Omit<SearchResult, 'mirrorinfo'|'inLibrary'|'id'> &
+  protected async searchResultsBuilder(mg:Partial<Omit<SearchResult, 'mirrorinfo'|'inLibrary'|'id'> &
   {
     /** force a specific id */
     id?: string
-  }):Promise<SearchResult> {
+  }>):Promise<SearchResult> {
+
+    // check data integrity
+    if(!mg.url || !mg.url.length) throw new Error('mirror_might_be_outdated');
+    if(!mg.langs || !mg.langs.length) throw new Error('mirror_might_be_outdated');
+    if(!mg.name || !mg.name.length) throw new Error('mirror_might_be_outdated');
+    // this can be an empty array
+    if(!mg.covers) throw new Error('mirror_might_be_outdated');
+
+    const { url, langs, name, covers, synopsis, last_release } = mg;
+
     let id: string;
-    if(mg.id) id = await this.#uuidv5(true, { langs: mg.langs, url: mg.url, id: mg.id });
-    else id = await this.#uuidv5(false, { langs: mg.langs, url: mg.url });
+    if(mg.id) id = await this.#uuidv5(true, { langs, url, id: mg.id });
+    else id = await this.#uuidv5(false, { langs, url });
+
     return {
-      ...mg,
       id,
+      url,
+      langs,
+      name,
+      covers,
+      synopsis,
+      last_release,
       mirrorinfo: this.mirrorInfo,
       inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
     };
