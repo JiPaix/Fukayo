@@ -35,9 +35,9 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     this.#intervals = {
       // we should perform checks every minute
       nextcache: Date.now() + 60000,
-      cache: setTimeout(this.update.bind(this), 60000),
+      cache: setTimeout(this.#clearcache.bind(this), 60000),
       nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
-      updates: setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates),
+      updates: setTimeout(this.update.bind(this), this.settings.library.waitBetweenUpdates),
     };
 
     // wait 30s on startup to make sure async operations are done
@@ -167,15 +167,15 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
 
   restartUpdate() {
     clearTimeout(this.#intervals.updates);
-    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.#intervals.updates = setTimeout(this.update.bind(this), this.settings.library.waitBetweenUpdates);
     this.#intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
   }
 
   restartCache() {
     clearTimeout(this.#intervals.cache);
     if(this.cacheEnabled) {
-      this.#intervals.cache = setTimeout(this.update.bind(this), 300000);
-      this.#intervals.nextcache = Date.now() + 300000;
+      this.#intervals.cache = setTimeout(this.#clearcache.bind(this), 60000);
+      this.#intervals.nextcache = Date.now() + 60000;
     }
   }
 
