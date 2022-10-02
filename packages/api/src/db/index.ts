@@ -47,7 +47,7 @@ export class Database<T extends object> {
    * checks if the database is outdated and if so, it will automatically update it
    * @param defaultData the default data to use if the database is not up to date
    */
-  async #autopatch(defaultData: T) {
+  #autopatch(defaultData: T) {
     if(semver.gt(packageJson.version, this.data._v)) {
       const newData = Object.keys(defaultData).reduce((acc, key) => {
         if(this.data[key as keyof T] === undefined) {
@@ -135,9 +135,24 @@ export class DatabaseIO<T extends object> {
     }
   }
 
+  #readSync():databaseGeneric<T> {
+    try {
+      const data = readFileSync(this.#file, 'utf-8');
+      return JSON.parse(data);
+    } catch(e) {
+      this.logger(e);
+      throw e;
+    }
+  }
+
   async write(data: T) {
     if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
     return this.#writer.write(JSON.stringify(data));
+  }
+
+  #writeSync(data: T) {
+    if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
+    return writeFileSync(this.#file, JSON.stringify({ ...data }));
   }
 
   /**
@@ -145,7 +160,7 @@ export class DatabaseIO<T extends object> {
    * @param defaultData the default data to use if the database is not up to date
    */
   async #autopatch(defaultData: T) {
-    const oldData = await this.read();
+    const oldData = this.#readSync();
     if(semver.gt(packageJson.version, oldData._v)) {
       this.logger('Updating database version');
       const newData = Object.keys(defaultData).reduce((acc, key) => {
@@ -156,7 +171,7 @@ export class DatabaseIO<T extends object> {
       }
       , {} as Partial<T>);
       // write the data anyway so we update _v and don't trigger the autopatch again
-      this.write({ ...oldData, ...newData, _v: packageJson.version });
+      this.#writeSync({ ...oldData, ...newData, _v: packageJson.version });
     }
   }
 }
