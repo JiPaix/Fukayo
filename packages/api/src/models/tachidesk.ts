@@ -126,10 +126,11 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
   }
 
   async getSourceList() {
-    return this.sourcelist ? this.sourcelist : await this.fetch<Source[]>({
+    this.sourcelist = this.sourcelist ? this.sourcelist : await this.fetch<Source[]>({
       url: this.#path('/source/list'),
       withCredentials: true,
     }, 'json');
+    return this.sourcelist;
   }
 
   async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | SchedulerClass, id: number) {
