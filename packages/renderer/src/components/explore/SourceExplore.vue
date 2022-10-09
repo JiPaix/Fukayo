@@ -53,15 +53,28 @@ onBeforeMount(async () => {
   }
 
   socket.emit('showRecommend', now, name);
-    socket.on('showRecommend', (id, result) => {
+  socket.on('showRecommend', (id, result) => {
     if(id === now) {
-      if(isSearchResult(result)) {
-        if(recommendation.value.length === 0) mirror.value = result.mirrorinfo;
-        if(!recommendation.value.some((r) => r.name === result.name)) recommendation.value.push(result);
-      }
-      if(isTaskDone(result)) {
-        loading.value = false;
-        socket?.off('showRecommend');
+      if(Array.isArray(result)){
+        result.forEach(ele => {
+          if(isSearchResult(ele)) {
+            if(recommendation.value.length === 0) mirror.value = ele.mirrorinfo;
+            if(!recommendation.value.some((r) => r.name === ele.name)) recommendation.value.push(ele);
+          }
+          if(isTaskDone(ele)) {
+            loading.value = false;
+            socket?.off('showRecommend');
+          }
+        });
+      }else {
+        if(isSearchResult(result)) {
+          if(recommendation.value.length === 0) mirror.value = result.mirrorinfo;
+          if(!recommendation.value.some((r) => r.name === result.name)) recommendation.value.push(result);
+        }
+        if(isTaskDone(result)) {
+          loading.value = false;
+          socket?.off('showRecommend');
+        }
       }
     }
   });

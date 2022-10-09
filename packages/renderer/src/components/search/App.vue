@@ -176,7 +176,22 @@ async function research() {
 
       socket?.on('searchInMirrors', (id, res) => {
         if(id === task.id) {
-          if(res && isSearchResult(res)) rawResults.value.push({...res, covers: res.covers.map(c => transformIMGurl(c, settings))});
+          if(Array.isArray(res)){
+            res.forEach(ele => {
+              if(res && isSearchResult(ele)) rawResults.value.push({...ele, covers: ele.covers.map(c => transformIMGurl(c, settings))});
+              else if(res && isTaskDone(ele)) {
+                // mirror sent us a 'done' message
+                task.dones++;
+                if(task.dones === task.nbOfDonesToExpect) {
+                  // if all mirrors have responded, we can stop listening and stop the loading animation
+                  socket?.off('searchInMirrors');
+                  loading.value = false;
+                  done.value = true;
+                }
+              }
+            });
+          }
+          else if(res && isSearchResult(res)) rawResults.value.push({...res, covers: res.covers.map(c => transformIMGurl(c, settings))});
           else if(res && isTaskDone(res)) {
             // mirror sent us a 'done' message
             task.dones++;

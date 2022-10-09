@@ -2,6 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/tachidesk.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
@@ -47,7 +48,7 @@ type Chapter = {
   name: string,
   uploadDate: number,
   chapterNumber: number,
-  scanlator?: string|null ,
+  scanlator?: string | null,
   mangaId: number,
   read: boolean,
   index: number,
@@ -55,8 +56,8 @@ type Chapter = {
   pageCount: number,
 }
 
-export class Tachidesk extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
-  #sourcelist: null|Source[];
+export class Tachidesk extends Mirror<{ login?: string | null, password?: string | null, host?: string | null, port?: number | null, protocol: 'http' | 'https', markAsRead: boolean }> implements MirrorInterface {
+  #sourcelist: null | Source[];
   constructor() {
     super({
       version: 1,
@@ -64,12 +65,12 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       host: 'http://localhost',
       name: 'tachidesk',
       displayName: 'Tachidesk',
-      langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
+      langs: mirrorsLang.map(x => x), // makes mirrorsLang mutable
       waitTime: 100,
       icon,
       meta: {
         speed: 1,
-        quality:1,
+        quality: 1,
         popularity: 1,
       },
       options: {
@@ -89,7 +90,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
   /** needs at least these three options to be enabled */
   get enabled(): boolean {
     const { enabled, host, port } = this.options;
-    if(enabled && host && port) return true;
+    if (enabled && host && port) return true;
     return false;
   }
 
@@ -97,22 +98,22 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     this.options.enabled = val;
   }
 
-  #path(path:string) {
-    if(!this.options.protocol || !this.options.host || !this.options.port) throw new Error('missing credentials');
-    if(this.options.login && this.options.password) return `${this.options.protocol}://${this.options.login}:${this.options.password}@${this.options.host}:${this.options.port}/api/v1${path}`;
+  #path(path: string) {
+    if (!this.options.protocol || !this.options.host || !this.options.port) throw new Error('missing credentials');
+    if (this.options.login && this.options.password) return `${this.options.protocol}://${this.options.login}:${this.options.password}@${this.options.host}:${this.options.port}/api/v1${path}`;
     return `${this.options.protocol}://${this.options.host}:${this.options.port}/api/v1${path}`;
   }
 
   isMangaPage(url: string): boolean {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     const res = /^\/manga\/\w+(\/?)$/gmi.test(url);
-    if(!res) this.logger('not a manga page:', url);
+    if (!res) this.logger('not a manga page:', url);
     return res;
   }
   isChapterPage(url: string): boolean {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     const res = /^\/manga\/\w+\/chapter\/\w+$/gmi.test(url);
-    if(!res) this.logger('not a chapter page:', url);
+    if (!res) this.logger('not a chapter page:', url);
     return res;
   }
 
@@ -154,44 +155,57 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         withCredentials: true,
       }, 'json');
 
-      const res = await this.#mangaFromCat(categories);
+      const inputArray = await this.#mangaFromCat(categories);
 
-      await Promise.all(res.map(async (manga) => {
+      //splitting the array in to 100 item chunks
+      const result = inputArray.reduce((resultArray: CategoryManga[][], item: CategoryManga, index) => {
+        const chunkIndex = Math.floor(index / 100);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
+
+      await Promise.all(result.map(async (res) => {
+        const mangaList = (await Promise.all(res.map(async (manga) => {
+          if (cancel) return;
+          if (!manga.title.toLowerCase().includes(query.toLowerCase())) return;
+          const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+            id: '',
+            lang: 'xx',
+          };
+          const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+
+          const covers: string[] = [];
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
+
+
+          const chapters = await this.fetch<Chapter[]>({
+            url: this.#path(`/manga/${manga.id}/chapters`),
+            withCredentials: true,
+          }, 'json');
+
+          // find the chapter with the highest chapterNumber
+          const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
+
+          const searchResult = await this.searchResultsBuilder({
+            name: manga.title,
+            url: `/manga/${manga.id}`,
+            covers,
+            last_release: {
+              name: chapter.name,
+              chapter: chapter.chapterNumber,
+            },
+            synopsis: manga.description,
+            langs: [lang],
+          });
+
+          return searchResult;
+        }))).filter(ele => ele !== undefined) as SearchResult[];
         if (cancel) return;
-        if (!manga.title.toLowerCase().includes(query.toLowerCase())) return;
-        const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
-          id: '',
-          lang: 'xx',
-        };
-        const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
-
-        const covers: string[] = [];
-        const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });        if (img) covers.push(img);
-
-
-        const chapters = await this.fetch<Chapter[]>({
-          url: this.#path(`/manga/${manga.id}/chapters`),
-          withCredentials: true,
-        }, 'json');
-
-        // find the chapter with the highest chapterNumber
-        const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
-
-        const searchResult = await this.searchResultsBuilder({
-          name: manga.title,
-          url: `/manga/${manga.id}`,
-          covers,
-          last_release: {
-            name: chapter.name,
-            chapter: chapter.chapterNumber,
-          },
-          synopsis: manga.description,
-          langs: [lang],
-        });
-
-        if (!cancel) socket.emit('searchInMirrors', id, searchResult);
+        if (!cancel) socket.emit('searchInMirrors', id, mangaList);
       }));
-      if (cancel) return;
     } catch (e) {
       this.logger('error while searching mangas', e);
       if (e instanceof Error) socket.emit('searchInMirrors', id, { mirror: this.name, error: 'search_error', trace: e.message });
@@ -236,8 +250,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       };
       const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
       const covers: string[] = [];
-      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-      if (img) covers.push(img);
+      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
       const tags = manga.genre;
@@ -248,6 +261,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         url: this.#path(`/manga/${manga.id}/chapters`),
         withCredentials: true,
       }, 'json');
+
 
       for (const chapter of chaptersRes) {
 
@@ -281,10 +295,12 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         langs,
         chapters,
       });
+
       socket.emit('showManga', id, mg);
 
     } catch (e) {
       this.logger('error while fetching manga', '@', url, e);
+      console.log(e);
       // we catch any errors because the client needs to be able to handle them
       if (e instanceof Error) socket.emit('showManga', id, { error: 'manga_error', trace: e.message });
       else if (typeof e === 'string') socket.emit('showManga', id, { error: 'manga_error', trace: e });
@@ -328,7 +344,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         if (cancel) break;
         if (typeof retryIndex === 'number' && i !== retryIndex) continue;
 
-        const img = await this.downloadImage(this.#path(url+'/page/'+i), undefined, false, { withCredentials: true });
+        const img = await this.downloadImage(this.#path(url + '/page/' + i), undefined, false, { withCredentials: true });
         if (img) {
           socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         } else {
@@ -366,33 +382,46 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         url: catUrl,
         withCredentials: true,
       }, 'json');
-      const res = await this.#mangaFromCat(categories);
+      const inputArray = await this.#mangaFromCat(categories);
 
-      await Promise.all(res.map(async (manga) => {
+      //splitting the array in to 100 item chunks
+      const result = inputArray.reduce((resultArray: CategoryManga[][], item: CategoryManga, index) => {
+        const chunkIndex = Math.floor(index / 100);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
+
+      await Promise.all(result.map(async (res) => {
+
+        const mangaList = (await Promise.all(res.map(async (manga) => {
+          if (cancel) return;
+
+          const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+            id: '',
+            lang: 'xx',
+          };
+          const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+          const covers: string[] = [];
+
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+
+          if (img) covers.push(img);
+
+          if (cancel) return;
+          const searchResult = await this.searchResultsBuilder({
+            name: manga.title,
+            url: `/manga/${manga.id}`,
+            covers,
+            langs: [lang],
+          });
+          return searchResult;
+        }))).filter(ele => ele !== undefined) as SearchResult[];
         if (cancel) return;
-
-        const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
-          id: '',
-          lang: 'xx',
-        };
-        const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
-        const covers: string[] = [];
-
-        const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-
-        if (img) covers.push(img);
-
-        if (cancel) return;
-        const searchResult = await this.searchResultsBuilder({
-          name: manga.title,
-          url: `/manga/${manga.id}`,
-          covers,
-          langs: [lang],
-        });
-        if (!cancel) socket.emit('showRecommend', id, searchResult);
-        return;
+        if (!cancel) socket.emit('showRecommend', id, mangaList);
       }));
-      if (cancel) return;
     } catch (e) {
       this.logger('error while recommending mangas', e);
       console.log(e);
@@ -408,46 +437,46 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     url = url.replace(this.host, ''); // remove the host from the url
     url = url.replace(/\/$/, ''); // remove trailing slash
-    if(this.options.host && this.options.port && this.options.protocol) {
+    if (this.options.host && this.options.port && this.options.protocol) {
       url = url.replace(this.options.host, '');
-      url = url.replace(':'+this.options.port.toString(), '');
+      url = url.replace(':' + this.options.port.toString(), '');
       url = url.replace(/http(s?):\/\//, '');
     }
     // if no lang is provided, we will use the default one
-    lang = lang||this.langs[0];
+    lang = lang || this.langs[0];
     // checking what kind of page this is
     const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
+      isChapterPage = this.isChapterPage(url);
 
-    if(!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-    if(isMangaPage || isChapterPage) {
+    if (!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
+    if (isMangaPage || isChapterPage) {
       try {
-        if(!this.options.host || !this.options.port) throw 'no credentials';
-        if(!this.options.host.length) throw 'no credentials';
+        if (!this.options.host || !this.options.port) throw 'no credentials';
+        if (!this.options.host.length) throw 'no credentials';
         url = url.replace(/chapter\/\w+(\/)?/, '');
-        return socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
-      } catch(e) {
-        if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
+        return socket.emit('getMangaURLfromChapterURL', id, { url, langs: [lang], mirror: { name: this.name, version: this.version } });
+      } catch (e) {
+        if (e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
         else this.logger('error while fetching manga from chapter url', e);
         return socket.emit('getMangaURLfromChapterURL', id, undefined);
       }
     }
   }
 
-  async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
-    if(!this.options.host || !this.options.port) return;
-    if(!this.options.host.length) return;
-    if(!mangaURL.length || !lang.length || !chapterURLs.length) return;
-    if(!this.options.markAsRead) return;
+  async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
+    if (!this.options.host || !this.options.port) return;
+    if (!this.options.host.length) return;
+    if (!mangaURL.length || !lang.length || !chapterURLs.length) return;
+    if (!this.options.markAsRead) return;
 
-    for(const chapterURL of chapterURLs) {
+    for (const chapterURL of chapterURLs) {
       try {
         const body = new fd();
-        body.append('read', read ? 'true': 'false');
+        body.append('read', read ? 'true' : 'false');
         body.append('lastPageRead', '1');
-        await this.post(this.#path(chapterURL), body, 'patch', { withCredentials: true});
-      } catch(e) {
-        if(e instanceof Error) this.logger('markAsRead:', e.message);
+        await this.post(this.#path(chapterURL), body, 'patch', { withCredentials: true });
+      } catch (e) {
+        if (e instanceof Error) this.logger('markAsRead:', e.message);
         else this.logger('markAsRead:', e);
       }
     }
