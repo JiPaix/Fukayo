@@ -58,11 +58,9 @@ async function search(origin: typeof props.mangas[0], selectedMirrors: string[])
   const search = await internalSearch(origin, selectedMirrors);
   for(const s of search) {
     try {
-      console.log(s.mirrorinfo.name);
       const f = await fetch(s.mirrorinfo.name, s.langs, s.url, s.id);
       candidates.value.push(f);
     } catch(e) {
-      console.error(e);
       continue;
     }
   }
@@ -83,12 +81,10 @@ async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: s
       if(id !== reqId) return;
 
       if(isSearchResult(manga)) {
-        console.log(manga.mirrorinfo.name);
         search.push(manga);
       }
       if(isTaskDone(manga)) {
         --mirrorToWait;
-        console.log('fini:', mirrorToWait);
       }
       if(mirrorToWait <= 0) {
         if(socket) socket.removeListener('searchInMirrors', searchListener);
@@ -98,10 +94,8 @@ async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: s
     if(!socket) return;
     socket.removeListener('searchInMirrors', searchListener);
     socket.on('searchInMirrors', searchListener);
-    console.log('selected mirrors:', selectedMirrors);
     socket.emit('searchInMirrors', origin.name, reqId, selectedMirrors, origin.langs, (nbOfDonesToExpect) => {
       mirrorToWait = nbOfDonesToExpect;
-      console.log('expect', nbOfDonesToExpect);
     });
   });
 }

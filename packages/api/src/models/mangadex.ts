@@ -732,8 +732,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(resp.result !== 'ok') throw new Error(`${resp.errors[0].title}: ${resp.errors[0].detail}`);
       if(callback) callback(resp.chapter.data.length);
 
-      console.log(resp);
-
       const type = this.options.dataSaver ? 'dataSaver' : 'data';
 
       for(const [i, v] of resp.chapter[type].entries()) {
