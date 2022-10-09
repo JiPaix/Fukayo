@@ -430,15 +430,15 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
         // we ignore SearchErrorMessage
         // at best we will find result next time update() is called
         // at worst this process will repeat until we update the app and mark the mirror as dead
-        if((res as SearchResult).name) {
-          results.push(res as SearchResult);
-        }
 
-        if((res as TaskDone).done) {
+        if(Array.isArray(res)) res.forEach(r => results.push(r));
+        else if((res as SearchResult).name) results.push(res as SearchResult);
+        else if((res as TaskDone).done) {
           this.removeListener('searchInMirrors', listener);
           return resolve(results);
         }
       };
+
       this.on('searchInMirrors', listener.bind(this));
       mirror.search(query.name, query.langs, this, reqId);
     });
