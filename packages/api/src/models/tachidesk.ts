@@ -33,7 +33,7 @@ type Source = {
 
 type Manga = {
   id: number,
-  sourceId: number,
+  sourceId: string,
   title: string,
   thumbnailUrl: string,
   artist: string,
@@ -56,6 +56,7 @@ type Chapter = {
 }
 
 export class Tachidesk extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
+  #sourcelist: null|Source[];
   constructor() {
     super({
       version: 1,
@@ -82,6 +83,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         markAsRead: true,
       },
     });
+    this.#sourcelist = null;
   }
 
   /** needs at least these three options to be enabled */
@@ -114,19 +116,37 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     return res;
   }
 
-  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
+  async #mangaFromCat(categories: CategoryList[]) {
+    return (await Promise.all(categories.map(async cat => {
+      return await this.fetch<CategoryManga[]>({
+        url: this.#path(`/category/${cat.id}`),
+        withCredentials: true,
+      }, 'json');
+    }))).flat();
+  }
+
+  async #getSourceList() {
+    this.#sourcelist = this.#sourcelist ? this.#sourcelist : await this.fetch<Source[]>({
+      url: this.#path('/source/list'),
+      withCredentials: true,
+    }, 'json');
+    return this.#sourcelist;
+  }
+
+  async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | SchedulerClass, id: number) {
     try {
-      if(!this.options.host || !this.options.port) throw 'no credentials';
-      if(!this.options.host.length) throw 'no credentials';
+      if (!this.options.host || !this.options.port) throw 'no credentials';
+      if (!this.options.host.length) throw 'no credentials';
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
-      if(!(socket instanceof SchedulerClass)) {
+      if (!(socket instanceof SchedulerClass)) {
         socket.once('stopSearchInMirrors', () => {
           this.logger('search canceled');
           this.stopListening(socket);
           cancel = true;
         });
       }
+      const SourceList = await this.#getSourceList();
 
       const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
@@ -134,64 +154,59 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         withCredentials: true,
       }, 'json');
 
-      for(const cat of categories) {
-        if(cancel) break;
-        const res = await this.fetch<CategoryManga[]>({
-          url: this.#path(`/category/${cat.id}`),
+      const res = await this.#mangaFromCat(categories);
+
+      await Promise.all(res.map(async (manga) => {
+        if (cancel) return;
+        if (!manga.title.toLowerCase().includes(query.toLowerCase())) return;
+        const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+          id: '',
+          lang: 'xx',
+        };
+        const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+
+        const covers: string[] = [];
+        const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });        if (img) covers.push(img);
+
+
+        const chapters = await this.fetch<Chapter[]>({
+          url: this.#path(`/manga/${manga.id}/chapters`),
           withCredentials: true,
         }, 'json');
 
-        for(const manga of res) {
-          if(cancel) break;
-          if(!manga.title.toLowerCase().includes(query.toLowerCase())) continue;
-          const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-            url: this.#path(`/source/${manga.sourceId}`),
-          }, 'json')).lang);
+        // find the chapter with the highest chapterNumber
+        const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
 
-          const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-          if(img) covers.push(img);
+        const searchResult = await this.searchResultsBuilder({
+          name: manga.title,
+          url: `/manga/${manga.id}`,
+          covers,
+          last_release: {
+            name: chapter.name,
+            chapter: chapter.chapterNumber,
+          },
+          synopsis: manga.description,
+          langs: [lang],
+        });
 
-
-          const chapters = await this.fetch<Chapter[]>({
-            url:this.#path(`/manga/${manga.id}/chapters`),
-            withCredentials: true,
-          }, 'json');
-
-          // find the chapter with the highest chapterNumber
-          const chapter = chapters.reduce((a, b) => a.chapterNumber > b.chapterNumber ? a : b);
-
-          const searchResult = await this.searchResultsBuilder({
-            name: manga.title,
-            url: `/manga/${manga.id}`,
-            covers,
-            last_release: {
-              name: chapter.name,
-              chapter: chapter.chapterNumber,
-            },
-            synopsis: manga.description,
-            langs: [lang],
-          });
-
-          if(!cancel) socket.emit('searchInMirrors', id, searchResult);
-        }
-      }
-      if(cancel) return;
-    } catch(e) {
+        if (!cancel) socket.emit('searchInMirrors', id, searchResult);
+      }));
+      if (cancel) return;
+    } catch (e) {
       this.logger('error while searching mangas', e);
-      if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
-      else if(typeof e === 'string') socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e});
-      else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
+      if (e instanceof Error) socket.emit('searchInMirrors', id, { mirror: this.name, error: 'search_error', trace: e.message });
+      else if (typeof e === 'string') socket.emit('searchInMirrors', id, { mirror: this.name, error: 'search_error', trace: e });
+      else socket.emit('searchInMirrors', id, { mirror: this.name, error: 'search_error' });
     }
     socket.emit('searchInMirrors', id, { done: true });
     return this.stopListening(socket);
   }
 
-  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url: string, langs: mirrorsLangsType[], socket: socketInstance | SchedulerClass, id: number) {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if (!(socket instanceof SchedulerClass)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
@@ -199,51 +214,53 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       });
     }
     const isMangaPage = this.isMangaPage(url);
-    if(!isMangaPage) {
-      socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+    if (!isMangaPage) {
+      socket.emit('showManga', id, { error: 'manga_error_invalid_link' });
       return this.stopListening(socket);
     }
 
     try {
-      if(!this.options.host || !this.options.port) throw 'no credentials';
-      if(!this.options.host.length) throw 'no credentials';
+      if (!this.options.host || !this.options.port) throw 'no credentials';
+      if (!this.options.host.length) throw 'no credentials';
       const manga = await this.fetch<Manga>({
         url: this.#path(url),
         withCredentials: true,
       }, 'json');
 
-      if(cancel) return;
+      if (cancel) return;
 
-      const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-        url: this.#path(`/source/${manga.sourceId}`),
-      }, 'json')).lang);
-
+      const SourceList = await this.#getSourceList();
+      const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+        id: '',
+        lang: 'xx',
+      };
+      const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-      if(img) covers.push(img);
+      if (img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
       const tags = manga.genre;
 
-      const chapters:MangaPage['chapters'] = [];
+      const chapters: MangaPage['chapters'] = [];
 
       const chaptersRes = await this.fetch<Chapter[]>({
         url: this.#path(`/manga/${manga.id}/chapters`),
         withCredentials: true,
       }, 'json');
 
-      for(const chapter of chaptersRes) {
+      for (const chapter of chaptersRes) {
 
-        if(cancel) break;
+        if (cancel) break;
         const chapLink = `/manga/${manga.id}/chapter/${chapter.index}`;
-        let date: number= Date.now();
-        if(chapter.uploadDate) date = chapter.uploadDate;
+        let date: number = Date.now();
+        if (chapter.uploadDate) date = chapter.uploadDate;
         const read = chapter.read;
         const number = chapter.chapterNumber;
         const name = chapter.name;
         const group = chapter.scanlator || undefined;
 
-        const built = await this.chaptersBuilder({
+        chapters.push(await this.chaptersBuilder({
           url: chapLink,
           name,
           number,
@@ -251,10 +268,9 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           read,
           group,
           lang,
-        });
-        chapters.push(built);
+        }));
       }
-      if(cancel) return;
+      if (cancel) return;
       const mg = await this.mangaPageBuilder({
         name: manga.title,
         url: `/manga/${manga.id}`,
@@ -267,20 +283,20 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       });
       socket.emit('showManga', id, mg);
 
-    } catch(e) {
+    } catch (e) {
       this.logger('error while fetching manga', '@', url, e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) socket.emit('showManga', id, {error: 'manga_error', trace: e.message});
-      else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
-      else socket.emit('showManga', id, {error: 'manga_error_unknown'});
+      if (e instanceof Error) socket.emit('showManga', id, { error: 'manga_error', trace: e.message });
+      else if (typeof e === 'string') socket.emit('showManga', id, { error: 'manga_error', trace: e });
+      else socket.emit('showManga', id, { error: 'manga_error_unknown' });
     }
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url: string, lang: mirrorsLangsType, socket: socketInstance | SchedulerClass, id: number, callback?: (nbOfPagesToExpect: number) => void, retryIndex?: number) {
     // // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if (!(socket instanceof SchedulerClass)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
         this.stopListening(socket);
@@ -290,102 +306,99 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(url);
-    if(!isLinkaChapter) {
+    if (!isLinkaChapter) {
       this.stopListening(socket);
-      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      return socket.emit('showChapter', id, { error: 'chapter_error_invalid_link' });
     }
 
-    if(cancel) return;
+    if (cancel) return;
 
     try {
-      if(!this.options.host || !this.options.port) throw 'no credentials';
-      if(!this.options.host.length) throw 'no credentials';
+      if (!this.options.host || !this.options.port) throw 'no credentials';
+      if (!this.options.host.length) throw 'no credentials';
 
       const res = await this.fetch<Chapter>({
         url: this.#path(url),
         withCredentials: true,
       }, 'json');
       const nbOfPages = res.pageCount;
-      if(callback) callback(nbOfPages);
-      if(cancel) return;
-      for(let i = 0; i < nbOfPages; i++) {
-        if(cancel) break;
-        if(typeof retryIndex === 'number' && i !== retryIndex) continue;
+      if (callback) callback(nbOfPages);
+      if (cancel) return;
+      for (let i = 0; i < nbOfPages; i++) {
+        if (cancel) break;
+        if (typeof retryIndex === 'number' && i !== retryIndex) continue;
 
         const img = await this.downloadImage(this.#path(url+'/page/'+i), undefined, false, { withCredentials: true });
-
-        if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+        if (img) {
+          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         } else {
-          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         }
       }
-      if(cancel) return;
-    } catch(e) {
+      if (cancel) return;
+    } catch (e) {
       this.logger('error while fetching chapter', e);
       // we catch any errors because the client needs to be able to handle them
-      if(e instanceof Error) socket.emit('showChapter', id, {error: 'chapter_error', trace: e.message});
-      else if(typeof e === 'string') return socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
-      else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
+      if (e instanceof Error) socket.emit('showChapter', id, { error: 'chapter_error', trace: e.message });
+      else if (typeof e === 'string') return socket.emit('showChapter', id, { error: 'chapter_error', trace: e });
+      else socket.emit('showChapter', id, { error: 'chapter_error_unknown' });
     }
     return this.stopListening(socket);
   }
 
-  async recommend(socket: socketInstance|SchedulerClass, id: number) {
+  async recommend(socket: socketInstance | SchedulerClass, id: number) {
     try {
-      if(!this.options.host || !this.options.port) throw 'no credentials';
-      if(!this.options.host.length) throw 'no credentials';
+      if (!this.options.host || !this.options.port) throw 'no credentials';
+      if (!this.options.host.length) throw 'no credentials';
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
-      if(!(socket instanceof SchedulerClass)) {
+      if (!(socket instanceof SchedulerClass)) {
         socket.once('stopShowRecommend', () => {
           this.logger('fetching recommendations canceled');
           this.stopListening(socket);
           cancel = true;
         });
       }
+      const SourceList = await this.#getSourceList();
 
       const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
         url: catUrl,
         withCredentials: true,
       }, 'json');
+      const res = await this.#mangaFromCat(categories);
 
-      for(const cat of categories) {
-        if(cancel) break;
-        const res = await this.fetch<CategoryManga[]>({
-          url: this.#path(`/category/${cat.id}`),
-          withCredentials: true,
-        }, 'json');
+      await Promise.all(res.map(async (manga) => {
+        if (cancel) return;
 
-        for(const manga of res) {
-          if(cancel) break;
+        const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+          id: '',
+          lang: 'xx',
+        };
+        const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+        const covers: string[] = [];
 
-          const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-            url: this.#path(`/source/${manga.sourceId}`),
-          }, 'json')).lang);
+        const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
 
-          const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-          if(img) covers.push(img);
+        if (img) covers.push(img);
 
-          if(cancel) break;
-          const searchResult = await this.searchResultsBuilder({
-            name: manga.title,
-            url:`/manga/${manga.id}`,
-            covers,
-            langs: [lang],
-          });
-
-          if(!cancel) socket.emit('showRecommend', id, searchResult);
-        }
-      }
-      if(cancel) return;
-    } catch(e) {
+        if (cancel) return;
+        const searchResult = await this.searchResultsBuilder({
+          name: manga.title,
+          url: `/manga/${manga.id}`,
+          covers,
+          langs: [lang],
+        });
+        if (!cancel) socket.emit('showRecommend', id, searchResult);
+        return;
+      }));
+      if (cancel) return;
+    } catch (e) {
       this.logger('error while recommending mangas', e);
-      if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
-      else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
-      else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
+      console.log(e);
+      if (e instanceof Error) socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e.message });
+      else if (typeof e === 'string') socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e });
+      else socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error_unknown' });
     }
     socket.emit('showRecommend', id, { done: true });
     return this.stopListening(socket);

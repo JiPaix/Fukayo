@@ -66,6 +66,8 @@ export function ISO3166_1_ALPHA2_TO_ISO639_1(input: string): mirrorsLangsType {
 
   if(input == 'EE') return 'et'; //=> Estonia -> Estonian
 
+  if(input == 'EN') return 'en'; //=> English -> English
+
   if(input == 'AG') return 'en'; //=> Antigua and Barbuda -> English
   if(input == 'AI') return 'en'; //=> Anguilla -> English
   if(input == 'AQ') return 'en'; //=> Antarctica -> English
