@@ -16,11 +16,11 @@ export function isChapterImageErrorMessage(res: ChapterImage | ChapterImageError
   return (res as ChapterImage).src === undefined && (res as ChapterImageErrorMessage).error !== undefined && (res as ChapterImageErrorMessage).index !== undefined;
 }
 
-export function isSearchResult(res: SearchResult | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is SearchResult {
+export function isSearchResult(res: SearchResult | SearchResult[] | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is SearchResult {
   return (res as SearchResult).url !== undefined;
 }
 
-export function isTaskDone(res: SearchResult | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is TaskDone {
+export function isTaskDone(res: SearchResult | SearchResult[] | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is TaskDone {
   return (res as TaskDone).done !== undefined;
 }
 

@@ -425,7 +425,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     const search:() => Promise<SearchResult[]> = () => new Promise(resolve => {
       const reqId = Date.now();
       const results:SearchResult[] = [];
-      const listener = (id: number, res: SearchResult | SearchErrorMessage | TaskDone) => {
+      const listener = (id: number, res: SearchResult | SearchResult[] | SearchErrorMessage | TaskDone) => {
         if(id !== reqId) return;
         // we ignore SearchErrorMessage
         // at best we will find result next time update() is called
