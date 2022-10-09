@@ -7,6 +7,7 @@ import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -175,7 +176,7 @@ async function research() {
 
       socket?.on('searchInMirrors', (id, res) => {
         if(id === task.id) {
-          if(res && isSearchResult(res)) rawResults.value.push(res);
+          if(res && isSearchResult(res)) rawResults.value.push({...res, covers: res.covers.map(c => transformIMGurl(c, settings))});
           else if(res && isTaskDone(res)) {
             // mirror sent us a 'done' message
             task.dones++;

@@ -91,7 +91,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img.img-responsive').attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink, 'cover');
+          const img = await this.downloadImage(coverLink);
           if(img) covers.push(img);
         }
 
@@ -169,7 +169,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img', el).attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink, 'cover');
+          const img = await this.downloadImage(coverLink);
           if(img) covers.push(img);
         }
 
@@ -228,7 +228,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       let coverLink = $('.boxed img').attr('src');
       if(coverLink) {
         if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-        const img = await this.downloadImage(coverLink, 'cover');
+        const img = await this.downloadImage(coverLink);
         if(img) covers.push(img);
       }
 
@@ -340,7 +340,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       for(const [i, imgLink] of res.entries()) {
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
-        const img = await this.downloadImage(imgLink, 'cover', `${this.host}${link}`);
+        const img = await this.downloadImage(imgLink, `${this.host}${link}`);
         if(img) {
           socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
           continue;

@@ -1,10 +1,11 @@
-import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { env } from 'process';
 
 export class FileServer {
   static #instance: FileServer;
   folder: string;
+  #defaultLifeTime = 60*60*24;
   #timeouts: {filename: string, timeout: NodeJS.Timeout}[];
   /**
    *
@@ -56,13 +57,26 @@ export class FileServer {
   }
 
   #resetFile(filename: string, lifetime: number) {
-    const find = this.#timeouts.find(({filename: f}) => f === filename);
-    if(find) {
-      clearTimeout(find.timeout);
-      find.timeout = setTimeout(() => {
+    const path = this.#resolveFile(filename);
+    const fileExist = existsSync(path);
+    const hasTimeout = this.#timeouts.find(({filename: f}) => f === filename);
+
+    if(fileExist) {
+      if(hasTimeout) {
+        clearTimeout(hasTimeout.timeout);
+        hasTimeout.timeout = setTimeout(() => {
+          this.delete(filename);
+        }, lifetime * 1000);
+        return true;
+      }
+      this.#timeouts.push({filename, timeout: setTimeout(() => {
         this.delete(filename);
-      }, lifetime * 1000);
+      }, lifetime * 1000)});
       return true;
+    }
+
+    if(hasTimeout) { // && !fileExist
+      clearTimeout(hasTimeout.timeout);
     }
     return false;
   }
@@ -79,17 +93,23 @@ export class FileServer {
     }
   }
 
-  serv (data: Buffer, filename:string, lifetime = 600) {
+  /**
+   *
+   * @param data the data to serv
+   * @param filename its filename
+   */
+  serv (data: Buffer, filename:string, lifetime?: number) {
 
-    const exist = this.#resetFile(filename, lifetime);
+    const exist = this.#resetFile(filename, lifetime||this.#defaultLifeTime);
     if(exist) return `/files/${filename}`;
 
-    const create = this.#initFile(filename, data, lifetime);
+    const create = this.#initFile(filename, data, lifetime||this.#defaultLifeTime);
     if(create) return `/files/${filename}`;
 
     return `/files/${filename}`;
   }
 
+  /** delete file */
   delete (filename: string) {
     try {
       const find = this.#timeouts.find(({filename: f}) => f === filename);
@@ -99,6 +119,21 @@ export class FileServer {
       return true;
     } catch(e) {
       return false;
+    }
+  }
+
+  /** renew lifetime */
+  renew(filename:string, lifetime?:number) {
+    return this.#resetFile(filename, lifetime||this.#defaultLifeTime);
+  }
+
+  /** get file */
+  get(filename:string) {
+    // in case filename is "https://localhost:8080/files/filename"
+    filename = filename.replace(/(.*files\/)?/g, '');
+    const file = this.#resolveFile(filename);
+    if(existsSync(file)) {
+      return readFileSync(file);
     }
   }
 }

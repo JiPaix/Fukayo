@@ -3,6 +3,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
+import { FileServer } from '@api/utils/fileserv';
 import type { mirrorsLangsType } from '@i18n/index';
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
@@ -244,8 +245,11 @@ export class MangasDB extends DatabaseIO<Mangas> {
     // check if the displayName has changed
     if(data.displayName !== manga.displayName) hasNewStuff = true;
 
-    // save base64 covers in to files
-    manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])), filename);
+    // in case filename is "https://localhost:8080/files/filename"
+    manga.covers = manga.covers.map(m => m.replace(/(.*files\/)?/g, ''));
+    data.covers = data.covers.map(m => m.replace(/(.*files\/)?/g, ''));
+
+    manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
     // we check if the manga has been updated by previous operations OR by the Scheduler
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
     if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
@@ -270,31 +274,23 @@ export class MangasDB extends DatabaseIO<Mangas> {
   }
 
   /** save base64 images to files and returns their filenames */
-  #saveCovers(covers:string[], filename:string) {
-    const coversAlreadySaved:{filename: string, data: string}[] = [];
+  #saveCovers(covers:string[]) {
+    const fileserver = FileServer.getInstance();
 
     const path = resolve(this.#path);
-    const files = readdirSync(path, {withFileTypes: true})
-      .filter(item => !item.isDirectory() && !item.name.endsWith('.json'))
+    const coversAlreadySaved = readdirSync(path, {withFileTypes: true})
+      .filter(item => !item.isDirectory() && !item.name.endsWith('.json') && covers.includes(item.name))
       .map(item => item.name);
-
-    files.forEach(f => {
-      coversAlreadySaved.push({filename: f, data: readFileSync(resolve(path, f)).toString() });
-    });
 
     covers = covers.map((c, i) => {
       // if cover is already a filename return as it is
-      if(c.includes(`_cover_${filename}`)) return c;
-      // if base64 data is already saved in another file, return its filename
-      const find = coversAlreadySaved.find(s=> s.data === c);
-      if(find) return find.filename.replace('.json', '');
-
+      if(coversAlreadySaved.includes(c)) return c;
       // new cover, save to file
-      const coverFileName = `${i}_cover_${filename}`;
+      const coverFileName = `${i}_cover_${c}`;
       const path = resolve(this.#path, coverFileName);
       if(!existsSync(path)) {
-        const data = c;
-        writeFileSync(path, data);
+        const data = fileserver.get(c);
+        if(data) writeFileSync(path, data);
       }
       return coverFileName;
     });
@@ -303,11 +299,15 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   /** reads files and return their content into an array */
   #getCovers(filenames: string[]) {
+    const fileserver = FileServer.getInstance();
+
     const res:string[] = [];
     filenames.forEach(f => {
       const path = resolve(this.#path, f);
       if(existsSync(path)) {
-        res.push(readFileSync(path).toString());
+        this.logger('should serv:', path);
+        const serv = fileserver.serv(readFileSync(path),f);
+        res.push(serv);
       }
     });
     return res;

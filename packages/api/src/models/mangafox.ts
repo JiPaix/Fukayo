@@ -85,7 +85,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const covers:string[] = [];
         const coverLink =  $('img.manga-list-4-cover', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink, 'cover');
+          const img = await this.downloadImage(coverLink);
           if(img) covers.push(img);
         }
 
@@ -171,7 +171,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const coverLink =  $('img.detail-info-cover-img').attr('src');
       if(coverLink) {
         // mangafox images needs to be downloaded (you can't just link the external url due to cors).
-        const img = await this.downloadImage(coverLink, 'cover');
+        const img = await this.downloadImage(coverLink);
         if(img) covers.push(img);
       }
 
@@ -382,7 +382,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const covers:string[] = [];
         const coverLink =  $('img.manga-list-1-cover', el).attr('src');
         if(coverLink) {
-          const img = await this.downloadImage(coverLink, 'cover');
+          const img = await this.downloadImage(coverLink);
           if(img) covers.push(img);
         }
 

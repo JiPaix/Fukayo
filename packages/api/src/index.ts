@@ -50,6 +50,8 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
     res.sendFile(fileName, options, (err) => {
       if (err) {
         next(err);
+      } else {
+        fileServer.renew(fileName);
       }
     });
   });

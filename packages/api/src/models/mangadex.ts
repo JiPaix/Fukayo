@@ -474,7 +474,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return this.logger('no coverURL');
 
-        const cover = await this.downloadImage(`${this.host}/covers/${mangadata.id}/${coverURL}.512.jpg`, 'cover');
+        const cover = await this.downloadImage(`${this.host}/covers/${mangadata.id}/${coverURL}.512.jpg`);
 
         const searchResult = await this.searchResultsBuilder({
           id: manga.data.id,
@@ -521,7 +521,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const coverData = result.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
-        const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`, 'cover');
+        const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`);
 
         const synopsis = result.attributes.description[Object.keys(result.attributes.description)[0]] || undefined;
         const last_release =

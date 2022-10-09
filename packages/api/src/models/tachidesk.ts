@@ -149,7 +149,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           }, 'json')).lang);
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
           if(img) covers.push(img);
 
 
@@ -219,7 +219,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
       }, 'json')).lang);
 
       const covers: string[] = [];
-      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
       if(img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
@@ -312,7 +312,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
 
-        const img = await this.downloadImage(this.#path(url+'/page/'+i), 'page', undefined, false, { withCredentials: true });
+        const img = await this.downloadImage(this.#path(url+'/page/'+i), undefined, false, { withCredentials: true });
 
         if(img) {
           socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
@@ -366,7 +366,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           }, 'json')).lang);
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), 'cover', undefined, false, { withCredentials: true });
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
           if(img) covers.push(img);
 
           if(cancel) break;

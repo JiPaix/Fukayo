@@ -4,6 +4,7 @@ import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -118,7 +119,7 @@ onBeforeUnmount(async () => {
             :group="group.manga"
             :group-name="group.name"
             :mirror="mirror"
-            :covers="group.covers"
+            :covers="group.covers.map(c => transformIMGurl(c, settings))"
             class="q-my-lg"
             :hide-langs="settings.i18n.ignored"
           />

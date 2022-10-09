@@ -11,6 +11,7 @@ import { chapterLabel } from '@renderer/components/reader/helpers';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { transformIMGurl } from '../helpers/transformIMGurl';
 
 /** quasar */
 const $q = useQuasar();
@@ -153,6 +154,7 @@ onMounted(async () => {
       if(resid === id) {
         const mirrorInfo = m.find(mirror => mirror.name === manga.mirror.name);
         if(mirrorInfo) {
+          manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
           manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
           const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);
           let chapterIndex = manga.chapters.findIndex(chapter => chapter.number === maxChapter);

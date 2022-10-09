@@ -17,6 +17,7 @@ import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, ref } from
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { routeTypeHelper } from '../helpers/routePusher';
+import { transformIMGurl } from '../helpers/transformIMGurl';
 
 const props = defineProps<{
   id: string,
@@ -380,7 +381,7 @@ async function startFetch() {
           mg.chapters = mg.chapters.filter(c => !settings.i18n.ignored.includes(c.lang));
         }
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
-        mangaRaw.value = mg;
+        mangaRaw.value = { ...mg, covers: mg.covers.map(c => transformIMGurl(c, settings)) };
         // user categories have to be stored in a Ref in order to be reactive
         userCategories.value = mg.userCategories;
 
