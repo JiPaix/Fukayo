@@ -156,7 +156,7 @@ async function remove() {
 
   if(isMangaInDb(manga.value)) {
     socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
-      mangaRaw.value = res;
+      mangaRaw.value = { ...res, covers: res.covers.map(c => transformIMGurl(c, settings)) };
       // automatically select another language when current is deleted
       changeRouteLang(langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex]);
     });

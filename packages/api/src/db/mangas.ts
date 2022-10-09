@@ -108,8 +108,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
         if(!data.langs.length && !data.chapters.length) {
           // remove manga database file if there's nothing in.
           unlinkSync(resolve(this.#path, `${index.file}.json`));
-          unDBify.covers = data.covers.map(c => readFileSync(resolve(this.#path, c)).toString());
-          data.covers.forEach(c => unlinkSync(resolve(this.#path, c)));
+          data.covers.forEach(c => unlinkSync(resolve(this.#path, c.replace(/(.*files\/)?/g, ''))));
           unDBify.inLibrary = false;
           return unDBify;
         }
