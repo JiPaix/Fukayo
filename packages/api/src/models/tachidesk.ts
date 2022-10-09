@@ -300,7 +300,6 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
 
     } catch (e) {
       this.logger('error while fetching manga', '@', url, e);
-      console.log(e);
       // we catch any errors because the client needs to be able to handle them
       if (e instanceof Error) socket.emit('showManga', id, { error: 'manga_error', trace: e.message });
       else if (typeof e === 'string') socket.emit('showManga', id, { error: 'manga_error', trace: e });
@@ -424,7 +423,6 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
       }));
     } catch (e) {
       this.logger('error while recommending mangas', e);
-      console.log(e);
       if (e instanceof Error) socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e.message });
       else if (typeof e === 'string') socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e });
       else socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error_unknown' });
