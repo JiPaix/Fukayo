@@ -79,7 +79,7 @@ async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: s
   let mirrorToWait = selectedMirrors.length;
   if (!socket) socket = await useSocket(settings.server);
   return new Promise(resolve => {
-    const searchListener = (id:number, manga:SearchResult | SearchErrorMessage | TaskDone) => {
+    const searchListener = (id:number, manga:SearchResult | SearchResult[] | SearchErrorMessage | TaskDone) => {
       if(id !== reqId) return;
 
       if(isSearchResult(manga)) {

@@ -255,7 +255,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     if(!chapter) throw new Error('mirror_might_be_outdated');
     if(!chapter.lang || !chapter.lang.length) throw new Error('mirror_might_be_outdated');
     if(!chapter.url || !chapter.url.length) throw new Error('mirror_might_be_outdated');
-    if(!chapter.number || isNaN(chapter.number)) throw new Error('mirror_might_be_outdated');
+    if(typeof chapter.number === 'undefined' || isNaN(chapter.number)) throw new Error('mirror_might_be_outdated');
 
     const { url, lang, date, number, name, volume, group, read } = chapter;
 
