@@ -250,7 +250,8 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
       };
       const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
       const covers: string[] = [];
-      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
+      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+      if (img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
       const tags = manga.genre;
@@ -261,7 +262,6 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
         url: this.#path(`/manga/${manga.id}/chapters`),
         withCredentials: true,
       }, 'json');
-
 
       for (const chapter of chaptersRes) {
 
