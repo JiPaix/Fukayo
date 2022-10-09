@@ -33,7 +33,7 @@ type Source = {
 
 type Manga = {
   id: number,
-  sourceId: number,
+  sourceId: string,
   title: string,
   thumbnailUrl: string,
   artist: string,
@@ -56,7 +56,7 @@ type Chapter = {
 }
 
 export class Tachidesk extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
-  sourcelist: null|Source[];
+  #sourcelist: null|Source[];
   constructor() {
     super({
       version: 1,
@@ -83,7 +83,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         markAsRead: true,
       },
     });
-    this.sourcelist = null;
+    this.#sourcelist = null;
   }
 
   /** needs at least these three options to be enabled */
@@ -116,7 +116,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     return res;
   }
 
-  async mangaFromCat(categories: CategoryList[]) {
+  async #mangaFromCat(categories: CategoryList[]) {
     return (await Promise.all(categories.map(async cat => {
       return await this.fetch<CategoryManga[]>({
         url: this.#path(`/category/${cat.id}`),
@@ -125,12 +125,12 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     }))).flat();
   }
 
-  async getSourceList() {
-    this.sourcelist = this.sourcelist ? this.sourcelist : await this.fetch<Source[]>({
+  async #getSourceList() {
+    this.#sourcelist = this.#sourcelist ? this.#sourcelist : await this.fetch<Source[]>({
       url: this.#path('/source/list'),
       withCredentials: true,
     }, 'json');
-    return this.sourcelist;
+    return this.#sourcelist;
   }
 
   async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | SchedulerClass, id: number) {
@@ -146,7 +146,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           cancel = true;
         });
       }
-      const SourceList = await this.getSourceList();
+      const SourceList = await this.#getSourceList();
 
       const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
@@ -154,14 +154,14 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         withCredentials: true,
       }, 'json');
 
-      const res = await this.mangaFromCat(categories);
+      const res = await this.#mangaFromCat(categories);
 
       await Promise.all(res.map(async (manga) => {
         if (cancel) return;
         if (!manga.title.toLowerCase().includes(query.toLowerCase())) return;
         const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
           id: '',
-          lang: '',
+          lang: 'xx',
         };
         const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
 
@@ -229,12 +229,15 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
 
       if (cancel) return;
 
-      const lang = ISO3166_1_ALPHA2_TO_ISO639_1((await this.fetch<Source>({
-        url: this.#path(`/source/${manga.sourceId}`),
-      }, 'json')).lang);
-
+      const SourceList = await this.#getSourceList();
+      const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+        id: '',
+        lang: 'xx',
+      };
+      const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
       const covers: string[] = [];
-      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });      if (img) covers.push(img);
+      const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+      if (img) covers.push(img);
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
       const tags = manga.genre;
@@ -356,24 +359,23 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           cancel = true;
         });
       }
-      const SourceList = await this.getSourceList();
+      const SourceList = await this.#getSourceList();
 
       const catUrl = this.#path('/category');
       const categories = await this.fetch<CategoryList[]>({
         url: catUrl,
         withCredentials: true,
       }, 'json');
-      const res = await this.mangaFromCat(categories);
+      const res = await this.#mangaFromCat(categories);
 
       await Promise.all(res.map(async (manga) => {
         if (cancel) return;
 
         const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
           id: '',
-          lang: '',
+          lang: 'xx',
         };
         const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
-
         const covers: string[] = [];
 
         const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
