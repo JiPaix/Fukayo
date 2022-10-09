@@ -1,3 +1,4 @@
+import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorsLangsType } from '@i18n/availableLangs';
 
 export type MangaInDBwithLabel = {
@@ -6,15 +7,21 @@ export type MangaInDBwithLabel = {
   langs:mirrorsLangsType[],
   name: string,
   displayName?: string,
+  tags: string[],
+  authors: string[],
   url: string,
+  synopsis?:string,
   userCategories: string[],
   unread: number,
-  chapters: {
+  /** is the mirror dead? */
+  dead:boolean,
+  /** is the entry broken? */
+  broken: boolean,
+  meta: MangaInDB['meta'],
+  chapters: (MangaInDB['chapters'][0] & {
     label: string | number;
     value: number;
-    read:boolean
-    lang: mirrorsLangsType
-  }[]
+  })[]
 };
 
 export type MangaGroup = {

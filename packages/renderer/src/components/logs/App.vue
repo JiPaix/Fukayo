@@ -2,7 +2,7 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { Scheduler } from '@api/server/helpers/scheduler';
+import type { Scheduler } from '@api/server/scheduler';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';

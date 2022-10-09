@@ -1,4 +1,4 @@
-import type { SchedulerClass } from '@api/server/helpers/scheduler';
+import type { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 /** Interface for Mirror classes */
@@ -24,7 +24,7 @@ export default interface MirrorInterface {
    * @param {socketInstance} socket user socket
    * @param {Number} id request's uid
    */
-  search(query: string, langs: mirrorsLangsType[] ,socket:socketInstance, id:number): void;
+  search(query: string, langs: mirrorsLangsType[] ,socket:socketInstance|SchedulerClass, id:number): void;
   /**
    * Get manga infos (title, authors, tags, chapters, covers, etc..)
    * @param url Relative url to the manga page

@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 
@@ -267,12 +267,13 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
             :
               i+1;
 
-        chapters.push(await this.chaptersBuilder({
+        const built = await this.chaptersBuilder({
           name: current_chapter,
           number: chapter,
           url: chaplink,
           lang: this.langs[0],
-        }));
+        });
+        chapters.push(built);
       }
 
       const mg = await this.mangaPageBuilder({

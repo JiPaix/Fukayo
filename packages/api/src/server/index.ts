@@ -6,10 +6,11 @@ import { UUID } from '@api/db/uuids';
 import mirrors from '@api/models/exports';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
-import { Scheduler, SchedulerClass } from '@api/server/helpers/scheduler';
+import { Scheduler, SchedulerClass } from '@api/server/scheduler';
 import type { ServerToClientEvents, socketInstance } from '@api/server/types';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
+import { env } from 'process';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 
@@ -24,6 +25,7 @@ export default class IOWrapper {
   login:string;
   password:string;
   db:TokenDatabase;
+  #isReady = false;
   constructor(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}) {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
@@ -31,8 +33,30 @@ export default class IOWrapper {
     this.db = new TokenDatabase({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     this.use();
     this.io.on('connection', this.routes.bind(this));
-    // the Scheduler needs the ioServer to emit events to all connected clients
-    Scheduler.registerIO(this.io);
+    // async hell
+    // in memory database need to perform async operation
+    this.db.init().then(() => {
+      this.logger('token database loaded');
+      this.#initMirrors().then(() => {
+        this.logger('mirrors databases loaded');
+        // the Scheduler needs io to broadcast events
+        Scheduler.registerIO(this.io).then(() => {
+          this.#isReady = true; // this makes the server available only after the Scheduler is done
+          this.logger('scheduler is ready');
+        });
+      });
+    });
+
+  }
+
+  protected logger(...args: unknown[]) {
+    if(env.MODE === 'development') console.log('[api]', `(\x1b[33m${this.constructor.name}\x1b[0m)` ,...args);
+  }
+
+  async #initMirrors() {
+    for(const mirror of mirrors) {
+        await mirror.init();
+    }
   }
 
   authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: 'token'|'refreshToken', payload:string}[]}) {
@@ -52,8 +76,22 @@ export default class IOWrapper {
     o.next();
   }
 
+  #waitUntilReady():Promise<true> {
+    return new Promise((resolve) => {
+      const loop:() => void = () => this.#isReady ? resolve(true) : setTimeout(loop, 1000);
+      loop();
+    });
+  }
+
   use() {
     this.io.use(async (socket, next) => {
+
+      // delay all responses until databases and the scheduler are ready
+      if(!this.#isReady) {
+        await this.#waitUntilReady();
+      }
+      this.logger('server is ready');
+
       // use token to authenticate
       if(socket.handshake.auth.token) {
 

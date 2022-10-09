@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/tachidesk.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
@@ -59,6 +59,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
   constructor() {
     super({
       version: 1,
+      isDead: false,
       host: 'http://localhost',
       name: 'tachidesk',
       displayName: 'Tachidesk',
@@ -242,7 +243,7 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
         const name = chapter.name;
         const group = chapter.scanlator || undefined;
 
-        chapters.push(await this.chaptersBuilder({
+        const built = await this.chaptersBuilder({
           url: chapLink,
           name,
           number,
@@ -250,7 +251,8 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
           read,
           group,
           lang,
-        }));
+        });
+        chapters.push(built);
       }
       if(cancel) return;
       const mg = await this.mangaPageBuilder({
@@ -438,7 +440,6 @@ export class Tachidesk extends Mirror<{login?: string|null, password?:string|nul
     }
   }
 }
-
 
 const tachidesk = new Tachidesk();
 export default tachidesk;

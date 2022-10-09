@@ -271,7 +271,28 @@
     "source": "Source | Sources",
     "synopsis": "Synopsis",
     "tags": "Tags",
+    "title": "Titre",
     "volume": "Volume | Volumes"
+  },
+  "migrate": {
+    "bug": "Problèmes",
+    "close": "Fermer l'outil de migration",
+    "entry_status": "Statut d'entrée",
+    "hidden": "ces entrées sont actuellement masquées dans votre bibliothèque",
+    "insepect": "Inspecter",
+    "mirror_status": "Statut de la source",
+    "new": "Nouveau",
+    "old": "Ancien",
+    "search_candidates": "Commencez à chercher des candidats à la migration",
+    "search_different_mirror": "Migrer à l'aide d'une autre source",
+    "search_same_mirror": "Migrer en utilisant la même source",
+    "select_candidate": "Migrer",
+    "select_mirror": "Sélectionnez une ou plusieurs sources",
+    "solutions": "Options de migration disponibles",
+    "warning": "Certaines entrées sont marquées comme cassées et nécessitent votre attention."
+  },
+  "migration": {
+    "results": "Candidat à la migration"
   },
   "reader": {
     "copytoclipboard": "Copier l'image dans le presse-papiers",

@@ -5,10 +5,12 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    * mirror's implementation version
    *
    * ⚠️ Mirror version must be incremented ONLY IF the mirror changed all of its mangas/chapter urls.
-   *
    * or you introduce some changes that breaks previous version of mangas in db
+   *
    */
   version: number,
+  /** is the mirror dead */
+  isDead: boolean,
   /** slug name: `az-_` */
   name: string,
   /** full name */

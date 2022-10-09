@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
@@ -58,6 +58,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
   constructor() {
     super({
       version: 1,
+      isDead: false,
       host: 'http://localhost',
       name: 'komga',
       displayName: 'Komga',

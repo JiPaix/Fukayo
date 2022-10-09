@@ -1,7 +1,7 @@
 import { DatabaseIO } from '@api/db';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
@@ -15,6 +15,8 @@ type Mangas = {
     url: string,
     file: string,
     langs: mirrorsLangsType[],
+    lastUpdate: number
+    update:boolean
   }[]
 }
 
@@ -50,6 +52,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
       // and past "meta.options" from either the payload, the database (if any), or use default settings
       (payload.manga as MangaInDB).meta = {
         lastUpdate: Date.now(),
+        broken: false,
         notify: true,
         update: true,
         options : payload.settings || alreadyInDB_DATA?.meta.options || {
@@ -76,7 +79,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
       this.logger('new manga added');
       // save manga data in its own table
       const manga = await this.#upsert(mangadata, filename, false);
-      db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, langs: manga.langs, file: filename });
+      db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, langs: manga.langs, file: filename, update: manga.meta.update, lastUpdate: Date.now() });
       await this.write(db);
       return manga;
     }
@@ -147,6 +150,16 @@ export class MangasDB extends DatabaseIO<Mangas> {
     };
   }
 
+  async getIndexes() {
+    return (await this.read()).mangas;
+  }
+
+  /** @important do not use if you aren't 100% sure the filename points to an existing database */
+  async getByFilename(filename:string) {
+    const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), {} as MangaInDB);
+    return mangadb.read();
+  }
+
   async getAll(): Promise<MangaInDB[]>
   async getAll(id:number, socket: socketInstance|SchedulerClass): Promise<void>
   async getAll(id?:number, socket?:socketInstance|SchedulerClass): Promise<MangaInDB[]|void> {
@@ -209,6 +222,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
       hasNewStuff = true;
     }
 
+    // check if meta changed
+    if(manga.meta.broken !== data.meta.broken) hasNewStuff = true;
+    if(manga.meta.notify !== data.meta.notify) hasNewStuff = true;
+    if(manga.meta.update !== data.meta.update) hasNewStuff = true;
+    if(manga.mirror.version !== data.mirror.version) hasNewStuff = true;
+
     // check if the manga has new options
     for (k in manga.meta.options) {  // const k: string
       if(data.meta.options[k] !== manga.meta.options[k]) hasNewStuff = true;
@@ -231,9 +250,22 @@ export class MangasDB extends DatabaseIO<Mangas> {
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
     if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
       data = {...manga, covers: manga.covers, _v: data._v };
-      mangadb.write(data);
-    }
+      await mangadb.write(data);
+      const find = db.mangas.find(m => m.id === manga.id);
+      if(find) {
+        let updateIndex = false;
+        if(find.lastUpdate !== manga.meta.lastUpdate) {
+          find.lastUpdate = manga.meta.lastUpdate;
+          updateIndex = true;
+        }
+        if(find.update !== manga.meta.update) {
+          find.update = manga.meta.update;
+          updateIndex = true;
+        }
 
+        if(updateIndex) await this.write(db);
+      }
+    }
     return data;
   }
 

@@ -7,7 +7,7 @@ import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
@@ -39,6 +39,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #icon;
   /** mirror's implementation version */
   version: number;
+  /** is the mirror dead */
+  isDead: boolean;
   /**
    * does the mirror treats different languages for the same manga as different entries
    * @default true
@@ -101,8 +103,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * mirror specific options
    */
   #db: Database<MirrorConstructor<T>['options']>;
-
-
   constructor(opts: MirrorConstructor<T>) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     this.name = opts.name;
@@ -114,7 +114,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.#icon = opts.icon;
     this.meta = opts.meta;
     this.version = opts.version;
-
+    this.isDead = opts.isDead;
     if(typeof opts.entryLanguageHasItsOwnURL === 'boolean') this.entryLanguageHasItsOwnURL = opts.entryLanguageHasItsOwnURL;
 
     if(this.cacheEnabled) {
@@ -122,6 +122,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
     this.#db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+  }
+
+  async init() {
+    return this.#db.init();
   }
 
   public get enabled() {
@@ -165,6 +169,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     const { _v, ...options } = allOptions;
     return {
       version: this.version,
+      isDead: this.isDead,
       name: this.name,
       displayName: this.displayName,
       host: this.host,

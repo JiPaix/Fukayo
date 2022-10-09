@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/mangahasu.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@i18n/index';
@@ -13,6 +13,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
   constructor() {
     super({
       version: 1,
+      isDead: false,
       host: 'https://mangahasu.se',
       althost: ['https://www.mangahasu.se'],
       name: 'mangahasu',
@@ -180,13 +181,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const [, , , , , , , chapterName] = match || [];
         const name = chapterName ? chapterName.trim() : current_line.replace(/chapter|chap|chaps/gi, '').trim();
         if(!name || !name.length) continue;
-
-        chapters.push(await this.chaptersBuilder({
+        const built = await this.chaptersBuilder({
           name,
           number: i+1,
           url: chaplink,
           lang: this.langs[0],
-        }));
+        });
+        chapters.push(built);
       }
       if(cancel) return;
       const mg = await this.mangaPageBuilder({

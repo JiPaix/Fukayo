@@ -4,8 +4,10 @@ import { SettingsDatabase } from '@api/db/settings';
 import type Mirror from '@api/models';
 import mirrors from '@api/models/exports';
 import type MirrorInterface from '@api/models/interfaces';
-import type { MangaErrorMessage } from '@api/models/types/errors';
+import type { MangaErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
+import type { TaskDone } from '@api/models/types/shared';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import type { ServerToClientEvents } from '@api/server/types/index';
 import EventEmitter from 'events';
@@ -32,20 +34,18 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   io?: ioServer<ClientToServerEvents, ServerToClientEvents>;
   constructor() {
     super();
+
+    this.setMaxListeners(0);
+
+    // we are just asking this.#update() to check every 60s if updates are needed
+    // then according to "this.settings.waitBetweenUpdates" the acutal update will be processed (or not)
+
     this.#intervals = {
-      // we should perform checks every minute
       nextcache: Date.now() + 60000,
       cache: setTimeout(this.#clearcache.bind(this), 60000),
-      nextupdate: Date.now() + (this.settings.library.waitBetweenUpdates),
-      updates: setTimeout(this.update.bind(this), this.settings.library.waitBetweenUpdates),
+      nextupdate: Date.now() + 60000,
+      updates: setTimeout(this.update.bind(this), 60000),
     };
-
-    // wait 30s on startup to make sure async operations are done
-    setTimeout(() => {
-      this.#clearcache();
-      this.update();
-    }, 30*1000);
-
   }
 
   get logs() {
@@ -68,8 +68,17 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     return this.#ongoing.updates;
   }
 
-  registerIO(io:ioServer) {
+  async registerIO(io:ioServer) {
+    this.logger('Scheduler loaded');
     this.io = io;
+    try {
+      this.#clearcache();
+      await this.update(false, true);
+    } catch(e) {
+      this.logger('catch!', e);
+      return;
+    }
+    return;
   }
 
   #addMangaLog(message:'chapter'|'chapter_error'|'chapter_read'|'manga_metadata', mirror:string, id: string, nbOfUpdates:number):void {
@@ -122,7 +131,10 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
           });
         }
       }
-      if(total.files > 0 && total.size > 0) this.addCacheLog('cache', total.files, total.size);
+      if(total.files > 0 && total.size > 0) {
+        this.addCacheLog('cache', total.files, total.size);
+        this.logger('done purging cache');
+      }
       this.restartCache();
     }
   }
@@ -158,17 +170,17 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     clearTimeout(this.#intervals.cache);
     clearTimeout(this.#intervals.updates);
     if(this.cacheEnabled) {
-      this.#intervals.cache = setTimeout(this.update.bind(this), 300000);
-      this.#intervals.nextcache = Date.now() + 300000;
+      this.#intervals.cache = setTimeout(this.update.bind(this), 60000);
+      this.#intervals.nextcache = Date.now() + 60000;
     }
-    this.#intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
-    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), this.settings.library.waitBetweenUpdates);
+    this.#intervals.nextupdate = Date.now() + 60000;
+    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), 60000);
   }
 
   restartUpdate() {
     clearTimeout(this.#intervals.updates);
-    this.#intervals.updates = setTimeout(this.update.bind(this), this.settings.library.waitBetweenUpdates);
-    this.#intervals.nextupdate = Date.now() + (this.settings.library.waitBetweenUpdates);
+    this.#intervals.updates = setTimeout(this.update.bind(this), 60000);
+    this.#intervals.nextupdate = Date.now() + 60000;
   }
 
   restartCache() {
@@ -182,28 +194,36 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   /**
    * List all mangas that needs to be updated and start updates
    * @param force if true, will force the update of all the mangas
+   * @param onlyfixes do run update, just fix mangas
    */
-  async update(force?:boolean) {
-    this.logger('updating');
+  async update(force?:boolean, onlyfixes?:boolean) {
     // if we are already updating, return
     if(this.#ongoing.updates) return;
     // emit to all the clients that we are updating
     this.#ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
-    const mangaByMirror = await this.#getMangasToUpdate(force);
-    // setMaxListeners according to the number of manga to update
-    const nbMangas = Object.keys(mangaByMirror).reduce((acc, key) => acc + mangaByMirror[key].length, 0);
-    this.setMaxListeners(nbMangas + 1);
-    // update the mangas
-    for(const mirrorName of Object.keys(mangaByMirror)) {
+    const {updates, fixes} = await this.#getMangasToUpdate(force);
+
+    const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
+    if(nbMangas > 0) this.logger('updating...');
+    // fixes mangas
+    for(const mirrorName of Object.keys(fixes)) {
       const mirror = mirrors.find(m => m.name === mirrorName);
-      if(mirror) await this.#updateMangas(mirror, mangaByMirror[mirrorName]);
+      if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
+    }
+
+    if(!onlyfixes) {
+      // update mangas
+      for(const mirrorName of Object.keys(updates)) {
+        const mirror = mirrors.find(m => m.name === mirrorName);
+        if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
+      }
     }
     // emit to all the clients that we are done updating
     this.#ongoing.updates = false;
     if(this.io) this.io.emit('finishedMangasUpdate');
-    this.logger('done updating');
+    if(nbMangas > 0) this.logger('update finished');
     // restart update intervals/timeouts
     this.restartUpdate();
   }
@@ -213,20 +233,60 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    * @param force if true, will force the update of all the mangas
    */
   async #getMangasToUpdate(force?:boolean) {
-    // filter mangas were lastUpdate + waitBetweenUpdates is less than now
-    const mangas = (await MangaDatabase.getAll())
-      .filter(manga => {
+    const indexes = await MangaDatabase.getIndexes();
+
+    const indexesToUpdate = indexes.filter(i => {
+        // do not update manga's for disabled mirrors or entry version doesn't match mirror version
+        const find = mirrors.find(m => m.name === i.mirror.name);
+        if(find && !find.enabled) return false;
+        if(find && find.version !== i.mirror.version) return false;
+        // do not update manga's explicitly marked as "do not update";
+        if(!i.update) return false;
+        // update if force is true or enough time has passed
         if(force) return true;
-        else if((manga.meta.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
+        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
         else return false;
-      });
-    // groups mangas by mirror
-    const mangasByMirror: sortedMangas<typeof mangas[0]> = {};
-    mangas.forEach(manga => {
-      if(!mangasByMirror[manga.mirror.name]) mangasByMirror[manga.mirror.name] = [];
-      mangasByMirror[manga.mirror.name].push(manga);
     });
-    return mangasByMirror;
+
+    const mangasToUpdate:MangaInDB[] = [];
+
+    for(const index of indexesToUpdate) {
+      const manga = await MangaDatabase.getByFilename(index.file);
+      mangasToUpdate.push(manga);
+    }
+    // mangas to update by mirror
+    const mangasToUpdateByMirror: sortedMangas<typeof mangasToUpdate[0]> = {};
+    mangasToUpdate.forEach(manga => {
+      if(!mangasToUpdateByMirror[manga.mirror.name]) mangasToUpdateByMirror[manga.mirror.name] = [];
+      mangasToUpdateByMirror[manga.mirror.name].push(manga);
+    });
+
+    /**
+     * - mangas where version doesn't match mirror's version
+     * - mangas from dead mirrors
+     */
+    const indexesToFix = indexes.filter(manga => {
+      const find = mirrors.find(m => m.name === manga.mirror.name);
+      if(find && (find.version !== manga.mirror.version || find.isDead)) return true;
+      else return false;
+    });
+
+
+    const mangasToFix:MangaInDB[] = [];
+
+    for(const fix of indexesToFix) {
+      const manga = await MangaDatabase.getByFilename(fix.file);
+      mangasToFix.push(manga);
+    }
+    // mangas to fix by mirror
+    const mangasToFixByMirror: sortedMangas<typeof mangasToUpdate[0]> = {};
+    mangasToFix.forEach(manga => {
+      if(!mangasToFixByMirror[manga.mirror.name]) mangasToFixByMirror[manga.mirror.name] = [];
+      mangasToFixByMirror[manga.mirror.name].push(manga);
+    });
+
+
+    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror };
   }
 
   /**
@@ -234,7 +294,6 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    */
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
     const res:MangaInDB[] = [];
-    const now = Date.now();
     for(const manga of mangas) {
       this.logger('updating', manga.name, '@', manga.mirror);
       try {
@@ -297,7 +356,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       } catch(e) {
         this.#addMangaLog('chapter_error', mirror.name, manga.id, 0);
       }
-      res.push({...manga, meta: {...manga.meta, lastUpdate: now}});
+      res.push({...manga, meta: {...manga.meta, lastUpdate: Date.now() }});
     }
     res.forEach(async (m) => {
       await MangaDatabase.add({ manga: m });
@@ -307,9 +366,92 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   /**
+   * Re-add mangas with newer version of their mirrors
+   * - If mirror is marked as dead, mangas are automatically marked as "broken"
+   * - if new version of mirror couldn't find a manga with a matching name, manga is marked as "broken"
+   *
+   * @important Broken mangas require user to migrate to manually migrate to another mirror
+   * @important migrated mangas may have new ids
+   */
+  async #fixMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
+    // if mirror is dead
+    if(mirror.isDead) {
+      for(const manga of mangas) {
+        await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        this.logger('marked entry', manga.name, 'as broken: mirror dead');
+      }
+      return;
+    }
+    // if mirror version != mangas version
+    for(const manga of mangas) {
+      // search the manga with a newer version of mirror
+      try {
+        const remoteManga = await this.#search(mirror, manga);
+        // if there no exact match mark manga as "broken"
+        if(!remoteManga) {
+          await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+          this.logger('marked entry', manga.name, 'as broken: could not migrate');
+        }
+        // else copy as much data as possible
+        else {
+          // copy chapters read status
+          remoteManga.chapters.map(c => {
+            const find = manga.chapters.find(f => f.number === c.number);
+            return { ...c, read: find ? find.read : false };
+          });
+          // copy meta and reader option
+          const meta = manga.meta;
+          const userCategories = manga.userCategories;
+          // remove old version
+          for(const lang of manga.langs) {
+            await MangaDatabase.remove(manga, lang);
+          }
+          // add new version
+          await MangaDatabase.add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
+          this.logger('migrated:', manga.name, 'version:', remoteManga.mirror.version);
+        }
+      } catch(e) {
+        await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        this.logger('marked entry', manga.name, 'as broken: could not migrate');
+        this.logger(e);
+      }
+    }
+  }
+
+  /**
+   * Search manga (exact match)
+   */
+  async #search(mirror:Mirror & MirrorInterface, query: MangaInDB) {
+    const search:() => Promise<SearchResult[]> = () => new Promise(resolve => {
+      const reqId = Date.now();
+      const results:SearchResult[] = [];
+      const listener = (id: number, res: SearchResult | SearchErrorMessage | TaskDone) => {
+        if(id !== reqId) return;
+        // we ignore SearchErrorMessage
+        // at best we will find result next time update() is called
+        // at worst this process will repeat until we update the app and mark the mirror as dead
+        if((res as SearchResult).name) {
+          results.push(res as SearchResult);
+        }
+
+        if((res as TaskDone).done) {
+          this.removeListener('searchInMirrors', listener);
+          return resolve(results);
+        }
+      };
+      this.on('searchInMirrors', listener.bind(this));
+      mirror.search(query.name, query.langs, this, reqId);
+    });
+    const searchResults = await search();
+    const match = searchResults.find(s => s.name === query.name);
+    if(!match) return;
+    else return this.#fetch(mirror, match);
+  }
+
+  /**
    * Fetch data directly from the mirror
    */
-  async #fetch(mirror:Mirror & MirrorInterface, manga: MangaInDB):Promise<MangaPage> {
+  async #fetch(mirror:Mirror & MirrorInterface, manga: MangaInDB|SearchResult):Promise<MangaPage> {
     return new Promise((resolve, reject) => {
       const reqId = Date.now();
       // setting up our listener
@@ -336,6 +478,6 @@ type sortedMangas<T> = {
 }
 
 function isMangaPage(manga: MangaInDB|MangaPage|MangaErrorMessage): manga is MangaPage {
-  return (manga as MangaPage).inLibrary === false && typeof (manga as MangaInDB).meta === 'undefined';
+  return typeof (manga as MangaInDB).meta === 'undefined';
 }
 

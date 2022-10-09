@@ -35,8 +35,12 @@ export class Database<T extends object> {
       this.data = { ...defaultData, _v: packageJson.version };
     }
     this.#writer = new Writer(this.#file);
-    this.write();
+  }
+
+  async init() {
+    await this.write();
     this.logger('Database loaded', this.#file);
+    return this;
   }
 
   protected logger(...args: unknown[]) {

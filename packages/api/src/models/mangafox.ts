@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/mangafox.png';
 import type MirrorInterface from '@api/models/interfaces/index';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 
@@ -11,6 +11,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
   constructor() {
     super({
       version: 1,
+      isDead: false,
       host: 'https://fanfox.net',
       althost: [
         'http://fanfox.net',
@@ -214,13 +215,15 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         // ensure we at least have a chapter number OR a chapter name
         if(chapterNameTrim === undefined && chapterNumberFloat === undefined) return;
 
-        chapters.push(await this.chaptersBuilder({
+        const built = await this.chaptersBuilder({
           name: chapterNameTrim,
           number: chapterNumberFloat,
           volume: volumeNumberInt ? isNaN(volumeNumberInt) ? undefined : volumeNumberInt : undefined,
           url: chapterUrl,
           lang: this.langs[0],
-        }));
+        });
+
+        chapters.push(built);
       }
       // emitting the manga page based on MangaPage model
       if(cancel) return;

@@ -98,6 +98,8 @@ export interface MangaInDB extends MangaPage {
     notify: boolean,
     /** should the manga chapters list be updated  */
     update: boolean,
+    /** is the mirror broken */
+    broken: boolean,
     options: {
       webtoon: boolean,
       showPageNumber: boolean,

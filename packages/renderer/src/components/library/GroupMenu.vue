@@ -185,7 +185,7 @@ function QMenuLabelColor (unread:number) {
                 v-if="manga.langs.length === 1"
                 class="text-caption text-grey"
               >
-                {{ manga.langs[0] }}
+                {{ $t(`languages.${manga.langs[0]}`) }}
               </q-item-label>
               <q-item-label v-if="manga.langs.length === 1">
                 <span

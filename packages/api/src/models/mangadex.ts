@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/mangadex.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/helpers/scheduler';
+import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { mirrorsLang } from '@i18n/index';
@@ -221,6 +221,13 @@ type Routes = {
     }
     err: Routes['/auth/login']['err']
   },
+  '/manga/{id}/read': {
+    ok: {
+      result: 'ok',
+      data: string[],
+    }
+    err: Routes['/auth/login']['err']
+  },
   '/group': {
     err: Routes['/auth/login']['err']
     ok: {
@@ -245,6 +252,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   constructor() {
     super({
       version: 1,
+      isDead: false,
       host: 'https://mangadex.org',
       name: 'mangadex',
       displayName: 'MangaDex',
@@ -382,6 +390,27 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         this.#login();
       }
     }, 14 * 60 * 1000); // 14 minutes
+  }
+
+  async #getReadMarker(mangaId: string):Promise<string[]> {
+    if(!this.options.login || !this.options.password) return [];
+    if(!this.authToken || !this.sessionToken) return [];
+
+    try {
+      const res = await this.fetch<Routes['/manga/{id}/read']['ok']|Routes['/manga/{id}/read']['err']>({
+        url: this.#path(`/manga/${mangaId}/read`),
+        headers: this.#headers,
+      }, 'json');
+      if(res.result == 'ok') return res.data;
+      else {
+        this.logger('Couldn\'t get read markers', res);
+        return [];
+      }
+    } catch(e) {
+      if(e instanceof Error) this.logger('Couldn\'t get read markers', e.message);
+      else this.logger('Couldn\'t get read markers', e);
+      return [];
+    }
   }
 
   #path(path:string) {
@@ -627,24 +656,25 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const groups = res.data.map(x=>x.relationships.find(y=>y.type==='scanlation_group')?.id);
         const scanlators = await this.#findGroup(groups.filter(x => typeof x !== 'undefined') as string[]);
         scanlators.forEach(s => scanlationGroups.add(s));
+        // retrieving read markers
+        const readMarkers = await this.#getReadMarker(url.replace('/manga/', ''));
 
         const chapters:MangaPage['chapters'] = [];
 
-        res.data
-          .filter(x => !x.attributes.externalUrl || !x.attributes.chapter)
-          .forEach(async x => {
-            chapters.push(await this.chaptersBuilder({
-              id: x.id,
-              url: '/chapter/'+x.id,
-              lang: x.attributes.translatedLanguage,
-              date: new Date(x.attributes.readableAt).getTime(),
-              number: parseFloat(x.attributes.chapter as string),
-              volume: x.attributes.volume ? parseFloat(x.attributes.volume) : undefined,
-              name: x.attributes.title ? x.attributes.title : undefined,
-              read: false,
-              group: Array.from(scanlationGroups).find(s => s.id === x.relationships.find(r => r.type === 'scanlation_group')?.id)?.name,
-            }));
+        for(const x of res.data.filter(x => !x.attributes.externalUrl || !x.attributes.chapter)) {
+          const built = await this.chaptersBuilder({
+            id: x.id,
+            url: '/chapter/'+x.id,
+            lang: x.attributes.translatedLanguage,
+            date: new Date(x.attributes.readableAt).getTime(),
+            number: parseFloat(x.attributes.chapter as string),
+            volume: x.attributes.volume ? parseFloat(x.attributes.volume) : undefined,
+            name: x.attributes.title ? x.attributes.title : undefined,
+            read: readMarkers.includes(x.id),
+            group: Array.from(scanlationGroups).find(s => s.id === x.relationships.find(r => r.type === 'scanlation_group')?.id)?.name,
           });
+          chapters.push(built);
+        }
 
         const mg = await this.mangaPageBuilder({
           id: url.replace('/manga/', ''),

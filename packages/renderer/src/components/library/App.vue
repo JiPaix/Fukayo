@@ -6,6 +6,7 @@ import { useSocket } from '@renderer/components/helpers/socket';
 import type { MangaGroup, MangaInDBwithLabel } from '@renderer/components/library/@types';
 import GroupCard from '@renderer/components/library/GroupCard.vue';
 import GroupFilter from '@renderer/components/library/GroupFilter.vue';
+import MigrateManga from '@renderer/components/library/migrate/App.vue';
 import { chapterLabel } from '@renderer/components/reader/helpers';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -19,6 +20,8 @@ let socket: socketClientInstance | undefined;
 const settings = useSettingsStore();
 /** mangas in db */
 const mangasRAW = ref<MangaGroup[]>([]);
+/** mangas in db from dead mirrors */
+const deadMangas = ref<(MangaInDBwithLabel & { covers: string[], mirrorDisplayName: string, mirrorIcon: string })[]>([]);
 /** mirrors */
 const mirrors = ref<mirrorInfo[]>([]);
 /** search */
@@ -159,21 +162,27 @@ onMounted(async () => {
             id: manga.id,
             name: manga.name,
             displayName: manga.displayName,
+            synopsis: manga.synopsis,
+            tags: manga.tags,
+            authors: manga.authors,
             mirror: mirrorInfo.name,
+            dead: mirrorInfo.isDead,
+            broken: manga.meta.broken,
             url: manga.url,
+            meta: manga.meta,
             userCategories: manga.userCategories,
             unread: manga.chapters.filter(c => !c.read).length,
             chapters: manga.chapters.map((c, i) => {
               return {
+                ...c,
                 label: chapterLabel(c.number, c.name),
                 value: i,
-                read: c.read,
-                lang: c.lang,
               };
             }),
             langs: manga.langs,
           };
-          if(!group) {
+          if(mg.dead) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
+          else if(!group) {
             mangasRAW.value.push({
               name: manga.displayName || manga.name,
               mangas: [mg as MangaInDBwithLabel],
@@ -212,7 +221,11 @@ onBeforeUnmount(() => {
       @search="(input) => search = input"
       @filter="(mirrors, langs, userCategories) => filters = {mirrors, langs, userCategories}"
     />
-
+    <migrate-manga
+      v-if="deadMangas.length"
+      :mangas="deadMangas"
+      bug
+    />
     <q-infinite-scroll
       class="w-100 q-pa-lg"
     >
