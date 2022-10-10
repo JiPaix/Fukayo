@@ -425,6 +425,17 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     const search:() => Promise<SearchResult[]> = () => new Promise(resolve => {
       const reqId = Date.now();
       const results:SearchResult[] = [];
+
+      // auto-resolve after 60s
+      let done = false;
+      setTimeout(() => {
+        if(!done) {
+          done = true;
+          this.removeListener('searchInMirrors', listener);
+          resolve(results);
+        }
+      }, 60*1000);
+
       const listener = (id: number, res: SearchResult | SearchResult[] | SearchErrorMessage | TaskDone) => {
         if(id !== reqId) return;
         // we ignore SearchErrorMessage
@@ -434,6 +445,8 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
         if(Array.isArray(res)) res.forEach(r => results.push(r));
         else if((res as SearchResult).name) results.push(res as SearchResult);
         else if((res as TaskDone).done) {
+          if(done) return;
+          done = true;
           this.removeListener('searchInMirrors', listener);
           return resolve(results);
         }
