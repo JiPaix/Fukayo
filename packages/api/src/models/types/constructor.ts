@@ -73,7 +73,7 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
 
   /** Requests limits */
   requestLimits: {
-    /** time between each requests (or each batch of concurrent requests) */
+    /** time in ms between each requests (or each batch of concurrent requests) */
     time: number,
     /** number of requests that can be sent at once */
     concurrent: number
