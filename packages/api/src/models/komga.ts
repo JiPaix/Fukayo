@@ -64,8 +64,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       displayName: 'Komga',
       langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
       requestLimits: {
-        time: 400,
-        concurrent: 1,
+        time: 10,
+        concurrent: 5,
       },
       icon,
       meta: {
@@ -324,20 +324,20 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       for(const serie of $.content) {
         if(cancel) break;
 
-        const covers: string[] = [];
+          const covers: string[] = [];
         const img = await this.downloadImage(this.#path(`/series/${serie.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) covers.push(img);
 
         let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
         if(serie.metadata.language && serie.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(serie.metadata.language);
 
-        const mg = await this.searchResultsBuilder({
+          const mg = await this.searchResultsBuilder({
           id: serie.id,
           url: `/series/${serie.id}`,
           name: serie.metadata.title,
-          covers,
-          langs: [lang],
-        });
+            covers,
+            langs: [lang],
+          });
 
         socket.emit('showRecommend', id, mg);
       }
