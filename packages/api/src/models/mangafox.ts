@@ -32,6 +32,10 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         popularity: 0.6,
       },
       options: { enabled: true, cache:true, adult: true },
+      requestLimits: {
+        time: 400,
+        concurrent: 1,
+      },
     });
   }
 

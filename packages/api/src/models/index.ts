@@ -13,7 +13,7 @@ import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
 import type { mirrorsLangsType } from '@i18n/index';
-import type { AxiosError, AxiosRequestConfig } from 'axios';
+import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import axios from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
 import { load } from 'cheerio';
@@ -94,15 +94,22 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     popularity: number,
   };
   /**
-   * Time to wait in ms between requests
+   * Request limits
    */
-  waitTime: number;
+  #requestLimits: {
+    /** time between each requests (or each batch of concurrent requests) */
+    time: number,
+    /** number of requests that can be sent at once */
+    concurrent: number
+  };
 
 
   /**
    * mirror specific options
    */
   #db: Database<MirrorConstructor<T>['options']>;
+  #axios: AxiosInstance;
+
   constructor(opts: MirrorConstructor<T>) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     this.name = opts.name;
@@ -110,7 +117,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.host = opts.host;
     this.althost = opts.althost;
     this.langs = opts.langs;
-    this.waitTime = opts.waitTime || 200;
+    this.#requestLimits = opts.requestLimits;
     this.#icon = opts.icon;
     this.meta = opts.meta;
     this.version = opts.version;
@@ -122,6 +129,30 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
     this.#db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
+
+    // make sure we don't have concurrent requests and wait time is forced
+
+    this.#axios = axios.create();
+    this.#axios.interceptors.request.use((conf) => {
+      return new Promise((resolve) => {
+        const interval = setInterval(() => {
+          if (this.#concurrency < this.#requestLimits.concurrent) {
+            this.#concurrency++;
+            clearInterval(interval);
+            resolve(conf);
+          }
+        }, this.#requestLimits.time);
+      });
+    });
+
+    this.#axios.interceptors.response.use((response) => {
+      this.#concurrency = Math.max(0, this.#concurrency - 1);
+      return Promise.resolve(response);
+    }, (error) => {
+      this.#concurrency = Math.max(0, this.#concurrency - 1);
+      return Promise.reject(error);
+    });
+
   }
 
   async init() {
@@ -180,10 +211,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       options: options,
       entryLanguageHasItsOwnURL: this.entryLanguageHasItsOwnURL,
     };
-  }
-
-  async #wait() {
-    return new Promise(resolve => setTimeout(resolve, this.waitTime*this.#concurrency));
   }
 
   protected logger(...args: unknown[]) {
@@ -356,17 +383,15 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * downloadImage(url, false)
    */
   protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<string|undefined> {
-    this.#concurrency++;
     const {identifier, filename} = await this.#generateCacheFilename(url, dependsOnParams);
 
     const cache = await this.#loadFromCache({identifier, filename});
     if(cache) return this.#returnFetch(cache, filename);
 
-    await this.#wait();
     // fetch the image using axios, or use puppeteer as fallback
     let buffer:Buffer|undefined;
     try {
-      const ab = await axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config, timeout: 5000 });
+      const ab = await this.#axios.get<ArrayBuffer>(url,  { responseType: 'arraybuffer', headers: { referer: referer || this.host }, ...config, timeout: 5000 });
       buffer = Buffer.from(ab.data);
     } catch {
       const res = await this.crawler({url, referer: referer||this.host, waitForSelector: `img[src^="${identifier}"]`, ...config, timeout: 10000 }, true);
@@ -399,10 +424,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:AxiosRequestConfig) {
-    this.#concurrency++;
-    await this.#wait();
     try {
-      const resp = await axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
+      const resp = await this.#axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
       return this.#returnFetch(resp.data);
     } catch(e) {
       if((e as AxiosError).response) {
@@ -432,16 +455,11 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   protected async fetch<T>(config: ClusterJob, type:'json'):Promise<T>
   protected async fetch(config: ClusterJob, type:'string'):Promise<string>
   protected async fetch<T>(config: ClusterJob, type: 'html'|'json'|'string'): Promise<T|CheerioAPI|string> {
-    // wait for the previous request to finish (this.waitTime * this.concurrency)
-    this.#concurrency++;
-    await this.#wait();
-
     // fetch the data (try to use axios first, then puppeteer)
     const res = await this.#internalFetch<T>(config, type);
 
     // throw an error if both axios and puppeteer failed
     if(typeof res === 'undefined' || res instanceof Error) {
-      this.#concurrency--;
       throw res || new Error('no_response');
     }
     // parse the data into the requested type
@@ -452,25 +470,21 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
         try {
           return this.#returnFetch<T>(JSON.parse(res));
         } catch {
-          this.#concurrency--;
           throw new Error('invalid_json');
         }
       }
-      this.#concurrency--;
       throw new Error(`unknown_type: ${type}`);
     }
     // if the data is a JSON object, parse it into the requested type
     else if(typeof res === 'object') {
       if(type === 'json') return this.#returnFetch(res);
       if(type === 'string') return this.#returnFetch(JSON.stringify(res));
-      this.#concurrency--;
       if(type === 'html') {
         throw new Error('cant_parse_json_to_html');
       }
       throw new Error(`unknown_type: ${type}`);
     }
     else {
-      this.#concurrency--;
       throw new Error('unknown_fetch_error');
     }
   }
@@ -486,7 +500,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
 
     try {
       // try to use axios first
-      const response = await axios.get<string|T>(config.url, { ...config, timeout: 5000 });
+      const response = await this.#axios.get<string|T>(config.url, { ...config, timeout: 5000 });
 
       if(typeof response.data === 'string') {
 
@@ -510,8 +524,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #returnFetch<T>(data : T, filename?: undefined):T
   #returnFetch<T>(data : T, filename: string):string
   #returnFetch<T>(data : T, filename?: string|undefined):T|string {
-    this.#concurrency--;
-    if(this.#concurrency < 0) this.#concurrency = 0;
     if(data instanceof Buffer && filename) {
       return FileServer.getInstance().serv(data, filename);
     }

@@ -23,6 +23,10 @@ class scanfr extends MyMangaReaderCMS<{ enabled: boolean}> {
         cache:true,
         enabled: true,
       },
+      requestLimits: {
+        time: 400,
+        concurrent: 1,
+      },
     });
   }
 }

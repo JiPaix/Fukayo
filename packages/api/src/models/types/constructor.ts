@@ -70,10 +70,18 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
      */
     popularity: number,
   }
+
+  /** Requests limits */
+  requestLimits: {
+    /** time between each requests (or each batch of concurrent requests) */
+    time: number,
+    /** number of requests that can be sent at once */
+    concurrent: number
+  }
   /**
-   * Time to wait in ms between requests
+   *
    */
-  waitTime?: number,
+
   /**
    * Mirror specific option
    * @example { adult: true, lowres: false }
