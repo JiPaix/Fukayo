@@ -128,35 +128,72 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
 
       const url = this.#path(`/series?search=${query}`);
       const res = await this.fetch<searchContent>({url, auth: {username: this.options.login, password: this.options.password}}, 'json');
-      for(const result of res.content) {
-        if(cancel) break;
-        const name = result.metadata.title;
-        const covers: string[] = [];
-        const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-        if(img) covers.push(img);
 
-        const synopsis = result.metadata.summary;
-        const books = await this.fetch<bookContent>({url: this.#path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
-        const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
+      const result = res.content.reduce((resultArray:typeof res.content[], item, index) => {
+        const chunkIndex = Math.floor(index / 100);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
 
-        let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-        if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
+      await Promise.all(result.map(async res => {
+        const mangaList = (await Promise.all(res.map(async manga => {
+          if (cancel) return;
+          if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
+          if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
+          if (!manga.metadata.title.toLowerCase().includes(query.toLowerCase())) return;
 
-        if(!langs.some(l => l === lang)) return;
+          let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+          if(manga.metadata.language && manga.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(manga.metadata.language);
+          const covers: string[] = [];
 
-        const mg = await this.searchResultsBuilder({
-          id: result.id,
-          name,
-          url: `/series/${result.id}`,
-          synopsis,
-          covers,
-          last_release,
-          langs: [lang],
-        });
-        // we return the results based on SearchResult model
-        if(!cancel) socket.emit('searchInMirrors', id, mg);
-      }
-      if(cancel) return;
+          const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+          if (img) covers.push(img);
+
+          if (cancel) return;
+          const mg = await this.searchResultsBuilder({
+            id: manga.id,
+            url: `/series/${manga.id}`,
+            name: manga.metadata.title,
+            covers,
+            langs: [lang],
+          });
+          return mg;
+        }))).filter(ele => ele !== undefined) as SearchResult[];
+        if (cancel) return;
+        if (!cancel) socket.emit('showRecommend', id, mangaList);
+      }));
+      // for(const result of res.content) {
+      //   if(cancel) break;
+      //   const name = result.metadata.title;
+      //   const covers: string[] = [];
+      //   const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+      //   if(img) covers.push(img);
+
+      //   const synopsis = result.metadata.summary;
+      //   const books = await this.fetch<bookContent>({url: this.#path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
+      //   const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
+
+      //   let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+      //   if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
+
+      //   if(!langs.some(l => l === lang)) return;
+
+      //   const mg = await this.searchResultsBuilder({
+      //     id: result.id,
+      //     name,
+      //     url: `/series/${result.id}`,
+      //     synopsis,
+      //     covers,
+      //     last_release,
+      //     langs: [lang],
+      //   });
+      //   // we return the results based on SearchResult model
+      //   if(!cancel) socket.emit('searchInMirrors', id, mg);
+      // }
+      // if(cancel) return;
     } catch(e) {
       this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
