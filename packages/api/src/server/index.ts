@@ -292,7 +292,6 @@ export default class IOWrapper {
      */
     socket.on('addManga', async (payload, callback) => {
       const mg = await MangaDatabase.add(payload);
-      uuidgen.remove(mg.id);
       mg.chapters.forEach(c => uuidgen.remove(c.id));
       callback(mg);
     });
