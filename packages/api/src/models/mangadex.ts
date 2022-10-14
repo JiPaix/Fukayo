@@ -260,7 +260,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         .map(x=>x) // makes mirrorsLangs mutable
         .filter(x=>x!=='xx'), // remove "unknown" from lang list
       icon,
-      waitTime: 500,
+      requestLimits: {
+        time: 500,
+        concurrent: 1,
+      },
       entryLanguageHasItsOwnURL: false,
       meta: {
         speed: 0.7,

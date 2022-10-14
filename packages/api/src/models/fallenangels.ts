@@ -21,6 +21,10 @@ class FallenAngels extends MyMangaReaderCMS {
         cache:true,
         enabled: true,
       },
+      requestLimits: {
+        time: 400,
+        concurrent: 1,
+      },
     });
   }
 }

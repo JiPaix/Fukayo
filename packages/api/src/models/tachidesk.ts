@@ -66,7 +66,10 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
       name: 'tachidesk',
       displayName: 'Tachidesk',
       langs: mirrorsLang.map(x => x), // makes mirrorsLang mutable
-      waitTime: 100,
+      requestLimits: {
+        time: 400,
+        concurrent: 1,
+      },
       icon,
       meta: {
         speed: 1,

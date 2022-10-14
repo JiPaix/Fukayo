@@ -63,7 +63,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       name: 'komga',
       displayName: 'Komga',
       langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
-      waitTime: 100,
+      requestLimits: {
+        time: 400,
+        concurrent: 1,
+      },
       icon,
       meta: {
         speed: 1,
