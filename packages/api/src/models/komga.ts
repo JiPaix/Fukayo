@@ -332,11 +332,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         return resultArray;
       }, []);
 
-      this.logger('fetching', result.length, 'chunks of 100s');
-
-      await Promise.all(result.map(async (res, i) => {
-        this.logger('starting chunk', i);
-        const mangaList = (await Promise.all(res.map(async (manga) => {
+      await Promise.all(result.map(async res => {
+        const mangaList = (await Promise.all(res.map(async manga => {
           if (cancel) return;
           if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
           if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
@@ -359,7 +356,6 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           return mg;
         }))).filter(ele => ele !== undefined) as SearchResult[];
         if (cancel) return;
-        this.logger('end of chunk', i);
         if (!cancel) socket.emit('showRecommend', id, mangaList);
       }));
 
