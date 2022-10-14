@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
+import type { RecommendErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
@@ -25,6 +26,8 @@ const mirror = ref<mirrorInfo>();
 const recommendation = ref<SearchResult[]>([]);
 /** loading state */
 const loading = ref(true);
+/** error? */
+const error = ref<null|RecommendErrorMessage>(null);
 
 const mangaGroups = computed(() => {
   const names = recommendation.value.map(r => r.name);
@@ -71,9 +74,13 @@ onBeforeMount(async () => {
           if(recommendation.value.length === 0) mirror.value = result.mirrorinfo;
           if(!recommendation.value.some((r) => r.name === result.name)) recommendation.value.push(result);
         }
-        if(isTaskDone(result)) {
+        else if(isTaskDone(result)) {
           loading.value = false;
           socket?.off('showRecommend');
+        }
+        else {
+          loading.value = false;
+          error.value = result;
         }
       }
     }
@@ -120,6 +127,29 @@ onBeforeUnmount(async () => {
     </q-footer>
     <q-page-container>
       <q-page
+        v-if="error"
+        class="q-pa-md"
+      >
+        <q-banner
+          inline-actions
+          class="text-dark bg-grey-5"
+        >
+          <template #avatar>
+            <q-icon
+              name="signal_wifi_off"
+              color="negative"
+            />
+          </template>
+          <div class="flex">
+            <span class="text-bold">{{ $t('error') }}:</span>
+          </div>
+          <div class="flex">
+            <span class="text-caption">{{ error.trace || error.error }}</span>
+          </div>
+        </q-banner>
+      </q-page>
+      <q-page
+        v-else
         class="q-pa-md"
       >
         <div

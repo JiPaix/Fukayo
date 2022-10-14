@@ -18,6 +18,7 @@
       "show": "Show"
     }
   },
+  "error": "Error",
   "explore": {
     "inlibrary": "Followed",
     "meta": {

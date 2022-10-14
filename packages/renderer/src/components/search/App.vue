@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
+import type { SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
@@ -33,10 +34,10 @@ const inputRef = ref<HTMLInputElement | null>(null);
 const query = ref('');
 /** last search we actually proceeded */
 const currentQuery = ref('');
-/** display results */
-const display = ref(false);
 /** display a loading circle next the the input while processing the request */
 const loading = ref(false);
+/** search errored */
+const error = ref<null|SearchErrorMessage>(null);
 /** query results from the websocket */
 const rawResults = ref([] as (SearchResult)[]); // the raw search results
 /** all the results been fetched  */
@@ -153,7 +154,7 @@ async function research() {
   socket.emit('stopSearchInMirrors');
 
   // reset previous results
-  display.value = false;
+  error.value = null;
   currentQuery.value = query.value;
   rawResults.value = [];
   done.value = false;
@@ -171,7 +172,6 @@ async function research() {
       nbOfDonesToExpect,
     ) => {
       task.nbOfDonesToExpect = nbOfDonesToExpect;
-      display.value = true;
       loading.value = true;
 
       socket?.on('searchInMirrors', (id, res) => {
@@ -201,6 +201,11 @@ async function research() {
               loading.value = false;
               done.value = true;
             }
+          }
+          else {
+            loading.value = false;
+            error.value = res;
+            done.value = true;
           }
         }
       });
@@ -245,6 +250,29 @@ onBeforeUnmount(async () => {
     </q-footer>
     <q-page-container>
       <q-page
+        v-if="error"
+        class="q-pa-md"
+      >
+        <q-banner
+          inline-actions
+          class="text-dark bg-grey-5"
+        >
+          <template #avatar>
+            <q-icon
+              name="signal_wifi_off"
+              color="negative"
+            />
+          </template>
+          <div class="flex">
+            <span class="text-bold">{{ $t('error') }}:</span>
+          </div>
+          <div class="flex">
+            <span class="text-caption">{{ error.trace || error.error }}</span>
+          </div>
+        </q-banner>
+      </q-page>
+      <q-page
+        v-else
         class="q-pa-md"
       >
         <q-form
