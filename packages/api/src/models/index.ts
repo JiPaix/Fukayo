@@ -403,7 +403,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     await this.#wait();
     try {
       const resp = await axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
-      return resp.data;
+      return this.#returnFetch(resp.data);
     } catch(e) {
       if((e as AxiosError).response) {
         this.logger({
@@ -424,7 +424,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
           url,
         });
       }
-      return undefined;
+      return this.#returnFetch(undefined);
     }
   }
 
