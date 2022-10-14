@@ -2,6 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
 import { SchedulerClass } from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
@@ -315,33 +316,53 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           cancel = true;
         });
       }
+
       const url = this.#path('/series?size=2000');
       const $ = await this.fetch<searchContent>({
         url,
         auth: {username: this.options.login, password: this.options.password},
       }, 'json');
 
-      for(const serie of $.content) {
-        if(cancel) break;
+      const result = $.content.reduce((resultArray:typeof $.content[], item, index) => {
+        const chunkIndex = Math.floor(index / 100);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
 
+      this.logger('fetching', result.length, 'chunks of 100s');
+
+      await Promise.all(result.map(async (res, i) => {
+        this.logger('starting chunk', i);
+        const mangaList = (await Promise.all(res.map(async (manga) => {
+          if (cancel) return;
+          if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
+          if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
+
+          let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
+          if(manga.metadata.language && manga.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(manga.metadata.language);
           const covers: string[] = [];
-        const img = await this.downloadImage(this.#path(`/series/${serie.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-        if(img) covers.push(img);
 
-        let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-        if(serie.metadata.language && serie.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(serie.metadata.language);
+          const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+          if (img) covers.push(img);
 
+          if (cancel) return;
           const mg = await this.searchResultsBuilder({
-          id: serie.id,
-          url: `/series/${serie.id}`,
-          name: serie.metadata.title,
+            id: manga.id,
+            url: `/series/${manga.id}`,
+            name: manga.metadata.title,
             covers,
             langs: [lang],
           });
+          return mg;
+        }))).filter(ele => ele !== undefined) as SearchResult[];
+        if (cancel) return;
+        this.logger('end of chunk', i);
+        if (!cancel) socket.emit('showRecommend', id, mangaList);
+      }));
 
-        socket.emit('showRecommend', id, mg);
-      }
-      if(cancel) return;
     } catch(e) {
       this.logger('error while recommending mangas', e);
       if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
