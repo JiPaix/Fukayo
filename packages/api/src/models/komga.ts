@@ -163,7 +163,7 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           return mg;
         }))).filter(ele => ele !== undefined) as SearchResult[];
         if (cancel) return;
-        if (!cancel) socket.emit('showRecommend', id, mangaList);
+        if (!cancel) socket.emit('searchInMirrors', id, mangaList);
       }));
       // for(const result of res.content) {
       //   if(cancel) break;
