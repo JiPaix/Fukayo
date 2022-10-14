@@ -250,7 +250,7 @@ onBeforeUnmount(async () => {
     </q-footer>
     <q-page-container>
       <q-page
-        v-if="error"
+        v-if="error && !rawResults.length"
         class="q-pa-md"
       >
         <q-banner
