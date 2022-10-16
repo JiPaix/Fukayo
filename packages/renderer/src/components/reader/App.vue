@@ -207,6 +207,7 @@ async function getManga():Promise<void> {
           if(mg.chapters.some(x => x.lang === props.lang )) {
             manga.value = mg;
             error.value = null;
+            historyStore.manga = mg;
           } else {
             error.value = { error: 'manga_error', trace: $t('reader.error.chapterLang') };
           }
@@ -370,14 +371,20 @@ async function toggleInLibrary(mangaSettings:MangaInDB['meta']['options'] = loca
 
   if(isMangaInDB(manga.value)) {
     socket.emit('removeManga', manga.value, props.lang, () => {
-      if(manga.value) manga.value.inLibrary = false;
+      if(manga.value) {
+        manga.value.inLibrary = false;
+        historyStore.manga = manga.value;
+      }
     });
   }
 
   else if(isManga(manga.value)) {
     manga.value.inLibrary = true;
     socket.emit('addManga', { manga: manga.value, settings: mangaSettings}, () => {
-      if(manga.value) manga.value.inLibrary = true;
+      if(manga.value) {
+        manga.value.inLibrary = true;
+        historyStore.manga = manga.value;
+      }
     });
   }
 }
@@ -394,6 +401,7 @@ async function toggleRead(index: number, forceTRUE = false) {
 
   const newReadValue = forceTRUE ? true : !manga.value.chapters[index].read;
   manga.value.chapters[index].read = newReadValue;
+  historyStore.manga = manga.value;
 
   const socket = await useSocket(settings.server);
   /** !! this event only marks as read on the website's source, eg. mangadex */
@@ -419,7 +427,7 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
     // if browser couldn't update within 500ms, the scroll position isn't changed
     // 500ms is a good compromise between responsiveness and performance
   }
-  localReaderSettings.value = newSettings;
+  historyStore.manga = manga.value;
   if(isMangaInDB(manga.value)) {
     const socket = await useSocket(settings.server);
     socket.emit('addManga', { manga: manga.value, settings: newSettings }, () => {
