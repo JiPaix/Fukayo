@@ -3,7 +3,7 @@ import type { PiniaCustomStateProperties, PiniaPluginContext, StateTree } from '
 function iterate(store: StateTree & PiniaCustomStateProperties<StateTree>, local: StateTree & PiniaCustomStateProperties<StateTree>) {
   Object.keys(store).forEach(key => {
     if (key === '__proto__' || key === 'constructor') return;
-    if (typeof store[key] === 'object' && store[key] !== null) {
+    if (typeof store[key] === 'object' && store[key] !== null && !Array.isArray(store[key])) {
       if(!local[key]) local[key] = {};
       return iterate(store[key], local[key]);
     }
