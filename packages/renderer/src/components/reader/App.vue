@@ -694,7 +694,7 @@ function scrollToPage(index: number) {
           </div>
         </div>
         <chapter-scroll-buffer
-          v-if="nextChapter"
+          v-if="nextChapter && currentChapterFormatted.imgs.length === currentChapterFormatted.imgsExpectedLength"
           type="next"
           :chapter="nextChapter"
           :show="showNextChapterDiv"
