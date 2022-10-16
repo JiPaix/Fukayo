@@ -258,7 +258,6 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
   async chapter(link:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
@@ -280,7 +279,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const $ = await this.fetch({
         url: `${this.host}${link}`,
         cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
-        waitForSelector: '#xf-new',
+        waitForSelector: '.reader-main',
       }, 'html');
 
       // we gather every parameters needed to build the request to the actual image
@@ -332,7 +331,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
                 pvalue = pvalues.map(img => pix + img + '?cid=' + cid + '&key=' + key);
 
           // download and pass to client
-          const bs64 = await this.downloadImage(pvalue[0].replace(/^\/\//g, 'http://'), 'page');
+          const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
+          const bs64 = await this.downloadImage(imageLink);
           if(bs64) {
             socket.emit('showChapter', id, { index: i, src: bs64, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
             continue;
