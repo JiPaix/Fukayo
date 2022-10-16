@@ -17,8 +17,8 @@ import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
 
-export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
-
+export default class Scheduler extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
+  static #instance: Scheduler;
   #intervals: {
     updates: NodeJS.Timer;
     nextupdate: number;
@@ -47,6 +47,13 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       nextupdate: Date.now() + 60000,
       updates: setTimeout(this.update.bind(this), 60000),
     };
+  }
+
+  static getInstance(): Scheduler {
+    if (!this.#instance) {
+      this.#instance = new this();
+    }
+    return this.#instance;
   }
 
   get logs() {
@@ -105,7 +112,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   #clearcache() {
     if(this.cacheEnabled) {
       const { age, size } = this.cache;
-      let cacheFiles = SchedulerClass.getAllCacheFiles();
+      let cacheFiles = Scheduler.getAllCacheFiles();
       const total = { files: 0, size:0 };
       if(age.enabled) {
         // delete files older than max, and remove them from the array
@@ -113,7 +120,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
           if(file.age > age.max) {
             total.files++;
             total.size += file.size;
-            SchedulerClass.unlinkSyncNoFail(file.filename);
+            Scheduler.unlinkSyncNoFail(file.filename);
             return true;
           }
           return false;
@@ -127,7 +134,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
           cacheFiles.forEach(file => {
             total.files++;
             total.size += file.size;
-            SchedulerClass.unlinkSyncNoFail(file.filename);
+            Scheduler.unlinkSyncNoFail(file.filename);
             if(total.size < size.max) return false;
           });
         }
@@ -149,7 +156,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       if(existsSync(join(path, file))) {
         const stat = statSync(path + '/' + file);
         if (stat.isDirectory() && !stat.isSymbolicLink()) {
-          res = SchedulerClass.getAllCacheFiles(path + '/' + file, res);
+          res = Scheduler.getAllCacheFiles(path + '/' + file, res);
         } else if(!stat.isSymbolicLink()) {
           const filePath = join(path, file);
           res.push({filename: filePath, size: stat.size, age: Date.now() - stat.mtime.getTime()});
@@ -484,8 +491,6 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     });
   }
 }
-
-export const Scheduler = new SchedulerClass();
 
 type sortedMangas<T> = {
   [key: string]: T[];

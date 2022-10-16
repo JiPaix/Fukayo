@@ -3,7 +3,7 @@ import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
-import { SchedulerClass } from '@api/server/scheduler';
+import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
@@ -112,13 +112,13 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return res;
   }
 
-  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
-      if(!(socket instanceof SchedulerClass)) {
+      if(!(socket instanceof Scheduler)) {
         socket.once('stopSearchInMirrors', () => {
           this.logger('search canceled');
           this.stopListening(socket);
@@ -204,11 +204,11 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
@@ -291,10 +291,10 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
         cancel = true;
@@ -341,13 +341,13 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async recommend(socket: socketInstance|SchedulerClass, id: number) {
+  async recommend(socket: socketInstance|Scheduler, id: number) {
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
       // we will check if user don't need results anymore at different intervals
       let cancel = false;
-      if(!(socket instanceof SchedulerClass)) {
+      if(!(socket instanceof Scheduler)) {
         socket.once('stopShowRecommend', () => {
           this.logger('fetching recommendations canceled');
           cancel = true;

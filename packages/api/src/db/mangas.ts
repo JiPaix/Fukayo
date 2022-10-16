@@ -1,7 +1,7 @@
 import { DatabaseIO } from '@api/db';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
-import { SchedulerClass } from '@api/server/scheduler';
+import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import { FileServer } from '@api/utils/fileserv';
 import type { mirrorsLangsType } from '@i18n/index';
@@ -169,11 +169,11 @@ export default class MangasDB extends DatabaseIO<Mangas> {
   }
 
   async getAll(): Promise<MangaInDB[]>
-  async getAll(id:number, socket: socketInstance|SchedulerClass): Promise<void>
-  async getAll(id?:number, socket?:socketInstance|SchedulerClass): Promise<MangaInDB[]|void> {
+  async getAll(id:number, socket: socketInstance|Scheduler): Promise<void>
+  async getAll(id?:number, socket?:socketInstance|Scheduler): Promise<MangaInDB[]|void> {
     const db = await this.read();
     let cancel = false;
-    if(id && socket && !(socket instanceof SchedulerClass)) {
+    if(id && socket && !(socket instanceof Scheduler)) {
       socket.once('stopShowLibrary', () => {
         cancel = true;
       });

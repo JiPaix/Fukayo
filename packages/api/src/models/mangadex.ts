@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import icon from '@api/models/icons/mangadex.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/scheduler';
+import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { mirrorsLang } from '@i18n/index';
@@ -424,7 +424,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   // until SEASONAL lists are made public we show last released chapters
   async recommend(socket: socketInstance, id: number) {
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowRecommend', () => {
         this.logger('fetching recommendations canceled');
         this.stopListening(socket);
@@ -500,10 +500,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     }
   }
 
-  async search(query:string, langs: mirrorsLangsType[], socket: socketInstance|SchedulerClass, id:number) {
+  async search(query:string, langs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     try {
       let cancel = false;
-      if(!(socket instanceof SchedulerClass)) {
+      if(!(socket instanceof Scheduler)) {
         socket.once('stopSearchInMirrors', () => {
           this.logger('search canceled');
           this.stopListening(socket);
@@ -590,10 +590,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     }
   }
 
-  async manga(url:string, requestedLangs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number) {
+  async manga(url:string, requestedLangs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
@@ -714,7 +714,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
 
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
         this.stopListening(socket);

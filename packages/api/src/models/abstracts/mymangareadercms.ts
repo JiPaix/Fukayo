@@ -2,7 +2,7 @@ import Mirror from '@api/models';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
-import { SchedulerClass } from '@api/server/scheduler';
+import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 
@@ -143,7 +143,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
   async recommend(socket: socketInstance, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowRecommend', () => {
         this.logger('fetching recommendations canceled');
         this.stopListening(socket);
@@ -193,11 +193,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return this.stopListening(socket);
   }
 
-  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|SchedulerClass, id:number)  {
+  async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number)  {
 
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
@@ -297,10 +297,10 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return this.stopListening(socket);
   }
 
-  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|SchedulerClass, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(!(socket instanceof SchedulerClass)) {
+    if(!(socket instanceof Scheduler)) {
       socket.once('stopShowChapter', () => {
         this.logger('fetching chapter canceled');
         this.stopListening(socket);

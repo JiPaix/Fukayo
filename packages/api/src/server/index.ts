@@ -6,7 +6,7 @@ import UUID from '@api/db/uuids';
 import mirrors from '@api/models/exports';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
-import { Scheduler, SchedulerClass } from '@api/server/scheduler';
+import Scheduler from '@api/server/scheduler';
 import type { ServerToClientEvents, socketInstance } from '@api/server/types';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
@@ -38,7 +38,7 @@ export default class IOWrapper {
       this.#initMirrors().then(() => {
         this.logger('mirrors databases loaded');
         // the Scheduler needs io to broadcast events
-        Scheduler.registerIO(this.io).then(() => {
+        Scheduler.getInstance().registerIO(this.io).then(() => {
           this.#isReady = true; // this makes the server available only after the Scheduler is done
           this.logger('scheduler is ready');
         });
@@ -331,7 +331,7 @@ export default class IOWrapper {
      * callback returns the size and number of files
      */
     socket.on('getCacheSize', callback => {
-      const b = SchedulerClass.getAllCacheFiles();
+      const b = Scheduler.getAllCacheFiles();
       const files = b.length;
       const size = b.reduce((acc, cur) => acc + cur.size, 0);
       callback(size, files);
@@ -348,7 +348,7 @@ export default class IOWrapper {
      * Scheduler will broadcast a 'startMangasUpdate' then 'finishedMangasUpdate' event to all clients during the update
      */
     socket.on('forceUpdates', () => {
-      Scheduler.update(true);
+      Scheduler.getInstance().update(true);
     });
 
     /**
@@ -356,11 +356,11 @@ export default class IOWrapper {
      * callback returns the status (true if the update is running, false otherwise)
      */
     socket.on('isUpdating', (cb) => {
-      cb(Scheduler.isUpdatingMangas);
+      cb(Scheduler.getInstance().isUpdatingMangas);
     });
 
     socket.on('schedulerLogs', (cb) => {
-      cb(Scheduler.logs);
+      cb(Scheduler.getInstance().logs);
     });
 
     socket.on('getSettings', (cb) => {
@@ -386,8 +386,8 @@ export default class IOWrapper {
       // we need to write the new settings to the database before restarting the cache/update timers
       SettingsDB.getInstance().data = settings;
       SettingsDB.getInstance().write();
-      if(restartUpdates) Scheduler.restartUpdate();
-      if(restartCache) Scheduler.restartCache();
+      if(restartUpdates) Scheduler.getInstance().restartUpdate();
+      if(restartCache) Scheduler.getInstance().restartCache();
       cb(SettingsDB.getInstance().data);
     });
   }

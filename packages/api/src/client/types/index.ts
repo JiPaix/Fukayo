@@ -1,7 +1,7 @@
 import type SettingsDB from '@api/db/settings';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { Scheduler } from '@api/server/scheduler';
+import type Scheduler from '@api/server/scheduler';
 import type { ServerToClientEvents } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import type { Socket } from 'socket.io-client';
@@ -37,7 +37,7 @@ export type ClientToServerEvents = {
   getMangaURLfromChapterURL: (id:number, url:string, lang?:mirrorsLangsType) => void;
   forceUpdates: () => void;
   isUpdating: (callback:(isUpdating:boolean)=>void) => void;
-  schedulerLogs: (callback:(logs:typeof Scheduler['logs'])=>void) => void;
+  schedulerLogs: (callback:(logs:Scheduler['logs'])=>void) => void;
   getSettings: (callback:(settings:SettingsDB['data'])=>void) => void;
   changeSettings: (settings:SettingsDB['data'], callback:(settings:SettingsDB['data'])=>void) => void;
   markAsRead: ({ mirror, lang, url, chapterUrls, read }: { mirror:string, lang:mirrorsLangsType, url:string, chapterUrls:string[], read:boolean }) => void;
