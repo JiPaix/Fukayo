@@ -141,6 +141,8 @@ onMounted(() => {
       color="orange"
       :label="$t('library.filter_by_name')"
       class="col-12"
+      autocomplete="off"
+      type="search"
       @keyup="emit('search', search)"
     />
     <div class="col-12 q-mt-md text-center">

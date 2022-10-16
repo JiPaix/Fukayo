@@ -175,6 +175,7 @@ onBeforeMount(async () => {
           v-model="query"
           name="search"
           type="search"
+          autocomplete="off"
           :placeholder="$t('explore.placeholder')"
           outlined
           clearable
