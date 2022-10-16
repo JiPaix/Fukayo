@@ -294,7 +294,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       const coverFileName = `${i}_cover_${c}`;
       const path = resolve(this.#path, coverFileName);
       if(!existsSync(path)) {
-        const data = FileServer.getInstance().get(c);
+        const data = FileServer.getInstance('fileserver').get(c);
         if(data) writeFileSync(path, data);
       }
       return coverFileName;
@@ -309,7 +309,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       const path = resolve(this.#path, f);
       if(existsSync(path)) {
         this.logger('should serv:', path);
-        const serv = FileServer.getInstance().serv(readFileSync(path),f);
+        const serv = FileServer.getInstance('fileserver').serv(readFileSync(path),f);
         res.push(serv);
       }
     });

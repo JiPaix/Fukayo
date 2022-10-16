@@ -19,7 +19,7 @@ export class FileServer {
     this.empty();
   }
 
-  static getInstance(folder?:string) {
+  static getInstance(folder:string) {
     if (this.#instance) {
         return this.#instance;
     }

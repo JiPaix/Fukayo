@@ -23,7 +23,7 @@ import { env } from 'process';
 
 const uuidgen = UUID.getInstance();
 const settings = SettingsDB.getInstance();
-const fileServer = FileServer.getInstance();
+const fileServer = FileServer.getInstance('fileserver');
 const mangadb = MangasDB.getInstance();
 
 /**
