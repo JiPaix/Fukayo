@@ -125,7 +125,7 @@ async function reload(pageIndex: number) {
         class="bg-negative flex flex-center"
         :style="`height:${$q.screen.height-82}px;width:100%;`"
       >
-        IMAGE ERROR PLEASE RELOAD
+        {{ $t('reader.reloadImage') }}
       </div>
     </div>
     <div v-else-if="isChapterImage(img)">
