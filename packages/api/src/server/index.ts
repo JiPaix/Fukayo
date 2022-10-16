@@ -18,7 +18,7 @@ import type { ExtendedError } from 'socket.io/dist/namespace';
  * Initialize a socket.io server
  */
 export default class IOWrapper {
-
+  static #instance: IOWrapper;
   io: ioServer<ClientToServerEvents, ServerToClientEvents>;
   login:string;
   password:string;
@@ -45,6 +45,13 @@ export default class IOWrapper {
       });
     });
 
+  }
+
+  static getInstance(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}): IOWrapper {
+    if (!this.#instance) {
+      this.#instance = new this(runner, CREDENTIALS, tokens);
+    }
+    return this.#instance;
   }
 
   protected logger(...args: unknown[]) {
