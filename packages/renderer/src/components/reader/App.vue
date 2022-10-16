@@ -5,7 +5,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDb } from '@renderer/components/helpers/typechecker';
+import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import chapterScrollBuffer from '@renderer/components/reader/chapterScrollBuffer.vue';
 import { isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
@@ -67,7 +67,7 @@ const doubleTapLeft = ref(0);
 /** count double-taps right when last page is onscreen */
 const doubleTapRight = ref(0);
 /** reader settings so they don't overwrite global options */
-const localReaderSettings = ref(manga.value && isMangaInDb(manga.value) ? manga.value.meta.options : settings.reader);
+const localReaderSettings = ref(manga.value && isMangaInDB(manga.value) ? manga.value.meta.options : settings.reader);
 
 
 /** formatted chapters (before sort) */
@@ -201,7 +201,7 @@ async function getManga():Promise<void> {
   return new Promise(resolve => {
     socket.once('showManga', (id, mg) => {
       if(id === reqId) {
-        if(isManga(mg) || isMangaInDb(mg)) {
+        if(isManga(mg) || isMangaInDB(mg)) {
           if(mg.chapters.some(x => x.lang === props.lang )) {
             manga.value = mg;
             error.value = null;
@@ -365,7 +365,7 @@ async function toggleInLibrary(mangaSettings:MangaInDB['meta']['options'] = loca
   if(!manga.value) return;
   const socket = await useSocket(settings.server);
 
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     socket.emit('removeManga', manga.value, props.lang, () => {
       if(manga.value) manga.value.inLibrary = false;
     });
@@ -391,8 +391,6 @@ async function toggleRead(index: number, forceTRUE = false) {
 
   const newReadValue = forceTRUE ? true : !manga.value.chapters[index].read;
   manga.value.chapters[index].read = newReadValue;
-
-  if(!isMangaInDb(manga.value)) return;
 
   const socket = await useSocket(settings.server);
   /** !! this event only marks as read on the website's source, eg. mangadex */
@@ -422,7 +420,7 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
     // 500ms is a good compromise between responsiveness and performance
   }
   localReaderSettings.value = newSettings;
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     const socket = await useSocket(settings.server);
     socket.emit('addManga', { manga: manga.value, settings: newSettings }, () => {
       // new settings saved
@@ -585,7 +583,7 @@ function scrollToPage(index: number) {
         :chapters="manga.chapters"
         :current-chapter-id="currentChapterId"
         :in-library="manga.inLibrary"
-        :reader-settings="isMangaInDb(manga) ? manga.meta.options : settings.reader"
+        :reader-settings="isMangaInDB(manga) ? manga.meta.options : settings.reader"
         @load-index="loadIndex"
         @toggle-in-library="toggleInLibrary"
         @toggle-read="toggleRead"

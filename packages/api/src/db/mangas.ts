@@ -1,4 +1,5 @@
 import { DatabaseIO } from '@api/db';
+import { isMangaInDB } from '@api/db/helpers';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import Scheduler from '@api/server/scheduler';
@@ -19,10 +20,6 @@ type Mangas = {
     lastUpdate: number
     update:boolean
   }[]
-}
-
-function isMangaInDB(res: MangaPage | MangaInDB ): res is MangaInDB {
-  return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
 }
 
 export default class MangasDB extends DatabaseIO<Mangas> {

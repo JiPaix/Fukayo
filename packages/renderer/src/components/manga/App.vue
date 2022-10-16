@@ -10,7 +10,7 @@ import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import {
 isManga,
 // eslint-disable-next-line comma-dangle
-isMangaInDb
+isMangaInDB
 } from '@renderer/components/helpers/typechecker';
 import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -135,10 +135,10 @@ function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]
 function toggleInLibrary() {
   if(!manga.value) return;
 
-  if(isManga(manga.value) && !isMangaInDb(manga.value)) {
+  if(isManga(manga.value) && !isMangaInDB(manga.value)) {
     add();
   }
-  else if(!isManga(manga.value) && isMangaInDb(manga.value)) {
+  else if(!isManga(manga.value) && isMangaInDB(manga.value)) {
     remove();
   }
 }
@@ -162,7 +162,7 @@ async function remove() {
   // get the language index
   const langIndex = manga.value.langs.findIndex(i => i === selectedLanguage.value);
 
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
       mangaRaw.value = { ...res, covers: res.covers.map(c => transformIMGurl(c, settings)) };
       // automatically select another language when current is deleted
@@ -175,7 +175,7 @@ async function remove() {
 async function updateManga(updatedManga:MangaInDB|MangaPage) {
   if(!manga.value) return;
   if(!socket) socket = await useSocket(settings.server);
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     socket.emit('addManga', { manga: updatedManga }, (res) => {
       mangaRaw.value = {...res, covers: manga.value?.covers||[] };
     });
@@ -344,7 +344,7 @@ const userCategories = ref<string[]>([]);
 function removeCategory(catName:string) {
   if(!manga.value) return;
   userCategories.value = userCategories.value.filter(cat => cat !== catName);
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     manga.value.userCategories = userCategories.value;
     updateManga(manga.value);
   }
@@ -355,7 +355,7 @@ function addCategory(catName: string) {
   if(!manga.value) return;
   if(userCategories.value.includes(catName)) return;
   userCategories.value.push(catName);
-  if(isMangaInDb(manga.value)) {
+  if(isMangaInDB(manga.value)) {
     manga.value.userCategories = userCategories.value;
     updateManga(manga.value);
   }
@@ -381,7 +381,7 @@ async function startFetch() {
 
   socket.once('showManga', (id, mg) => {
     if (id === reqId) {
-      if((isManga(mg) || isMangaInDb(mg))) {
+      if((isManga(mg) || isMangaInDB(mg))) {
         nodata.value = null;
         // When the manga is fetched from recommendation no language filter is applied we have to this ourself
         if(!mg.inLibrary) { // making sure we don't hide something that might be in the user's library
@@ -602,11 +602,11 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   <q-btn
                     v-if="manga"
                     class="w-100"
-                    :icon="isMangaInDb(manga) ? 'o_delete_forever': 'o_library_add'"
-                    :color="isMangaInDb(manga) ? 'negative' : 'orange'"
-                    :text-color="isMangaInDb(manga) ? 'white': 'dark'"
+                    :icon="isMangaInDB(manga) ? 'o_delete_forever': 'o_library_add'"
+                    :color="isMangaInDB(manga) ? 'negative' : 'orange'"
+                    :text-color="isMangaInDB(manga) ? 'white': 'dark'"
                   >
-                    {{ isMangaInDb(manga) ? $t('reader.manga.remove') : $t('reader.manga.add') }}
+                    {{ isMangaInDB(manga) ? $t('reader.manga.remove') : $t('reader.manga.add') }}
                   </q-btn>
                   <q-skeleton
                     v-else
