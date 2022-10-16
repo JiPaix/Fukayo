@@ -79,6 +79,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     // now only "alreadyInDB" is able to tell us if the manga is actually in the db or not.
     if(alreadyInDB) {
       this.logger('updating manga');
+      if(payload.settings) mangadata.meta.options = payload.settings;
       return this.#upsert(mangadata, filename, true);
     }
     else {
