@@ -55,8 +55,11 @@ export class UUID extends Database<uuids> {
   }
 
   #save(id: Omit<uuid, 'id'>) {
-    const uuid = uuidv5(id.mirror + id.langs.join() + id.url, this.#NAMESPACE);
-    this.data.ids.push({id: uuid, ...id});
+    const uuid = uuidv5(id.mirror + id.url, this.#NAMESPACE);
+    // update uuid if it already exists
+    const search = this.data.ids.findIndex(i => i.id === uuid);
+    if(search > -1) this.data.ids[search] = { ...id, id: uuid, langs: Array.from(new Set(this.data.ids[search].langs.concat(id.langs))) };
+    else this.data.ids.push({id: uuid, ...id});
     this.#pending++;
     return uuid;
   }
@@ -71,12 +74,10 @@ export class UUID extends Database<uuids> {
   }
 
   #force(uuid: uuid & { id: string }):string {
-    const find = this.data.ids.find(i => i.id === uuid.id);
-    if(!find) this.data.ids.push(uuid);
-    else {
-      find.langs = Array.from(new Set(find.langs.concat(uuid.langs)));
-      find.url = uuid.url;
-    }
+    // update uuid if it already exists
+    const search = this.data.ids.findIndex(i => i.id === uuid.id);
+    if(search > -1) this.data.ids[search] = { ...this.data.ids[search], url: uuid.url,langs: Array.from(new Set(this.data.ids[search].langs.concat(uuid.langs))) };
+    else this.data.ids.push(uuid);
     this.#pending++;
     return uuid.id;
   }
