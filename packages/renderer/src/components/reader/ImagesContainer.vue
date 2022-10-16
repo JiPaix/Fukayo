@@ -2,7 +2,7 @@
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
-import { isChapterImage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
+import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
@@ -104,6 +104,16 @@ async function reload(pageIndex: number) {
 </script>
 
 <template>
+  <q-linear-progress
+    v-if="imgs.length !== expectedLength"
+    :dark="$q.dark.isActive"
+    class="fixed-bottom"
+    style="margin-left: 0;"
+    size="4px"
+    :color="imgs.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img)) ? 'negative' : 'positive'"
+    :value="imgs.length/expectedLength"
+    animation-speed="500"
+  />
   <div
     v-for="(img, j) in imgs"
     :id="`page-${j+1}`"

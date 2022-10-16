@@ -691,16 +691,6 @@ function scrollToPage(index: number) {
               @scroll-to-page="scrollToPage"
               @load-next="loadNext"
             />
-            <q-linear-progress
-              v-if="currentChapterFormatted.imgs.length !== currentChapterFormatted.imgsExpectedLength"
-              :dark="$q.dark.isActive"
-              class="absolute absolute-bottom q-mx-sm"
-              style="margin-left: 0;"
-              size="4px"
-              :color="currentChapterFormatted.imgs.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img)) ? 'negative' : 'positive'"
-              :value="currentChapterFormatted.imgs.length/currentChapterFormatted.imgsExpectedLength"
-              animation-speed="500"
-            />
           </div>
         </div>
         <chapter-scroll-buffer
