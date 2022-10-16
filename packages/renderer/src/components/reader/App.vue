@@ -67,7 +67,7 @@ const doubleTapLeft = ref(0);
 /** count double-taps right when last page is onscreen */
 const doubleTapRight = ref(0);
 /** reader settings so they don't overwrite global options */
-const localReaderSettings = ref(manga.value && isMangaInDB(manga.value) ? manga.value.meta.options : settings.reader);
+const localReaderSettings = computed(() => manga.value && isMangaInDB(manga.value) ? manga.value.meta.options : settings.reader);
 
 
 /** formatted chapters (before sort) */
