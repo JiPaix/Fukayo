@@ -520,13 +520,24 @@ onBeforeUnmount(turnOff);
 let scrollInterval: ReturnType<typeof setInterval> | null = null;
 
 function scrollToPage(index: number) {
+  if(localReaderSettings.value.longStrip) {
+    const container = document.querySelector('.fit.scroll.chapters') as HTMLElement | null;
+    const upward = index <= currentPage.value-2;
+    if(!container) return;
     if(scrollInterval) {
       clearInterval(scrollInterval);
       scrollInterval = null;
     }
-    const container = document.querySelector('.fit.scroll.chapters') as HTMLElement | null;
-    const upward = index <= currentPage.value-2;
-    if(container) {
+    if(localReaderSettings.value.webtoon) {
+      const percent = ($q.screen.height * 80)/100;
+      let toScroll = percent;
+      scrollInterval = setInterval( () => {
+        if(!scrollInterval) return;
+        container.scrollBy(0, upward ? -20 : 20);
+        toScroll = toScroll - 20;
+        if(toScroll <= 0) return clearInterval(scrollInterval);
+      }, 1);
+    } else {
       scrollInterval = setInterval(async () => {
         if(!scrollInterval) return;
 
@@ -545,6 +556,7 @@ function scrollToPage(index: number) {
         }
       },1);
     }
+  }
 }
 
 </script>
