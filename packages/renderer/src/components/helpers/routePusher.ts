@@ -8,11 +8,10 @@ export type mangaRoute = {
 }
 
 export type readerRoute = {
-  mirror?: string,
-  lang?: string,
-  url?: string,
+  mirror: string,
+  lang: mirrorsLangsType,
   id: string,
-  parentId: string,
+  chapterId: string,
 }
 
 export function routeTypeHelper(routeName: 'reader', params: readerRoute): {name: 'reader', params: readerRoute }

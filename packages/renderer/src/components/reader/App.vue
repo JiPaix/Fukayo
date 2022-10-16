@@ -2,6 +2,8 @@
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDb } from '@renderer/components/helpers/typechecker';
 import chapterScrollBuffer from '@renderer/components/reader/chapterScrollBuffer.vue';
@@ -10,24 +12,27 @@ import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
 import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
+import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { scroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref } from 'vue';
-
+import { useI18n } from 'vue-i18n';
 /** props */
 const props = defineProps<{
-  mirror?: string,
-  lang?: string,
-  url?: string,
+  mirror: string,
+  lang: mirrorsLangsType,
   id: string,
-  parentId: string,
+  chapterId: string,
 }>();
 
-/** settings */
+/** settings store */
 const settings = useSettingsStore();
+/** history store */
+const historyStore = useHistoryStore();
 /** quasar */
 const $q = useQuasar();
-
+/** i18n */
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
 /** sidebar */
@@ -35,7 +40,7 @@ const rightDrawerOpen = ref(false);
 /** chapters ref */
 const chaptersRef = ref<null|HTMLDivElement>(null);
 /** chapter id user is currently reading */
-const currentChapterId = ref(props.id);
+const currentChapterId = ref(props.chapterId);
 /** current page */
 const currentPage = ref(0);
 /** current pages length */
@@ -103,7 +108,7 @@ const currentChapterFormatted = computed(() => {
 
 
 /** previous chapter */
-const prevChapter = computed(() => {
+const nextChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
   if(!chapter) return null;
@@ -113,7 +118,7 @@ const prevChapter = computed(() => {
 });
 
 /** next chapter */
-const nextChapter = computed(() => {
+const prevChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
   if(!chapter) return null;
@@ -127,27 +132,27 @@ async function loadIndex(index: number) {
   if(!manga.value) return;
   // check if index exists
   const chapter = manga.value.chapters[index];
-  if(chapter) getChapter(chapter.id, chapter.url, {});
+  if(chapter) getChapter(chapter.id, {});
 }
 
 /** load the next chapter in cache */
-async function loadNext() {
+async function loadPrev(scrollup?: boolean) {
   if(!manga.value) return;
   if(!currentChapterFormatted.value) return;
   if(currentChapterFormatted.value.index === 0) return;
   // check if next chapter exists
   const chapter = manga.value.chapters[currentChapterFormatted.value.index - 1];
-  if(chapter) getChapter(chapter.id, chapter.url, {});
+  if(chapter) getChapter(chapter.id, {scrollup});
 }
 
 /** load previous chapter in cache */
-async function loadPrev(scrollup?: boolean) {
+async function loadNext() {
   if(!manga.value) return;
   if(!currentChapterFormatted.value) return;
   if(currentChapterFormatted.value.index === 0) return;
   // check if previous chapter exists
   const chapter = manga.value.chapters[currentChapterFormatted.value.index + 1];
-  if(chapter) getChapter(chapter.id, chapter.url, {scrollup});
+  if(chapter) getChapter(chapter.id, {});
 }
 
 function onImageVisible(imageIndex:number, chapterId:string) {
@@ -178,22 +183,35 @@ function changeURL(chapterId: string) {
 /** get manga info: triggered once at page load */
 async function getManga():Promise<void> {
   RAWchapters.value = [];
+  if(historyStore.manga) {
+    if(historyStore.manga.id === props.id) {
+      error.value = null;
+      manga.value = historyStore.manga;
+      return;
+    }
+  }
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
   socket.emit('showManga', reqId, {
-    id: props.parentId,
+    mirror: props.mirror,
+    id: props.id,
+    langs: [props.lang],
   });
+
   return new Promise(resolve => {
     socket.once('showManga', (id, mg) => {
       if(id === reqId) {
         if(isManga(mg) || isMangaInDb(mg)) {
-          manga.value = mg;
-          error.value = null;
-          resolve();
+          if(mg.chapters.some(x => x.lang === props.lang )) {
+            manga.value = mg;
+            error.value = null;
+          } else {
+            error.value = { error: 'manga_error', trace: $t('reader.error.chapterLang') };
+          }
         } else {
-        error.value = mg;
-        resolve();
+          error.value = mg;
         }
+        resolve();
       }
     });
   });
@@ -210,7 +228,7 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
 }
 
 
-async function getChapter(chapterId = props.id, url = props.url, opts: { scrollup?: boolean, prefetch?:boolean, reloadIndex?:number, callback?:() => void }):Promise<void> {
+async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolean, prefetch?:boolean, reloadIndex?:number, callback?:() => void }):Promise<void> {
   if(!manga.value) return;
 
   // prepare the requests
@@ -243,7 +261,7 @@ async function getChapter(chapterId = props.id, url = props.url, opts: { scrollu
     });
     if(!needToFetch) {
       if(!nextChapter.value) return;
-      return getChapter(nextChapter.value.id, nextChapter.value.url, {prefetch: true});
+      return getChapter(nextChapter.value.id, {prefetch: true});
     }
   }
 
@@ -251,9 +269,8 @@ async function getChapter(chapterId = props.id, url = props.url, opts: { scrollu
   let imgsExpectedLength = 0;
   socket.emit('showChapter', reqId, {
     id: chapterId,
-    mirror: manga.value.mirror,
+    mirror: manga.value.mirror.name,
     lang: props.lang,
-    url: url,
     retryIndex: opts.reloadIndex,
   }, (length) => {
     imgsExpectedLength = length;
@@ -334,7 +351,7 @@ async function getChapter(chapterId = props.id, url = props.url, opts: { scrollu
       if(!nextChapter.value) return;
       if(!settings.reader.preloadNext) return;
       if(opts.prefetch) return;
-      return getChapter(nextChapter.value.id, nextChapter.value.url, { prefetch: true});
+      return getChapter(nextChapter.value.id, { prefetch: true});
     }
 
     // if we need to preload next chapter
@@ -349,7 +366,7 @@ async function toggleInLibrary(mangaSettings:MangaInDB['meta']['options'] = loca
   const socket = await useSocket(settings.server);
 
   if(isMangaInDb(manga.value)) {
-    socket.emit('removeManga', manga.value, () => {
+    socket.emit('removeManga', manga.value, props.lang, () => {
       if(manga.value) manga.value.inLibrary = false;
     });
   }
@@ -380,10 +397,10 @@ async function toggleRead(index: number, forceTRUE = false) {
   const socket = await useSocket(settings.server);
   /** !! this event only marks as read on the website's source, eg. mangadex */
   socket.emit('markAsRead', {
-    mirror: manga.value.mirror,
-    lang: manga.value.lang,
+    mirror: manga.value.mirror.name,
+    lang: props.lang,
     url: manga.value.url,
-    chapterUrl: manga.value.chapters[index].url,
+    chapterUrls: [manga.value.chapters[index].url],
     read: newReadValue,
   });
 
@@ -482,7 +499,7 @@ function listenScrollBeyondPage(event: WheelEvent) {
 
 async function turnOn() {
   await getManga();
-  await getChapter(props.id, props.url, { });
+  await getChapter(props.chapterId, { });
   window.addEventListener('wheel', listenScrollBeyondPage, { passive: true });
   window.addEventListener('keyup', listenKeyboardArrows, { passive: true });
 }
@@ -618,7 +635,7 @@ function scrollToPage(index: number) {
                 color="white"
                 text-color="black"
                 class="w-100"
-                @click.once="getChapter(currentChapter!.id, currentChapter!.url, { })"
+                @click.once="getChapter(currentChapter!.id, { })"
               >
                 {{ $t('reader.error.reload') }}
               </q-btn>
@@ -647,7 +664,7 @@ function scrollToPage(index: number) {
               :current-page="currentPage"
               :reader-settings="localReaderSettings"
               @change-page="onImageVisible"
-              @reload="(reloadIndex, id, url, callback) => getChapter(id, url, { reloadIndex, callback})"
+              @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
             />
             <nav-overlay
               :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"

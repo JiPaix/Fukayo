@@ -61,7 +61,5 @@ function nav() {
     @mouseover="show = true"
     @mouseleave="show = false"
     @click="nav"
-  >
-    {{ position }}
-  </div>
+  />
 </template>

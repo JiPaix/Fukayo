@@ -51,7 +51,7 @@ const firstChapterLabel = computed(() => {
 });
 
 /** label of the previous chapter */
-const previousChapterLabel = computed(() => {
+const nextChapterLabel = computed(() => {
   if(currentChapterIndex.value + 1 < props.chapters.length) {
     return {
       label: chapterLabel(props.chapters[currentChapterIndex.value + 1].number, props.chapters[currentChapterIndex.value + 1].name),
@@ -62,7 +62,7 @@ const previousChapterLabel = computed(() => {
 });
 
 /** label of the next chapter */
-const nextChapterLabel = computed(() => {
+const previousChapterLabel = computed(() => {
   if(currentChapterIndex.value - 1 >= 0) {
     return {
       label: chapterLabel(props.chapters[currentChapterIndex.value - 1].number, props.chapters[currentChapterIndex.value - 1].name),
@@ -83,7 +83,6 @@ const lastChapterLabel = computed(() => {
 
 /** shorthand for `emit('loadIndex', chapter_index)` */
 function goToChapter(label: { label: string | number, value: number } ) {
-  console.log('go To Chapter', label.value);
   emit('loadIndex', label.value);
 }
 /** shorthand for `emit('loadIndex', first_chapter_index)` */

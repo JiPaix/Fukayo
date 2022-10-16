@@ -31,7 +31,7 @@ const router = createRouter({
       },
       {
         name: 'reader',
-        path: '/read/:parentId/:id',
+        path: '/manga/:mirror/:id/:lang/read/:chapterId',
         component: () => import('@renderer/components/reader/App.vue'),
         props: true,
       },

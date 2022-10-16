@@ -307,6 +307,7 @@
     },
     "error": {
       "chapter": "Le {chapterWord} n'a pas pu être chargé",
+      "chapterLang": "La langue sélectionnée n'a pas de chapitre",
       "reload": "Recharger"
     },
     "first": "Retourner au premier chapitre :",
@@ -362,6 +363,7 @@
     "logs": "Journaux",
     "reader": {
       "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
+      "overlay": "Afficher l'overlay de navigation lors du survol des images",
       "preload": "Précharger le chapitre suivant pendant la lecture",
       "title": "Lecteur"
     },

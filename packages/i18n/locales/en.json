@@ -307,6 +307,7 @@
     },
     "error": {
       "chapter": "Couldn't load chapter",
+      "chapterLang": "Selected language has no chapter",
       "reload": "Reload"
     },
     "first": "Go back to the first chapter:",
@@ -362,6 +363,7 @@
     "logs": "Logs",
     "reader": {
       "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",
+      "overlay": "Display navigation overlay when hovering images",
       "preload": "Preload next chapter while reading",
       "title": "Reader"
     },

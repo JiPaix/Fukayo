@@ -4,20 +4,21 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import {
 isManga,
 // eslint-disable-next-line comma-dangle
 isMangaInDb
 } from '@renderer/components/helpers/typechecker';
+import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import type dayjs from 'dayjs';
 import { useQuasar } from 'quasar';
 import { computed, inject, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { routeTypeHelper } from '../helpers/routePusher';
-import { transformIMGurl } from '../helpers/transformIMGurl';
 
 const props = defineProps<{
   id: string,
@@ -35,6 +36,8 @@ const router = useRouter();
 const dayJS = inject<typeof dayjs>('dayJS');
 /** stored settings */
 const settings = useSettingsStore();
+/** stored history */
+const historyStore = useHistoryStore();
 /** web socket */
 let socket: socketClientInstance | undefined;
 /** manga filter dialog */
@@ -112,13 +115,18 @@ const unreadChaps = computed(() => {
 function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]) {
   if(!mirrorinfo.value || !manga.value) return;
 
+  if(mangaRaw.value && mangaRaw.value.chapters) {
+    // chapters needs to use the default sorting
+    historyStore.manga = { ...mangaRaw.value, chapters: chapters.value.sort((a, b) => a.number - b.number) };
+  }
+
   const params = routeTypeHelper('reader', {
     mirror: mirrorinfo.value.name,
     lang: chapter.lang,
-    url: chapter.url,
-    id: chapter.id,
-    parentId: manga.value.id,
+    id: manga.value.id,
+    chapterId: chapter.id,
   });
+
 
   router.push(params);
 }
