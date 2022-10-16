@@ -263,23 +263,25 @@ export default class IOWrapper {
      * Get a manga's chapter
      * the mirror will reply with a 'showChapter' event containing the chapter's data
      */
-    socket.on('showChapter', (id, opts, callback) => {
-      if(!opts.mirror || !opts.lang || !opts.url) {
-        if(opts.id) {
-          const search = UUID.getInstance().data.ids.find(u => u.id === opts.id && u.langs.some(l => l === opts.lang));
-          if(search) {
-            const mirror = mirrors.find(m => m.name === search.mirror.name);
-            if(mirror) mirror.chapter(search.url, opts.lang, socket, id, callback, opts.retryIndex);
-            else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
-          }
-        } else {
-          socket.emit('showChapter', id, {error: 'chapter_error_unknown', index: 0, lastpage: true});
-        }
+    socket.on('showChapter', async (id, opts, callback) => {
+      const mirror = mirrors.find(m => m.name === opts.mirror);
+      if(!mirror) return socket.emit('showChapter', id, { error: 'chapter_error_mirror_not_found', index: 0, lastpage: true });
+
+      // don't bother searching if we already have the url
+      if(opts.url) return mirror.chapter(opts.url, opts.lang, socket, id, callback);
+
+      // if manga is in db search the chapter url
+      const mg = await MangasDB.getInstance().get({id: opts.mangaId, langs: [opts.lang] });
+      if(mg) {
+        const chap = mg.chapters.find(c => c.id === opts.chapterId && c.lang === opts.lang);
+        if(!chap) return socket.emit('showChapter', id, {error:'chapter_error', trace: 'cannot find chapter in db'});
+        return mirror.chapter(chap.url, chap.lang, socket, id, callback);
       }
+      // last resort: search in the uuid database
       else {
-        const mirror = mirrors.find(m => m.name === opts.mirror);
-        if(mirror) mirror.chapter(opts.url, opts.lang, socket, id, callback, opts.retryIndex);
-        else socket.emit('showChapter', id, {error: 'chapter_error_mirror_not_found', index: 0, lastpage: true});
+        const search = UUID.getInstance().data.ids.find(u => u.id === opts.chapterId && u.langs.some(l => l === opts.lang));
+        if(!search) return socket.emit('showChapter', id, { error: 'chapter_error_invalid_link' });
+        return mirror.chapter(search.url, opts.lang, socket, id, callback);
       }
     });
 

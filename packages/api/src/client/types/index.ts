@@ -25,7 +25,7 @@ export type ClientToServerEvents = {
   stopShowRecommend: () => void;
   stopShowLibrary: () => void;
   showManga: (id:number, opts: {mirror?:string, langs:mirrorsLangsType[], id?:string, url?:string }) => void;
-  showChapter: (id:number, opts: { id?: string, mirror?:string, lang:mirrorsLangsType, url?:string, retryIndex?:number }, callback?: (nbOfPagesToExpect:number)=>void) => void;
+  showChapter: (id:number, opts: { mangaId:string, chapterId: string, url?:string, mirror:string, lang:mirrorsLangsType, retryIndex?:number }, callback?: (nbOfPagesToExpect:number)=>void) => void;
   showRecommend: (id:number, mirror:string) => void;
   changeMirrorSettings: (mirror:string, options:Record<string, unknown>, callback: (m: mirrorInfo[])=>void) => void;
   getCacheSize: (callback: (size: number, files:number) => void) => void;

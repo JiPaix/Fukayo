@@ -188,6 +188,8 @@ async function getManga():Promise<void> {
       error.value = null;
       manga.value = historyStore.manga;
       return;
+    } else {
+      historyStore.manga = null;
     }
   }
   const socket = await useSocket(settings.server);
@@ -230,7 +232,6 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
 
 async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolean, prefetch?:boolean, reloadIndex?:number, callback?:() => void }):Promise<void> {
   if(!manga.value) return;
-
   // prepare the requests
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
@@ -268,8 +269,10 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
   // ask for the chapter images and get the number of expected images
   let imgsExpectedLength = 0;
   socket.emit('showChapter', reqId, {
-    id: chapterId,
+    chapterId: chapterId,
+    mangaId: manga.value.id,
     mirror: manga.value.mirror.name,
+    url: manga.value.chapters.find(c=>c.id === chapterId)?.url,
     lang: props.lang,
     retryIndex: opts.reloadIndex,
   }, (length) => {
