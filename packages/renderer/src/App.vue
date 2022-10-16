@@ -68,7 +68,8 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
 onBeforeMount(()=> {
   if(!isElectron) {
     const [host, port] = new URL(window.location.href).host.split(':');
-    settings.server.hostname = host;
+    settings.server.ssl = new URL(window.location.href).protocol === 'https:' ? 'app' : 'false';
+    settings.server.hostname = settings.server.ssl === 'false' ? 'http://' : 'https://' + host;
     settings.server.port = parseInt(port);
   }
   connect(undefined, true);

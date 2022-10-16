@@ -35,7 +35,8 @@
     "db",
     "vite",
     "e2e",
-    "dbs"
+    "dbs",
+    "build"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",
