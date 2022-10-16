@@ -130,6 +130,23 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     return db.mangas.some(m => m.mirror.name === mirror && m.langs.some(l => langs.includes(l)) && m.url === url);
   }
 
+  async markAsRead(mangaId:string, chaptersUrls:string[], lang:mirrorsLangsType) {
+    const db = await this.read();
+    const mg = db.mangas.find(m => m.id === mangaId && m.langs.includes(lang));
+    if(!mg) return;
+
+    const mangadb = new DatabaseIO(resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
+    const data = await mangadb.read();
+    data.chapters = data.chapters.map(c => {
+      if(chaptersUrls.includes(c.url) && c.lang === lang) {
+        c.read = !c.read;
+      }
+      return c;
+    });
+    mangadb.write(data);
+  }
+
+
   async get(opts: {id:string,  langs: mirrorsLangsType[] }): Promise<MangaInDB|undefined>
   async get(opts: {mirror: string, langs: mirrorsLangsType[], url: string}): Promise<MangaInDB|undefined>
   async get(opts: {mirror?:string, langs:mirrorsLangsType[], url?:string, id?:string}):Promise<MangaInDB|undefined> {

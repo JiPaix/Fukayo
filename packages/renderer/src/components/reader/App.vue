@@ -400,10 +400,7 @@ async function toggleRead(index: number, forceTRUE = false) {
     url: manga.value.url,
     chapterUrls: [manga.value.chapters[index].url],
     read: newReadValue,
-  });
-
-  socket.emit('addManga', { manga: manga.value, settings: settings.reader }, () => {
-    // chapter marked as "newReadValue"
+    mangaId: manga.value.id,
   });
 
 }

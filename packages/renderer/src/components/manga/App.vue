@@ -201,8 +201,8 @@ async function markAsRead(index:number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true });
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Mark a chapter as unread */
@@ -222,8 +222,8 @@ async function markAsUnread(index:number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false });
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Mark all previous chapters as read */
@@ -244,8 +244,8 @@ async function markPreviousAsRead(index: number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true});
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Mark all previous chapters as unread */
@@ -266,8 +266,8 @@ async function markPreviousAsUnread(index: number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false});
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Mark all next chapters as read */
@@ -288,8 +288,8 @@ async function markNextAsRead(index: number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true});
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Mark all next chapters as unread */
@@ -310,8 +310,8 @@ async function markNextAsUnread(index: number) {
   });
 
   const updatedManga = { ...manga.value, chapters: updatedChapters };
-  await updateManga(updatedManga);
-  socket.emit('markAsRead', {mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: false});
+  mangaRaw.value = updatedManga;
+  socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
 /** Opens the "change display name" dialog, calls `updateManga` when user press "OK" */

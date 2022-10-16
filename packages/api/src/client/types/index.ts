@@ -40,7 +40,7 @@ export type ClientToServerEvents = {
   schedulerLogs: (callback:(logs:Scheduler['logs'])=>void) => void;
   getSettings: (callback:(settings:SettingsDB['data'])=>void) => void;
   changeSettings: (settings:SettingsDB['data'], callback:(settings:SettingsDB['data'])=>void) => void;
-  markAsRead: ({ mirror, lang, url, chapterUrls, read }: { mirror:string, lang:mirrorsLangsType, url:string, chapterUrls:string[], read:boolean }) => void;
+  markAsRead: ({ mirror, lang, url, chapterUrls, read, mangaId }: { mirror:string, lang:mirrorsLangsType, url:string, chapterUrls:string[], read:boolean, mangaId:string }) => void;
 }
 
 export type socketClientInstance = Socket<ServerToClientEvents, ClientToServerEvents>

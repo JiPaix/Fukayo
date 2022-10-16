@@ -311,11 +311,13 @@ export default class IOWrapper {
     });
 
     /** Mark manga as read on external sources (if available) */
-    socket.on('markAsRead', payload => {
+    socket.on('markAsRead', async payload => {
+      await MangasDB.getInstance().markAsRead(payload.mangaId, payload.chapterUrls, payload.lang);
       const mirror = mirrors.find(m => m.name === payload.mirror);
       if(mirror && mirror.markAsRead) {
         mirror.markAsRead(payload.url, payload.lang, payload.chapterUrls, payload.read);
       }
+
     });
     /**
      * Change settings for a mirror
