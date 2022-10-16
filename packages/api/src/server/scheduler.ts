@@ -1,6 +1,6 @@
 import type { ClientToServerEvents } from '@api/client/types';
-import { MangaDatabase } from '@api/db/mangas';
-import { SettingsDatabase } from '@api/db/settings';
+import MangasDB from '@api/db/mangas';
+import SettingsDB from '@api/db/settings';
 import type Mirror from '@api/models';
 import mirrors from '@api/models/exports';
 import type MirrorInterface from '@api/models/interfaces';
@@ -17,7 +17,11 @@ import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
 
+const settings = SettingsDB.getInstance();
+const mangadb = MangasDB.getInstance();
+
 export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
+
   #intervals: {
     updates: NodeJS.Timer;
     nextupdate: number;
@@ -53,15 +57,15 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
   }
 
   get settings() {
-    return SettingsDatabase.data;
+    return settings.data;
   }
 
   get cache() {
-    return SettingsDatabase.data.cache;
+    return settings.data.cache;
   }
 
   get cacheEnabled() {
-    return SettingsDatabase.data.cache.age.enabled || SettingsDatabase.data.cache.size.enabled;
+    return settings.data.cache.age.enabled || settings.data.cache.size.enabled;
   }
 
   get isUpdatingMangas() {
@@ -233,7 +237,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
    * @param force if true, will force the update of all the mangas
    */
   async #getMangasToUpdate(force?:boolean) {
-    const indexes = await MangaDatabase.getIndexes();
+    const indexes = await mangadb.getIndexes();
 
     const indexesToUpdate = indexes.filter(i => {
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
@@ -251,7 +255,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     const mangasToUpdate:MangaInDB[] = [];
 
     for(const index of indexesToUpdate) {
-      const manga = await MangaDatabase.getByFilename(index.file);
+      const manga = await mangadb.getByFilename(index.file);
       mangasToUpdate.push(manga);
     }
     // mangas to update by mirror
@@ -275,7 +279,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     const mangasToFix:MangaInDB[] = [];
 
     for(const fix of indexesToFix) {
-      const manga = await MangaDatabase.getByFilename(fix.file);
+      const manga = await mangadb.getByFilename(fix.file);
       mangasToFix.push(manga);
     }
     // mangas to fix by mirror
@@ -359,7 +363,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
       res.push({...manga, meta: {...manga.meta, lastUpdate: Date.now() }});
     }
     res.forEach(async (m) => {
-      await MangaDatabase.add({ manga: m });
+      await mangadb.add({ manga: m });
     });
 
 
@@ -377,7 +381,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
     // if mirror is dead
     if(mirror.isDead) {
       for(const manga of mangas) {
-        await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        await mangadb.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: mirror dead');
       }
       return;
@@ -389,7 +393,7 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
         const remoteManga = await this.#search(mirror, manga);
         // if there no exact match mark manga as "broken"
         if(!remoteManga) {
-          await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+          await mangadb.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
           this.logger('marked entry', manga.name, 'as broken: could not migrate');
         }
         // else copy as much data as possible
@@ -404,14 +408,14 @@ export class SchedulerClass extends (EventEmitter as new () => TypedEmitter<Serv
           const userCategories = manga.userCategories;
           // remove old version
           for(const lang of manga.langs) {
-            await MangaDatabase.remove(manga, lang);
+            await mangadb.remove(manga, lang);
           }
           // add new version
-          await MangaDatabase.add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
+          await mangadb.add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
           this.logger('migrated:', manga.name, 'version:', remoteManga.mirror.version);
         }
       } catch(e) {
-        await MangaDatabase.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        await mangadb.add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: could not migrate');
         this.logger(e);
       }

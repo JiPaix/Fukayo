@@ -25,12 +25,20 @@ function isMangaInDB(res: MangaPage | MangaInDB ): res is MangaInDB {
   return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
 }
 
-export class MangasDB extends DatabaseIO<Mangas> {
+export default class MangasDB extends DatabaseIO<Mangas> {
+  static #instance: MangasDB;
   #path: string;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
     this.#path = resolve(env.USER_DATA, '.mangasdb');
+  }
+
+  static getInstance(): MangasDB {
+    if (!this.#instance) {
+      this.#instance = new this();
+    }
+    return this.#instance;
   }
 
   /** add or update a manga */
@@ -274,8 +282,6 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   /** save base64 images to files and returns their filenames */
   #saveCovers(covers:string[]) {
-    const fileserver = FileServer.getInstance();
-
     const path = resolve(this.#path);
     const coversAlreadySaved = readdirSync(path, {withFileTypes: true})
       .filter(item => !item.isDirectory() && !item.name.endsWith('.json') && covers.includes(item.name))
@@ -288,7 +294,7 @@ export class MangasDB extends DatabaseIO<Mangas> {
       const coverFileName = `${i}_cover_${c}`;
       const path = resolve(this.#path, coverFileName);
       if(!existsSync(path)) {
-        const data = fileserver.get(c);
+        const data = FileServer.getInstance().get(c);
         if(data) writeFileSync(path, data);
       }
       return coverFileName;
@@ -298,14 +304,12 @@ export class MangasDB extends DatabaseIO<Mangas> {
 
   /** reads files and return their content into an array */
   #getCovers(filenames: string[]) {
-    const fileserver = FileServer.getInstance();
-
     const res:string[] = [];
     filenames.forEach(f => {
       const path = resolve(this.#path, f);
       if(existsSync(path)) {
         this.logger('should serv:', path);
-        const serv = fileserver.serv(readFileSync(path),f);
+        const serv = FileServer.getInstance().serv(readFileSync(path),f);
         res.push(serv);
       }
     });
@@ -320,4 +324,3 @@ export class MangasDB extends DatabaseIO<Mangas> {
   }
 }
 
-export const MangaDatabase = new MangasDB();

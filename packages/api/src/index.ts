@@ -10,7 +10,12 @@ import morgan from 'morgan';
 import { join } from 'path';
 import { env } from 'process';
 
+
 export default function useFork(settings: ForkEnv = env):Promise<client> {
+
+  // init the file server directory
+  const fileServer = FileServer.getInstance('fileserver');
+
   // put settings in global scope
   if(settings) {
     let k:keyof typeof settings;
@@ -34,8 +39,7 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
     res.send('User-agent: *\nDisallow: /');
 });
 
-  // init the file server directory
-  const fileServer = FileServer.getInstance('fileserver');
+
   // serve the files
   app.get('/files/:fileName', (req, res, next) => {
     const options = {

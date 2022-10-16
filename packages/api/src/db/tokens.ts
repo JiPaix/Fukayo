@@ -20,7 +20,8 @@ type Tokens = {
   authorizedTokens: AuthorizedToken[]
 }
 
-export class TokenDatabase extends Database<Tokens> {
+export default class TokenDatabase extends Database<Tokens> {
+  static #instance: TokenDatabase;
 
   constructor(tokens: { accessToken: string, refreshToken: string }) {
     super(resolve(env.USER_DATA, 'access_db.json'), { authorizedTokens: [], refreshTokens: [] });
@@ -35,6 +36,14 @@ export class TokenDatabase extends Database<Tokens> {
     // save
     this.write();
   }
+
+  static getInstance(tokens: { accessToken: string, refreshToken: string }): TokenDatabase {
+    if (!this.#instance) {
+      this.#instance = new this(tokens);
+    }
+    return this.#instance;
+  }
+
   isExpired(token: RefreshToken) {
     return token.expire < Date.now();
   }

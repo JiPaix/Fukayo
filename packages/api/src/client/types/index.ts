@@ -1,10 +1,11 @@
-import type { SettingsDB } from '@api/db/settings';
+import type SettingsDB from '@api/db/settings';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { Scheduler } from '@api/server/scheduler';
 import type { ServerToClientEvents } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import type { Socket } from 'socket.io-client';
+
 export type SocketClientConstructor = {
   accessToken?: string | null,
   refreshToken?: string | null,

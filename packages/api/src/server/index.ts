@@ -1,8 +1,8 @@
 import type { ClientToServerEvents } from '@api/client/types';
-import { MangaDatabase } from '@api/db/mangas';
-import { SettingsDatabase } from '@api/db/settings';
-import { TokenDatabase } from '@api/db/tokens';
-import { UUID } from '@api/db/uuids';
+import MangasDB from '@api/db/mangas';
+import SettingsDB from '@api/db/settings';
+import TokenDatabase from '@api/db/tokens';
+import UUID from '@api/db/uuids';
 import mirrors from '@api/models/exports';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
@@ -15,6 +15,8 @@ import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 
 const uuidgen = UUID.getInstance();
+const SettingsDatabase = SettingsDB.getInstance();
+const mangadb = MangasDB.getInstance();
 
 /**
  * Initialize a socket.io server
@@ -30,7 +32,7 @@ export default class IOWrapper {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
     this.io = new ioServer(runner, {cors: { origin: '*'}, maxHttpBufferSize: 1e+9});
-    this.db = new TokenDatabase({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    this.db = TokenDatabase.getInstance({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
     this.use();
     this.io.on('connection', this.routes.bind(this));
     // async hell
@@ -175,13 +177,13 @@ export default class IOWrapper {
     });
 
     /**
-     * Get all mangas from the MangaDatabase
+     * Get all mangas from the mangadb
      *
-     * for each mangas MangaDatabase replies with a 'showLibrary' event containing the manga's data
+     * for each mangas mangadb replies with a 'showLibrary' event containing the manga's data
      * including the chapters.
      */
     socket.on('showLibrary', (id) => {
-      MangaDatabase.getAll(id, socket);
+      mangadb.getAll(id, socket);
     });
 
     /**
@@ -212,8 +214,8 @@ export default class IOWrapper {
     socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
 
-      if(opts.id && opts.langs) indb = await MangaDatabase.get({id: opts.id, langs: opts.langs});
-      else if(opts.mirror && opts.langs && opts.url) indb = await MangaDatabase.get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
+      if(opts.id && opts.langs) indb = await mangadb.get({id: opts.id, langs: opts.langs});
+      else if(opts.mirror && opts.langs && opts.url) indb = await mangadb.get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);
 
@@ -242,7 +244,7 @@ export default class IOWrapper {
         const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port && (m.options.port !== '443' && m.options.port !== '80') ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(!mirror) return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
-        const indb = await MangaDatabase.get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
+        const indb = await mangadb.get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
         if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
 
         const search = uuidgen.data.ids.find(u => u.langs.some(l => lang === l) && u.mirror.name === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
@@ -291,7 +293,7 @@ export default class IOWrapper {
      * callback returns the manga's data (which is different from the one sent by the mirror)
      */
     socket.on('addManga', async (payload, callback) => {
-      const mg = await MangaDatabase.add(payload);
+      const mg = await mangadb.add(payload);
       mg.chapters.forEach(c => uuidgen.remove(c.id));
       callback(mg);
     });
@@ -301,7 +303,7 @@ export default class IOWrapper {
      * callback returns the manga-in-db's data (as a mirror would send it)
      */
     socket.on('removeManga', async (manga, lang, callback) => {
-      const notInDB = await MangaDatabase.remove(manga, lang);
+      const notInDB = await mangadb.remove(manga, lang);
       callback(notInDB);
     });
 
@@ -339,7 +341,7 @@ export default class IOWrapper {
     socket.on('emptyCache', () => removeAllCacheFiles());
 
     /**
-     * Force an update of all mangas chapters in the MangaDatabase
+     * Force an update of all mangas chapters in the mangadb
      * Scheduler will broadcast a 'startMangasUpdate' then 'finishedMangasUpdate' event to all clients during the update
      */
     socket.on('forceUpdates', () => {

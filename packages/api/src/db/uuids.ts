@@ -25,7 +25,7 @@ const defaultSettings = {
   ids: [],
 };
 
-export class UUID extends Database<uuids> {
+export default class UUID extends Database<uuids> {
   readonly #NAMESPACE = 'af68caec-20c3-495a-90ff-0350710bc7a3';
   #pending: number;
   static #instance: UUID;
@@ -46,7 +46,6 @@ export class UUID extends Database<uuids> {
     if (!this.#instance) {
       this.#instance = new this();
     }
-
     return this.#instance;
   }
 

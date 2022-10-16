@@ -1,8 +1,8 @@
 import { Database } from '@api/db/index';
-import { MangaDatabase } from '@api/db/mangas';
-import { SettingsDatabase } from '@api/db/settings';
+import MangasDB from '@api/db/mangas';
+import SettingsDB from '@api/db/settings';
 import type { uuid } from '@api/db/uuids';
-import { UUID } from '@api/db/uuids';
+import UUID from '@api/db/uuids';
 import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
@@ -22,6 +22,9 @@ import { resolve } from 'path';
 import { env } from 'process';
 
 const uuidgen = UUID.getInstance();
+const settings = SettingsDB.getInstance();
+const fileServer = FileServer.getInstance();
+const mangadb = MangasDB.getInstance();
 
 /**
  * The default mirror class
@@ -179,7 +182,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   public get cacheEnabled() {
-    return SettingsDatabase.data.cache.age.enabled || SettingsDatabase.data.cache.size.enabled;
+    return settings.data.cache.age.enabled || settings.data.cache.size.enabled;
   }
   /**
    * Returns the mirror icon
@@ -219,7 +222,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
 
   /** check if the fetched manga is part of the library */
   #isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
-    return MangaDatabase.has(mirror, langs, url);
+    return mangadb.has(mirror, langs, url);
   }
 
   /**
@@ -352,12 +355,12 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     },
   ): Promise<string> {
     if(force && options.id) {
-      const mg = await MangaDatabase.get({id: options.id, langs: options.langs});
+      const mg = await mangadb.get({id: options.id, langs: options.langs});
       if(mg) return mg.id;
       return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
     }
     if(!force && options.url && options.langs) {
-      const mg = await MangaDatabase.get({ mirror: this.name, langs: options.langs, url: options.url });
+      const mg = await mangadb.get({ mirror: this.name, langs: options.langs, url: options.url });
       if(mg) return mg.id;
       return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
     }
@@ -525,7 +528,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #returnFetch<T>(data : T, filename: string):string
   #returnFetch<T>(data : T, filename?: string|undefined):T|string {
     if(data instanceof Buffer && filename) {
-      return FileServer.getInstance().serv(data, filename);
+      return fileServer.serv(data, filename);
     }
     return data;
   }
