@@ -746,12 +746,3 @@ function scrollToPage(index: number) {
     </q-page-container>
   </q-layout>
 </template>
-<style lang="css">
-.chapters::-webkit-scrollbar {
-    display: none;
-}
-.chapters {
-    scrollbar-width: none;
-}
-
-</style>
