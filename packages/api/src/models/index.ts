@@ -21,11 +21,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { env } from 'process';
 
-const uuidgen = UUID.getInstance();
-const settings = SettingsDB.getInstance();
-const fileServer = FileServer.getInstance('fileserver');
-const mangadb = MangasDB.getInstance();
-
 /**
  * The default mirror class
  *
@@ -182,7 +177,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   public get cacheEnabled() {
-    return settings.data.cache.age.enabled || settings.data.cache.size.enabled;
+    return SettingsDB.getInstance().data.cache.age.enabled || SettingsDB.getInstance().data.cache.size.enabled;
   }
   /**
    * Returns the mirror icon
@@ -222,7 +217,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
 
   /** check if the fetched manga is part of the library */
   #isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
-    return mangadb.has(mirror, langs, url);
+    return MangasDB.getInstance().has(mirror, langs, url);
   }
 
   /**
@@ -355,16 +350,16 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     },
   ): Promise<string> {
     if(force && options.id) {
-      const mg = await mangadb.get({id: options.id, langs: options.langs});
+      const mg = await MangasDB.getInstance().get({id: options.id, langs: options.langs});
       if(mg) return mg.id;
-      return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
+      return UUID.getInstance().generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
     }
     if(!force && options.url && options.langs) {
-      const mg = await mangadb.get({ mirror: this.name, langs: options.langs, url: options.url });
+      const mg = await MangasDB.getInstance().get({ mirror: this.name, langs: options.langs, url: options.url });
       if(mg) return mg.id;
-      return uuidgen.generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
+      return UUID.getInstance().generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
     }
-    throw Error('uuidgen: missing options');
+    throw Error('UUID.getInstance(): missing options');
   }
 
   /** change the mirror settings */
@@ -528,7 +523,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #returnFetch<T>(data : T, filename: string):string
   #returnFetch<T>(data : T, filename?: string|undefined):T|string {
     if(data instanceof Buffer && filename) {
-      return fileServer.serv(data, filename);
+      return FileServer.getInstance('fileserver').serv(data, filename);
     }
     return data;
   }

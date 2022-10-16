@@ -14,10 +14,6 @@ import { env } from 'process';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 
-const uuidgen = UUID.getInstance();
-const SettingsDatabase = SettingsDB.getInstance();
-const mangadb = MangasDB.getInstance();
-
 /**
  * Initialize a socket.io server
  */
@@ -177,13 +173,13 @@ export default class IOWrapper {
     });
 
     /**
-     * Get all mangas from the mangadb
+     * Get all mangas from the MangasDB.getInstance()
      *
-     * for each mangas mangadb replies with a 'showLibrary' event containing the manga's data
+     * for each mangas MangasDB.getInstance() replies with a 'showLibrary' event containing the manga's data
      * including the chapters.
      */
     socket.on('showLibrary', (id) => {
-      mangadb.getAll(id, socket);
+      MangasDB.getInstance().getAll(id, socket);
     });
 
     /**
@@ -214,8 +210,8 @@ export default class IOWrapper {
     socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
 
-      if(opts.id && opts.langs) indb = await mangadb.get({id: opts.id, langs: opts.langs});
-      else if(opts.mirror && opts.langs && opts.url) indb = await mangadb.get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
+      if(opts.id && opts.langs) indb = await MangasDB.getInstance().get({id: opts.id, langs: opts.langs});
+      else if(opts.mirror && opts.langs && opts.url) indb = await MangasDB.getInstance().get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);
 
@@ -226,7 +222,7 @@ export default class IOWrapper {
       }
 
       if(opts.id) {
-        const search = uuidgen.data.ids.find(u => u.id === opts.id);
+        const search = UUID.getInstance().data.ids.find(u => u.id === opts.id);
         if(search) {
           const mirror = mirrors.find(m => m.name === search.mirror.name);
           if(mirror) return mirror.manga(search.url, search.langs, socket, id);
@@ -244,10 +240,10 @@ export default class IOWrapper {
         const mirror = mirrors.find(m => m.host === URI.origin || m.althost?.some(h => h === URI.origin) || (m.options.host && `${m.options.port && (m.options.port !== '443' && m.options.port !== '80') ? m.options.host+':'+m.options.port : m.options.host}` === URI.host));
         if(!mirror) return socket.emit('getMangaURLfromChapterURL', id, undefined);
 
-        const indb = await mangadb.get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
+        const indb = await MangasDB.getInstance().get({ mirror: mirror.name, langs: [lang||mirror.langs[0]], url: URI.toString().replace(URI.origin, '')});
         if(indb) return socket.emit('getMangaURLfromChapterURL', id, indb);
 
-        const search = uuidgen.data.ids.find(u => u.langs.some(l => lang === l) && u.mirror.name === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
+        const search = UUID.getInstance().data.ids.find(u => u.langs.some(l => lang === l) && u.mirror.name === mirror.name && u.url === URI.toString().replace(URI.origin, ''));
         if(search) return socket.emit('getMangaURLfromChapterURL', id, search);
 
         return mirror.mangaFromChapterURL(socket, id, url, lang);
@@ -263,7 +259,7 @@ export default class IOWrapper {
     socket.on('showChapter', (id, opts, callback) => {
       if(!opts.mirror || !opts.lang || !opts.url) {
         if(opts.id) {
-          const search = uuidgen.data.ids.find(u => u.id === opts.id && u.langs.some(l => l === opts.lang));
+          const search = UUID.getInstance().data.ids.find(u => u.id === opts.id && u.langs.some(l => l === opts.lang));
           if(search) {
             const mirror = mirrors.find(m => m.name === search.mirror.name);
             if(mirror) mirror.chapter(search.url, opts.lang, socket, id, callback, opts.retryIndex);
@@ -293,8 +289,8 @@ export default class IOWrapper {
      * callback returns the manga's data (which is different from the one sent by the mirror)
      */
     socket.on('addManga', async (payload, callback) => {
-      const mg = await mangadb.add(payload);
-      mg.chapters.forEach(c => uuidgen.remove(c.id));
+      const mg = await MangasDB.getInstance().add(payload);
+      mg.chapters.forEach(c => UUID.getInstance().remove(c.id));
       callback(mg);
     });
 
@@ -303,7 +299,7 @@ export default class IOWrapper {
      * callback returns the manga-in-db's data (as a mirror would send it)
      */
     socket.on('removeManga', async (manga, lang, callback) => {
-      const notInDB = await mangadb.remove(manga, lang);
+      const notInDB = await MangasDB.getInstance().remove(manga, lang);
       callback(notInDB);
     });
 
@@ -341,7 +337,7 @@ export default class IOWrapper {
     socket.on('emptyCache', () => removeAllCacheFiles());
 
     /**
-     * Force an update of all mangas chapters in the mangadb
+     * Force an update of all mangas chapters in the MangasDB.getInstance()
      * Scheduler will broadcast a 'startMangasUpdate' then 'finishedMangasUpdate' event to all clients during the update
      */
     socket.on('forceUpdates', () => {
@@ -361,7 +357,7 @@ export default class IOWrapper {
     });
 
     socket.on('getSettings', (cb) => {
-      cb(SettingsDatabase.data);
+      cb(SettingsDB.getInstance().data);
     });
 
     socket.on('changeSettings', (settings, cb) => {
@@ -369,23 +365,23 @@ export default class IOWrapper {
       let restartCache = false;
       let restartUpdates = false;
       // if waitBetweenUpdates is changed, we need to restart the update timer
-      if(settings.library.waitBetweenUpdates !== SettingsDatabase.data.library.waitBetweenUpdates) {
+      if(settings.library.waitBetweenUpdates !== SettingsDB.getInstance().data.library.waitBetweenUpdates) {
         restartUpdates = true;
       }
       // if any of this cache settings is changed, we need to restart the cache timer
-      if(settings.cache.age.enabled !== SettingsDatabase.data.cache.age.enabled
-        || settings.cache.size.enabled == SettingsDatabase.data.cache.size.enabled
-        || settings.cache.age.max !== SettingsDatabase.data.cache.age.max
-        || settings.cache.size.max !== SettingsDatabase.data.cache.size.max)
+      if(settings.cache.age.enabled !== SettingsDB.getInstance().data.cache.age.enabled
+        || settings.cache.size.enabled == SettingsDB.getInstance().data.cache.size.enabled
+        || settings.cache.age.max !== SettingsDB.getInstance().data.cache.age.max
+        || settings.cache.size.max !== SettingsDB.getInstance().data.cache.size.max)
       {
         restartCache = true;
       }
       // we need to write the new settings to the database before restarting the cache/update timers
-      SettingsDatabase.data = settings;
-      SettingsDatabase.write();
+      SettingsDB.getInstance().data = settings;
+      SettingsDB.getInstance().write();
       if(restartUpdates) Scheduler.restartUpdate();
       if(restartCache) Scheduler.restartCache();
-      cb(SettingsDatabase.data);
+      cb(SettingsDB.getInstance().data);
     });
   }
 }
