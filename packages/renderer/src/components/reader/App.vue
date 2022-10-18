@@ -14,7 +14,7 @@ import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { scroll, useQuasar } from 'quasar';
+import { debounce, scroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 /** props */
@@ -433,14 +433,16 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
   }
   localReaderSettings.value = { ...localReaderSettings.value, ...newSettings };
   historyStore.manga = manga.value;
-  if(isMangaInDB(manga.value)) {
-    const socket = await useSocket(settings.server);
-    socket.emit('addManga', { manga: manga.value, settings: newSettings }, () => {
-      // new settings saved
-    });
-  }
+  saveSettings(manga.value, newSettings);
 }
 
+const saveSettings = debounce(async(manga: MangaInDB | MangaPage | null, newSettings: typeof localReaderSettings.value) => {
+  if(!manga || !isMangaInDB(manga)) return;
+  const socket = await useSocket(settings.server);
+  socket.emit('addManga', { manga: manga, settings: newSettings }, () => {
+    // new settings saved
+  });
+});
 
 
 function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
