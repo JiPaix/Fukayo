@@ -108,7 +108,7 @@ const currentChapterFormatted = computed(() => {
 
 
 
-/** previous chapter */
+/** next chapter */
 const nextChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
@@ -118,7 +118,7 @@ const nextChapter = computed(() => {
   return manga.value.chapters[index + 1];
 });
 
-/** next chapter */
+/** previous chapter */
 const prevChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
@@ -187,7 +187,7 @@ async function getManga():Promise<void> {
   if(historyStore.manga) {
     if(historyStore.manga.id === props.id) {
       error.value = null;
-      manga.value = historyStore.manga;
+      manga.value = { ...historyStore.manga, chapters: historyStore.manga.chapters.sort((a, b) => a.number - b.number) };
       if(isMangaInDB(manga.value)) {
         localReaderSettings.value = manga.value.meta.options;
       }
@@ -208,6 +208,7 @@ async function getManga():Promise<void> {
       if(id === reqId) {
         if(isManga(mg) || isMangaInDB(mg)) {
           if(mg.chapters.some(x => x.lang === props.lang )) {
+            mg.chapters = mg.chapters.sort((a, b) => a.number - b.number);
             manga.value = mg;
             error.value = null;
             historyStore.manga = mg;
