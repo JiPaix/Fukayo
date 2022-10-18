@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
@@ -40,7 +41,7 @@ function toggleDarkMode() {
       @click="router.back()"
     />
     <q-avatar v-if="manga && manga.covers">
-      <img :src="manga.covers[manga.covers.length-1]">
+      <img :src="transformIMGurl(manga.covers[manga.covers.length-1], settings)">
     </q-avatar>
     <q-skeleton
       v-else
