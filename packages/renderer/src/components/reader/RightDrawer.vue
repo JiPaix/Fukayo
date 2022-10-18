@@ -313,11 +313,11 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
           :color="localSettings.zoomMode === 'fit-height' ? 'orange' : undefined"
           :disable="localSettings.webtoon"
           @click="localSettings.zoomMode = 'fit-height';localSettings.webtoon = false"
-        />
-        <q-tooltip>
-          {{ $t('reader.displaymode.fit-height') }} ({{ localSettings.webtoon ? $t('reader.displaymode.compatibility') : '' }})
-        </q-tooltip>
-
+        >
+          <q-tooltip>
+            {{ $t('reader.displaymode.fit-height') }} ({{ localSettings.webtoon ? $t('reader.displaymode.compatibility') : '' }})
+          </q-tooltip>
+        </q-btn>
         <q-btn
           icon="pageview"
           :color="localSettings.zoomMode === 'custom' ? 'orange' : undefined"
