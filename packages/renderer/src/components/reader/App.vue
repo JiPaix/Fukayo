@@ -66,9 +66,10 @@ const showNextChapterDiv = ref(false);
 const doubleTapLeft = ref(0);
 /** count double-taps right when last page is onscreen */
 const doubleTapRight = ref(0);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { preloadNext, ...settingsOmitPreload } = settings.reader;
 /** reader settings so they don't overwrite global options */
-const localReaderSettings = computed(() => manga.value && isMangaInDB(manga.value) ? manga.value.meta.options : settings.reader);
-
+const localReaderSettings = ref(settingsOmitPreload);
 
 /** formatted chapters (before sort) */
 const RAWchapters = ref<{
@@ -187,7 +188,9 @@ async function getManga():Promise<void> {
     if(historyStore.manga.id === props.id) {
       error.value = null;
       manga.value = historyStore.manga;
-      return;
+      if(isMangaInDB(manga.value)) {
+        localReaderSettings.value = manga.value.meta.options;
+      }
     } else {
       historyStore.manga = null;
     }
@@ -211,6 +214,7 @@ async function getManga():Promise<void> {
           } else {
             error.value = { error: 'manga_error', trace: $t('reader.error.chapterLang') };
           }
+        if(isMangaInDB(mg)) localReaderSettings.value = mg.meta.options;
         } else {
           error.value = mg;
         }
@@ -427,6 +431,7 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
     // if browser couldn't update within 500ms, the scroll position isn't changed
     // 500ms is a good compromise between responsiveness and performance
   }
+  localReaderSettings.value = { ...localReaderSettings.value, ...newSettings };
   historyStore.manga = manga.value;
   if(isMangaInDB(manga.value)) {
     const socket = await useSocket(settings.server);
