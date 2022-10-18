@@ -131,6 +131,8 @@ async function reload(pageIndex: number) {
     <div v-else-if="isChapterImage(img)">
       <div
         class="flex flex-center"
+        :class="readerSettings.zoomMode ? 'q-ml-auto q-mr-auto' : undefined"
+        :style="readerSettings.zoomMode ? { width: style.width } : undefined"
       >
         <img
           :src="transformIMGurl(img.src)"
