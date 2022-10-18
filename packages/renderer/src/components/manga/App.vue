@@ -823,6 +823,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
               class="w-100"
             >
               <q-item
+                v-if="(settings.mangaPage.chapters.hideRead && !item.read) || !settings.mangaPage.chapters.hideRead"
                 :key="index"
                 :dark="$q.dark.isActive"
                 clickable
