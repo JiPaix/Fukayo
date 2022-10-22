@@ -248,6 +248,7 @@ async function getManga():Promise<void> {
 
 /** change current chapter variables and make sure scroll position doesn't mess with UI */
 async function chapterTransition(opts: { chapterId:string, PageToShow:number }) {
+  showPageSelector.value = false;
   currentChapterId.value = opts.chapterId;
   currentPage.value = opts.PageToShow;
   loadingAchapter.value = false;
@@ -343,33 +344,33 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
         }
       }
     } else {
-    // API returs a ChapterImage when an image is found, or ChapterImageErrorMessage when an error occurs
-    if(isChapterImage(chapter) || isChapterImageErrorMessage(chapter)) {
-      // check if the image exist and is worth replacing
-      const toReplace =
-        exist.imgs.findIndex(img => (isChapterImage(img) || isChapterImageErrorMessage(img)) && img.index  === chapter.index);
+      // API returs a ChapterImage when an image is found, or ChapterImageErrorMessage when an error occurs
+      if(isChapterImage(chapter) || isChapterImageErrorMessage(chapter)) {
+        // check if the image exist and is worth replacing
+        const toReplace =
+          exist.imgs.findIndex(img => (isChapterImage(img) || isChapterImageErrorMessage(img)) && img.index  === chapter.index);
 
-      if(toReplace > -1) {
-        // replace error with image
-        if(isChapterImageErrorMessage(exist.imgs[toReplace]) && isChapterImage(chapter)) exist.imgs[toReplace] = chapter;
-        // replace images with different sources
-        else if(isChapterImage(exist.imgs[toReplace]) && isChapterImage(chapter)) {
-          if((exist.imgs[toReplace] as ChapterImage).src !== chapter.src) exist.imgs[toReplace] = chapter;
+        if(toReplace > -1) {
+          // replace error with image
+          if(isChapterImageErrorMessage(exist.imgs[toReplace]) && isChapterImage(chapter)) exist.imgs[toReplace] = chapter;
+          // replace images with different sources
+          else if(isChapterImage(exist.imgs[toReplace]) && isChapterImage(chapter)) {
+            if((exist.imgs[toReplace] as ChapterImage).src !== chapter.src) exist.imgs[toReplace] = chapter;
+          }
+        }
+        // add new image
+        else exist.imgs.push(chapter);
+      }
+      // if this is the first page, trigger the page transition
+      if(firstPage) {
+        firstPage = false;
+        if(!opts.prefetch && !opts.reloadIndex) {
+          chapterTransition({
+            chapterId,
+            PageToShow: opts.scrollup ? exist.imgs.length : 1,
+          });
         }
       }
-      // add new image
-      else exist.imgs.push(chapter);
-    }
-      // if this is the first page, trigger the page transition
-    if(firstPage) {
-      firstPage = false;
-      if(!opts.prefetch && !opts.reloadIndex) {
-        chapterTransition({
-          chapterId,
-          PageToShow: opts.scrollup ? exist.imgs.length : 1,
-        });
-      }
-    }
     }
     // if we have all the images, stop listening for events
     if(chapter.lastpage) {
