@@ -5,6 +5,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import chapterScrollBuffer from '@renderer/components/reader/chapterScrollBuffer.vue';
 import { isMouseEvent } from '@renderer/components/reader/helpers';
@@ -14,9 +15,10 @@ import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { debounce, scroll, useQuasar } from 'quasar';
+import { debounce, QVirtualScroll, scroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+
 /** props */
 const props = defineProps<{
   mirror: string,
@@ -41,6 +43,8 @@ const rightDrawerOpen = ref(false);
 const chaptersRef = ref<null|HTMLDivElement>(null);
 /** chapter id user is currently reading */
 const currentChapterId = ref(props.chapterId);
+/** display page selector */
+const showPageSelector = ref(false);
 /** current page */
 const currentPage = ref(0);
 /** current pages length */
@@ -49,6 +53,7 @@ const currentPagesLength = computed(() => {
   return currentChapterFormatted.value.imgsExpectedLength;
 });
 
+const thumbscroll = ref<null|QVirtualScroll>();
 
 /** manga data */
 const manga = ref<MangaPage|MangaInDB|null>(null);
@@ -503,10 +508,11 @@ function listenScrollBeyondPage(event: WheelEvent) {
           window.scrollTo({top: y });
         }
       });
-
-
     }
+}
 
+function thumbnailScroll(evt:WheelEvent) {
+  if(thumbscroll.value) thumbscroll.value.$el.scrollLeft += evt.deltaY;
 }
 
 async function turnOn() {
@@ -534,6 +540,9 @@ onBeforeUnmount(turnOff);
 let scrollInterval: ReturnType<typeof setInterval> | null = null;
 
 function scrollToPage(index: number) {
+  // scroll the thumbnail previews to the right page
+  if(thumbscroll.value) thumbscroll.value.scrollTo(index-1, 'start-force');
+
   if(localReaderSettings.value.longStrip) {
     const container = document.querySelector('.fit.scroll.chapters') as HTMLElement | null;
     const upward = index <= currentPage.value-2;
@@ -729,6 +738,67 @@ function scrollToPage(index: number) {
           v-if="currentChapterFormatted"
           class="absolute-bottom"
         >
+          <q-slide-transition>
+            <div
+              v-if="showPageSelector"
+              class="q-mb-xs"
+              :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px'"
+              style="opacity:0.9;"
+            >
+              <q-virtual-scroll
+                ref="thumbscroll"
+                v-slot="{ item, index }"
+                :items="currentChapterFormatted.imgs"
+                virtual-scroll-horizontal
+                class="q-ml-auto q-mr-auto rounded-borders"
+                style="max-width:500px;overflow-x:hidden;max-height:250px;"
+              >
+                <div
+                  :key="index"
+                  class="row items-center"
+                  :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
+                  @wheel="thumbnailScroll"
+                >
+                  <q-item
+
+                    clickable
+                  >
+                    <q-item-section>
+                      <q-item-label>
+                        #{{ index+1 }}
+                      </q-item-label>
+                      <q-item-label>
+                        <img
+                          v-if="isChapterImage(item)"
+                          :src="transformIMGurl(item.src, settings)"
+                          style="max-height:200px;max-width:160px"
+                          loading="lazy"
+                          @click="scrollToPage(item.index)"
+                        >
+                        <q-card
+                          v-else
+                          class="bg-negative"
+                          @click="scrollToPage(item.index)"
+                        >
+                          <q-card-section>
+                            <q-icon
+                              name="o_broken_image"
+                              size="lg"
+                            />
+                          </q-card-section>
+                        </q-card>
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+
+                  <q-separator
+                    vertical
+                    spaced
+                  />
+                </div>
+              </q-virtual-scroll>
+            </div>
+          </q-slide-transition>
           <div
             class="flex flex-center"
             :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px;'"
@@ -747,6 +817,7 @@ function scrollToPage(index: number) {
               />
               <q-btn
                 rounded
+                @click="showPageSelector = !showPageSelector;thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage-2, 'start') : null"
               >
                 {{ currentPage }} / {{ currentPagesLength }}
               </q-btn>
