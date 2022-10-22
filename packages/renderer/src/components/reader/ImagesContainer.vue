@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ChapterImage } from '@api/models/types/chapter';
-import type { ChapterErrorMessage, ChapterImageErrorMessage } from '@api/models/types/errors';
+import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
 import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -12,14 +12,14 @@ const props = defineProps<{
   chapterURL: string,
   index: number,
   expectedLength: number,
-  imgs: (ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage)[]
+  imgs: (ChapterImage | ChapterImageErrorMessage)[]
   currentPage: number,
   readerSettings: MangaInDB['meta']['options']
 }>();
 
 const emit = defineEmits<{
   (event: 'changePage', page: number, chapterId: string): void,
-  (event: 'reload', pageIndex:number, chapterId: string, chapterURL:string, callback:() =>void): void
+  (event: 'reload', pageIndex:number|undefined, chapterId: string, chapterURL:string, callback:() =>void): void
 }>();
 
 const $q = useQuasar();
@@ -35,14 +35,6 @@ function transformIMGurl(url: string) {
   if(import.meta.env.PROD) return `/${url}`;
   return `${settings.server.ssl === 'false' ? 'http' : 'https'}://${location.hostname}:${settings.server.port}/${url}`;
 }
-
-// function getDelta(imageIndex:number) {
-//   const pageIndex = props.currentPage - 1;
-//   const delta = pageIndex - imageIndex;
-//   if((delta < 0 && delta >= -5) || (delta > 0 && delta <= 5)) return true;
-//   return false;
-// }
-
 function imageVisibility(imageIndex:number) {
   emit('changePage', imageIndex, props.chapterId);
 }
@@ -55,6 +47,8 @@ const style = computed(() => {
     'height': 'auto',
     'padding-right': '0',
     'padding-left': '0',
+    'max-width': 'auto',
+    'max-height': 'auto',
   };
 
   if(props.readerSettings.webtoon) base['margin-top'] = '0px';
@@ -64,7 +58,8 @@ const style = computed(() => {
   }
   if(props.readerSettings.zoomMode === 'fit-height') {
     base['width'] = 'auto';
-    base['height'] = `${$q.screen.height-82}px`; // size of screen - header height
+    base['max-width'] = '100%';
+    base['max-height'] = `${$q.screen.height-82}px`; // size of screen - header height
   }
   if(props.readerSettings.zoomMode === 'fit-width') {
     base['width'] = '100%';
@@ -95,7 +90,7 @@ const firstPageStyle = computed(() => {
 
 const reloading = ref(false);
 
-async function reload(pageIndex: number) {
+async function reload(pageIndex: number|undefined) {
   const callback = () => {
     reloading.value = false;
   };
@@ -124,6 +119,7 @@ async function reload(pageIndex: number) {
       <div
         class="bg-negative flex flex-center"
         :style="`height:${$q.screen.height-82}px;width:100%;`"
+        @click="reload(j)"
       >
         {{ $t('reader.reloadImage') }}
       </div>
@@ -156,24 +152,6 @@ async function reload(pageIndex: number) {
             </q-item>
           </q-list>
         </q-menu>
-      </div>
-    </div>
-    <div v-else>
-      <div
-        class="flex flex-column flex-center"
-      >
-        <q-btn
-          icon-right="broken_image"
-          :loading="reloading"
-          color="white"
-          text-color="black"
-          @click="reload(j)"
-        >
-          {{ $t('reader.reload') }}
-        </q-btn>
-        <div>
-          {{ img.error }}
-        </div>
       </div>
     </div>
   </div>

@@ -324,8 +324,9 @@
       "count": "Page {current}/{total}"
     },
     "previous": "Revenir au chapitre précédent :",
-    "reload": "Recharger cette page",
+    "reload": "Recharger ce chapitre",
     "reloadImage": "Recharger cette image",
+    "reload_chapter": "Recharger ce chapitre",
     "showpagenumber": "Afficher le numéro de page",
     "webtoon": "Mode Webtoon"
   },

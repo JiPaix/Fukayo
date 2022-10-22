@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-import type { ChapterImage } from '@api/models/types/chapter';
-import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage } from '@api/models/types/errors';
+import { ChapterImage } from '@api/models/types/chapter';
+import type { MangaErrorMessage } from '@api/models/types/errors';
+import { ChapterErrorMessage, ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
@@ -58,7 +59,7 @@ const thumbscroll = ref<null|QVirtualScroll>();
 /** manga data */
 const manga = ref<MangaPage|MangaInDB|null>(null);
 /** couldn't load manga data */
-const error = ref<MangaErrorMessage|null>(null);
+const error = ref<MangaErrorMessage|ChapterErrorMessage|null>(null);
 
 /** make sure we don't load chapter twice */
 const loadingAchapter = ref(false);
@@ -85,7 +86,7 @@ const RAWchapters = ref<{
   /** expected length of imgs array */
   imgsExpectedLength: number,
   /** chapter images/errors */
-  imgs: (ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage)[]
+  imgs: (ChapterImage | ChapterImageErrorMessage)[]
   }[]
 >([]);
 
@@ -186,6 +187,19 @@ function changeURL(chapterId: string) {
 
 /** get manga info: triggered once at page load */
 async function getManga():Promise<void> {
+  // cancel previous requests
+  if(loadingAchapter.value) turnOff(false);
+  // remove errors
+  error.value = null;
+  // show spinner
+  loadingAchapter.value = true;
+  // reset current page and chapter id
+  currentPage.value = 0;
+  currentChapterId.value = props.chapterId;
+  // hide previous/next chapter divs
+  showPrevChapterDiv.value = false;
+  showNextChapterDiv.value = false;
+
   RAWchapters.value = [];
   if(historyStore.manga) {
     if(historyStore.manga.id === props.id) {
@@ -193,6 +207,8 @@ async function getManga():Promise<void> {
       manga.value = { ...historyStore.manga, chapters: historyStore.manga.chapters.sort((a, b) => a.number - b.number) };
       if(isMangaInDB(manga.value)) {
         localReaderSettings.value = manga.value.meta.options;
+        // hide spinner
+        loadingAchapter.value = false;
       }
     } else {
       historyStore.manga = null;
@@ -222,6 +238,8 @@ async function getManga():Promise<void> {
         } else {
           error.value = mg;
         }
+        // hide spinner
+        loadingAchapter.value = false;
         resolve();
       }
     });
@@ -251,6 +269,8 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
   }
 
   if(!opts.prefetch && !opts.reloadIndex) {
+    // remove errors
+    error.value = null;
     // show spinner
     loadingAchapter.value = true;
     // reset current page and chapter id
@@ -297,6 +317,12 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
     if(opts.callback) opts.callback();
     const exist = RAWchapters.value.find(c => c.id === chapterId);
 
+    // stop listening for events as the API won't return results anymore
+    // OR return and wait for the next event
+    if(isChapterErrorMessage(chapter)) {
+      error.value = chapter;
+      return socket.off('showChapter');
+    }
     // if entry is new (first page usually), and we aren't reloading/prefetching a page/chapter: add it to cache
     if(!exist) {
       RAWchapters.value.push({
@@ -316,18 +342,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
           });
         }
       }
-
-      // stop listening for events as the API won't return results anymore
-      // OR return and wait for the next event
-      if(isChapterErrorMessage(chapter) || chapter.lastpage) return socket.off('showChapter');
-      else return;
-    }
-
-    if(isChapterErrorMessage(chapter)) {
-      exist.imgs = [chapter]; // put the error message in the image array
-      return socket.off('showChapter'); // stop listening for events as the API won't return results anymore
-    }
-
+    } else {
     // API returs a ChapterImage when an image is found, or ChapterImageErrorMessage when an error occurs
     if(isChapterImage(chapter) || isChapterImageErrorMessage(chapter)) {
       // check if the image exist and is worth replacing
@@ -345,8 +360,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
       // add new image
       else exist.imgs.push(chapter);
     }
-
-    // // if this is the first page, trigger the page transition
+      // if this is the first page, trigger the page transition
     if(firstPage) {
       firstPage = false;
       if(!opts.prefetch && !opts.reloadIndex) {
@@ -356,7 +370,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
         });
       }
     }
-
+    }
     // if we have all the images, stop listening for events
     if(chapter.lastpage) {
       socket.off('showChapter');
@@ -365,10 +379,6 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
       if(opts.prefetch) return;
       return getChapter(nextChapter.value.id, { prefetch: true});
     }
-
-    // if we need to preload next chapter
-
-
   });
 }
 
@@ -533,6 +543,11 @@ async function turnOff(removeListeners = true) {
   }
 }
 
+async function restart() {
+  await turnOff();
+  await turnOn();
+}
+
 onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
 
@@ -634,7 +649,26 @@ function scrollToPage(index: number) {
         v-if="error"
         class="bg-negative"
       >
-        {{ error }}
+        <div v-if="error.error.startsWith('chapter') && isChapterErrorMessage(error as ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage)">
+          <span class="text-white text-bold">{{ error.error }}</span>
+          <span v-if="error.trace">: {{ error.trace }}</span>
+          <q-btn
+            size="lg"
+            @click="getChapter(currentChapter ? currentChapter.id : props.chapterId, {})"
+          >
+            {{ $t('reader.reload_chapter') }}
+          </q-btn>
+        </div>
+        <div v-else>
+          <span class="text-white text-bold">{{ error.error }}</span>
+          <span v-if="error.trace">: {{ error.trace }}</span>
+          <q-btn
+            size="lg"
+            @click="restart"
+          >
+            {{ $t('reader.reload_chapter') }}
+          </q-btn>
+        </div>
       </div>
       <div
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
