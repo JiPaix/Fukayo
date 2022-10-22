@@ -129,7 +129,7 @@ jobs:
       - name: Compile & release Electron app
         run: |
           npm run build
-          if [ "$RUNNER_OS" == "Linux" ];
+          if [ "$RUNNER_OS" == "Linux" ]; then
               npm exec electron-builder --config=.electron-builder.config.js --publish=always --linux
           elif [ "$RUNNER_OS" == "Windows" ]; then
               npm exec electron-builder --config=.electron-builder.config.js --publish=always --win32
