@@ -12,8 +12,26 @@
 
     "baseUrl": ".",
     "paths": {
-      "/@/*": [
-        "./src/*"
+      "@renderer/*": [
+        "../renderer/src/*"
+      ],
+      "@api/*" : [
+        "../api/src/*"
+      ],
+      "@main/*" : [
+        "../main/src/*"
+      ],
+      "@preload/*" : [
+        "../preload/src/*"
+      ],
+      "@assets/*" : [
+        "../renderer/assets/*"
+      ],
+      "@buildResources/*" : [
+        "../../buildResources/*"
+      ],
+      "@i18n/*" : [
+        "../i18n/src/*"
       ]
     }
   },

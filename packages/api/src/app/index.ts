@@ -1,17 +1,17 @@
-import { readFileSync } from 'node:fs';
-import crypto from 'node:crypto';
-import { env, send } from 'node:process';
-import EventEmitter from 'node:events';
-import { createServer as createHttp } from 'node:http';
-import { createServer as createHttps } from 'node:https';
-import generateKeyPair from '../utils/certificate';
-import IOWrapper from '../server';
-import type TypedEmitter from 'typed-emitter';
+import type { ForkResponse, Message, StartMessage } from '@api/app/types';
+import IOWrapper from '@api/server';
+import generateKeyPair from '@api/utils/certificate';
 import type { Buffer } from 'buffer';
-import type { ForkResponse, Message, StartMessage } from './types';
-import type { Server } from 'node:http';
-import type { Server as httpsServer } from 'node:https';
+import crypto from 'crypto';
+import EventEmitter from 'events';
 import type { Express } from 'express';
+import { readFileSync } from 'fs';
+import type { Server } from 'http';
+import { createServer as createHttp } from 'http';
+import type { Server as httpsServer } from 'https';
+import { createServer as createHttps } from 'https';
+import { env } from 'process';
+import type TypedEmitter from 'typed-emitter';
 
 const isMessage = (message: unknown): message is Message => {
   if(typeof message !== 'object') return false;
@@ -22,6 +22,7 @@ const isMessage = (message: unknown): message is Message => {
 type ForkEvents = {
   start: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
   shutdown: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
+  shutdownFromWeb: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
   pong: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
 }
 
@@ -43,9 +44,9 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
     });
   }
 
-  private send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
+  send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
     this.emit(type, { success, message });
-    if(send) send({type, success, message}, undefined, undefined, (e) => {
+    if(process.send) process.send({type, success, message}, undefined, undefined, (e) => {
       if(e) {
         this.killRunner();
       }
@@ -97,7 +98,7 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
     const accessToken = crypto.randomBytes(32).toString('hex');
     const refreshToken = crypto.randomBytes(32).toString('hex');
     if(!this.runner) throw new Error('runner_not_created, unexpected');
-    new IOWrapper(this.runner, this.credentials, { accessToken, refreshToken });
+    IOWrapper.getInstance(this.runner, this.credentials, { accessToken, refreshToken });
     this.send('start', true, accessToken+'[split]'+refreshToken);
     this.runner.off('error', this.event_start_error.bind(this));
   }

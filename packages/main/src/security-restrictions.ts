@@ -12,23 +12,6 @@ const ALLOWED_ORIGINS_AND_PERMISSIONS = new Map<string, Set<'clipboard-read' | '
     : [],
 );
 
-/**
- * List of origins that you allow open IN BROWSER.
- * Navigation to origins below is possible only if the link opens in a new window
- *
- * @example
- * <a
- *   target="_blank"
- *   href="https://github.com/"
- * >
- */
-const ALLOWED_EXTERNAL_ORIGINS = new Set<`${string}`>([
-  'localhost',
-  'fanfox.net',
-  'mangahasu.se',
-]);
-
-
 app.on('web-contents-created', (_, contents) => {
 
   /**
@@ -83,16 +66,7 @@ app.on('web-contents-created', (_, contents) => {
    * @see https://www.electronjs.org/docs/latest/tutorial/security#15-do-not-use-openexternal-with-untrusted-content
    */
   contents.setWindowOpenHandler(({url}) => {
-    const {hostname} = new URL(url);
-
-    if (ALLOWED_EXTERNAL_ORIGINS.has(hostname)) {
-      // Open default browser
-      shell.openExternal(url).catch(console.error);
-
-    } else if (import.meta.env.DEV) {
-      console.warn('Blocked the opening of an unallowed origin:2', hostname);
-    }
-
+    shell.openExternal(url).catch(console.error);
     // Prevent creating new window in application
     return {action: 'deny'};
   });

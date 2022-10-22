@@ -1,5 +1,7 @@
-import { Database } from './';
-import crypto from 'node:crypto';
+import { Database } from '@api/db';
+import crypto from 'crypto';
+import { resolve } from 'path';
+import { env } from 'process';
 
 type RefreshToken = {
   token: string,
@@ -18,10 +20,11 @@ type Tokens = {
   authorizedTokens: AuthorizedToken[]
 }
 
-export class TokenDatabase extends Database<Tokens> {
+export default class TokenDatabase extends Database<Tokens> {
+  static #instance: TokenDatabase;
 
-  constructor(filePath: string, tokens: { accessToken: string, refreshToken: string }) {
-    super(filePath, { authorizedTokens: [], refreshTokens: [] });
+  constructor(tokens: { accessToken: string, refreshToken: string }) {
+    super(resolve(env.USER_DATA, 'access_db.json'), { authorizedTokens: [], refreshTokens: [] });
     // remove expired or master tokens
     this.data.authorizedTokens = this.data.authorizedTokens.filter(t => t.expire > Date.now() && !t.master);
     this.data.refreshTokens = this.data.refreshTokens.filter(t => t.expire > Date.now() && !t.master);
@@ -33,24 +36,32 @@ export class TokenDatabase extends Database<Tokens> {
     // save
     this.write();
   }
+
+  static getInstance(tokens: { accessToken: string, refreshToken: string }): TokenDatabase {
+    if (!this.#instance) {
+      this.#instance = new this(tokens);
+    }
+    return this.#instance;
+  }
+
   isExpired(token: RefreshToken) {
     return token.expire < Date.now();
   }
   areParent(parent:RefreshToken, child:AuthorizedToken) {
     return parent.token === child.parent;
   }
-  generateAccess(refresh: RefreshToken, master = false) {
+  async generateAccess(refresh: RefreshToken, master = false) {
     const token = crypto.randomBytes(32).toString('hex');
     const in5minutes = Date.now() + (5 * 60 * 1000);
     const authorized = { token, expire: in5minutes, parent: refresh.token, master };
-    this.addAccessToken(authorized);
+    await this.addAccessToken(authorized);
     return authorized;
   }
-  generateRefresh(master = false) {
+  async generateRefresh(master = false) {
     const token = crypto.randomBytes(32).toString('hex');
     const in7days = Date.now() + (7 * 24 * 60 * 60 * 1000);
     const refresh = { token, expire: in7days, master };
-    this.addRefreshToken(refresh);
+    await this.addRefreshToken(refresh);
     return refresh;
   }
   findAccessToken(token: string) {
@@ -72,11 +83,11 @@ export class TokenDatabase extends Database<Tokens> {
 
   addAccessToken(token: AuthorizedToken) {
     this.data.authorizedTokens.push(token);
-    this.write();
+    return this.write();
   }
 
   addRefreshToken(token: RefreshToken) {
     this.data.refreshTokens.push(token);
-    this.write();
+    return this.write();
   }
 }

@@ -1,12 +1,21 @@
-import { env } from 'node:process';
+import { Fork } from '@api/app';
+import client from '@api/client';
+import type { ForkEnv } from '@api/types';
+import { FileServer } from '@api/utils/fileserv';
+import { verify } from '@api/utils/standalone';
+import compression from 'compression';
+import history from 'connect-history-api-fallback';
+import cors from 'cors';
 import express from 'express';
 import morgan from 'morgan';
-import { Fork } from './app';
-import { verify } from './utils/standalone';
-import client from './client';
-import type { ForkEnv } from './types';
+import { join } from 'path';
+import { env } from 'process';
 
-export default function useFork(settings: ForkEnv = env):Promise<client> {
+export default function useFork(settings: ForkEnv = env):Promise<{ client: client, fork:Fork }> {
+
+  // init the file server directory
+  const fileServer = FileServer.getInstance('fileserver');
+
   // put settings in global scope
   if(settings) {
     let k:keyof typeof settings;
@@ -21,18 +30,82 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
   // Express config
   const app = express();
 
+  // compress resources
+  app.use(compression());
+
+  // cors
+  app.options('*', cors({
+    origin: '*',
+  }));
+
+  // robots.txt
+  app.get('/robots.txt', function (req, res) {
+    res.type('text/plain');
+    res.send('User-agent: *\nDisallow: /');
+});
+
+
+  // serve the files
+  app.get('/files/:fileName', (req, res, next) => {
+    const options = {
+      root: fileServer.folder,
+      dotfiles: 'deny',
+      headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true,
+      },
+    };
+    const fileName = req.params.fileName;
+    res.sendFile(fileName, options, (err) => {
+      if (err) {
+        next(err);
+      } else {
+        fileServer.renew(fileName);
+      }
+    });
+  });
+
+  // force authentication for file requests
+  app.use('/files', (req, res, next) => {
+    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+    const strauth = Buffer.from(b64auth, 'base64').toString();
+    const splitIndex = strauth.indexOf(':');
+    const login = strauth.substring(0, splitIndex);
+    const password = strauth.substring(splitIndex + 1);
+    if(login !== env.LOGIN || password !== env.PASSWORD) {
+      // Access denied...
+      res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
+      res.status(401).send('Authentication required.'); // custom message
+    } else {
+      // Access granted...
+      next();
+    }
+  });
+
   // serve the view if any
   if(env.VIEW) {
     app.use(express.static(env.VIEW));
+    // proxy requests through a specified index page
+    app.use(history({
+      index: '/',
+      rewrites: [{
+        from: /^.*\/(.*\.\w{2,5})$/, // make sure ressource files are served through /file.ext instead of /requested/path/file.ext
+        to: (context) => {
+          return `/${context.match[1]}`;
+        },
+      }],
+    }));
+    // 2nd load of statics for unhandled history api fallback
+    app.use(express.static(env.VIEW));
+    app.get('*', (_req, res) => {
+      try {
+        if(!env.VIEW) throw new Error('unexpected error');
+        res.sendFile(join(env.VIEW, 'index.html'));
+      } catch (error) {
+        res.json({ success: false, message: 'Something went wrong' });
+      }
+    });
   }
-
-  // 403-404 handler
-  app.use((req, res, next) => {
-    if(res.headersSent) return next();
-    if(env.VIEW) res.status(404).json({error: 'not_found'});
-    else res.status(403).send('Forbidden');
-    next();
-  });
 
   // enable logging
   if (env.MODE === 'development') {
@@ -64,13 +137,14 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
           if(pings) pings();
           if(timeout) clearTimeout(timeout);
         }
-        // return a socket.io client
-        return resolve(new client({
+        const c = new client({
           accessToken: message.split('[split]')[0],
           refreshToken: message.split('[split]')[1],
           ssl: env.SSL,
           port: parseInt(env.PORT),
-        }));
+        });
+        // return both a socket.io client and the fork
+        return resolve({client: c, fork});
       }
       return reject(new Error(message));
     });
@@ -86,6 +160,26 @@ export default function useFork(settings: ForkEnv = env):Promise<client> {
         key: env.KEY,
        });
     }
+
+    // add route to interact with fork:
+    // force authentication for file requests
+    app.post('/kill', (req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
+      const strauth = Buffer.from(b64auth, 'base64').toString();
+      const splitIndex = strauth.indexOf(':');
+      const login = strauth.substring(0, splitIndex);
+      const password = strauth.substring(splitIndex + 1);
+      if(login !== env.LOGIN || password !== env.PASSWORD) {
+        // Access denied...
+        res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
+        res.status(401).send('Authentication required.'); // custom message
+      } else {
+        // Access granted...
+        res.status(200).send('killing the app');
+        fork.send('shutdownFromWeb'); // forkAPI is listening this (in main package)
+      }
+    });
 
   });
 }

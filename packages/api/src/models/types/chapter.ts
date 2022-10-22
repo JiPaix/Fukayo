@@ -1,4 +1,4 @@
-export type ChapterPage = {
+export type ChapterImage = {
   /** 0 based index of the page */
   index: number,
   /**

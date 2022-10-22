@@ -94,7 +94,7 @@ const supportedTypes = [
   'revert',
   'deps',
   'release',
-  'Merge',
+  'merge',
   fallbackType,
 ];
 
@@ -152,6 +152,10 @@ function setCommitTypeAndScope(commit) {
   // Commits like `revert something`
   if (type === undefined && commit.subject.startsWith('revert')) {
     type = 'revert';
+  }
+
+  if (type === undefined && commit.subject.startsWith('Merge')) {
+    type = 'merge';
   }
 
   return {
@@ -308,7 +312,7 @@ function getChangeLog(groups) {
     if (group.isEmpty) {
       continue;
     }
-    if(typeId === 'release' || typeId === 'Merge') continue;
+    if(typeId === 'release' || typeId === 'merge') continue;
     changelog += `### ${replaceHeader(typeId)}${'\r\n'}`;
 
     for (const [scopeId, scope] of group.scopes) {

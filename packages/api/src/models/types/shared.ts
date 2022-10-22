@@ -1,3 +1,5 @@
+import type { mirrorsLangsType } from '@i18n/index';
+
 export type TaskDone = {
   done: boolean;
 }
@@ -5,6 +7,10 @@ export type TaskDone = {
  * Mirror information
  */
 export type mirrorInfo = {
+  /** mirror's implementation version `Integer`*/
+  version: number,
+  /** isdead */
+  isDead: boolean,
   /** Mirror's slug */
   name:string,
   /** Mirror's full name */
@@ -28,12 +34,26 @@ export type mirrorInfo = {
    *
    * ISO 639-1 codes
    */
-  langs:string[],
+  langs: mirrorsLangsType[],
+  /**
+   * does the mirror treats different languages for the same manga as different entries
+   * @default true
+   * @example
+   * ```js
+   * // multipleLangsOnSameEntry = false
+   * manga_from_mangadex = { title: 'A', url: `/manga/xyz`, langs: ['en', 'jp'] }
+   *
+   * // multipleLangsOnSameEntry = true
+   * manga_from_tachidesk = { title: 'B', url: `/manga/yz`, langs: ['en'] }
+   * manga_from_tachidesk2 = { title: 'B', url: `/manga/xyz`, langs: ['jp'] }
+   * ```
+   */
+   entryLanguageHasItsOwnURL: boolean,
   /**
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
-  options: Record<string, unknown> & { enabled: boolean },
+  options: Record<string, unknown>,
     /** Meta information */
     meta: {
       /**

@@ -1,4 +1,16 @@
-export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean}> = {
+import type { mirrorsLangsType } from '@i18n/index';
+
+export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: boolean, cache:boolean }> = {
+  /**
+   * mirror's implementation version
+   *
+   * ⚠️ Mirror version must be incremented ONLY IF the mirror changed all of its mangas/chapter urls.
+   * or you introduce some changes that breaks previous version of mangas in db
+   *
+   */
+  version: number,
+  /** is the mirror dead */
+  isDead: boolean,
   /** slug name: `az-_` */
   name: string,
   /** full name */
@@ -8,6 +20,8 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    * @example 'https://www.mirror.com'
    */
   host: string,
+  /** alternative hostnames were the site can be reached */
+  althost?: string[]
   /**
    * mirror icon (import)
    * @example
@@ -20,7 +34,21 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    *
    * ISO 639-1 codes
    */
-  langs: string[],
+  langs: mirrorsLangsType[],
+  /**
+   * does the mirror treats different languages for the same manga as different entries
+   * @default true
+   * @example
+   * ```js
+   * // multipleLangsOnSameEntry = false
+   * manga_from_mangadex = { title: 'A', url: `/manga/xyz`, langs: ['en', 'jp'] }
+   *
+   * // multipleLangsOnSameEntry = true
+   * manga_from_tachidesk = { title: 'B', url: `/manga/yz`, langs: ['en'] }
+   * manga_from_tachidesk2 = { title: 'B', url: `/manga/xyz`, langs: ['jp'] }
+   * ```
+   */
+  entryLanguageHasItsOwnURL?: boolean,
   /** Meta information */
   meta: {
     /**
@@ -42,19 +70,21 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
      */
     popularity: number,
   }
+
+  /** Requests limits */
+  requestLimits: {
+    /** time in ms between each requests (or each batch of concurrent requests) */
+    time: number,
+    /** number of requests that can be sent at once */
+    concurrent: number
+  }
   /**
-   * Time to wait in ms between requests
+   *
    */
-  waitTime?: number,
+
   /**
    * Mirror specific option
    * @example { adult: true, lowres: false }
    */
   options: T
-  /**
-   * Enable/disable cache
-   */
-  cache: boolean
-  /** Cache Max Age */
-  cacheMaxAge?: number
 }

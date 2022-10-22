@@ -1,7 +1,7 @@
 export type Message = ShutdownMessage | StartMessage | PingMessage;
 
 export type ShutdownMessage = {
-  type: 'shutdown';
+  type: 'shutdown'|'shutdownFromWeb';
 }
 
 export type StartMessage = {
@@ -14,7 +14,7 @@ export type PingMessage = {
 }
 
 export type ForkResponse = {
-  type: 'start' | 'shutdown' | 'pong',
+  type: 'start' | 'shutdown' | 'shutdownFromWeb' | 'pong',
   success?: boolean,
   message?: string,
 }

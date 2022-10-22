@@ -1,25 +1,26 @@
 <script lang="ts" setup>
-import { ref, onBeforeMount } from 'vue';
-import { useQuasar } from 'quasar';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import { useI18n } from 'vue-i18n';
-import { useSocket } from './components/helpers/socket';
+import type { LoginAuth } from '@api/client/types';
+import favicon from '@assets/icon.svg';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
+import AppLayout from '@renderer/components/AppLayout.vue';
+import { useSocket } from '@renderer/components/helpers/socket';
+import Login from '@renderer/components/login/App.vue';
+import Setup from '@renderer/components/setup/App.vue';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useFavicon } from '@vueuse/core';
-import setupPage from '/@/components/setupPage.vue';
-import loginPage from '/@/components/loginPage.vue';
-import mainPage from '/@/components/mainPage.vue';
-import favicon from '../assets/icon.svg';
-import type { LoginAuth } from '../../api/src/client/types';
+import { useQuasar } from 'quasar';
+import { onBeforeMount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-/** vue-i18n */
-const $t = useI18n().t.bind(useI18n());
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** load favicon */
 useFavicon(favicon); // change favicon
 /** stored settings */
 const settings = useSettingsStore();
 /** quasar */
 const $q = useQuasar();
-$q.dark.set(true);
+$q.dark.set(settings.theme === 'dark');
 $q.loading.hide();
 const loading = ref(false);
 
@@ -53,8 +54,8 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
       // do not show error if we connect wasn't explicitly called by the user
       if(beforeMount) return;
       $q.notify({
-        message: $t('setup.error.value'),
-        caption: typeof e === 'string' ? e : $t('setup.unexpectederror.value'),
+        message: $t('setup.error'),
+        caption: typeof e === 'string' ? e : $t('setup.unexpectederror'),
         color: 'negative',
       });
     }
@@ -67,32 +68,33 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
 onBeforeMount(()=> {
   if(!isElectron) {
     const [host, port] = new URL(window.location.href).host.split(':');
-    settings.server.hostname = host;
+    settings.server.ssl = new URL(window.location.href).protocol === 'https:' ? 'app' : 'false';
+    settings.server.hostname = settings.server.ssl === 'false' ? 'http://' : 'https://' + host;
     settings.server.port = parseInt(port);
   }
   connect(undefined, true);
 });
 </script>
 <template>
-  <q-layout dark>
+  <q-layout>
     <q-page-container>
-      <q-page dark>
+      <q-page>
         <div v-if="!loading">
           <div v-if="!connected">
             <!-- Setup page if client is electron -->
-            <setupPage
+            <setup
               v-if="isElectron"
               @done="connect"
             />
             <!-- Login page if client is not electron -->
-            <loginPage
+            <login
               v-else
               :bad-password="badPassword"
               @done="connect"
             />
           </div>
           <!-- Main page once client is connected -->
-          <mainPage
+          <app-layout
             v-else
             :logo="favicon"
           />

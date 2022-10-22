@@ -1,0 +1,194 @@
+<script lang="ts" setup>
+import type { socketClientInstance } from '@api/client/types';
+import type { MangaInDB } from '@api/models/types/manga';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type Scheduler from '@api/server/scheduler';
+import type en from '@i18n/../locales/en.json';
+import type { appLangsType } from '@i18n/index';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
+import { useSocket } from '@renderer/components/helpers/socket';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import type dayjs from 'dayjs';
+import { format, useQuasar } from 'quasar';
+import { computed, inject, onBeforeMount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+
+/** quasar */
+const $q = useQuasar();
+/** quasar format util */
+const { humanStorageSize } = format;
+/** settings */
+const settings = useSettingsStore();
+/** vue-router */
+const router = useRouter();
+/** socket */
+let socket:socketClientInstance|undefined;
+/** dayJS lib */
+const dayJS = inject<typeof dayjs>('dayJS');
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+const mangaLogs = ref<Scheduler['logs']['manga']>([]);
+
+const cacheLogs = ref<Scheduler['logs']['cache']>([]);
+
+const logs = computed(() => {
+    return [...mangaLogs.value, ...cacheLogs.value].sort((a, b) => b.date - a.date);
+});
+
+function isMangaLog(res:Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]): res is Scheduler['logs']['manga'][0] {
+  return res.message === 'chapter' || res.message === 'chapter_error' || res.message === 'chapter_read';
+}
+
+const mirrors = ref<mirrorInfo[]>([]);
+const mangas = ref<MangaInDB[]>([]);
+
+function getMangaName (mangaId:string) {
+  const manga = mangas.value.find(m => m.id === mangaId);
+  if(manga) return manga.displayName || manga.name;
+  else return '';
+}
+
+function getMangaLang (mangaId:string) {
+  const manga = mangas.value.find(m => m.id === mangaId);
+  if(!manga) return '';
+  return manga.langs.map(l =>  $t(`languages.${l}`)).join(', ');
+}
+
+function getMirror(name:string) {
+  const mirror = mirrors.value.find(m => m.name === name);
+  if(mirror) return mirror.displayName || mirror.name;
+  else return '';
+}
+
+function itemClick(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
+  if(isMangaLog(log)) {
+    const manga = mangas.value.find(m => m.id === log.id);
+    if(!manga) return;
+    const params = routeTypeHelper('manga', { mirror: manga.mirror.name, id: manga.id, lang: manga.langs[0] });
+    router.push(params);
+  }
+}
+
+function colorSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
+  if(log.message === 'chapter') return 'positive';
+  if(log.message === 'chapter_error' || log.message === 'cache_error') return 'negative';
+  if(log.message === 'chapter_read' || log.message === 'cache' || log.message === 'manga_metadata') return 'secondary';
+}
+
+function iconSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
+  if(log.message === 'chapter') return 'new_releases';
+  if(log.message === 'chapter_error') return 'personal_injury';
+  if(log.message === 'chapter_read') return 'visibility';
+  if(log.message === 'cache') return 'recycling';
+  if(log.message === 'cache_error') return 'dangerous';
+  if(log.message === 'manga_metadata') return 'analytics';
+}
+
+onBeforeMount(async () => {
+  const now = Date.now();
+  if(!socket) socket = await useSocket(settings.server);
+  socket.emit('schedulerLogs', (l)=> {
+    mangaLogs.value = l.manga;
+    cacheLogs.value = l.cache;
+  });
+  socket.emit('getMirrors', true, (m) => {
+    mirrors.value = m;
+  });
+  socket.on('showLibrary', (id, manga) => {
+    if(id === now) {
+      mangas.value.push(manga);
+    }
+  });
+  socket.emit('showLibrary', now);
+});
+
+</script>
+<template>
+  <div
+    class="w-100 q-ma-sm"
+    :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
+  >
+    <q-infinite-scroll :offset="250">
+      <q-list
+        v-for="(log, index) in logs"
+        :key="index"
+        :dark="$q.dark.isActive"
+      >
+        <q-item
+          clickable
+          class="q-py-md"
+          :dark="$q.dark.isActive"
+          @click="itemClick(log)"
+        >
+          <q-item-section avatar>
+            <q-icon
+              :color="colorSelector(log)"
+              :name="iconSelector(log)"
+              size="lg"
+            />
+          </q-item-section>
+          <q-item-section v-if="isMangaLog(log)">
+            <q-item-label
+              lines="1"
+              class="flex items-center"
+            >
+              <span class="text-weight-bold">{{ getMangaName(log.id) }} <i>({{ getMangaLang(log.id) }})</i></span>
+              <q-tooltip>
+                <img
+                  :src="mangas.find(m => m.id === log.id )?.covers[0]"
+                >
+              </q-tooltip>
+            </q-item-label>
+            <q-item-label
+              caption
+              lines="1"
+            >
+              <div class="flex">
+                <span v-if="log.message === 'chapter'">{{ $t('logs.found_chapter', {number: log.nbOfUpdates}, log.nbOfUpdates) }}</span>
+                <span v-else-if="log.message === 'chapter_error'">{{ $t('logs.error_chapter') }}</span>
+                <span v-else-if="log.message === 'chapter_read'">{{ $t('logs.read_chapter', {number: log.nbOfUpdates}, log.nbOfUpdates) }}</span>
+                <span v-else-if="log.message === 'manga_metadata'">{{ $t('logs.new_metadata') }}</span>
+              </div>
+            </q-item-label>
+          </q-item-section>
+          <q-item-section v-else>
+            <q-item-label
+              lines="1"
+              class="flex items-center"
+            >
+              <span> {{ $t('settings.cache') }} </span>
+            </q-item-label>
+            <q-item-label
+              caption
+              lines="1"
+            >
+              <span v-html="$t('logs.cache', {size: humanStorageSize(log.size), files: log.files }, log.files)" />
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+            top
+          >
+            {{ dayJS ? dayJS(log.date).fromNow() : log.date }}
+            <div
+              v-if="isMangaLog(log)"
+              class="flex items-center"
+            >
+              <img
+                :src="mirrors.find(m => m.name === log.mirror)?.icon"
+                width="16"
+                height="16"
+                class="q-mr-xs"
+              >
+              <span> {{ getMirror(log.mirror) }} </span>
+            </div>
+          </q-item-section>
+        </q-item>
+        <q-separator
+          v-if="index < (logs.length-1)"
+          :dark="$q.dark.isActive"
+        />
+      </q-list>
+    </q-infinite-scroll>
+  </div>
+</template>

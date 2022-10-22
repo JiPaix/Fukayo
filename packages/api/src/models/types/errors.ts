@@ -4,7 +4,7 @@ export type ErrorMessage = {
 }
 
 export type MangaErrorMessage = {
-    error:'manga_error'|'manga_error_unknown'|'manga_error_invalid_link'
+    error:'manga_error'|'manga_error_unknown'|'manga_error_invalid_link'|'manga_error_mirror_not_found'
     trace?:string
 }
 
@@ -19,8 +19,8 @@ export type ChapterErrorMessage = {
     trace?: string
     url?: string
 }
-export type ChapterPageErrorMessage = {
-    error:'chapter_error'|'chapter_error_unknown'|'chapter_error_invalid_link'|'chapter_error_fetch'|'chapter_error_no_image'
+export type ChapterImageErrorMessage = {
+    error:'chapter_error'|'chapter_error_unknown'|'chapter_error_invalid_link'|'chapter_error_fetch'|'chapter_error_no_image'|'chapter_error_mirror_not_found'
     trace?: string
     url?: string
     index: number

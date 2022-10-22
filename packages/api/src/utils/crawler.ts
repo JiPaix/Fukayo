@@ -1,13 +1,13 @@
-import { env } from 'node:process';
-import { Cluster } from 'puppeteer-cluster';
-import { resolve } from 'node:path';
-import puppeteer from 'puppeteer-extra';
-import si from 'systeminformation';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
-import UserAgent from 'user-agents';
+import type { ClusterJob } from '@api/utils/types/crawler';
+import { resolve } from 'path';
+import { env } from 'process';
 import type { Page } from 'puppeteer';
-import type { ClusterJob } from './types/crawler';
+import { Cluster } from 'puppeteer-cluster';
+import puppeteer from 'puppeteer-extra';
+import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import si from 'systeminformation';
+import UserAgent from 'user-agents';
 
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin());
@@ -39,6 +39,7 @@ let runningTask = 0;
  * Initialize cluster instance if not already initialized.
  */
 async function useCluster() {
+  if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
   if(cluster) return cluster;
   // pseudo benchmarking
   const cores = (await si.cpu()).physicalCores;
@@ -85,6 +86,9 @@ async function useCluster() {
 
 async function task({page, data}: { page: Page, data: ClusterJob }) {
   try {
+    let html:undefined|string|Error = undefined;
+    if(data.auth) await page.authenticate({username:data.auth.username, password:data.auth.password});
+    page.setDefaultTimeout(data.timeout || 10000);
     await page.setUserAgent(userAgent.random().toString());
     if(data.cookies) data.cookies.forEach(c => page.setCookie(c));
 
@@ -94,10 +98,22 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
       if (req.isInterceptResolutionHandled()) return;
     });
 
-    // get the content
+    page.on('response', async resp => {
+      if(data.type !== 'json') return;
+      if(!resp.url()) return;
+      if(resp.ok()) html = await resp.text();
+      else new Error(`bad_request: ${resp.status()} @ ${data.url}`);
+    });
+
+    // go to page and wait for network idle
     await page.goto(data.url, { referer: data.referer });
-    if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, { timeout: 1000*20 });
-    const html = await page.content();
+    await page.waitForNetworkIdle();
+
+    // if we didn't get a 404, and user asked for HTML/STRING, get it
+    if(data.type !== 'json' && !html) {
+      if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, { timeout: 1000*20 });
+      html = await page.content();
+    }
 
     // remove task from task list then close cluster if needed
     runningTask = runningTask-1;
@@ -107,6 +123,7 @@ async function task({page, data}: { page: Page, data: ClusterJob }) {
   } catch(e) {
     // in most cases happens because waitForSelector timeout is reached (cloudflare?)
     runningTask = runningTask-1;
+    closeClusterIfAllDone();
     if(e instanceof Error) return e;
   }
 }
@@ -131,6 +148,7 @@ async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
   } catch(e) {
     // in most cases happens because waitForSelector timeout is reached (cloudflare?)
     runningTask = runningTask-1;
+    closeClusterIfAllDone();
     if(e instanceof Error) return e;
   }
 }
@@ -138,10 +156,11 @@ async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
 /**
  * execute a task with headless browser
  */
-export async function crawler(data: ClusterJob, isFile: false): Promise<string | Error | undefined>
+export async function crawler(data: ClusterJob, isFile: false, type: 'html'|'json'|'string'): Promise<string | Error | undefined>
 export async function crawler(data: ClusterJob, isFile: true): Promise<Buffer | Error | undefined>
-export async function crawler(data: ClusterJob, isFile: boolean) {
+export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'json'|'string') {
   const instance = await useCluster();
+  if(type) data.type = type;
   if(isFile) {
     return instance.execute(data, taskFile) as Promise<Buffer | Error | undefined>;
   }

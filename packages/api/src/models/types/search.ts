@@ -1,10 +1,9 @@
-import type { mirrorInfo } from './shared';
+import type { mirrorInfo } from '@api/models/types/shared';
+import type { mirrorsLangsType } from '@i18n/index';
 
 export type SearchResult = {
   /**
-   * ID of the manga
-   *
-   * @example 'mirror_name/manga_lang/relative-url-of-manga'
+   * id of the manga
    */
   id:string,
   /**
@@ -18,7 +17,7 @@ export type SearchResult = {
    *
    * ISO 639-1 codes
    */
-  lang: string,
+  langs: mirrorsLangsType[],
   /** Manga's full name */
   name: string,
   /**
@@ -31,6 +30,8 @@ export type SearchResult = {
   synopsis?: string,
   /** Mirror's information */
   mirrorinfo:mirrorInfo,
+  /** is the manga in the library */
+  inLibrary: boolean,
   /** Latest release */
   last_release?: {
     /** Chapter's name */

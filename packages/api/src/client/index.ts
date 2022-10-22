@@ -1,11 +1,18 @@
-import io from 'socket.io-client';
+import type { ForkResponse, startPayload } from '@api/app/types';
+import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from '@api/client/types';
+import type { ServerToClientEvents } from '@api/server/types';
 import type { Socket } from 'socket.io-client';
-import type { ForkResponse, startPayload } from '../app/types';
-import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from './types';
-import type { ServerToClientEvents } from '../server/types';
+import io from 'socket.io-client';
 
 declare global {
-  interface Window { readonly apiServer: { startServer: (payload: startPayload) => Promise<ForkResponse>; stopServer: () => Promise<ForkResponse>; getEnv: string; } }
+  interface Window {
+    readonly apiServer: {
+      startServer: (payload: startPayload) => Promise<ForkResponse>;
+      stopServer: () => Promise<ForkResponse>;
+      copyImageToClipboard: (string: string) => Promise<void>;
+      getEnv: string;
+    }
+  }
 }
 
 /**
@@ -75,11 +82,9 @@ export default class socket {
   connect(auth?: LoginAuth): Promise<Socket<ServerToClientEvents, ClientToServerEvents>> {
 
     return new Promise((resolve, reject) => {
-
-      if(this.socket && !this.socket.disconnected) {
+      if(this.socket && this.socket.connected) {
         return resolve(this.initSocket());
       }
-
       const authentification = auth ? auth : { token: this.settings.accessToken, refreshToken: this.settings.refreshToken };
       const socket:Socket<ServerToClientEvents, ClientToServerEvents> = io(this.getServer(),
       {

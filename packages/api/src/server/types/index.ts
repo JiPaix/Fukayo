@@ -1,20 +1,24 @@
+import type { ClientToServerEvents } from '@api/client/types';
+import type { ChapterImage } from '@api/models/types/chapter';
+import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
+import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { SearchResult } from '@api/models/types/search';
+import type { TaskDone } from '@api/models/types/shared';
 import type { Socket } from 'socket.io';
-import type { ChapterPage } from '../../models/types/chapter';
-import type { SearchErrorMessage, RecommendErrorMessage, MangaErrorMessage, ChapterPageErrorMessage, ChapterErrorMessage } from '../../models/types/errors';
-import type { MangaPage } from '../../models/types/manga';
-import type { SearchResult } from '../../models/types/search';
-import type { TaskDone } from '../../models/types/shared';
-import type { ClientToServerEvents } from '../../client/types';
 
-export interface ServerToClientEvents {
+export type ServerToClientEvents = {
   authorized: () => void;
   unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
-  searchInMirrors: (id:number, mangas:SearchResult|SearchErrorMessage|TaskDone) => void;
-  showManga: (id:number, manga:MangaPage|MangaErrorMessage) =>void
-  showChapter: (id:number, chapter:ChapterPage|ChapterPageErrorMessage|ChapterErrorMessage) => void;
-  showRecommend: (id:number, mangas:SearchResult|RecommendErrorMessage|TaskDone) => void;
+  searchInMirrors: (id:number, mangas:SearchResult[]|SearchResult|SearchErrorMessage|TaskDone) => void;
+  showManga: (id:number, manga:MangaPage|MangaInDB|MangaErrorMessage) =>void
+  showMangas: (id:number, mangas:(MangaInDB | MangaPage | MangaErrorMessage)[]) =>void
+  showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
+  showRecommend: (id:number, mangas:SearchResult[]|SearchResult|RecommendErrorMessage|TaskDone) => void;
+  showLibrary: (id:number, manga:MangaInDB) => void;
+  finishedMangasUpdate: () => void;
+  startMangasUpdate: () => void;
 }
 
 export type socketInstance = Socket<ClientToServerEvents, ServerToClientEvents>

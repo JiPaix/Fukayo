@@ -1,22 +1,23 @@
 <script lang="ts" setup>
-import { ref, computed, onBeforeMount } from 'vue';
-import { useSocket } from '../helpers/socket';
-import { useStore as useSettingsStore } from '/@/store/settings';
-import filesize from 'filesize';
-import type { socketClientInstance } from '../../../../api/src/client/types';
+import type { socketClientInstance } from '@api/client/types';
+import { useSocket } from '@renderer/components/helpers/socket';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { format, useQuasar } from 'quasar';
+import { computed, onBeforeMount, ref } from 'vue';
 
+const $q = useQuasar();
 const settings = useSettingsStore();
 let socket:socketClientInstance|undefined;
 const size = ref(0);
-const files = ref<string[]>([]);
+const files = ref(0);
 
 const humanreadable = computed(() => {
-  return filesize(size.value);
+  return format.humanStorageSize(size.value);
 });
 
 function emptyCache() {
-  socket?.emit('emptyCache', files.value);
-  files.value = [];
+  socket?.emit('emptyCache');
+  files.value = 0;
   size.value = 0;
 }
 
@@ -34,6 +35,7 @@ onBeforeMount(async () => {
   <q-list separator>
     <q-item
       v-ripple
+      :dark="$q.dark.isActive"
       clickable
       @click="emptyCache"
     >
@@ -45,14 +47,14 @@ onBeforeMount(async () => {
       </q-item-section>
 
       <q-item-section>
-        <q-item-label>Cache</q-item-label>
+        <q-item-label>{{ $t('settings.cache') }}</q-item-label>
         <q-item-label
           caption
           lines="2"
         >
           <div>{{ humanreadable }}</div>
           <div class="text-grey">
-            {{ files.length }} Files
+            {{ files }} {{ $t('settings.file', files) }}
           </div>
         </q-item-label>
       </q-item-section>

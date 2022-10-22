@@ -29,7 +29,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: self-ubuntu
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read

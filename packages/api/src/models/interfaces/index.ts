@@ -1,64 +1,8 @@
-import type { mirrorInfo } from '../types/shared';
-import type { socketInstance } from '../../server/types';
-
+import type Scheduler from '@api/server/scheduler';
+import type { socketInstance } from '@api/server/types';
+import type { mirrorsLangsType } from '@i18n/index';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
-  /**
-   * Whether the mirror is enabled
-   */
-  get enabled(): boolean;
-  /** full name */
-  displayName: string;
-  /** slug name */
-  name: string;
-  /**
-   * hostname without ending slash
-   * @example 'https://www.mirror.com'
-   */
-  host: string;
-  /**
-   * Languages supported by the mirror
-   *
-   * ISO 639-1 codes
-   */
-  langs: string[];
-  /** Meta information */
-  meta: {
-    /**
-     * quality of scans
-     *
-     * Number between 0 and 1
-     */
-    quality: number,
-    /**
-     * Speed of releases
-     *
-     * Number between 0 and 1
-     */
-    speed: number,
-    /**
-     * Mirror's popularity
-     *
-     * Number between 0 and 1
-     */
-    popularity: number,
-  }
-  /**
-   * Time to wait in ms between requests
-   */
-  waitTime: number;
-  /**
-   * The icon in base 64 data string
-   * @example "data:image/png;base64,..."
-   */
-  get icon(): string;
-
-  /**
-   * Mirror informations
-   */
-  get mirrorInfo(): mirrorInfo;
-  /** Change the mirror settings */
-  changeSettings(options: Record<string, unknown>): void;
   /**
    * Test if url is a manga page
    */
@@ -80,15 +24,15 @@ export default interface MirrorInterface {
    * @param {socketInstance} socket user socket
    * @param {Number} id request's uid
    */
-  search(query: string, socket:socketInstance, id:number): void;
+  search(query: string, langs: mirrorsLangsType[] ,socket:socketInstance|Scheduler, id:number): void;
   /**
-   * Get manga info from
-   * @param {String} url Relative url to the manga page
-   * @param {String} lang ISO-639-1 language code
-   * @param {socketInstance} socket the request initiator
-   * @param {Number} id arbitrary id
+   * Get manga infos (title, authors, tags, chapters, covers, etc..)
+   * @param url Relative url to the manga page
+   * @param langs ISO-639-1 language code
+   * @param socket the request initiator
+   * @param id arbitrary id
    */
-  manga(url:string, lang:string, socket:socketInstance, id:number): void;
+  manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number): void;
   /**
    * Get all images from chapter
    * @param link Relative url of chapter page (any page)
@@ -98,13 +42,14 @@ export default interface MirrorInterface {
    * @param callback callback function to tell the client how many pages to expect
    * @param retryIndex If you don't need the whole chapter, you can pass the index of the page you want to start from (0-based)
    */
-  chapter(link:string, lang:string, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
+  chapter(link:string, lang:mirrorsLangsType, socket:socketInstance, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number): void;
 
+  markAsRead?(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean): void;
   /**
    *
    * @param socket the request initiator
    * @param id arbitrary id
    */
   recommend(socket:socketInstance, id:number): void;
-// eslint-disable-next-line semi
-}
+// eslint-disable-next-line semi, @typescript-eslint/no-extra-semi
+};

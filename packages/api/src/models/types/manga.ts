@@ -1,12 +1,10 @@
-import type { mirrorInfo } from './shared';
-
-export type MangaPage = {
+import type { mirrorsLangsType } from '@i18n/index';
+export interface MangaPage {
   /**
    * ID of the manga
-   *
    * @example 'mirror_name/manga_lang/relative-url-of-manga'
    */
-  id:string
+  id: string
   /**
    * Relative url of the manga (with leading slash)
    *
@@ -18,7 +16,7 @@ export type MangaPage = {
    *
    * ISO 639-1 codes
    */
-  lang: string,
+  langs: mirrorsLangsType[],
   /** Manga's full name */
   name: string,
   /** Custom manga's name defined by user */
@@ -28,56 +26,87 @@ export type MangaPage = {
    *
    * @example ["data:image/png;base64,...", "data:image/png;base64,..."]
    */
-  covers?: string[],
+  covers: string[],
   /** Summary */
   synopsis?: string,
   /** Tags */
-  tags?:string[],
+  tags:string[],
   /** Authors */
-  authors?: string[],
-  /** Mirror's information */
-  mirrorInfo: mirrorInfo,
-  /** List of chapters */
+  authors: string[],
+  /** Is the manga saved in db */
+  inLibrary: boolean
+  /** user categories */
+  userCategories: string[]
+  /** chapters */
   chapters: {
+    /**
+     * Chapter's uuid
+     */
+    id: string,
+    /**
+     * Chapter's relative URL
+     * @example '/manga/manga-name/chapter-name'
+     */
+    url: string
+    /**
+     * chapter language
+     */
+    lang: mirrorsLangsType
+    /** fetch date */
+    date: number
     /**
      * Chapter number (float) or position in the list
      *
      * position is used if the chapter is not numbered (or not available)
      */
-    number: number,
+    number: number
+    /** Chapter's name */
+    name?: string
     /**
      * Chapter's volume number
      */
     volume?: number
-    /**
-     * Chapter's relative URL
-     *
-     * @example '/manga/manga-name/chapter-name'
-     */
-    url: string,
-    /** Chapter's name */
-    name?: string,
-    /** Fetch date */
-    date: number
-    /**
-     * Has the chapter been read?
-     *
-     * Only required for mangas which are stored in the database
-     */
-    read?: boolean
     /**
      * Scanlator's name
      *
      * to use if mirror can provide the same chapter from multiple scanlators
      */
     group?: string|number
+    /**
+     * Chapter's read status
+     *
+     * reset to false if the chapter is reloaded without being in the library
+     */
+    read: boolean
   }[]
+  /** mirror name */
+  mirror: {
+    name: string,
+    /** mirror's implementation version `Integer` */
+    version: number
+  }
 }
 
-export type MangaInDB = MangaPage & {
-  /** Mirror's slug */
-  mirror: string,
-  chapters: MangaPage['chapters'] & {
-    read: boolean
+export interface MangaInDB extends MangaPage {
+  chapters : (MangaPage['chapters'][0])[]
+  meta : {
+    /** the last read chapter id */
+    lastReadChapterId?: string,
+    /** last time chapters list has been updated */
+    lastUpdate: number,
+    /** notify user when new chapter is out */
+    notify: boolean,
+    /** should the manga chapters list be updated  */
+    update: boolean,
+    /** is the mirror broken */
+    broken: boolean,
+    options: {
+      webtoon: boolean,
+      showPageNumber: boolean,
+      zoomMode: 'auto' | 'fit-width' | 'fit-height' | 'custom',
+      zoomValue: number,
+      longStrip:boolean,
+      overlay: boolean,
+    }
   }
 }

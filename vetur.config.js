@@ -21,5 +21,9 @@ module.exports = {
       root: './packages/preload',
       tsconfig: './tsconfig.json',
     },
+    {
+      root: './packages/api',
+      tsconfig: './tsconfig.json',
+    },
   ],
 };

@@ -1,98 +1,101 @@
-import {createApp} from 'vue';
-import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
-import App from './App.vue';
-
-const myApp = createApp(App);
+import Root from '@renderer/App.vue';
+import { createApp } from 'vue';
+import { createRouter, createWebHistory } from 'vue-router';
 
 // LocalStorage
+import { piniaLocalStorage } from '@renderer/store/localStorage';
 import { createPinia } from 'pinia';
-import { piniaLocalStorage } from './store/localStorage';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);
 
-myApp.use(pinia);
-
 // Router
-import MangaLibrary from './components/MangaLibrary.vue';
-import searchManga from './components/searchMangas.vue';
-import showManga from './components/showManga.vue';
-import explorePage from './components/ExploreMirrors.vue';
-import exploreMirror from './components/ExploreSelectedMirror.vue';
-import settingsPage from './components/settings/settingsPage.vue';
-
 const router = createRouter({
-  history: typeof window.apiServer === 'undefined' ? createWebHashHistory() : createWebHistory(),
+  history: createWebHistory(),
   routes: [
       {
         name: 'home',
         path: '/',
-        component: MangaLibrary,
+        component: () => import('@renderer/components/library/App.vue'),
       },
       {
         name: 'search',
         path: '/search',
-        component: searchManga,
+        component: () => import('@renderer/components/search/App.vue'),
         props: route => ({ query: route.query.q }),
       },
       {
         name: 'manga',
-        path: '/manga/:mirror/:lang/:url',
-        component: showManga,
+        path: '/manga/:mirror/:id/:lang',
+        component: () => import('@renderer/components/manga/App.vue'),
+        props: true,
+      },
+      {
+        name: 'reader',
+        path: '/manga/:mirror/:id/:lang/read/:chapterId',
+        component: () => import('@renderer/components/reader/App.vue'),
+        props: true,
       },
       {
         name: 'explore',
         path: '/explore',
-        component: explorePage,
+        component: () => import('@renderer/components/explore/App.vue'),
       },
       {
         name: 'explore_mirror',
         path: '/explore/:mirror',
-        component: exploreMirror,
+        component: () => import('@renderer/components/explore/SourceExplore.vue'),
       },
       {
         name: 'settings',
         path: '/settings',
-        component: settingsPage,
+        component: () => import('@renderer/components/settings/App.vue'),
+      },
+      {
+        name: 'logs',
+        path: '/logs',
+        component: () => import('@renderer/components/logs/App.vue'),
       },
     ],
 });
 
-myApp.use(router);
-
 // Quasar
-import { Quasar, Dialog, Notify, Loading } from 'quasar';
-import('@quasar/extras/roboto-font/roboto-font.css');
+import { Dialog, Loading, Notify, Quasar } from 'quasar';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+/** @ts-ignore */
+import('@fontsource/roboto');
 import('@quasar/extras/material-icons/material-icons.css');
 import('@quasar/extras/material-icons-outlined/material-icons-outlined.css');
 import('@quasar/extras/material-icons-round/material-icons-round.css');
 import('quasar/dist/quasar.css');
 
-myApp.use(Quasar, {
-  plugins: {Dialog, Notify, Loading},
+const QuasarConfig = {
+  plugins: { Dialog, Notify, Loading },
   config: {
     brand: {
       primary: '#3d75ad',
       secondary: '#4da89f',
       accent: '#9C27B0',
-
       dark: '#1d1d1d',
-
       positive: '#3b9c52',
       negative: '#b53645',
       info: '#61c1d4',
       warning: '#dbb54d',
     },
   },
-});
+};
 
 // localization
-import { findLocales } from './locales/lib';
-import { setupI18n } from './locales/lib';
+import { findAppLocale } from '@i18n/index';
+import { setupI18n } from '@renderer/locales';
 import dayjs from 'dayjs';
 
-const lang = findLocales(navigator.language);
-myApp.use(setupI18n({ locale: lang }));
-myApp.provide('dayJS', dayjs);
+const lang = findAppLocale(navigator.language);
 
 // init
-myApp.mount('#app');
+const App = createApp(Root);
+App.provide('dayJS', dayjs);
+App.use(setupI18n({ locale: lang }));
+App.use(Quasar, QuasarConfig);
+App.use(pinia);
+App.use(router);
+App.mount('#app');

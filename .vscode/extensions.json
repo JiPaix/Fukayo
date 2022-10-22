@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "formulahendry.auto-close-tag",
+    "steoates.autoimport",
+    "formulahendry.auto-rename-tag",
+    "naumovs.color-highlight",
+    "vivaxy.vscode-conventional-commits",
+    "editorconfig.editorconfig",
+    "cschleiden.vscode-github-actions",
+    "lokalise.i18n-ally",
+    "eamodio.gitlens"
+  ]
+}

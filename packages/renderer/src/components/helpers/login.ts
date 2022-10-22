@@ -15,10 +15,10 @@ export const isPasswordValid = (password:string|null) => {
 export const passwordHint = (password:string|null) => {
   // 8 chars, at least a symbol, a number and with upper and lower case chars
   const regex = /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-  if(password === null || password.length < 6) return 'setup.password.hints.default.value';
-  if(regex.test(password)) return 'setup.password.hints.strong.value';
-  if(password.length >= 8) return 'setup.password.hints.average.value';
-  return 'setup.password.hints.weak.value';
+  if(password === null || password.length < 6) return 'setup.password_hints.default';
+  if(regex.test(password)) return 'setup.password_hints.strong';
+  if(password.length >= 8) return 'setup.password_hints.average';
+  return 'setup.password_hints.weak';
 };
 
 /**
@@ -47,10 +47,10 @@ export const isHostNameValid = (hostname:string|null) => {
 };
 
 export const hostNameHint = (hostname:string|null) => {
-  if(hostname === null || hostname.length < 1) return 'setup.setHostname.errors.length.value';
-  if(!hostname.startsWith('https://')) return 'setup.setHostname.errors.protocol.value';
-  if(hostname.replace('https://', '').length < 1) return 'setup.setHostname.errors.length.value';
-  if(hostname.includes(' ')) return 'setup.setHostname.errors.space.value';
+  if(hostname === null || hostname.length < 1) return 'setup.address_errors.length';
+  if(!hostname.startsWith('https://')) return 'setup.address_errors.protocol';
+  if(hostname.replace('https://', '').length < 1) return 'setup.address_errors.length';
+  if(hostname.includes(' ')) return 'setup.address_errors.space';
   return '';
 };
 
