@@ -142,18 +142,16 @@ async function loadPrev(scrollup?: boolean) {
   if(!currentChapterFormatted.value) return;
   if(currentChapterFormatted.value.index === 0) return;
   // check if next chapter exists
-  const chapter = manga.value.chapters[currentChapterFormatted.value.index - 1];
-  if(chapter) getChapter(chapter.id, {scrollup});
+  if(prevChapter.value) getChapter(prevChapter.value.id, {scrollup});
 }
 
 /** load previous chapter in cache */
 async function loadNext() {
   if(!manga.value) return;
   if(!currentChapterFormatted.value) return;
-  if(currentChapterFormatted.value.index === 0) return;
+  if(currentChapterFormatted.value.index === manga.value.chapters.length-1) return;
   // check if previous chapter exists
-  const chapter = manga.value.chapters[currentChapterFormatted.value.index + 1];
-  if(chapter) getChapter(chapter.id, {});
+  if(nextChapter.value) getChapter(nextChapter.value.id, {});
 }
 
 function onImageVisible(imageIndex:number, chapterId:string) {
