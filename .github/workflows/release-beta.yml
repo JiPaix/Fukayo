@@ -130,11 +130,11 @@ jobs:
         run: |
           npm run build
           if [ "$RUNNER_OS" == "Linux" ]; then
-              npm exec electron-builder --config=.electron-builder.config.js --publish always --linux
+              npm exec electron-builder --config=.electron-builder.config.js --publish=always --linux
           elif [ "$RUNNER_OS" == "Windows" ]; then
-              npm exec electron-builder --config=.electron-builder.config.js --publish always --win32
+              npm exec electron-builder --config=.electron-builder.config.js --publish=always --win32
           elif [ "$RUNNER_OS" == "macOS" ]; then
-              npm exec electron-builder --config=.electron-builder.config.js --publish always --macos
+              npm exec electron-builder --config=.electron-builder.config.js --publish=always --macos
           else
               echo "$RUNNER_OS not supported"
               exit 1
