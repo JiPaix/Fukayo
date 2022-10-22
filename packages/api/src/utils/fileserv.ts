@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 import { env } from 'process';
-
+import sanitize from 'sanitize-filename';
 export class FileServer {
   static #instance: FileServer;
   folder: string;
@@ -53,7 +53,7 @@ export class FileServer {
   }
 
   #resolveFile(filename: string) {
-    return resolve(this.folder, filename);
+    return resolve(this.folder, sanitize(filename));
   }
 
   #resetFile(filename: string, lifetime: number) {
