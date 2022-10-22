@@ -11,7 +11,6 @@ if (process.env.VITE_APP_VERSION === undefined) {
 const config = {
   appId: 'com.electron.fukayo',
   productName: 'Fukayo',
-  // copyright: '',
   directories: {
     output: 'dist',
     buildResources: 'buildResources',
@@ -25,20 +24,18 @@ const config = {
   linux: {
     target: "appImage",
     synopsis: 'Read your favorite manga',
-    category: 'Utility',
-    icon: 'buildResources/icon_256.png',
+    category: 'AudioVideo',
+    icon: 'icon_256.png',
   },
   win: {
     target: "nsis",
-    icon: 'buildResources/icon_256.ico',
+    icon: 'icon_256.ico',
     // legalTrademarks: undefined,
   },
   nsis: {
     oneClick: true,
     perMachine: false,
-    installerIcon: "buildResources/icon_256.ico",
-    // installerHeaderIcon: "buildResources/icons/win/icon.ico",
-    // license: "eula.txt",
+    installerIcon: "icon_256.ico",
   },
   // mac: {
   //   category: 'public.app-category.utilities',
