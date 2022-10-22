@@ -33,8 +33,6 @@ export type ClientToServerEvents = {
   addManga: ( payload: { manga:MangaPage|MangaInDB, settings?:MangaInDB['meta']['options'] }, callback:(dbManga: MangaInDB)=>void) => void;
   removeManga: (dbManga:MangaInDB, lang:mirrorsLangsType, callback:(manga: MangaPage)=>void) => void;
   showLibrary:(id:number) => void;
-  findMirrorByURL: (url:string, callback:(m: mirrorInfo|undefined, isMangaPage: boolean, isChapterPage: boolean)=>void) => void;
-  getMangaURLfromChapterURL: (id:number, url:string, lang?:mirrorsLangsType) => void;
   forceUpdates: () => void;
   isUpdating: (callback:(isUpdating:boolean)=>void) => void;
   schedulerLogs: (callback:(logs:Scheduler['logs'])=>void) => void;

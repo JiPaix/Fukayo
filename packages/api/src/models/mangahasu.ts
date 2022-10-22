@@ -5,7 +5,6 @@ import type { MangaPage } from '@api/models/types/manga';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
-import { ISO3166_1_ALPHA2_TO_ISO639_1 } from '@i18n/index';
 import type { SearchResult } from './types/search';
 
 class MangaHasu extends Mirror implements MirrorInterface {
@@ -320,40 +319,6 @@ class MangaHasu extends Mirror implements MirrorInterface {
     }
     socket.emit('showRecommend', id, { done: true });
     return this.stopListening(socket);
-  }
-
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-    if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
-    // if no lang is provided, we will use the default one
-    lang = ISO3166_1_ALPHA2_TO_ISO639_1( (lang||this.langs[0]) );
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
-
-    if(!isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return this.stopListening(socket);
-    }
-    if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
-      return this.stopListening(socket);
-    }
-    if(isChapterPage) {
-      try {
-        const $ = await this.fetch({
-          url: `${this.host}${url}`,
-          waitForSelector: 'body',
-        }, 'html');
-        const chapterPageURL = $('a[itemprop="url"][href*=html]').attr('href');
-        if(chapterPageURL) socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, langs: [lang], mirror:{name: this.name, version: this.version} });
-        else socket.emit('getMangaURLfromChapterURL', id, undefined);
-      } catch {
-        socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-      return this.stopListening(socket);
-    }
   }
 }
 

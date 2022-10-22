@@ -2,7 +2,7 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { Scheduler } from '@api/server/scheduler';
+import type Scheduler from '@api/server/scheduler';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
@@ -27,15 +27,15 @@ let socket:socketClientInstance|undefined;
 /** dayJS lib */
 const dayJS = inject<typeof dayjs>('dayJS');
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-const mangaLogs = ref<typeof Scheduler['logs']['manga']>([]);
+const mangaLogs = ref<Scheduler['logs']['manga']>([]);
 
-const cacheLogs = ref<typeof Scheduler['logs']['cache']>([]);
+const cacheLogs = ref<Scheduler['logs']['cache']>([]);
 
 const logs = computed(() => {
     return [...mangaLogs.value, ...cacheLogs.value].sort((a, b) => b.date - a.date);
 });
 
-function isMangaLog(res:typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]): res is typeof Scheduler['logs']['manga'][0] {
+function isMangaLog(res:Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]): res is Scheduler['logs']['manga'][0] {
   return res.message === 'chapter' || res.message === 'chapter_error' || res.message === 'chapter_read';
 }
 
@@ -60,7 +60,7 @@ function getMirror(name:string) {
   else return '';
 }
 
-function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
+function itemClick(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
   if(isMangaLog(log)) {
     const manga = mangas.value.find(m => m.id === log.id);
     if(!manga) return;
@@ -69,13 +69,13 @@ function itemClick(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler[
   }
 }
 
-function colorSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
+function colorSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
   if(log.message === 'chapter') return 'positive';
   if(log.message === 'chapter_error' || log.message === 'cache_error') return 'negative';
   if(log.message === 'chapter_read' || log.message === 'cache' || log.message === 'manga_metadata') return 'secondary';
 }
 
-function iconSelector(log: typeof Scheduler['logs']['manga'][0] | typeof Scheduler['logs']['cache'][0]) {
+function iconSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
   if(log.message === 'chapter') return 'new_releases';
   if(log.message === 'chapter_error') return 'personal_injury';
   if(log.message === 'chapter_read') return 'visibility';

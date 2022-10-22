@@ -412,42 +412,6 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket:socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-    if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
-    // if no lang is provided, we will use the default one
-    lang = lang||this.langs[0];
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
-
-    if(!isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return this.stopListening(socket);
-    }
-    if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
-      return this.stopListening(socket);
-    }
-    if(isChapterPage) {
-      try {
-        const $ = await this.fetch({
-          url: `${this.host}${url}`,
-          cookies: [{name: 'isAdult', value: this.options.adult ? '1' : '0', path: '/', domain: 'fanfox.net'}],
-          waitForSelector: 'body',
-        }, 'html');
-
-        const pageURL = $('.reader-header-title-1 > a[href^="/manga"]').attr('href');
-        if(pageURL) return socket.emit('getMangaURLfromChapterURL', id, {url: pageURL.replace(this.host, ''), langs: [lang], mirror:{name: this.name, version: this.version}});
-        else return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      } catch {
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-    }
-    return socket.emit('getMangaURLfromChapterURL', id, undefined);
-  }
-
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   #unpack(p, a, c, k, e, d):string {

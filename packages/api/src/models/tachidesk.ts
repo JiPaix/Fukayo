@@ -434,36 +434,6 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-    if (this.options.host && this.options.port && this.options.protocol) {
-      url = url.replace(this.options.host, '');
-      url = url.replace(':' + this.options.port.toString(), '');
-      url = url.replace(/http(s?):\/\//, '');
-    }
-    // if no lang is provided, we will use the default one
-    lang = lang || this.langs[0];
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-      isChapterPage = this.isChapterPage(url);
-
-    if (!isMangaPage && !isChapterPage) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-    if (isMangaPage || isChapterPage) {
-      try {
-        if (!this.options.host || !this.options.port) throw 'no credentials';
-        if (!this.options.host.length) throw 'no credentials';
-        url = url.replace(/chapter\/\w+(\/)?/, '');
-        return socket.emit('getMangaURLfromChapterURL', id, { url, langs: [lang], mirror: { name: this.name, version: this.version } });
-      } catch (e) {
-        if (e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
-        else this.logger('error while fetching manga from chapter url', e);
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-    }
-  }
-
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
     if (!this.options.host || !this.options.port) return;
     if (!this.options.host.length) return;

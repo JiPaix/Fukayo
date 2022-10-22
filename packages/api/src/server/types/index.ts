@@ -4,7 +4,6 @@ import type { ChapterErrorMessage, ChapterImageErrorMessage, MangaErrorMessage, 
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { TaskDone } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n/index';
 import type { Socket } from 'socket.io';
 
 export type ServerToClientEvents = {
@@ -18,7 +17,6 @@ export type ServerToClientEvents = {
   showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult[]|SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB) => void;
-  getMangaURLfromChapterURL: (id:number, infos: { mirror: {name: string, version: number }, langs:mirrorsLangsType[], url:string } | undefined) => void;
   finishedMangasUpdate: () => void;
   startMangasUpdate: () => void;
 }

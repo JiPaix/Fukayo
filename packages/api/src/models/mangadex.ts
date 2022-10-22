@@ -763,46 +763,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return /title\/(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})/gm.test(url);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace('https://api.mangadex.org', ''); // remove the api url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-
-
-
-    // if no lang is provided, we will use a default one
-    lang = lang||'en';
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
-
-    if(isMangaPage) {
-      const mangaId = url.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/);
-      if(!mangaId) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId[0]}`, langs: [lang], mirror:{name: this.name, version: this.version}});
-    }
-    else if(isChapterPage) {
-      try {
-        const chapterId = url.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/);
-
-        const res = await this.fetch<
-          Routes['/chapter/{id}']['ok'] | Routes['/chapter/{id}']['err']
-        >({ url: this.#path(`/chapter/${chapterId}?includes[]=manga`), headers: this.#headers }, 'json');
-
-        if(res.result !== 'ok') return socket.emit('getMangaURLfromChapterURL', id, undefined);
-
-        const find = res.data.relationships.find(x => x.type === 'manga');
-        if(!find) return socket.emit('getMangaURLfromChapterURL', id, undefined);
-
-        const mangaId = find.id;
-        return socket.emit('getMangaURLfromChapterURL', id, {url: `/manga/${mangaId}`, langs: [lang], mirror:{name: this.name, version: this.version}});
-      } catch {
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-    }
-    else return socket.emit('getMangaURLfromChapterURL', id, undefined);
-  }
-
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
     if(!this.options.login || !this.options.password || !this.options.markAsRead || chapterURLs.length) return;
 

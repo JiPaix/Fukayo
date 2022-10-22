@@ -406,49 +406,6 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
     return this.stopListening(socket);
   }
 
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-    if(this.options.host && this.options.port && this.options.protocol) {
-      url = url.replace(this.options.host, '');
-      url = url.replace(':'+this.options.port.toString(), '');
-      url = url.replace(/http(s?):\/\//, '');
-    }
-    // if no lang is provided, we will use the default one
-    lang = lang||this.langs[0];
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
-
-    if(!isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return this.stopListening(socket);
-    }
-    if(isMangaPage || isChapterPage) {
-      try {
-        if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
-        if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-        url = url.replace('/read', '');
-        url = url.replace(/book(s?)/, 'books');
-        const match = url.match(/\/series\/(\w+)/);
-        let mangaPageURL = '/series/';
-        if(match) {
-          mangaPageURL += match[1];
-        } else {
-          const res = await this.fetch<book>({url: this.#path(url), auth: {username: this.options.login, password: this.options.password}}, 'json');
-          mangaPageURL += res.seriesId;
-        }
-        if(mangaPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: mangaPageURL, langs: [lang], mirror: {name: this.name, version: this.version} });
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      } catch(e) {
-        if(e instanceof Error) this.logger('error while fetching manga from chapter url', e.message);
-        else this.logger('error while fetching manga from chapter url', e);
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-    }
-  }
-
   async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
     if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
     if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;

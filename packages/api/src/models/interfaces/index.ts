@@ -51,7 +51,5 @@ export default interface MirrorInterface {
    * @param id arbitrary id
    */
   recommend(socket:socketInstance, id:number): void;
-
-  mangaFromChapterURL(socket:socketInstance, id:number, url: string, lang?:mirrorsLangsType): void;
-// eslint-disable-next-line semi
-}
+// eslint-disable-next-line semi, @typescript-eslint/no-extra-semi
+};

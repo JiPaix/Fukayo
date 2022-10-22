@@ -358,37 +358,4 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     }
     return this.stopListening(socket);
   }
-
-  async mangaFromChapterURL(socket: socketInstance, id: number, url: string, lang?: mirrorsLangsType) {
-    url = url.replace(this.host, ''); // remove the host from the url
-    url = url.replace(/\/$/, ''); // remove trailing slash
-    if(this.althost) this.althost.forEach(host => url = url.replace(host, ''));
-    // if no lang is provided, we will use the default one
-    lang = lang||this.langs[0];
-    // checking what kind of page this is
-    const isMangaPage = this.isMangaPage(url),
-          isChapterPage = this.isChapterPage(url);
-
-    if(!isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, undefined);
-      return this.stopListening(socket);
-    }
-    if(isMangaPage && !isChapterPage) {
-      socket.emit('getMangaURLfromChapterURL', id, {url, langs: [lang], mirror:{name: this.name, version: this.version}});
-      return this.stopListening(socket);
-    }
-    if(isChapterPage) {
-      try {
-        const $ = await this.fetch({
-          url: `${this.host}${url}`,
-          waitForSelector: 'body',
-        }, 'html');
-        const chapterPageURL = $('.nav li a[href*=manga]').first().attr('href');
-        if(chapterPageURL) return socket.emit('getMangaURLfromChapterURL', id, { url: chapterPageURL, langs: [lang], mirror:{name: this.name, version: this.version} });
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      } catch {
-        return socket.emit('getMangaURLfromChapterURL', id, undefined);
-      }
-    }
-  }
 }
