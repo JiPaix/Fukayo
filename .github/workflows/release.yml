@@ -127,24 +127,39 @@ jobs:
 
       # Compile app and upload artifacts
       - name: Compile & release Electron app
-        uses: samuelmeuli/action-electron-builder@v1.6.0
+        run: |
+          npm run build
+          if [ "$RUNNER_OS" == "Linux" ];
+              npx --no-install electron-builder --linux --publish always --config .electron-builder.config.js
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+              npx --no-install electron-builder --win32 --publish always --config .electron-builder.config.js
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+              npx --no-install electron-builder --mac --publish always --config .electron-builder.config.js
+          else
+              echo "$RUNNER_OS not supported"
+              exit 1
+          fi
+        shell: bash
         env:
           VITE_APP_VERSION: ${{ needs.draft.outputs.version }}
-        with:
-          build_script_name: build
-          args: --config .electron-builder.config.js
+        # uses: samuelmeuli/action-electron-builder@v1.6.0
+        # env:
+        #   VITE_APP_VERSION: ${{ needs.draft.outputs.version }}
+        # with:
+        #   build_script_name: build
+        #   args: --config .electron-builder.config.js
 
           # GitHub token, automatically provided to the action
           # (No need to define this secret in the repo settings)
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # If the commit is tagged with a version (e.g. "v1.0.0"),
           # release the app after building
-          release: true
+          # release: true
 
           # Sometimes the build may fail due to a connection problem with Apple, GitHub, etc. servers.
           # This option will restart the build as many attempts as possible
-          max_attempts: 3
+          # max_attempts: 3
 
 
           # Code Signing params
