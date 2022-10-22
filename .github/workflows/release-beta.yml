@@ -143,42 +143,6 @@ jobs:
         env:
           VITE_APP_VERSION: ${{ needs.draft.outputs.version }}
 
-        # uses: samuelmeuli/action-electron-builder@v1.6.0
-
-        # env:
-          # VITE_APP_VERSION: ${{ needs.draft.outputs.version }}
-        # with:
-          # build_script_name: build
-          # args: --config .electron-builder.config.js
-
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          # release: true
-
-          # Sometimes the build may fail due to a connection problem with Apple, GitHub, etc. servers.
-          # This option will restart the build as many attempts as possible
-          # max_attempts: 3
-
-
-          # Code Signing params
-
-          # Base64-encoded code signing certificate for Windows
-          # windows_certs: ''
-
-          # Password for decrypting `windows_certs`
-          # windows_certs_password: ''
-
-          # Base64-encoded code signing certificate for macOS
-          # mac_certs: ''
-
-          # Password for decrypting `mac_certs`
-          # mac_certs_password: ''
-
-
   publish:
     needs: [ draft, upload_artifacts ]
 
