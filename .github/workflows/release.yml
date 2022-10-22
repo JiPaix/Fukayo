@@ -132,7 +132,7 @@ jobs:
           if [ "$RUNNER_OS" == "Linux" ]; then
               npm run publish:linux
           elif [ "$RUNNER_OS" == "Windows" ]; then
-              npm run publish:windows
+              npm run publish:win
           elif [ "$RUNNER_OS" == "macOS" ]; then
               npm run publish:mac
           else
