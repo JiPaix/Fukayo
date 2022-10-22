@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
-import type { SettingsDB } from '@api/db/settings';
+import type SettingsDB from '@api/db/settings';
+import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n/index';
 import { useSocket } from '@renderer/components/helpers/socket';
-import type en from '@i18n/../locales/en.json';
 import { useStore as useStoreSettings } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { transformIMGurl } from '../helpers/transformIMGurl';
 
 /** quasar */
 const $q = useQuasar();
@@ -33,6 +34,13 @@ const cacheMinutes = ref<number|undefined>();
 const globalSettingsChanged = ref(false);
 
 
+/** is client electron */
+const isElectron = computed(() => {
+  return typeof window.apiServer;
+});
+
+/** env variables */
+const env = import.meta.env;
 
 /** waitDay + waitHour + waitMinutes in ms */
 const waitupdate = computed(() => {
@@ -212,6 +220,35 @@ onBeforeMount(async () => {
   await getSettings();
 });
 
+function prompt (retry = false) {
+      $q.dialog({
+        html: true,
+        title: $t('settings.app_confirm_quit'),
+        message: `${$t('settings.app_ask_password')} ${retry ? '<p class="text-negative">'+$t('settings.app_ask_password_retry')+'</p>' : ''}`,
+        prompt: {
+          model: '',
+          type: 'password', // optional
+        },
+        cancel: true,
+        persistent: true,
+      }).onOk(data => {
+        if(typeof data === 'string') kill(data);
+      });
+    }
+
+
+async function kill(password:string) {
+  fetch(transformIMGurl('kill', settings), {
+      method: 'post',
+      headers: {
+        'Authorization': 'Basic '+btoa(`${settings.server.login}:${password}`),
+      },
+    }).then((r) => {
+      if(!r.ok) throw new Error();
+    }).catch(() => {
+      prompt(true);
+    });
+}
 </script>
 <template>
   <q-card
@@ -225,6 +262,114 @@ onBeforeMount(async () => {
         :dark="$q.dark.isActive"
         separator
       >
+        <q-expansion-item
+          :label="$t('settings.server').toLocaleUpperCase()"
+          class="shadow-2"
+          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+          group="global"
+          :dark="$q.dark.isActive"
+        >
+          <q-list
+            separator
+            :dark="$q.dark.isActive"
+            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+          >
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.app_version') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <span>{{ env.VITE_APP_VERSION }}</span>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.app_client') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <span>{{ isElectron ? 'Electron':'Browser' }}</span>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.app_env') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <span>{{ env.MODE }}</span>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.app_shutdown') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-btn
+                  color="negative"
+                  size="sm"
+                  :label="$t('electron.systemtray.quit')"
+                  @click="() => prompt(false)"
+                />
+              </q-item-section>
+            </q-item>
+            <q-slide-transition>
+              <div
+                v-show="globalSettingsChanged && typeof warning === 'undefined'"
+                class="w-100"
+              >
+                <q-btn
+                  class="bg-primary text-white cursor-pointer w-100"
+                  flat
+                  :rounded="false"
+                  @click="saveSettings"
+                >
+                  {{ $t('settings.globalSettings.save') }}
+                </q-btn>
+              </div>
+            </q-slide-transition>
+            <q-slide-transition>
+              <div v-show="typeof warning !== 'undefined'">
+                <q-banner
+                  class="bg-red text-white cursor-pointer"
+                  :dark="$q.dark.isActive"
+                >
+                  {{ warning }}
+                </q-banner>
+              </div>
+            </q-slide-transition>
+          </q-list>
+        </q-expansion-item>
         <q-expansion-item
           :label="$t('settings.global.title').toLocaleUpperCase()"
           class="shadow-2"

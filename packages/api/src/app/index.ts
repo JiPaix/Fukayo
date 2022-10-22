@@ -10,7 +10,7 @@ import type { Server } from 'http';
 import { createServer as createHttp } from 'http';
 import type { Server as httpsServer } from 'https';
 import { createServer as createHttps } from 'https';
-import { env, send } from 'process';
+import { env } from 'process';
 import type TypedEmitter from 'typed-emitter';
 
 const isMessage = (message: unknown): message is Message => {
@@ -22,6 +22,7 @@ const isMessage = (message: unknown): message is Message => {
 type ForkEvents = {
   start: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
   shutdown: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
+  shutdownFromWeb: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
   pong: (res:{ success: ForkResponse['success'], message?: ForkResponse['message'] }) => void
 }
 
@@ -43,9 +44,9 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
     });
   }
 
-  private send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
+  send(type: ForkResponse['type'], success?: ForkResponse['success'], message?: ForkResponse['message']) {
     this.emit(type, { success, message });
-    if(send) send({type, success, message}, undefined, undefined, (e) => {
+    if(process.send) process.send({type, success, message}, undefined, undefined, (e) => {
       if(e) {
         this.killRunner();
       }

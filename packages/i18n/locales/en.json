@@ -337,6 +337,13 @@
     "tab": "Search"
   },
   "settings": {
+    "app_ask_password": "Please type in your password",
+    "app_ask_password_retry": "Wrong password",
+    "app_client": "Client",
+    "app_confirm_quit": "Are you sure you want to close the server?",
+    "app_env": "Environment",
+    "app_shutdown": "Shutdown",
+    "app_version": "Version",
     "cache": "Cache",
     "change": "Modify",
     "darkmode": "Enable dark mode",
@@ -389,6 +396,7 @@
         }
       }
     },
+    "server": "Server",
     "source": {
       "adult": "Adult content",
       "dataSaver": "Save bandwidth",

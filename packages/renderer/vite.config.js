@@ -6,8 +6,9 @@ import vue from '@vitejs/plugin-vue';
 import { builtinModules } from 'module';
 import { join, resolve } from 'path';
 import { chrome } from '../../.electron-vendors.cache.json';
-// import vuetify from '@vuetify/vite-plugin';
+import packageJson from '../../package.json';
 
+process.env.VITE_APP_VERSION = packageJson.version;
 const PACKAGE_ROOT = __dirname;
 
 /**

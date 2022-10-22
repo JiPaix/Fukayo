@@ -16,7 +16,7 @@ export class forkAPI {
   private pingInterval?: NodeJS.Timeout;
   private pongTimeout?: NodeJS.Timeout;
 
-  private fork?: ChildProcess;
+  fork?: ChildProcess;
   private forkEnv: ForkEnv;
 
   constructor(payload: startPayload) {
@@ -108,7 +108,7 @@ export class forkAPI {
     });
   }
 
-  public async start():Promise<ForkResponse> {
+  public async start():Promise<{ resp: ForkResponse, fork?: ChildProcess }> {
     // init the fork if it hasn't been already
     if(!this.fork) this.init();
     // if fork is already in the process of being started or stoped, wait for it to finish
@@ -120,7 +120,7 @@ export class forkAPI {
       // setting up a 60 seconds timeout after which we force shutdown
       const timeout = setTimeout(() => {
         this.forceShutdown();
-        resolve({ type: 'start', success: false, message: 'timeout' });
+        resolve({ resp: { type: 'start', success: false, message: 'timeout' } });
       }, 60*1000);
       // sending start message to fork and setting up a watch to see if it responds
       this.fork?.send({type: 'start', payload: this.startPayload});
@@ -137,11 +137,15 @@ export class forkAPI {
           } else {
             this.forceShutdown();
           }
-          resolve(msg);
+          resolve({ resp: msg, fork: this.fork });
         }
-
       };
       this.fork?.on('message', listener);
+      // keep listening to message, in case user wants to kill process from web page
+      this.fork?.on('message', (msg:ForkResponse) => {
+        if(msg.type !== 'shutdownFromWeb') return;
+        else app.quit();
+      });
     });
   }
 
