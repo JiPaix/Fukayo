@@ -27,6 +27,8 @@ const search = ref<string|null>(null);
 const includedMirrors = ref<string[]>([]);
 /** lang filter */
 const includedLangsRAW = ref<mirrorsLangsType[]>([]);
+/** show the filter dialog */
+const showFilterDialog = ref(true);
 /** return the ordered list of includedLangsRAW */
 const includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
@@ -148,17 +150,20 @@ onMounted(() => {
     <div class="col-12 q-mt-md text-center">
       <q-btn-group :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'">
         <q-btn
+          v-if="$q.screen.gt.xs"
           :ripple="false"
           text-color="orange"
           icon="filter_alt"
           style="cursor:default!important;"
         />
         <q-btn
+          v-if="$q.screen.gt.xs"
           :icon="settings.library.sort === 'AZ' ? 'text_rotation_angledown' : 'text_rotation_angleup'"
           size="1em"
           @click="settings.library.sort === 'AZ' ? settings.library.sort = 'ZA' : settings.library.sort = 'AZ'"
         />
         <q-btn
+          v-if="$q.screen.gt.xs"
           :icon="settings.library.sort === 'unread' ? 'trending_up' : 'trending_down'"
           size="1em"
           @click="settings.library.sort === 'unread' ? settings.library.sort = 'read' : settings.library.sort = 'unread'"
@@ -357,6 +362,7 @@ onMounted(() => {
           </q-list>
         </q-btn-dropdown>
         <q-btn
+          v-if="$q.screen.gt.xs"
           icon="new_releases"
           size="1em"
           :text-color="settings.library.showUnread ? '' : 'orange'"
@@ -368,5 +374,62 @@ onMounted(() => {
         </q-btn>
       </q-btn-group>
     </div>
+    <q-btn
+      v-if="!$q.screen.gt.xs"
+      class="col-12 q-mt-md text-center bg-grey-9"
+      icon="filter_list"
+      @click="showFilterDialog = !showFilterDialog"
+    />
   </div>
+  <q-dialog
+    v-model="showFilterDialog"
+    position="standard"
+  >
+    <q-card
+      class="q-pa-lg"
+      style="width: 350px;"
+    >
+      <div class="row items-center">
+        <div class="col-6">
+          <span class="text-weight-bold">{{ $t('library.sort_by_name') }}:</span>
+        </div>
+        <div class="col-6 text-right">
+          <q-btn
+            flat
+            round
+            :color="settings.library.sort === 'AZ' || settings.library.sort === 'ZA' ? 'orange': ''"
+            :icon="settings.library.sort === 'AZ' ? 'text_rotation_angledown' : 'text_rotation_angleup'"
+            size="lg"
+            @click="settings.library.sort === 'AZ' ? settings.library.sort = 'ZA' : settings.library.sort = 'AZ'"
+          />
+        </div>
+      </div>
+      <div class="row items-center q-mt-lg">
+        <div class="col-6">
+          <span class="text-weight-bold">{{ $t('library.hide_unread') }}:</span>
+        </div>
+        <div class="col-6 text-right">
+          <q-toggle
+            :model-value="!settings.library.showUnread"
+            color="orange"
+            @update:model-value="settings.library.showUnread = !settings.library.showUnread"
+          />
+        </div>
+      </div>
+      <div class="row items-center q-mt-lg">
+        <div class="col-6">
+          <span class="text-weight-bold">{{ $t('library.sort_by_read') }}:</span>
+        </div>
+        <div class="col-6 text-right">
+          <q-btn
+            flat
+            :icon="settings.library.sort === 'unread' ? 'trending_up' : 'trending_down'"
+            size="lg"
+            :color="settings.library.sort === 'unread' || settings.library.sort === 'read' ? 'orange': ''"
+            @click="settings.library.sort === 'unread' ? settings.library.sort = 'read' : settings.library.sort = 'unread'"
+          />
+        </div>
+      </div>
+    </q-card>
+  </q-dialog>
 </template>
