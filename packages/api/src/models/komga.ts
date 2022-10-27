@@ -6,7 +6,7 @@ import type { SearchResult } from '@api/models/types/search';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
-import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
+import { BC47_TO_ISO639_1, mirrorsLang } from '@i18n/index';
 
 //  /series?search=word
 type searchContent = {
@@ -145,8 +145,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
           if (!manga.metadata.title.toLowerCase().includes(query.toLowerCase())) return;
 
-          let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-          if(manga.metadata.language && manga.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(manga.metadata.language);
+          let lang = 'xx' as mirrorsLangsType;
+          if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
@@ -165,35 +165,6 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         if (cancel) return;
         if (!cancel) socket.emit('searchInMirrors', id, mangaList);
       }));
-      // for(const result of res.content) {
-      //   if(cancel) break;
-      //   const name = result.metadata.title;
-      //   const covers: string[] = [];
-      //   const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-      //   if(img) covers.push(img);
-
-      //   const synopsis = result.metadata.summary;
-      //   const books = await this.fetch<bookContent>({url: this.#path(`/series/${result.id}/books?sort=metadata.numberSort%2Cdesc`), auth: {username: this.options.login, password: this.options.password}}, 'json');
-      //   const last_release = { chapter: books.content[0].metadata.numberSort, name: books.content[0].metadata.title };
-
-      //   let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-      //   if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
-
-      //   if(!langs.some(l => l === lang)) return;
-
-      //   const mg = await this.searchResultsBuilder({
-      //     id: result.id,
-      //     name,
-      //     url: `/series/${result.id}`,
-      //     synopsis,
-      //     covers,
-      //     last_release,
-      //     langs: [lang],
-      //   });
-      //   // we return the results based on SearchResult model
-      //   if(!cancel) socket.emit('searchInMirrors', id, mg);
-      // }
-      // if(cancel) return;
     } catch(e) {
       this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
@@ -231,8 +202,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
       }, 'json');
       const name = result.metadata.title;
 
-      let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-      if(result.metadata.language && result.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(result.metadata.language);
+      let lang = 'xx' as mirrorsLangsType;
+      if(result.metadata.language && result.metadata.language.length) lang = BC47_TO_ISO639_1(result.metadata.language);
 
       if(cancel) return;
       const covers:string[] = [];
@@ -375,8 +346,8 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
           if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
           if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
 
-          let lang = ISO3166_1_ALPHA2_TO_ISO639_1('xx');
-          if(manga.metadata.language && manga.metadata.language.length) lang = ISO3166_1_ALPHA2_TO_ISO639_1(manga.metadata.language);
+          let lang = 'xx' as mirrorsLangsType;
+          if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
