@@ -516,7 +516,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 autofocus
                 counter
                 :debounce="500"
-                @update:model-value="(v) => changeDisplayName(v)"
+                @update:model-value="(v?:string|number|null) => changeDisplayName(v)"
                 @keyup.enter="scope.set"
               >
                 <template #append>
