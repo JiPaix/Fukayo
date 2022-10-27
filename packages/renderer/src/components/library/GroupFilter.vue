@@ -28,7 +28,7 @@ const includedMirrors = ref<string[]>([]);
 /** lang filter */
 const includedLangsRAW = ref<mirrorsLangsType[]>([]);
 /** show the filter dialog */
-const showFilterDialog = ref(true);
+const showFilterDialog = ref(false);
 /** return the ordered list of includedLangsRAW */
 const includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
