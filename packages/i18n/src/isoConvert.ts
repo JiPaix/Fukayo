@@ -1,4 +1,15 @@
 import type { mirrorsLangsType } from '@i18n/availableLangs';
+import { mirrorsLang } from '@i18n/availableLangs';
+
+export function BC47_TO_ISO639_1(input: string|mirrorsLangsType): mirrorsLangsType {
+  // if BC47 == ISO391-1
+  if(mirrorsLang.includes(input as mirrorsLangsType)) return input as mirrorsLangsType;
+  // if BC47 start with ISO391-1
+  const split = input.split('-')[0];
+  if(split.length == 2 && mirrorsLang.includes(split as mirrorsLangsType)) return split as mirrorsLangsType;
+  // else
+  return 'xx';
+}
 
 export function ISO3166_1_ALPHA2_TO_ISO639_1(input: string): mirrorsLangsType {
   input = input.toLocaleUpperCase();
