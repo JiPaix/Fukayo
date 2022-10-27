@@ -40,15 +40,8 @@ function addPx(size: { width: number, height: number }) {
 
 /** Card size */
 const size = computed(() => {
-  if($q.screen.xs) {
+  if($q.screen.xs || $q.screen.sm) {
     // mobile
-    return addPx({
-      width: defaultImageSize.width * 2,
-      height: defaultImageSize.height * 2,
-    });
-  }
-  if($q.screen.sm) {
-    // tablet
     return addPx({
       width: defaultImageSize.width * 1.5,
       height: defaultImageSize.height * 1.5,
