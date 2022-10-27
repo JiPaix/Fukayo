@@ -6,7 +6,7 @@ import type { SearchResult } from '@api/models/types/search';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
-import { ISO3166_1_ALPHA2_TO_ISO639_1, mirrorsLang } from '@i18n/index';
+import { mirrorsLang } from '@i18n/index';
 import fd from 'form-data';
 
 type CategoryList = {
@@ -178,7 +178,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
             id: '',
             lang: 'xx',
           };
-          const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+          const lang = currentSource.lang.toLocaleLowerCase();
 
           const covers: string[] = [];
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
@@ -251,7 +251,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
         id: '',
         lang: 'xx',
       };
-      const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+      const lang = currentSource.lang.toLocaleLowerCase();
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
       if (img) covers.push(img);
@@ -405,7 +405,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
             id: '',
             lang: 'xx',
           };
-          const lang = ISO3166_1_ALPHA2_TO_ISO639_1(currentSource.lang);
+          const lang = currentSource.lang.toLocaleLowerCase();
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
