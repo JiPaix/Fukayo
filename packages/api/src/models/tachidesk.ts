@@ -29,7 +29,7 @@ type CategoryManga = {
 
 type Source = {
   id: string
-  lang: string
+  lang: mirrorsLangsType
 }
 
 type Manga = {
@@ -178,7 +178,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
             id: '',
             lang: 'xx',
           };
-          const lang = currentSource.lang.toLocaleLowerCase();
+          const lang = currentSource.lang;
 
           const covers: string[] = [];
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
@@ -251,7 +251,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
         id: '',
         lang: 'xx',
       };
-      const lang = currentSource.lang.toLocaleLowerCase();
+      const lang = currentSource.lang;
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
       if (img) covers.push(img);
@@ -405,7 +405,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
             id: '',
             lang: 'xx',
           };
-          const lang = currentSource.lang.toLocaleLowerCase();
+          const lang = currentSource.lang;
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
