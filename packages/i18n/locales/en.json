@@ -230,6 +230,8 @@
     "hide_unread": "Hide mangas for which you have read all the chapters",
     "left_to_read": "Chapter left | Chapters left",
     "show_unread": "Show manga for which you have read all chapters",
+    "sort_by_name": "Sort by name",
+    "sort_by_read": "Sort by number of unread chapters",
     "tab": "Library"
   },
   "logs": {
@@ -320,11 +322,11 @@
     },
     "next": "Go to the next chapter:",
     "next_chapter": "Next chapter",
-    "previous_chapter": "Previous chapter",
     "page": {
       "count": "Page {current}/{total}"
     },
     "previous": "Go back to the previous chapter:",
+    "previous_chapter": "Previous chapter",
     "reload": "Reload this chapter",
     "reloadImage": "Reload this image",
     "reload_chapter": "Reload this chapter",
