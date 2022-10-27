@@ -318,7 +318,7 @@ onBeforeMount(async () => {
                     :model-value="mirror.options.enabled"
                     size="lg"
                     :dark="$q.dark.isActive"
-                    @update:model-value="(v) => changeOption(mirror.name, 'enabled', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'enabled', v)"
                   />
                 </q-item-section>
               </q-item>
@@ -351,7 +351,7 @@ onBeforeMount(async () => {
                       :model-value="value"
                       size="lg"
                       :dark="$q.dark.isActive"
-                      @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
+                      @update:model-value="(v:unknown) => changeOption(mirror.name, propertyName, v)"
                     />
                   </q-item-section>
                   <q-item-section
@@ -364,7 +364,7 @@ onBeforeMount(async () => {
                       dense
                       :model-value="value"
                       :dark="$q.dark.isActive"
-                      @update:model-value="(v) => changeOption(mirror.name, propertyName, v)"
+                      @update:model-value="(v:unknown) => changeOption(mirror.name, propertyName, v)"
                     >
                       <template #after>
                         <q-btn
@@ -396,7 +396,7 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
                     :dark="$q.dark.isActive"
-                    @update:model-value="(v) => changeOption(mirror.name, 'login', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'login', v)"
                   />
                 </q-item>
               </div>
@@ -418,7 +418,7 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
                     :dark="$q.dark.isActive"
-                    @update:model-value="(v) => changeOption(mirror.name, 'password', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'password', v)"
                   />
                 </q-item>
               </div>
@@ -440,7 +440,7 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
                     :dark="$q.dark.isActive"
-                    @update:model-value="(v) => changeOption(mirror.name, 'host', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'host', v)"
                   />
                 </q-item>
               </div>
@@ -462,7 +462,7 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
                     :dark="$q.dark.isActive"
-                    @update:model-value="(v) => changeOption(mirror.name, 'port', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'port', v)"
                   />
                 </q-item>
               </div>
@@ -483,7 +483,7 @@ onBeforeMount(async () => {
                     :model-value="asTypeOrUndefined(mirror.options.protocol as string) || 'http'"
                     :dark="$q.dark.isActive"
                     :options="['http', 'https']"
-                    @update:model-value="(v) => changeOption(mirror.name, 'protocol', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'protocol', v)"
                   />
                 </q-item>
               </div>
@@ -512,7 +512,7 @@ onBeforeMount(async () => {
                     new-value-mode="add-unique"
                     style="width: 250px"
                     :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
-                    @update:model-value="(v) => changeOption(mirror.name, 'excludedGroups', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'excludedGroups', v)"
                   />
                 </q-item>
               </div>
@@ -543,7 +543,7 @@ onBeforeMount(async () => {
                     style="width: 250px"
                     reactive-rules
                     :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
-                    @update:model-value="(v) => changeOption(mirror.name, 'excludedUploaders', v)"
+                    @update:model-value="(v:unknown) => changeOption(mirror.name, 'excludedUploaders', v)"
                   />
                 </q-item>
               </div>

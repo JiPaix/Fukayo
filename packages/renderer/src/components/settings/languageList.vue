@@ -75,7 +75,7 @@ function unselectAll() {
         <q-checkbox
           :model-value="!settings.i18n.ignored.includes(lang)"
           :label="$t(`languages.${lang}`)"
-          @update:model-value="(val) => updateval(lang, val)"
+          @update:model-value="(val:boolean) => updateval(lang, val)"
         />
       </div>
     </q-card-section>
