@@ -320,6 +320,7 @@
     },
     "next": "Go to the next chapter:",
     "next_chapter": "Next chapter",
+    "previous_chapter": "Previous chapter",
     "page": {
       "count": "Page {current}/{total}"
     },
