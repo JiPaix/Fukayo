@@ -154,7 +154,17 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   async init() {
-    return this.#db.init();
+    const init = await this.#db.init();
+    if(this.#db.data.host && typeof this.#db.data.host === 'string') {
+      this.host = this.#db.data.host;
+      if(this.#db.data.protocol && typeof this.#db.data.host === 'string') {
+        this.host = this.#db.data.protocol + '://' + this.host;
+      }
+      if(this.#db.data.port && typeof this.#db.data.port === 'number') {
+        this.host = this.host + ':' + this.#db.data.port;
+      }
+    }
+    return init;
   }
 
   public get enabled() {
@@ -365,6 +375,13 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   /** change the mirror settings */
   changeSettings(opts: Record<string, unknown>) {
     this.options = { ...this.options, ...opts };
+    // update this.host if mirror is self-hosted
+    if(opts.host || opts.protocol || opts.port) {
+      if(this.options.host && typeof this.options.host === 'string') this.host = this.options.host;
+      if(this.options.protocol && typeof this.options.protocol === 'string') this.host = this.options.protocol + '://' + this.host;
+      if(this.options.port && typeof this.options.port === 'number') this.host = this.host + ':' + this.options.port;
+    }
+
   }
 
   /**
