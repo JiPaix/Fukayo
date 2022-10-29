@@ -167,6 +167,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return init;
   }
 
+  async login():Promise<boolean|void> {
+    return;
+  }
+
   public get enabled() {
     return this.#db.data.enabled && !this.isDead;
   }
@@ -381,7 +385,9 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(this.options.protocol && typeof this.options.protocol === 'string') this.host = this.options.protocol + '://' + this.host;
       if(this.options.port && typeof this.options.port === 'number') this.host = this.host + ':' + this.options.port;
     }
-
+    if(opts.login || opts.password) {
+      this.login();
+    }
   }
 
   /**
