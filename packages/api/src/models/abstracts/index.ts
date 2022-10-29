@@ -518,7 +518,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       const response = await this.#axios.get<string|T>(config.url, { ...config, timeout: 5000 });
 
       if(typeof response.data === 'string') {
-
         if(config.waitForSelector) {
           const $ = this.#loadHTML(response.data);
           if($(config.waitForSelector).length) return response.data;
@@ -536,7 +535,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       }
       if(e instanceof AxiosError) {
         const msg = e.response?.data.message?.toLocaleLowerCase() as string | undefined;
-        if(msg === 'unauthorized' && typeof config.auth !== 'undefined') throw e;
+        if(msg === 'unauthorized'|| e.response?.status === 401 ) return new Error('unauthorized');
       }
       // if axios fails or the selector is not found, try puppeteer
       return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false, type);
