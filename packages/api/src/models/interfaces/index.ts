@@ -14,11 +14,6 @@ export default interface MirrorInterface {
   isChapterPage(url:string): boolean;
 
   /**
-   * Optional: get volume, chapter number and chapter name from string
-   */
-  getChapterInfoFromString?(str:string): RegExpExecArray | null
-
-  /**
    * Search manga by name
    * @param {String} query Search string
    * @param {socketInstance} socket user socket

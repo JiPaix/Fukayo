@@ -1,8 +1,8 @@
 import type { ClientToServerEvents } from '@api/client/types';
 import MangasDB from '@api/db/mangas';
 import SettingsDB from '@api/db/settings';
-import type Mirror from '@api/models';
-import mirrors from '@api/models/exports';
+import mirrors from '@api/models';
+import type Mirror from '@api/models/abstracts';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';

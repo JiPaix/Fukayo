@@ -3,7 +3,7 @@ import MangasDB from '@api/db/mangas';
 import SettingsDB from '@api/db/settings';
 import TokenDatabase from '@api/db/tokens';
 import UUID from '@api/db/uuids';
-import mirrors from '@api/models/exports';
+import mirrors from '@api/models';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
 import Scheduler from '@api/server/scheduler';
