@@ -1,4 +1,4 @@
-import Mirror from '@api/models/abstracts';
+import { SelfHosted } from '@api/models/abstracts/selfhosted';
 import icon from '@api/models/icons/komga.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
@@ -55,7 +55,7 @@ type book = {
   },
 }
 
-class Komga extends Mirror<{login?: string|null, password?:string|null, host?:string|null, port?:number|null, protocol:'http'|'https', markAsRead: boolean}> implements MirrorInterface {
+class Komga extends SelfHosted implements MirrorInterface {
   constructor() {
     super({
       version: 1,
@@ -84,14 +84,18 @@ class Komga extends Mirror<{login?: string|null, password?:string|null, host?:st
         protocol: 'http',
         markAsRead: true,
       },
-    });
+    }, true);
   }
 
   /** needs at least these three options to be enabled */
-  public get enabled(): boolean {
+  get enabled(): boolean {
     const { enabled, host, port, password, login} = this.options;
     if(enabled && host && port && password && login) return true;
     return false;
+  }
+
+  set enabled(val: boolean) {
+    this.options.enabled = val;
   }
 
   #path(path:string) {

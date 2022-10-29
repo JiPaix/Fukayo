@@ -1,4 +1,4 @@
-import Mirror from '@api/models/abstracts';
+import { SelfHosted } from '@api/models/abstracts/selfhosted';
 import icon from '@api/models/icons/tachidesk.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MangaPage } from '@api/models/types/manga';
@@ -56,7 +56,7 @@ type Chapter = {
   pageCount: number,
 }
 
-export class Tachidesk extends Mirror<{ login?: string | null, password?: string | null, host?: string | null, port?: number | null, protocol: 'http' | 'https', markAsRead: boolean }> implements MirrorInterface {
+export class Tachidesk extends SelfHosted implements MirrorInterface {
   #sourcelist: null | Source[];
   constructor() {
     super({
@@ -86,19 +86,8 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
         protocol: 'http',
         markAsRead: true,
       },
-    });
+    }, false);
     this.#sourcelist = null;
-  }
-
-  /** needs at least these three options to be enabled */
-  get enabled(): boolean {
-    const { enabled, host, port } = this.options;
-    if (enabled && host && port) return true;
-    return false;
-  }
-
-  set enabled(val: boolean) {
-    this.options.enabled = val;
   }
 
   #path(path: string) {
@@ -113,6 +102,7 @@ export class Tachidesk extends Mirror<{ login?: string | null, password?: string
     if (!res) this.logger('not a manga page:', url);
     return res;
   }
+
   isChapterPage(url: string): boolean {
     url = url.replace(/(\?.*)/g, ''); // remove hash/params from the url
     const res = /^\/manga\/\w+\/chapter\/\w+$/gmi.test(url);
