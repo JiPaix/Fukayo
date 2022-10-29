@@ -134,11 +134,9 @@ function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]
 /** toggle manga in and out of library */
 function toggleInLibrary() {
   if(!manga.value) return;
-
-  if(isManga(manga.value) && !isMangaInDB(manga.value)) {
+  if(!isMangaInDB(manga.value)) {
     add();
-  }
-  else if(!isManga(manga.value) && isMangaInDB(manga.value)) {
+  } else {
     remove();
   }
 }
@@ -381,7 +379,7 @@ async function startFetch() {
 
   socket.once('showManga', (id, mg) => {
     if (id === reqId) {
-      if((isManga(mg) || isMangaInDB(mg))) {
+      if(isManga(mg)) {
         nodata.value = null;
         // When the manga is fetched from recommendation no language filter is applied we have to this ourself
         if(!mg.inLibrary) { // making sure we don't hide something that might be in the user's library

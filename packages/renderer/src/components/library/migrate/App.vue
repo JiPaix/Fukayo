@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
+import { isMangaPage } from '@api/db/helpers';
 import type { MangaErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
@@ -8,7 +9,7 @@ import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n/index';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isManga, isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
+import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import type { MangaInDBwithLabel } from '@renderer/components/library/@types';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -106,7 +107,7 @@ async function fetch(mirror: string, langs: mirrorsLangsType[], url: string, id:
   return new Promise((resolve, reject) => {
       const mangaListener = (id: number, manga: MangaPage | MangaInDB | MangaErrorMessage) => {
       if(id !== reqId) return;
-      if(isManga(manga)) resolve(manga);
+      if(isMangaPage(manga)) resolve(manga);
       else reject(manga);
     };
     if(!socket) return;

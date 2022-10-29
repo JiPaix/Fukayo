@@ -225,7 +225,7 @@ async function getManga():Promise<void> {
   return new Promise(resolve => {
     socket.once('showManga', (id, mg) => {
       if(id === reqId) {
-        if(isManga(mg) || isMangaInDB(mg)) {
+        if(isManga(mg)) {
           if(mg.chapters.some(x => x.lang === props.lang )) {
             mg.chapters = mg.chapters.sort((a, b) => a.number - b.number);
             manga.value = mg;
