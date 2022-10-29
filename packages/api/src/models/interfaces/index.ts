@@ -4,6 +4,10 @@ import type { mirrorsLangsType } from '@i18n/index';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**
+   * log-in the mirror
+   */
+  login?(): Promise<boolean|void>
+  /**
    * Test if url is a manga page
    */
   isMangaPage(url:string): boolean;
