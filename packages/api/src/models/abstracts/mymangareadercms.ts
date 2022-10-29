@@ -1,4 +1,4 @@
-import Mirror from '@api/models';
+import Mirror from '@api/models/abstracts';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';

@@ -1,4 +1,4 @@
-import Mirror from '@api/models';
+import Mirror from '@api/models/abstracts';
 import icon from '@api/models/icons/mangafox.png';
 import type MirrorInterface from '@api/models/interfaces/index';
 import type { MangaPage } from '@api/models/types/manga';
