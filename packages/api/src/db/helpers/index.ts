@@ -5,6 +5,10 @@ export function isMangaInDB(res: MangaPage | MangaInDB | MangaErrorMessage): res
   return (res as MangaInDB).inLibrary === true && (res as MangaInDB).meta !== undefined;
 }
 
-export function isManga(res: MangaPage | MangaErrorMessage | MangaInDB): res is MangaPage {
-  return (res as MangaPage).inLibrary === false;
+export function isManga(res: MangaPage | MangaErrorMessage | MangaInDB | unknown): res is MangaPage|MangaInDB {
+  return (res as MangaPage).inLibrary !== undefined;
+}
+
+export function isMangaPage(res: unknown): res is MangaPage {
+  return (res as MangaPage).inLibrary == false;
 }
