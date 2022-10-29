@@ -13,8 +13,8 @@ import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
 import type { mirrorsLangsType } from '@i18n/index';
-import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
-import axios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
 import { load } from 'cheerio';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -522,15 +522,22 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
         if(config.waitForSelector) {
           const $ = this.#loadHTML(response.data);
           if($(config.waitForSelector).length) return response.data;
-          else throw new Error('selector_not_found');
+          else throw new Error(`selector_not_found: ${config.waitForSelector}`);
         }
         return response.data;
       } else {
-        if(config.waitForSelector) throw new Error('no_selector_in_'+typeof response.data);
+        if(config.waitForSelector) throw new Error(`unexpected_response: ${typeof response.data}`);
         return response.data;
       }
     } catch(e) {
-      if(e instanceof Error && e.message.includes('no_selector_in_')) throw e;
+      // some exceptions where using puppeteer is unnecessary
+      if(e instanceof Error) {
+        if(e.message.startsWith('unexpected_response')) throw e;
+      }
+      if(e instanceof AxiosError) {
+        const msg = e.response?.data.message?.toLocaleLowerCase() as string | undefined;
+        if(msg === 'unauthorized' && typeof config.auth !== 'undefined') throw e;
+      }
       // if axios fails or the selector is not found, try puppeteer
       return this.crawler({...config, waitForSelector: config.waitForSelector, timeout: 10000 }, false, type);
     }
