@@ -168,7 +168,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   public get enabled() {
-    return this.#db.data.enabled;
+    return this.#db.data.enabled && !this.isDead;
   }
 
   public set enabled(val:boolean) {
