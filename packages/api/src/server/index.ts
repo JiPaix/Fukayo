@@ -203,7 +203,6 @@ export default class IOWrapper {
      */
     socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
-
       if(opts.id && opts.langs) indb = await MangasDB.getInstance().get({id: opts.id, langs: opts.langs});
       else if(opts.mirror && opts.langs && opts.url) indb = await MangasDB.getInstance().get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
@@ -219,7 +218,7 @@ export default class IOWrapper {
         const search = UUID.getInstance().data.ids.find(u => u.id === opts.id);
         if(search) {
           const mirror = mirrors.find(m => m.name === search.mirror.name);
-          if(mirror) return mirror.manga(search.url, search.langs, socket, id);
+          if(mirror) return mirror.manga(search.url, opts.langs||search.langs, socket, id);
           else return socket.emit('showManga', id, {error: 'manga_error_mirror_not_found'});
         }
       }
