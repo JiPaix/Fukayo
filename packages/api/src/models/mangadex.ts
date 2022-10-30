@@ -366,12 +366,14 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         this.logger('logged in!');
         return true;
       } else {
+        this.#nullTokens();
         this.logger(resp.errors);
         return false;
       }
     } catch(e) {
       if(e instanceof Error) this.logger('not logged in:', e.message);
       else this.logger('not logged in:', e);
+      this.#nullTokens();
       return false;
     }
   }
