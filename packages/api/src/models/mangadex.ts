@@ -1,6 +1,8 @@
 import Mirror from '@api/models/abstracts';
+import importerIcon from '@api/models/icons/mangadex-importer.png';
 import icon from '@api/models/icons/mangadex.png';
 import type MirrorInterface from '@api/models/interfaces';
+import type { importErrorMessage } from '@api/models/types/errors';
 import type { MangaPage } from '@api/models/types/manga';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
@@ -179,6 +181,17 @@ type Routes = {
     }
     err: Routes['/auth/login']['err']
   },
+  '/manga': {
+    ok: {
+      result: 'ok',
+      response: 'collection'
+      data: Routes['/manga/{id}']['ok']['data'][]
+      limit: number,
+      offset: number,
+      total: number
+    }
+    err: Routes['/auth/login']['err']
+  }
   '/manga/{id}': {
     ok: {
       result: 'ok',
@@ -241,6 +254,26 @@ type Routes = {
         }
       }[]
     }
+  },
+  '/user/list' : {
+    err: Routes['/auth/login']['err'],
+    ok: {
+      result: 'ok',
+      response: 'collection'
+      total: number,
+      data: {
+        id: string,
+        type: 'custom_list',
+        attributes: {
+          name: string
+          visibility: 'private' | 'public'
+        },
+        relationships: {
+          id:string,
+          type: 'manga'|'user',
+        }[]
+      }[]
+    }
   }
 }
 
@@ -281,7 +314,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         excludedUploaders: [],
       },
     });
-    this.#login();
+    this.login();
   }
 
   get #headers() {
@@ -300,7 +333,13 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return langs.map(x => 'availableTranslatedLanguage[]=' + x).join('&');
   }
 
-  async #login() {
+  public get loggedIn():boolean {
+    const { login, password } = this.options;
+    const { authToken, sessionToken } = this;
+    return ![login, password, authToken, sessionToken].some(x => x == null);
+  }
+
+  async login() {
     this.#clearIntervals();
     this.#nullTokens();
     if(!this.options.login || !this.options.password) return this.logger('no credentials');
@@ -380,7 +419,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if (dayCount === 29) {
           if(this.authInterval) clearInterval(this.authInterval);
-          this.#login();
+          this.login();
         }
     }, msInDay);
   }
@@ -390,7 +429,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const res = await this.#refresh();
       if(!res) {
         // login will clear all intervals and null tokens
-        this.#login();
+        this.login();
       }
     }, 14 * 60 * 1000); // 14 minutes
   }
@@ -614,7 +653,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
       if(manga.result !== 'ok') throw new Error(`${manga.errors[0].title}: ${manga.errors[0].detail}`);
 
-      const langs = manga.data.attributes.availableTranslatedLanguages;
+      const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean);
 
       if(!requestedLangs.some(x => langs.includes(x))) throw new Error(`this manga has no translation for this languages ${requestedLangs}`);
 
@@ -629,7 +668,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const coverData = manga.data.relationships.find(x => x.type === 'cover_art');
       if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
       if(!coverURL) return;
-      const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`, 'cover');
+      const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`);
 
       const requestLangs = requestedLangs.map(x => `translatedLanguage[]=${x}`).join('&');
 
@@ -682,7 +721,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const mg = await this.mangaPageBuilder({
           id: url.replace('/manga/', ''),
           url,
-          langs: requestedLangs,
+          langs,
           covers: cover ? [cover] : [],
           name,
           synopsis,
@@ -789,6 +828,97 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     } catch(e) {
       if(e instanceof Error) return this.logger('markAsRead:', e.message);
       else return this.logger('markAsRead:', e);
+    }
+  }
+
+  /** Get connected user list */
+  async getLists(): Promise<importErrorMessage | Routes['/user/list']['ok']['data']> {
+    if(!this.loggedIn) return {error: 'import_error', trace: 'not logged in'};
+    try {
+
+      const lists: Routes['/user/list']['ok']['data'] = [];
+
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for(const [i,_v] of Array.from({ length: 100 }).entries()) {
+
+        const resp = await this.fetch<
+        Routes['/user/list']['ok'] | Routes['/auth/login']['err']
+        >({
+          url: this.#path('/user/list?limit=100'+'&offset='+i),
+          headers: this.#headers,
+        },
+        'json',
+        );
+        if(resp.result !== 'ok') throw new Error(`${resp.errors[0].title}: ${resp.errors[0].detail}`);
+        resp.data.filter(d=>d.attributes.visibility !== 'public').forEach(d=>lists.push(d));
+        if(resp.total === resp.data.length || resp.total === lists.length) break;
+      }
+      return lists;
+    } catch(e) {
+      if(e instanceof Error) return {error: 'import_error', trace: e.message};
+      else if(typeof e === 'string') return {error: 'import_error', trace: e};
+      else return { error: 'import_error' };
+    }
+  }
+
+  async getMangasFromList(id:number, socket:socketInstance, requestedLangs: mirrorsLangsType[],ids:string[]) {
+
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    if(socket) {
+      socket.once('stopShowImports', () => {
+        this.logger('fetching imports canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+    }
+
+    const idChunks = ids.reduce((res: string[][], item: string, index) => {
+      const chunkIndex = Math.floor(index/50);
+      if(!res[chunkIndex]) {
+        res[chunkIndex] = [];
+      }
+      res[chunkIndex].push(item);
+      return res;
+    }, []);
+
+    try {
+      const list: Routes['/manga']['ok']['data'] = [];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for(const [i,chunk] of idChunks.entries()) {
+        if(cancel) break;
+        const ids = chunk.map(x => 'ids[]=' + x).join('&');
+        const resp = await this.fetch<
+        Routes['/manga']['ok'] |  Routes['/manga']['err']
+        >({
+          url: this.#path(`/manga?${ids}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&includes[]=artist&includes[]=author&includes[]=chapter&includes[]=scanlation_group&limit=100&offset=${i}`),
+          headers: this.#headers,
+        },
+        'json',
+        );
+        if(resp.result !== 'ok') throw new Error(`${resp.errors[0].title}: ${resp.errors[0].detail}`);
+        resp.data.forEach(d=>list.push(d));
+      }
+
+      for(const manga of list) {
+        if(cancel) break;
+        const langs = manga.attributes.availableTranslatedLanguages;
+        const name =  manga.attributes.title[Object.keys(manga.attributes.title)[0]];
+        let coverURL: undefined | string = undefined;
+        const coverData = manga.relationships.find(x => x.type === 'cover_art');
+        if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
+        if(!coverURL) return;
+        const cover = await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`);
+        socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, icon: importerIcon, langs: this.mirrorInfo.langs } });
+      }
+      if(!cancel) socket.emit('showImports', id, { done: true });
+      if(cancel) return this.stopListening(socket);
+    } catch(e) {
+      this.logger('error while fetching manga', e);
+      // we catch any errors because the client needs to be able to handle them
+      if(e instanceof Error) socket.emit('showImports', id, {error: 'import_error', trace: e.message});
+      else if(typeof e === 'string') socket.emit('showImports', id, {error: 'import_error', trace: e});
+      else socket.emit('showImports', id, {error: 'import_error'});
     }
   }
 }

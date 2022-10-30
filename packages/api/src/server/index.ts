@@ -4,6 +4,7 @@ import SettingsDB from '@api/db/settings';
 import TokenDatabase from '@api/db/tokens';
 import UUID from '@api/db/uuids';
 import mirrors from '@api/models';
+import type Importer from '@api/models/imports/interfaces';
 import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
 import Scheduler from '@api/server/scheduler';
@@ -24,6 +25,8 @@ export default class IOWrapper {
   password:string;
   db:TokenDatabase;
   #isReady = false;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  #importer: Importer[] = [];
   constructor(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}) {
     this.login = CREDENTIALS.login;
     this.password = CREDENTIALS.password;
@@ -41,6 +44,10 @@ export default class IOWrapper {
         Scheduler.getInstance().registerIO(this.io).then(() => {
           this.#isReady = true; // this makes the server available only after the Scheduler is done
           this.logger('scheduler is ready');
+          // loading mirror import modules
+          import('../models/imports').then(l => {
+            this.#importer = l.default;
+          });
         });
       });
     });
@@ -354,6 +361,18 @@ export default class IOWrapper {
       if(restartUpdates) Scheduler.getInstance().restartUpdate();
       if(restartCache) Scheduler.getInstance().restartCache();
       cb(SettingsDB.getInstance().data);
+    });
+
+    socket.on('getImports', (showall, cb) => {
+      const infos = this.#importer.map(imp=>imp.showInfo);
+      if(showall) cb(infos);
+      else cb(infos.filter(imp=>imp.enabled));
+    });
+
+    socket.on('showImports', (id, mirrorName, langs) => {
+      const importer = this.#importer.find(m=>m.name === mirrorName);
+      if(!importer) return socket.emit('showImports', id, { error:'import_error', trace: 'importer_not_found' });
+      importer.getMangas(socket, id, langs);
     });
   }
 }

@@ -32,6 +32,16 @@
   "global": {
     "colon_word": "{word}:"
   },
+  "import": {
+    "close": "Close",
+    "failed": "Error",
+    "in_library": "Imported",
+    "not_in_library": "Not imported",
+    "start_import": "Import",
+    "subtitle": "Import titles you've saved to an external source",
+    "tab": "Import",
+    "title": "Import titles"
+  },
   "languages": {
     "aa": "Afar",
     "ab": "Abkhazian",
