@@ -328,8 +328,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   }
 
-  #includeLangs(langs: mirrorsLangsType[]) {
-    return langs.map(x => 'availableTranslatedLanguage[]=' + x).join('&');
+  #includeLangs(langs: mirrorsLangsType[], type?: 'available') {
+    langs = langs.filter(l => this.langs.includes(l));
+    if(type === 'available') return langs.map(x => 'availableTranslatedLanguage[]=' + x).join('&');
+    else return langs.map(x => 'translatedLanguage[]=' + x).join('&');
   }
 
   public get loggedIn():boolean {
@@ -511,7 +513,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         let coverURL: undefined | string = undefined;
 
-        const langs = manga.data.attributes.availableTranslatedLanguages;
+        const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
 
         const coverData = manga.data.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
@@ -552,7 +554,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
 
       const url =
-        this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(langs)}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
+        this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(langs, 'available')}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
       const res = await this.fetch<Routes['/manga/{search}']['ok']|Routes['/manga/{search}']['err']>({url}, 'json');
       if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
@@ -571,8 +573,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           result.attributes.lastChapter && isNaN(parseFloat(result.attributes.lastChapter)) ?
             { chapter: parseFloat(result.attributes.lastChapter) } : undefined;
 
-        const langs = result.attributes.availableTranslatedLanguages;
-
         const searchResult = await this.searchResultsBuilder({
           id: result.id,
           name,
@@ -580,7 +580,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           covers: cover ? [cover] : [],
           synopsis,
           last_release,
-          langs: langs,
+          langs: result.attributes.availableTranslatedLanguages.filter(Boolean), // sometimes language = null
         });
 
         // we return the results based on SearchResult model
@@ -654,7 +654,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
       if(manga.result !== 'ok') throw new Error(`${manga.errors[0].title}: ${manga.errors[0].detail}`);
 
-      const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean);
+      const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
 
       if(!requestedLangs.some(x => langs.includes(x))) throw new Error(`this manga has no translation for this languages ${requestedLangs}`);
 
@@ -670,8 +670,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
       if(!coverURL) return;
       const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`);
-
-      const requestLangs = requestedLangs.map(x => `translatedLanguage[]=${x}`).join('&');
+      const requestLangs = this.#includeLangs(requestedLangs);
 
       const scanlationGroups:Set<{id:string, name: string}> = new Set();
 
@@ -683,8 +682,10 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         let reqURL = this.#path(
           `${url}/feed?limit=500&offset=${page*500}&${requestLangs}&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`,
         );
-        if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
-        if(this.options.excludedUploaders) reqURL += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
+
+        // filter Boolean in just in case
+        if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
+        if(this.options.excludedUploaders.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
 
         const res = await this.fetch<
           Routes['/manga/{id}/feed']['ok']|Routes['/manga/{id}/feed']['err']
@@ -903,7 +904,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
       for(const manga of list) {
         if(cancel) break;
-        const langs = manga.attributes.availableTranslatedLanguages;
+        const langs = manga.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
         const name =  manga.attributes.title[Object.keys(manga.attributes.title)[0]];
         let coverURL: undefined | string = undefined;
         const coverData = manga.relationships.find(x => x.type === 'cover_art');
