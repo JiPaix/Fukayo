@@ -267,11 +267,21 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     // check if the displayName has changed
     if(data.displayName !== manga.displayName) hasNewStuff = true;
 
-    // in case filename is "https://localhost:8080/files/filename"
-    manga.covers = manga.covers.map(m => m.replace(/(.*files\/)?/g, ''));
-    data.covers = data.covers.map(m => m.replace(/(.*files\/)?/g, ''));
+    if(alreadyInDB) {
+      // covers in db start with "{number}_cover_"
+      const mangaCoverClone = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
+      // covers from the view start with "/files/"
+      const fetchedCoverClone = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
 
-    manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+      if(!arraysEqual(fetchedCoverClone, mangaCoverClone)) {
+        hasNewStuff = true;
+        manga.covers = manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+      }
+    } else {
+      hasNewStuff = true;
+      manga.covers = manga.covers = this.#saveCovers(Array.from(new Set(manga.covers)));
+    }
+
     // we check if the manga has been updated by previous operations OR by the Scheduler
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
     if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
