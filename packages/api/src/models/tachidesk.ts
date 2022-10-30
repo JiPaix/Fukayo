@@ -1,6 +1,8 @@
 import { SelfHosted } from '@api/models/abstracts/selfhosted';
 import icon from '@api/models/icons/tachidesk.png';
+import type { ImportResults } from '@api/models/imports/types/index';
 import type MirrorInterface from '@api/models/interfaces';
+import type { importErrorMessage } from '@api/models/types/errors';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import Scheduler from '@api/server/scheduler';
@@ -11,13 +13,13 @@ import fd from 'form-data';
 
 type CategoryList = {
   default: boolean;
-  id: number
+  id: string
   name: string
   order: number
 }
 
 type CategoryManga = {
-  id: number,
+  id: string,
   artist: string
   author: string
   description: string
@@ -33,7 +35,7 @@ type Source = {
 }
 
 type Manga = {
-  id: number,
+  id: string,
   sourceId: string,
   title: string,
   thumbnailUrl: string,
@@ -441,6 +443,95 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         else this.logger('markAsRead:', e);
       }
     }
+  }
+
+  async getLists():Promise<importErrorMessage|CategoryManga[]> {
+    try {
+      if (!this.options.host || !this.options.port) throw 'unauthorized';
+      if (!this.options.host.length) throw 'unauthorized';
+      const catUrl = this.#path('/category');
+      const categories = await this.fetch<CategoryList[]>({
+        url: catUrl,
+        withCredentials: true,
+      }, 'json');
+      const inputArray = await this.#mangaFromCat(categories);
+      return inputArray;
+    } catch(e) {
+      if(e instanceof Error) return {error: 'import_error', trace: e.message};
+      else if(typeof e === 'string') return {error: 'import_error', trace: e};
+      else return { error: 'import_error' };
+    }
+  }
+  async getMangasToImport(id:number, socket:socketInstance, langs: mirrorsLangsType[], inputArray:CategoryManga[]) {
+    try {
+      if (!this.options.host || !this.options.port) throw 'unauthorized';
+      if (!this.options.host.length) throw 'unauthorized';
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      if (!(socket instanceof Scheduler)) {
+        socket.once('stopShowImports', () => {
+          this.logger('fetching imports canceled');
+          this.stopListening(socket);
+          cancel = true;
+        });
+      }
+      const SourceList = await this.#getSourceList();
+      socket.emit('showImports', id, inputArray.length);
+      //splitting the array in to 100 item chunks
+      const result = inputArray.reduce((resultArray: CategoryManga[][], item: CategoryManga, index) => {
+        const chunkIndex = Math.floor(index / 100);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
+
+      await Promise.all(result.map(async (res) => {
+
+        const mangaList = (await Promise.all(res.map(async (manga) => {
+          if (cancel) return;
+
+          const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
+            id: '',
+            lang: 'xx',
+          };
+          const lang = currentSource.lang;
+          const covers: string[] = [];
+
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+
+          if (img) covers.push(img);
+
+          if (cancel) return;
+          const searchResult = await this.searchResultsBuilder({
+            name: manga.title,
+            url: `/manga/${manga.id}`,
+            covers,
+            langs: [lang],
+          });
+          return {
+            mirror: {
+              name: this.name,
+              langs: this.langs,
+            },
+            name: searchResult.name,
+            url: searchResult.url,
+            covers: searchResult.covers,
+            inLibrary: searchResult.inLibrary,
+          };
+        }))).filter(ele => ele !== undefined) as ImportResults[];
+        if (cancel) return;
+        if (!cancel) socket.emit('showImports', id,  mangaList);
+      }));
+    } catch (e) {
+      this.logger('error while recommending mangas', e);
+      if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
+      else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
+      else socket.emit('showImports', id, {error: 'import_error' });
+    }
+    socket.emit('showImports', id, { done: true });
+    return this.stopListening(socket);
   }
 }
 
