@@ -32,6 +32,16 @@
   "global": {
     "colon_word": "{word} :"
   },
+  "import": {
+    "close": "Fermer",
+    "failed": "Erreur",
+    "in_library": "Importé",
+    "not_in_library": "Non importé",
+    "start_import": "Importer",
+    "subtitle": "Importez les titres que vous avez enregistrés sur une source externe",
+    "tab": "Importer",
+    "title": "Importer des titres"
+  },
   "languages": {
     "aa": "Afar",
     "ab": "Abkhaze",

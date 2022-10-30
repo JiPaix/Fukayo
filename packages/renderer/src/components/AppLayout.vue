@@ -176,6 +176,21 @@ function toggleDarkMode() {
               {{ $t('settings.tab') }}
             </q-item-section>
           </q-item>
+          <q-item
+            v-ripple
+            :dark="$q.dark.isActive"
+            clickable
+            :active="route.name === 'import'"
+            @click="router.push({ name: 'import' })"
+          >
+            <q-item-section avatar>
+              <q-icon name="list_alt" />
+            </q-item-section>
+
+            <q-item-section>
+              {{ $t('import.tab') }}
+            </q-item-section>
+          </q-item>
           <q-separator :dark="$q.dark.isActive" />
           <q-item
             v-ripple
