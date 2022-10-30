@@ -10,6 +10,7 @@ import type { SearchResult } from '@api/models/types/search';
 import type { TaskDone } from '@api/models/types/shared';
 import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import type { ServerToClientEvents } from '@api/server/types/index';
+import type { LogChapterError, LogChapterNew, LogChapterRead, LogMangaNewMetadata } from '@api/server/types/scheduler';
 import EventEmitter from 'events';
 import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join, resolve } from 'path';
@@ -30,7 +31,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     cache: false,
   };
 
-  mangaLogs:{date: number, message:'chapter'|'chapter_read'|'chapter_error'|'manga_metadata', mirror:string, id: string, nbOfUpdates:number }[] = [];
+  mangaLogs:(LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata)[] = [];
   cacheLogs: { date: number, message: 'cache'|'cache_error', files:number, size:number }[] = [];
   io?: ioServer<ClientToServerEvents, ServerToClientEvents>;
   constructor() {
@@ -89,9 +90,9 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     return;
   }
 
-  #addMangaLog(message:'chapter'|'chapter_error'|'chapter_read'|'manga_metadata', mirror:string, id: string, nbOfUpdates:number):void {
+  #addMangaLog(log: LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata):void {
     if(!this.settings.library.logs.enabled) return;
-    this.mangaLogs.push({date: Date.now(), message, mirror, id, nbOfUpdates});
+    this.mangaLogs.push(log);
     if(this.mangaLogs.length > this.settings.library.logs.max) {
       this.mangaLogs.shift();
     }
@@ -301,26 +302,24 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * Fetch the data, check if there's any difference and update accordingly
    */
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
-    const res:MangaInDB[] = [];
+    const db = MangasDB.getInstance();
     for(const manga of mangas) {
       this.logger('updating', manga.name, '@', manga.mirror);
       try {
         const fetched = await this.#fetch(mirror, manga);
-        let countNewChaps = 0;
-        let countNewReadStatus = 0;
-        let countNewMetadata = 0;
+        const id = manga.id;
 
         // check if some keys changed
         if(manga.name !== fetched.name) {
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'name', oldVal: manga.name, newVal: fetched.name }});
           manga.name = fetched.name;
-          countNewMetadata++;
         }
 
         // For mirror which only have 1 lang, which might change
         if(mirror.langs.length === 1 || mirror.mirrorInfo.entryLanguageHasItsOwnURL) {
           if(manga.langs[0] !== fetched.langs[0]) {
+            this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'langs', oldVal: manga.langs, newVal: fetched.langs }});
             manga.langs = fetched.langs;
-            countNewMetadata++;
             fetched.chapters.map(x => {
               return { ...x, lang: fetched.langs[0] };
             });
@@ -328,49 +327,48 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         }
 
         if(manga.synopsis !== fetched.synopsis) {
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'synopsis', oldVal: manga.synopsis, newVal: fetched.synopsis }});
           manga.synopsis = fetched.synopsis;
-          countNewMetadata++;
         }
         if(!arraysEqual(manga.authors, fetched.authors)) {
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'authors', oldVal: manga.authors, newVal: fetched.authors }});
           manga.authors = fetched.authors;
-          countNewMetadata++;
-        }
-        if(!arraysEqual(manga.covers, fetched.covers)) {
-          manga.covers = fetched.covers;
-          countNewMetadata++;
-        }
-        if(!arraysEqual(manga.tags, fetched.tags)) {
-          manga.tags = fetched.tags;
-          countNewMetadata++;
         }
 
-        // if fetched has chapters not in manga add them if they don't already exist
-        fetched.chapters
-          .forEach(chapter => {
+        const mangaCoverClone = [...manga.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
+        const fetchedCoverClone = [...fetched.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
+        if(!arraysEqual(mangaCoverClone, fetchedCoverClone)) {
+          manga.covers = fetched.covers;
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'covers' }});
+        }
+
+        const mangaTagClone = [...manga.tags].sort();
+        const fetchedTagClone = [...fetched.tags].sort();
+        if(!arraysEqual(mangaTagClone, fetchedTagClone)) {
+          manga.tags = fetched.tags;
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'tags' }});
+        }
+
+        for(const chapter of fetched.chapters) {
           const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
           if(chapterInDB) {
             if(!chapterInDB.read && chapter.read) {
               chapterInDB.read = true;
-              countNewReadStatus++;
+              this.#addMangaLog({ date: Date.now(), id, message: 'log_chapter_read', data: chapterInDB });
             }
           } else {
             manga.chapters.push(chapter);
-            countNewChaps++;
+            this.#addMangaLog({ date: Date.now(), id, message: 'log_chapter_new', data: chapter });
           }
-        });
-        if(countNewChaps > 0) this.#addMangaLog('chapter', mirror.name, manga.id, countNewChaps);
-        if(countNewReadStatus > 0) this.#addMangaLog('chapter_read', mirror.name, manga.id, countNewReadStatus);
-        if(countNewReadStatus > 0) this.#addMangaLog('manga_metadata', mirror.name, manga.id, countNewMetadata);
+        }
+        await db.add({manga: {...manga, meta: {...manga.meta, lastUpdate: Date.now() } } });
       } catch(e) {
-        this.#addMangaLog('chapter_error', mirror.name, manga.id, 0);
+        let err = '';
+        if(e instanceof Error) err = e.message;
+        if(typeof e === 'string') err = e;
+        this.#addMangaLog({ date: Date.now(), id: manga.id, message: 'log_chapter_error', data: err});
       }
-      res.push({...manga, meta: {...manga.meta, lastUpdate: Date.now() }});
     }
-    res.forEach(async (m) => {
-      await MangasDB.getInstance().add({ manga: m });
-    });
-
-
   }
 
   /**

@@ -246,11 +246,13 @@
     "tab": "Library"
   },
   "logs": {
-    "cache": "<span class=\"text-weight-bold\">{files} file</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span> | <span class=\"text-weight-bold\">{files} files</span> deleted for a total of <span class=\"text-weight-bold\">{size}</span>",
-    "error_chapter": "encoutered an error while updating",
-    "found_chapter": "found {number} new chapter | found {number} new chapters",
-    "new_metadata": "updated metdatas",
-    "read_chapter": "updated read status for {number} chapter | updated read statues for {number} chapters"
+    "cache": "Cache",
+    "cache_delete": "Deteleted {number} files",
+    "cache_error": "Failed to empty cache",
+    "error_chapter": "Update failed",
+    "found_chapter": "New chapter",
+    "new_metadata": "Updated metdatas",
+    "read_chapter": "Read markers imported"
   },
   "mangas": {
     "add_new_category": "Add a new category",
