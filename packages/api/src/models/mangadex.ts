@@ -835,7 +835,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   /** Get connected user list */
   async getLists(): Promise<importErrorMessage | Routes['/user/list']['ok']['data']> {
-    if(!this.loggedIn) return {error: 'import_error', trace: 'not logged in'};
+    if(!this.loggedIn) return {error: 'import_error', trace: 'unauthorized'};
     try {
 
       const lists: Routes['/user/list']['ok']['data'] = [];
