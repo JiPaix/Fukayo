@@ -12,7 +12,7 @@ import type { mirrorsLangsType } from '@i18n/index';
 
 const mangadex = mirrors.find(m=> m.name === 'mangadex') as typeof MangaDex;
 
-class MangadexImporter extends Importer implements ImporterInterface{
+class MangadexImporter extends Importer implements ImporterInterface {
   constructor() {
     super(mangadex.name, mangadex.host, mangadex.displayName, icon);
   }
@@ -84,7 +84,6 @@ class MangadexImporter extends Importer implements ImporterInterface{
         mirror: {
           name: mangadex.name,
           langs: mangadex.mirrorInfo.langs,
-          icon: icon,
         },
       });
     }
