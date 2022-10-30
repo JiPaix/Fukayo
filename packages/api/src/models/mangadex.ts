@@ -1,5 +1,4 @@
 import Mirror from '@api/models/abstracts';
-import importerIcon from '@api/models/icons/mangadex-importer.png';
 import icon from '@api/models/icons/mangadex.png';
 import type MirrorInterface from '@api/models/interfaces';
 import type { importErrorMessage } from '@api/models/types/errors';
@@ -911,7 +910,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
         const cover = await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`);
-        socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, icon: importerIcon, langs: this.mirrorInfo.langs } });
+        socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, langs: this.mirrorInfo.langs } });
       }
       if(!cancel) socket.emit('showImports', id, { done: true });
       if(cancel) return this.stopListening(socket);
