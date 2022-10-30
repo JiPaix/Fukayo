@@ -654,6 +654,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       socket.removeAllListeners('stopShowChapter');
       socket.removeAllListeners('stopSearchInMirrors');
       socket.removeAllListeners('stopShowRecommend');
+      socket.removeAllListeners('stopShowImports');
     }
   }
 }

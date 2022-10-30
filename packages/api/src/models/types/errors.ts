@@ -33,6 +33,11 @@ export type RecommendErrorMessage = {
   trace?:string
 }
 
+export type importErrorMessage = {
+  error:'import_error'
+  trace?: string | 'importer_not_found'
+}
+
 export function isErrorMessage(x: unknown): x is ErrorMessage {
     if(!x) return false;
     if(typeof x === 'object') {

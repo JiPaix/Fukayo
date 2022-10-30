@@ -1,5 +1,5 @@
 import type { ChapterImage } from '@api/models/types/chapter';
-import type { ChapterErrorMessage, ChapterImageErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
+import type { ChapterErrorMessage, ChapterImageErrorMessage, importErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { TaskDone } from '@api/models/types/shared';
 export { isManga, isMangaInDB } from '@api/db/helpers';
@@ -20,7 +20,10 @@ export function isSearchResult(res: SearchResult | SearchResult[] | SearchErrorM
   return (res as SearchResult).url !== undefined;
 }
 
-export function isTaskDone(res: SearchResult | SearchResult[] | SearchErrorMessage | RecommendErrorMessage | TaskDone): res is TaskDone {
+export function isTaskDone(res: SearchResult | SearchResult[] | SearchErrorMessage | RecommendErrorMessage | TaskDone | unknown): res is TaskDone {
   return (res as TaskDone).done !== undefined;
 }
 
+export function isImportErrorMessage(res:unknown) : res is importErrorMessage {
+  return (res as importErrorMessage).error !== undefined;
+}
