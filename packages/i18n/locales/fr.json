@@ -40,7 +40,8 @@
     "start_import": "Importer",
     "subtitle": "Importez les titres que vous avez enregistrés sur une source externe",
     "tab": "Importer",
-    "title": "Importer des titres"
+    "title": "Importer des titres",
+    "unauthorized": "Non autorisé : identification erronées (?)"
   },
   "languages": {
     "aa": "Afar",

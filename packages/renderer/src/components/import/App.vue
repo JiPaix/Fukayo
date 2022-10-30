@@ -346,7 +346,7 @@ async function startImport() {
               <p class="text-h5">
                 {{ $t('import.failed') }}:
               </p>
-              <span class="text-caption">{{ error.trace || error.error }}</span>
+              <span class="text-caption">{{ error.trace === 'unauthorized' ? $t('import.unauthorized') : error.trace || error.error }}</span>
               <template #action>
                 <q-btn
                   flat
