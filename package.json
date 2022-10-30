@@ -5,7 +5,7 @@
   "homepage": "https://fukayo.com",
   "repository": "github:JiPaix/Fukayo",
   "license": "MIT",
-  "version": "0.8.23",
+  "version": "0.8.47",
   "private": false,
   "engines": {
     "node": ">=v16.13",
