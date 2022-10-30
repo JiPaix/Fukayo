@@ -40,7 +40,8 @@
     "start_import": "Import",
     "subtitle": "Import titles you've saved to an external source",
     "tab": "Import",
-    "title": "Import titles"
+    "title": "Import titles",
+    "unauthorized": "Unauthorized: wrong credentials (?)"
   },
   "languages": {
     "aa": "Afar",
