@@ -107,7 +107,7 @@
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-adblocker-no-vulnerabilities": "^2.12.3",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
-    "quasar": "^2.10.0",
+    "quasar": "^2.10.1",
     "sanitize-filename": "^1.6.3",
     "semver": "^7.3.8",
     "socket.io": "^4.5.3",
