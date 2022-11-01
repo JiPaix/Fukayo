@@ -53,12 +53,12 @@ jobs:
       - name: Get version
         id: version
         if: steps.version-updated.outputs.has-updated
-        run: echo "build-version=${{steps.version-updated.outputs.current-package-version}}-beta >> $GITHUB_OUTPUT"
+        run: echo "build-version=${{steps.version-updated.outputs.current-package-version}}-beta" >> $GITHUB_OUTPUT
 
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated
         id: tag
-        run: echo "last-tag=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}}) >> $GITHUB_OUTPUT"
+        run: echo "last-tag=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}})" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
         if: steps.version-updated.outputs.has-updated
@@ -93,8 +93,8 @@ jobs:
         with:
           prerelease: true
           draft: true
-          tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.build-version }}
+          name: v${{ steps.version.outputs.build-version }}
           body: ${{ steps.release-note.outputs.release-note }}
 
   upload_artifacts:
