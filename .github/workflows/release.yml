@@ -52,12 +52,12 @@ jobs:
       - name: Get version
         id: version
         if: steps.version-updated.outputs.has-updated
-        run: echo "::set-output name=build-version::${{steps.version-updated.outputs.current-package-version}}"
+        run: echo "build-version=${{steps.version-updated.outputs.current-package-version}}-beta >> $GITHUB_OUTPUT"
 
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated
         id: tag
-        run: echo "::set-output name=last-tag::$(git describe --exclude "*-beta" --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}})"
+        run: echo "last-tag=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}}) >> $GITHUB_OUTPUT"
 
       - name: Generate release notes
         if: steps.version-updated.outputs.has-updated
@@ -159,8 +159,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern=${{ needs.draft.outputs.version }}
 
       - name: Build and push Docker image
         if: matrix.os == 'ubuntu-latest'
