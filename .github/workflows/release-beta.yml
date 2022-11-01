@@ -155,7 +155,7 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         if: matrix.os == 'ubuntu-latest'
         id: meta
-        uses: docker/metadata-action@v4.4.1
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
