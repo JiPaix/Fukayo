@@ -33,7 +33,7 @@ jobs:
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
 
-      - uses: JiPaix/package-json-updated-action@1.0.2
+      - uses: JiPaix/package-json-updated-action
         id: version-updated
         with:
           path: package.json
