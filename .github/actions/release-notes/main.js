@@ -18,10 +18,6 @@ function getInput(name, options) {
   return val.trim();
 }
 
-function setOutput(varName, val) {
-  execSync(`echo "${varName}=${val} >> $GITHUB_OUTPUT`)
-}
-
 const START_FROM = getInput('from');
 const END_TO = getInput('to');
 const INCLUDE_COMMIT_BODY = getInput('include-commit-body') === 'true';
@@ -348,7 +344,7 @@ try {
   const commits = getCommits();
   const grouped = getGroupedCommits(commits);
   const changelog = getChangeLog(grouped);
-  setOutput('release-note', escapeData(changelog) + '\r\n')
+  process.stdout.write('::set-output name=release-note::' + escapeData(changelog) + '\r\n');
 } catch (e) {
   console.error(e);
   process.exit(1);
