@@ -13,6 +13,7 @@
   },
   "main": "packages/main/dist/index.cjs",
   "scripts": {
+    "start": "electron .",
     "build": "npm run build:i18n && npm run build:main && npm run build:preload && npm run build:renderer && npm run build:api",
     "prebuild:api": "rimraf ./packages/api/dist",
     "prebuild:main": "rimraf ./packages/main/dist",
@@ -80,7 +81,6 @@
     "terser": "^5.15.1",
     "typed-emitter": "^2.1.0",
     "typescript": "4.8.4",
-    "user-agents": "^1.0.1183",
     "vite": "^3.2.1",
     "vitest": "^0.24.3",
     "vue": "^3.2.41",
@@ -113,6 +113,7 @@
     "socket.io": "^4.5.3",
     "socket.io-client": "^4.5.3",
     "systeminformation": "^5.12.11",
+    "user-agents": "^1.0.1183",
     "uuid": "^9.0.0",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6"

@@ -3,6 +3,11 @@ import { app } from 'electron';
 import Ready from './appReady';
 import './security-restrictions';
 
+if(app.commandLine.hasSwitch('server')) {
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('headless');
+}
+
 /**
  * Prevent multiple instances
  */
