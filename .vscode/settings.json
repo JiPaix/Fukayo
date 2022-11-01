@@ -37,7 +37,8 @@
     "e2e",
     "dbs",
     "build",
-    "reader"
+    "reader",
+    "experimental"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",
