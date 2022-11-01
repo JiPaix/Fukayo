@@ -155,12 +155,14 @@ jobs:
       - name: Extract metadata (tags, labels) for Docker
         if: matrix.os == 'ubuntu-latest'
         id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        uses: docker/metadata-action@v4.4.1
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
             type=ref,event=branch
-            type=semver,pattern=${{ needs.draft.outputs.version }}
       - name: Build and push Docker image
         if: matrix.os == 'ubuntu-latest'
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
