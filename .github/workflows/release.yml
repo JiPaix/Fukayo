@@ -32,7 +32,7 @@ jobs:
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
 
-      - uses: MontyD/package-json-updated-action@1.0.1
+      - uses: JiPaix/package-json-updated-action@1.0.2
         id: version-updated
         with:
           path: package.json
@@ -155,11 +155,12 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        type: |
-          type=semver,pattern={{version}}
-          type=ref,event=branch
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
 
       - name: Build and push Docker image
         if: matrix.os == 'ubuntu-latest'
