@@ -20,4 +20,4 @@ VOLUME ["/home/fukayo/.config/fukayo"]
 USER fukayo
 EXPOSE $FUKAYO_PORT
 CMD xvfb-run ./fukayo --server --login=$FUKAYO_USERNAME --password=$FUKAYO_PASSWORD --port=$FUKAYO_PORT --no-sandbox
-LABEL org.opencontainers.image.authors="Farah Nur (farahnur074@gmail.com)"
+LABEL org.opencontainers.image.authors="Farah Nur (farahnur42@gmail.com)"
