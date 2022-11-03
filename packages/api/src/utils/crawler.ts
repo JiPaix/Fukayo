@@ -139,12 +139,12 @@ async function taskFile({page, data}: { page: Page, data: ClusterJob }) {
     });
 
     // get the content
-    const res = await page.goto(data.url, { referer: data.referer });
+    const res = await page.goto(data.url, { referer: data.referer, waitUntil: 'networkidle2' });
     if(data.waitForSelector) await page.waitForSelector(data.waitForSelector, {timeout: 1000*20});
     // remove task from task list then close cluster if needed
     runningTask = runningTask-1;
     closeClusterIfAllDone();
-    return res.buffer();
+    if(res) return res.buffer();
   } catch(e) {
     // in most cases happens because waitForSelector timeout is reached (cloudflare?)
     runningTask = runningTask-1;
