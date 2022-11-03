@@ -38,7 +38,8 @@
     "dbs",
     "build",
     "reader",
-    "experimental"
+    "experimental",
+    "docker"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",
