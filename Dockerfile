@@ -1,18 +1,23 @@
-FROM debian:buster-slim
+FROM almalinux:9-minimal
 
-ENV USERNAME=${USERNAME:-admin}
-ENV PASSWORD=${PASSWORD:-password}
+ENV FUKAYO_USERNAME=${FUKAYO_USERNAME:-admin} \
+    FUKAYO_PASSWORD=${FUKAYO_PASSWORD:-password} \
+    FUKAYO_PORT=${FUKAYO_PORT:-4444}
 
-RUN apt-get update
-RUN apt-get install -y xvfb chromium
+RUN microdnf install -y epel-release && \
+    microdnf install -y chromium xorg-x11-server-Xvfb && \
+    microdnf remove -y chromium && \
+    microdnf clean all
 
-RUN groupadd -g 999 fukayo && \
-    useradd -r -u 999 -g fukayo fukayo
-RUN mkdir -p /home/fukayo && chown -R fukayo:fukayo /home/fukayo
+RUN useradd -m fukayo && \
+    mkdir /home/fukayo/app && chown -R fukayo:fukayo /home/fukayo/app && chmod -R 755 /home/fukayo/app && \
+    mkdir -p /home/fukayo/.config/fukayo && chown -R fukayo:fukayo /home/fukayo/.config && \
+    chmod -R 755 /home/fukayo/.config/fukayo
 
+WORKDIR /home/fukayo/app
+COPY dist/linux-unpacked/ ./
+VOLUME ["/home/fukayo/.config/fukayo"]
 USER fukayo
-WORKDIR /home/fukayo
-COPY dist/linux-unpacked ./
-
-EXPOSE 8080
-CMD xvfb-run ./fukayo --server --login=$USERNAME --password=$PASSWORD --port=8080 --no-sandbox
+EXPOSE $FUKAYO_PORT
+CMD xvfb-run ./fukayo --server --login=$FUKAYO_USERNAME --password=$FUKAYO_PASSWORD --port=$FUKAYO_PORT --no-sandbox
+LABEL org.opencontainers.image.authors="Farah Nur (farahnur074@gmail.com)"
