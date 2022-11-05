@@ -179,7 +179,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.USERNAME }}
+          registry: null
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_SECRET }}
 
       - name: (DOCKER-DH) Extract metadata
