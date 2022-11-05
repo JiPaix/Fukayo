@@ -7,6 +7,8 @@ import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n/index';
 import { BC47_TO_ISO639_1, mirrorsLang } from '@i18n/index';
+import type { ImportResults } from './imports/types';
+import type { importErrorMessage } from './types/errors';
 
 //  /series?search=word
 type searchContent = {
@@ -117,18 +119,19 @@ class Komga extends SelfHosted implements MirrorInterface {
   }
 
   async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    if(!(socket instanceof Scheduler)) {
+      socket.once('stopSearchInMirrors', () => {
+        this.logger('search canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+    }
+
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-      // we will check if user don't need results anymore at different intervals
-      let cancel = false;
-      if(!(socket instanceof Scheduler)) {
-        socket.once('stopSearchInMirrors', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
 
       const url = this.#path(`/series?search=${query}`);
       const res = await this.fetch<searchContent>({url, auth: {username: this.options.login, password: this.options.password}}, 'json');
@@ -169,6 +172,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         if (cancel) return;
         if (!cancel) socket.emit('searchInMirrors', id, mangaList);
       }));
+      if(cancel) return;
     } catch(e) {
       this.logger('error while searching mangas', e);
       if(e instanceof Error) socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error', trace: e.message});
@@ -254,7 +258,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         tags,
         chapters,
       });
-
+      if(cancel) return;
       socket.emit('showManga', id, mg);
     } catch(e) {
       this.logger('error while fetching manga', '@', url, e);
@@ -317,19 +321,20 @@ class Komga extends SelfHosted implements MirrorInterface {
   }
 
   async recommend(socket: socketInstance|Scheduler, id: number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    if(!(socket instanceof Scheduler)) {
+      socket.once('stopShowRecommend', () => {
+        this.logger('fetching recommendations canceled');
+        cancel = true;
+      });
+    }
+
     try {
       if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
       if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-      // we will check if user don't need results anymore at different intervals
-      let cancel = false;
-      if(!(socket instanceof Scheduler)) {
-        socket.once('stopShowRecommend', () => {
-          this.logger('fetching recommendations canceled');
-          cancel = true;
-        });
-      }
 
-      const url = this.#path('/series?size=2000');
+      const url = this.#path('/series?size=20000');
       const $ = await this.fetch<searchContent>({
         url,
         auth: {username: this.options.login, password: this.options.password},
@@ -368,16 +373,16 @@ class Komga extends SelfHosted implements MirrorInterface {
           return mg;
         }))).filter(ele => ele !== undefined) as SearchResult[];
         if (cancel) return;
-        if (!cancel) socket.emit('showRecommend', id, mangaList);
+        else socket.emit('showRecommend', id, mangaList);
       }));
-
+      if(cancel) return;
+      socket.emit('showRecommend', id, { done: true });
     } catch(e) {
       this.logger('error while recommending mangas', e);
       if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
       else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
     }
-    socket.emit('showRecommend', id, { done: true });
     return this.stopListening(socket);
   }
 
@@ -397,7 +402,70 @@ class Komga extends SelfHosted implements MirrorInterface {
       }
     }
   }
-}
+
+  async getLists(): Promise<importErrorMessage | searchContent['content']> {
+      try {
+        if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return {error: 'import_error', trace: 'unauthorized'};
+        if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return {error: 'import_error', trace: 'unauthorized'};
+        // we will check if user don't need results anymore at different intervals
+        const url = this.#path('/series?size=20000');
+        const $ = await this.fetch<searchContent>({
+          url,
+          auth: {username: this.options.login, password: this.options.password},
+        }, 'json');
+        return $.content;
+      } catch(e) {
+        this.logger('error while importing mangas', e);
+        if(e instanceof Error) return {error: 'import_error', trace: e.message};
+        else if(typeof e === 'string') return {error: 'import_error', trace: e};
+        else return { error: 'import_error' };
+      }
+    }
+
+    async getMangasToImport(id:number, socket:socketInstance, langs: mirrorsLangsType[], inputArray:searchContent['content']) {
+      try {
+        if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'unauthorized';
+        if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'unauthorized';
+
+        // we will check if user don't need results anymore at different intervals
+        let cancel = false;
+        if (!(socket instanceof Scheduler)) {
+          socket.once('stopShowImports', () => {
+            this.logger('fetching imports canceled');
+            this.stopListening(socket);
+            cancel = true;
+          });
+        }
+
+        for(const manga of inputArray) {
+          if(cancel) break;
+          const covers:string[] = [];
+          const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
+          let lang = 'xx' as mirrorsLangsType;
+          if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
+          if(img) covers.push(img);
+          const res:ImportResults = {
+            mirror: { name: this.name, langs: this.langs },
+            name: manga.metadata.title,
+            langs: [lang],
+            url: `/series/${manga.id}`,
+            covers,
+            inLibrary: false,
+          };
+          if(!cancel) socket.emit('showImports', id, res);
+        }
+        if(cancel) return;
+        socket.emit('showImports', id, { done: true });
+      } catch(e) {
+        this.logger('error while recommending mangas', e);
+        if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
+        else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
+        else socket.emit('showImports', id, {error: 'import_error' });
+      }
+      return this.stopListening(socket);
+    }
+  }
+
 
 
 const komga = new Komga();
