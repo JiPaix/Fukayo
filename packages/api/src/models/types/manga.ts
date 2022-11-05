@@ -37,6 +37,8 @@ export interface MangaPage {
   inLibrary: boolean
   /** user categories */
   userCategories: string[]
+  /** publication status */
+  status: 'ongoing'|'completed'|'hiatus'|'cancelled'|'unknown',
   /** chapters */
   chapters: {
     /**

@@ -20,6 +20,7 @@ type MangaAttributes = {
   },
   lastChapter: string | null
   lastVolume: string | null
+  status: 'ongoing' | 'completed' | 'hiatus' | 'cancelled' | null
   tags: {
     id: string,
     type: 'tag',
@@ -659,6 +660,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(!requestedLangs.some(x => langs.includes(x))) throw new Error(`this manga has no translation for this languages ${requestedLangs}`);
 
       const name =  manga.data.attributes.title[Object.keys(manga.data.attributes.title)[0]];
+      const status = manga.data.attributes.status || undefined;
       const tags = manga.data.attributes.tags.map(x => x.attributes.name[Object.keys(x.attributes.name)[0]]);
       const synopsis = manga.data.attributes.description[Object.keys(manga.data.attributes.description)[0]] || undefined;
       const authors = manga.data.relationships
@@ -730,6 +732,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           tags,
           authors,
           chapters,
+          status,
         });
 
         socket.emit('showManga', id, mg);

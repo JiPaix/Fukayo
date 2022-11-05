@@ -29,7 +29,7 @@ export type LogChapterRead = MangaLogs & {
 export type LogMangaNewMetadata = MangaLogs & {
   message: 'log_manga_metadata',
   data: {
-    tag: 'name' | 'langs' | 'synopsis' | 'authors' | 'covers' | 'tags'
+    tag: 'name' | 'langs' | 'synopsis' | 'authors' | 'covers' | 'tags' | 'status'
     oldVal?: string  | string[] | mirrorsLangsType[]
     newVal?: string  | string[] | mirrorsLangsType[]
   }

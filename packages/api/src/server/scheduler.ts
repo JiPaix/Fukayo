@@ -315,6 +315,11 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
           manga.name = fetched.name;
         }
 
+        if(manga.status !== fetched.status) {
+          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'status', oldVal: manga.status, newVal: fetched.status }});
+          manga.name = fetched.name;
+        }
+
         // For mirror which only have 1 lang, which might change
         if(mirror.langs.length === 1 || mirror.mirrorInfo.entryLanguageHasItsOwnURL) {
           if(manga.langs[0] !== fetched.langs[0]) {

@@ -249,6 +249,10 @@ export default class MangasDB extends DatabaseIO<Mangas> {
         hasNewStuff = true;
       }
     }
+    // check if manga name changed
+    if(manga.name !== data.name) hasNewStuff = true;
+    // check if manga publication's status changed
+    if(manga.status !== manga.status) hasNewStuff = true;
 
     // check if categories changed
     if(!arraysEqual(data.userCategories.sort(), manga.userCategories.sort())) {

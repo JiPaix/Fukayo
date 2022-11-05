@@ -57,6 +57,23 @@ const slide = ref(0);
 /** manga failed to load*/
 const nodata = ref<string[]|null>(null);
 
+/** return the color class for the manga's publication status */
+function statusClass(status:MangaPage['status']) {
+  switch(status) {
+    case 'cancelled':
+      return 'negative';
+    case 'completed':
+      return 'primary';
+    case 'hiatus':
+      return 'accent';
+    case 'ongoing':
+      return 'positive';
+    case 'unknown':
+      return 'accent';
+  }
+}
+
+
 type Manga = MangaInDB | MangaPage;
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
@@ -573,9 +590,17 @@ function changeRouteLang(lang: mirrorsLangsType) {
         </div>
         <div class="row q-mx-sm">
           <div
-            class="col-sm-3 col-xs-8 col-lg-2 q-my-lg"
+            class="col-sm-4 col-xs-8 col-lg-2 q-my-lg"
             :class="$q.screen.lt.lg ? 'q-ml-auto q-mr-auto' : undefined"
           >
+            <div
+              v-if="manga"
+              :class="'bg-'+statusClass(manga.status)"
+              class="w-100 text-center q-mb-xs rounded-borders"
+            >
+              {{ $t('mangas.publication') }}
+              <span class="text-weight-bold">{{ $t(`mangas.status_${manga.status}`) }}</span>
+            </div>
             <q-carousel
               v-if="manga && manga.covers.length > 0"
               v-model="slide"
@@ -621,11 +646,11 @@ function changeRouteLang(lang: mirrorsLangsType) {
             />
           </div>
           <div
-            class="col-sm-9 col-xs-12 q-px-lg q-my-lg"
+            class="col-sm-8 col-xs-12 q-px-lg q-my-lg"
           >
             <q-list
               v-if="manga"
-              padding
+              dense
             >
               <q-item>
                 <q-item-section

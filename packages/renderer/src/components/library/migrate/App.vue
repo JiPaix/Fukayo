@@ -134,6 +134,7 @@ async function migrate(source:typeof props.mangas[0], candidate:MangaPage) {
     userCategories: source.userCategories,
     meta: source.meta,
     mirror: { name: source.mirror, version: mirrorVersion.version },
+    status: source.status,
     chapters: source.chapters.map(c => {
       return {
         ...c,
