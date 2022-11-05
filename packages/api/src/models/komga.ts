@@ -220,7 +220,7 @@ class Komga extends SelfHosted implements MirrorInterface {
 
       const synopsis = result.metadata.summary;
       const authors:string[] = result.booksMetadata.authors;
-      const tags:string[] = [...result.booksMetadata.tags, ...result.metadata.genres];
+      const tags:string[] = [...result.booksMetadata.tags, ...result.metadata.genres, ...result.metadata.tags];
 
       const chapters:MangaPage['chapters'] = [];
 
