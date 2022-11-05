@@ -184,7 +184,7 @@ jobs:
 
       - name: (DOCKER-DH) Extract metadata
         if: matrix.os == 'ubuntu-latest'
-        id: meta
+        id: metadh
         uses: docker/metadata-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -202,8 +202,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.metadh.outputs.tags }}
+          labels: ${{ steps.metadh.outputs.labels }}
 
   publish:
     needs: [ draft, upload_artifacts ]
