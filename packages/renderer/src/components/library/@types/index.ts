@@ -13,6 +13,7 @@ export type MangaInDBwithLabel = {
   synopsis?:string,
   userCategories: string[],
   unread: number,
+  status: MangaInDB['status']
   /** is the mirror dead? */
   dead:boolean,
   /** is the entry broken? */

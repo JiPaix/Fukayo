@@ -170,6 +170,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(tag.length) tags.push(tag);
       });
 
+      const status = $('.info-c .detail_item.row-a:contains("status") a').first().text().trim().toLocaleLowerCase() as 'completed' | 'ongoing';
       const chapters:MangaPage['chapters'] = [];
 
       for(const [i, el] of $('td.name > a').toArray().reverse().entries()) {
@@ -201,6 +202,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         authors,
         tags,
         chapters,
+        status,
       });
       socket.emit('showManga', id, mg);
     } catch(e) {

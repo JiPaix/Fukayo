@@ -169,7 +169,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       const name = $('span.detail-info-right-title-font').text().trim();
       // synopsis
       const synopsis = $('p.fullcontent').text().trim(); // optional
-
+      // status
+      const status = $('span.detail-info-right-title-tip')?.text().trim().toLocaleLowerCase() as 'completed'|'ongoing'|null|undefined || undefined;
       // covers (some mirror have multiple covers, not fanfox though)
       const covers:string[] = [];
       const coverLink =  $('img.detail-info-cover-img').attr('src');
@@ -241,6 +242,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         authors,
         tags,
         chapters: chapters.sort((a,b) => a.number - b.number),
+        status,
       });
 
       socket.emit('showManga', id, mg);

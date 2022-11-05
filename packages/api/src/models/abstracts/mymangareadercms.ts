@@ -246,6 +246,12 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         if(tag.length) uniq_tags.add(tag);
       });
 
+      let status:MangaPage['status'] = 'unknown';
+      const el = $('.dl-horizontal > dd > span');
+
+      if(el.hasClass('label-success')) status = 'ongoing';
+      if(el.hasClass('label-danger')) status = 'completed';
+
       const authors = Array.from(uniq_authors);
       const tags = Array.from(uniq_tags);
 
@@ -285,6 +291,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         chapters,
         covers,
         authors,
+        status,
       });
       if(!cancel) socket.emit('showManga', id, mg);
     } catch(e) {

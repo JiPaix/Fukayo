@@ -172,6 +172,7 @@ onMounted(async () => {
             broken: manga.meta.broken,
             url: manga.url,
             meta: manga.meta,
+            status: manga.status,
             userCategories: manga.userCategories,
             unread: manga.chapters.filter(c => !c.read).length,
             chapters: manga.chapters.map((c, i) => {

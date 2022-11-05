@@ -20,6 +20,7 @@ type searchContent = {
       language: string,
       genres: string[],
       tags: string[],
+      status: 'ENDED' | 'ONGOING' | 'HIATUS' | 'ABANDONED'
     },
     booksMetadata: {
       authors: string[],
@@ -218,6 +219,24 @@ class Komga extends SelfHosted implements MirrorInterface {
       const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
       if(img) covers.push(img);
 
+      let status:MangaPage['status'] = 'unknown';
+      switch(result.metadata.status) {
+        case 'ABANDONED':
+          status = 'cancelled';
+          break;
+        case 'ENDED':
+          status = 'completed';
+          break;
+        case 'HIATUS':
+          status = 'hiatus';
+          break;
+        case 'ONGOING':
+          status = 'ongoing';
+          break;
+        default:
+          status = 'unknown';
+          break;
+      }
       const synopsis = result.metadata.summary;
       const authors:string[] = result.booksMetadata.authors;
       const tags:string[] = [...result.booksMetadata.tags, ...result.metadata.genres, ...result.metadata.tags];
@@ -257,6 +276,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         authors,
         tags,
         chapters,
+        status,
       });
       if(cancel) return;
       socket.emit('showManga', id, mg);

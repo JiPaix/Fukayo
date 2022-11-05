@@ -262,7 +262,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     if(!mg.tags) throw new Error('mirror_might_be_outdated');
     if(!mg.authors) throw new Error('mirror_might_be_outdated');
 
-    const { url, langs, name, displayName, covers, synopsis, tags, authors, chapters } = mg;
+    const { url, langs, name, displayName, covers, synopsis, tags, authors, chapters, status } = mg;
 
     let id: string;
     if(mg.id) id = await this.#uuidv5(true, { langs, url, id: mg.id });
@@ -282,6 +282,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       mirror: { name: this.name, version: this.version },
       inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
       userCategories: [],
+      status: status || 'unknown',
     };
   }
 

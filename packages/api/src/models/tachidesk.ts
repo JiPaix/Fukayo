@@ -42,6 +42,7 @@ type Manga = {
   artist: string,
   author: string,
   description: string,
+  status: 'ONGOING' | 'PUBLISHING_FINISHED' | 'ON_HIATUS' | 'CANCELLED'
   genre: string[],
 }
 
@@ -247,6 +248,23 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
       if (img) covers.push(img);
+      let status:MangaPage['status'];
+      switch(manga.status) {
+        case 'CANCELLED':
+          status = 'cancelled';
+          break;
+        case 'ONGOING':
+          status = 'ongoing';
+          break;
+        case 'ON_HIATUS':
+          status = 'hiatus';
+          break;
+        case 'PUBLISHING_FINISHED':
+          status = 'completed';
+          break;
+        default:
+          status = 'unknown';
+      }
       const synopsis = manga.description;
       const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
       const tags = manga.genre;
@@ -289,6 +307,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         synopsis,
         langs,
         chapters,
+        status,
       });
 
       socket.emit('showManga', id, mg);

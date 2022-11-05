@@ -285,7 +285,13 @@
       "previous_unread": "Mark previous chapters as unread"
     },
     "original_title": "Original title: {title}",
+    "publication": "Publication status:",
     "source": "Source | Sources",
+    "status_cancelled": "cancelled",
+    "status_completed": "completed",
+    "status_hiatus": "hiatus",
+    "status_ongoing": "ongoing",
+    "status_unknown": "unknown",
     "synopsis": "Synopsis",
     "tags": "Tags",
     "title": "Title",
