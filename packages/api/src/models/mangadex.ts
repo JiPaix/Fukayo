@@ -529,10 +529,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           covers: cover ? [cover] : [],
         });
 
-        socket.emit('showRecommend', id, searchResult);
+        if(!cancel) socket.emit('showRecommend', id, searchResult);
       }
-      socket.emit('showRecommend', id, { done: true });
-      if(cancel) return;
     } catch(e) {
         this.logger('error while recommending mangas', e);
         // we catch any errors because the client needs to be able to handle them
@@ -540,6 +538,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
         else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
     }
+    if(!cancel) socket.emit('showRecommend', id, { done: true });
+    return this.stopListening(socket);
   }
 
   async search(query:string, langs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
@@ -857,6 +857,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
       return lists;
     } catch(e) {
+      this.logger('error while importing mangas', e);
       if(e instanceof Error) return {error: 'import_error', trace: e.message};
       else if(typeof e === 'string') return {error: 'import_error', trace: e};
       else return { error: 'import_error' };
