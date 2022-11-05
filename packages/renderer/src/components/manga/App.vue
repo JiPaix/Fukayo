@@ -720,22 +720,15 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   <q-avatar
                     color="primary"
                     text-color="white"
-                    icon="tag"
+                    icon="portrait"
                   />
                 </q-item-section>
-
                 <q-item-section>
-                  <q-item-label>{{ $t('mangas.tags') }}</q-item-label>
+                  <q-item-label>{{ $t('mangas.authors_and_artists') }}</q-item-label>
                   <q-item-label
                     caption
                   >
-                    <span
-                      v-for="(tag, i) in manga.tags"
-                      :key="i"
-                      class="self-center"
-                    >
-                      {{ tag }}{{ i === manga.tags.length-1 ? '' : ',&nbsp;' }}
-                    </span>
+                    {{ manga.authors.join(', ') }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -751,10 +744,9 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   <q-avatar
                     color="primary"
                     text-color="white"
-                    icon="description"
+                    icon="tag"
                   />
                 </q-item-section>
-
                 <q-item-section>
                   <q-item-label>{{ $t('mangas.synopsis') }}</q-item-label>
                   <q-item-label
@@ -768,6 +760,26 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 spaced
                 inset="item"
               />
+              <q-item>
+                <q-item-section
+                  top
+                  avatar
+                >
+                  <q-avatar
+                    color="primary"
+                    text-color="white"
+                    icon="tag"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ $t('mangas.tags') }}</q-item-label>
+                  <q-item-label
+                    caption
+                  >
+                    {{ manga.tags.join(', ') }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
             </q-list>
           </div>
           <div class="row q-ml-auto">

@@ -277,7 +277,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       covers,
       synopsis,
       tags,
-      authors,
+      authors: Array.from(new Set(authors)),
       chapters: chapters.sort((a, b) => a.number - b.number),
       mirror: { name: this.name, version: this.version },
       inLibrary: await this.#isInLibrary(this.name, mg.langs, mg.url),
