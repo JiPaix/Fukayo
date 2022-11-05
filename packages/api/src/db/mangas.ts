@@ -323,6 +323,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       .map(item => item.name);
 
     covers = covers.map((c, i) => {
+      c = c.replace(/^.*\/files\//g, '');
       // if cover is already a filename return as it is
       if(coversAlreadySaved.includes(c)) return c;
       // new cover, save to file
