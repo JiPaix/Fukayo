@@ -39,12 +39,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         if: steps.version-updated.outputs.has-updated
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         if: steps.version-updated.outputs.has-updated
         with:
           node-version: 18
@@ -108,9 +108,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: 18 # Need for npm >=7.7
           cache: 'npm'
@@ -145,7 +145,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Log in to the Container registry
         if: matrix.os == 'ubuntu-latest'
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -165,7 +165,7 @@ jobs:
 
       - name: Build and push Docker image
         if: matrix.os == 'ubuntu-latest'
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        uses: docker/build-push-action@v3
         with:
           context: .
           push: true
@@ -195,7 +195,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out beta Branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: beta
           fetch-depth: 0
