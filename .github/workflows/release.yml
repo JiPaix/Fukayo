@@ -143,7 +143,8 @@ jobs:
         env:
           VITE_APP_VERSION: ${{ needs.draft.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Log in to the Container registry
+
+      - name: (DOCKER-GH) Log in to the Container registry
         if: matrix.os == 'ubuntu-latest'
         uses: docker/login-action@v2
         with:
@@ -151,19 +152,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: (DOCKER-GH) Extract metadata
         if: matrix.os == 'ubuntu-latest'
         id: meta
         uses: docker/metadata-action@v4
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}},value=${{ needs.draft.outputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.draft.outputs.version }}
             type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ needs.draft.outputs.version }}
             type=semver,pattern={{major}},value=${{ needs.draft.outputs.version }}
+            type=ref,event=branch
 
-      - name: Build and push Docker image
+      - name: (DOCKER-GH) Build and push
         if: matrix.os == 'ubuntu-latest'
         uses: docker/build-push-action@v3
         with:
@@ -171,6 +174,37 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: (DOCKER-DH) Log in to the Container registry
+        if: matrix.os == 'ubuntu-latest'
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.DOCKERHUB_SECRET }}
+
+      - name: (DOCKER-DH) Extract metadata
+        if: matrix.os == 'ubuntu-latest'
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.draft.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.draft.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}},value=${{ needs.draft.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.draft.outputs.version }}
+            type=ref,event=branch
+
+      - name: (DOCKER-DH) Build and push
+        if: matrix.os == 'ubuntu-latest'
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
   publish:
     needs: [ draft, upload_artifacts ]
     if: needs.draft.outputs.has-updated
