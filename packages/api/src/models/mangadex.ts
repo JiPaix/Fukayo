@@ -656,7 +656,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       if(manga.result !== 'ok') throw new Error(`${manga.errors[0].title}: ${manga.errors[0].detail}`);
 
       const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
-
       if(!requestedLangs.some(x => langs.includes(x))) throw new Error(`this manga has no translation for this languages ${requestedLangs}`);
 
       const name =  manga.data.attributes.title[Object.keys(manga.data.attributes.title)[0]];
@@ -707,7 +706,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         const chapters:MangaPage['chapters'] = [];
 
-        for(const x of res.data.filter(x => !x.attributes.externalUrl || !x.attributes.chapter)) {
+        for(const x of res.data.filter(x => (!x.attributes.externalUrl || !x.attributes.chapter) && requestedLangs.includes(x.attributes.translatedLanguage))) {
           const built = await this.chaptersBuilder({
             id: x.id,
             url: '/chapter/'+x.id,
@@ -725,7 +724,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const mg = await this.mangaPageBuilder({
           id: url.replace('/manga/', ''),
           url,
-          langs,
+          langs: requestedLangs,
           covers: cover ? [cover] : [],
           name,
           synopsis,
