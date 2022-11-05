@@ -107,7 +107,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    */
   #db: Database<MirrorConstructor<T>['options']>;
   #axios: AxiosInstance;
-
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  #filenamify?: typeof import('filenamify').default;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  #fileTypeFromBuffer?: typeof import('file-type').fileTypeFromBuffer;
   constructor(opts: MirrorConstructor<T>) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     this.name = opts.name;
@@ -164,6 +167,11 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
         this.host = this.host + ':' + this.#db.data.port;
       }
     }
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
+    this.#filenamify = imp.default;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    this.#fileTypeFromBuffer = (await (eval('import("file-type")') as Promise<typeof import('file-type')>)).fileTypeFromBuffer;
     return init;
   }
 
@@ -230,8 +238,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** check if the fetched manga is part of the library */
-  #isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
-    return MangasDB.getInstance().has(mirror, langs, url);
+  async #isInLibrary(mirror:string, langs: mirrorsLangsType[], url:string) {
+    return (await MangasDB.getInstance()).has(mirror, langs, url);
   }
 
   /**
@@ -364,12 +372,12 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     },
   ): Promise<string> {
     if(force && options.id) {
-      const mg = await MangasDB.getInstance().get({id: options.id, langs: options.langs});
+      const mg = await (await MangasDB.getInstance()).get({id: options.id, langs: options.langs});
       if(mg) return mg.id;
       return UUID.getInstance().generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid, true);
     }
     if(!force && options.url && options.langs) {
-      const mg = await MangasDB.getInstance().get({ mirror: this.name, langs: options.langs, url: options.url });
+      const mg = await (await MangasDB.getInstance()).get({ mirror: this.name, langs: options.langs, url: options.url });
       if(mg) return mg.id;
       return UUID.getInstance().generate({ mirror: { name: this.name, version: this.version }, ...options } as uuid);
     }
@@ -430,18 +438,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   private async getFileMime(buffer:Buffer) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const { fileTypeFromBuffer } = await (eval('import("file-type")') as Promise<typeof import('file-type')>);
-    const fT = await fileTypeFromBuffer(buffer);
+    if(typeof this.#fileTypeFromBuffer === 'undefined') throw new Error('call mirror.init() first');
+    const fT = await this.#fileTypeFromBuffer(buffer);
     if(fT) return { mime: fT.mime };
     else return { mime: 'image/jpeg' };
-  }
-
-  private async filenamify(string:string) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
-    const filenamify = imp.default;
-    return filenamify(string);
   }
 
   protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:AxiosRequestConfig) {
@@ -641,9 +641,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   async #generateCacheFilename(url:string, dependsOnParams:boolean) {
+    if(typeof this.#filenamify === 'undefined') throw new Error('call mirror.init() first');
     const uri = new URL(url);
     const identifier = uri.origin + uri.pathname + (dependsOnParams ? uri.search : '');
-    const filename = await this.filenamify(identifier);
+    const filename = this.#filenamify(identifier);
     return {filename, identifier};
   }
 

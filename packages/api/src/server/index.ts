@@ -172,8 +172,8 @@ export default class IOWrapper {
      * for each mangas MangasDB.getInstance() replies with a 'showLibrary' event containing the manga's data
      * including the chapters.
      */
-    socket.on('showLibrary', (id) => {
-      MangasDB.getInstance().getAll(id, socket);
+    socket.on('showLibrary', async (id) => {
+      (await MangasDB.getInstance()).getAll(id, socket);
     });
 
     /**
@@ -203,8 +203,8 @@ export default class IOWrapper {
      */
     socket.on('showManga', async (id, opts) => {
       let indb: MangaInDB | undefined;
-      if(opts.id && opts.langs) indb = await MangasDB.getInstance().get({id: opts.id, langs: opts.langs});
-      else if(opts.mirror && opts.langs && opts.url) indb = await MangasDB.getInstance().get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
+      if(opts.id && opts.langs) indb = await (await MangasDB.getInstance()).get({id: opts.id, langs: opts.langs});
+      else if(opts.mirror && opts.langs && opts.url) indb = await (await MangasDB.getInstance()).get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
       if(indb) return socket.emit('showManga', id, indb);
 
@@ -238,7 +238,7 @@ export default class IOWrapper {
       if(opts.url) return mirror.chapter(opts.url, opts.lang, socket, id, callback);
 
       // if manga is in db search the chapter url
-      const mg = await MangasDB.getInstance().get({id: opts.mangaId, langs: [opts.lang] });
+      const mg = await (await MangasDB.getInstance()).get({id: opts.mangaId, langs: [opts.lang] });
       if(mg) {
         const chap = mg.chapters.find(c => c.id === opts.chapterId && c.lang === opts.lang);
         if(!chap) return socket.emit('showChapter', id, {error:'chapter_error', trace: 'cannot find chapter in db'});
@@ -265,7 +265,7 @@ export default class IOWrapper {
      * callback returns the manga's data (which is different from the one sent by the mirror)
      */
     socket.on('addManga', async (payload, callback) => {
-      const mg = await MangasDB.getInstance().add(payload);
+      const mg = await (await MangasDB.getInstance()).add(payload);
       mg.chapters.forEach(c => UUID.getInstance().remove(c.id));
       callback(mg);
     });
@@ -275,13 +275,13 @@ export default class IOWrapper {
      * callback returns the manga-in-db's data (as a mirror would send it)
      */
     socket.on('removeManga', async (manga, lang, callback) => {
-      const notInDB = await MangasDB.getInstance().remove(manga, lang);
+      const notInDB = await (await MangasDB.getInstance()).remove(manga, lang);
       callback(notInDB);
     });
 
     /** Mark manga as read on external sources (if available) */
     socket.on('markAsRead', async payload => {
-      await MangasDB.getInstance().markAsRead(payload.mangaId, payload.chapterUrls, payload.lang);
+      await (await MangasDB.getInstance()).markAsRead(payload.mangaId, payload.chapterUrls, payload.lang);
       const mirror = mirrors.find(m => m.name === payload.mirror);
       if(mirror && mirror.markAsRead) {
         mirror.markAsRead(payload.url, payload.lang, payload.chapterUrls, payload.read);

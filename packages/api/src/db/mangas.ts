@@ -25,24 +25,34 @@ type Mangas = {
 export default class MangasDB extends DatabaseIO<Mangas> {
   static #instance: MangasDB;
   #path: string;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  #filenamify?: typeof import('filenamify').default;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
     this.#path = resolve(env.USER_DATA, '.mangasdb');
   }
 
-  static getInstance(): MangasDB {
+  static async getInstance(): Promise<MangasDB> {
     if (!this.#instance) {
       this.#instance = new this();
+      await this.#instance.loadExternalLibraries();
     }
     return this.#instance;
   }
 
+  async loadExternalLibraries() {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+      const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
+      this.#filenamify = imp.default;
+  }
+
   /** add or update a manga */
   async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
+    if(typeof this.#filenamify === 'undefined') throw new Error('call MangasDB.getInstance() first');
     const db = await this.read();
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
-    const filename = await this.#filenamify(payload.manga.id);
+    const filename = this.#filenamify(payload.manga.id);
 
     // New manga || Manga/lang combo
     if(!isMangaInDB(payload.manga)) {
@@ -339,13 +349,6 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       }
     });
     return res;
-  }
-
-  async #filenamify(string:string) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
-    const filenamify = imp.default;
-    return filenamify(string);
   }
 }
 

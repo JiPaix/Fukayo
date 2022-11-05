@@ -242,7 +242,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @param force if true, will force the update of all the mangas
    */
   async #getMangasToUpdate(force?:boolean) {
-    const indexes = await MangasDB.getInstance().getIndexes();
+    const indexes = await (await MangasDB.getInstance()).getIndexes();
 
     const indexesToUpdate = indexes.filter(i => {
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
@@ -260,7 +260,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     const mangasToUpdate:MangaInDB[] = [];
 
     for(const index of indexesToUpdate) {
-      const manga = await MangasDB.getInstance().getByFilename(index.file);
+      const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
       mangasToUpdate.push(manga);
     }
     // mangas to update by mirror
@@ -284,7 +284,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     const mangasToFix:MangaInDB[] = [];
 
     for(const fix of indexesToFix) {
-      const manga = await MangasDB.getInstance().getByFilename(fix.file);
+      const manga = await (await MangasDB.getInstance()).getByFilename(fix.file);
       mangasToFix.push(manga);
     }
     // mangas to fix by mirror
@@ -302,7 +302,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * Fetch the data, check if there's any difference and update accordingly
    */
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
-    const db = MangasDB.getInstance();
+    const db = await MangasDB.getInstance();
     for(const manga of mangas) {
       this.logger('updating', manga.name, '@', manga.mirror);
       try {
@@ -383,7 +383,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     // if mirror is dead
     if(mirror.isDead) {
       for(const manga of mangas) {
-        await MangasDB.getInstance().add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: mirror dead');
       }
       return;
@@ -395,7 +395,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         const remoteManga = await this.#search(mirror, manga);
         // if there no exact match mark manga as "broken"
         if(!remoteManga) {
-          await MangasDB.getInstance().add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+          await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
           this.logger('marked entry', manga.name, 'as broken: could not migrate');
         }
         // else copy as much data as possible
@@ -410,14 +410,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
           const userCategories = manga.userCategories;
           // remove old version
           for(const lang of manga.langs) {
-            await MangasDB.getInstance().remove(manga, lang);
+            await (await MangasDB.getInstance()).remove(manga, lang);
           }
           // add new version
-          await MangasDB.getInstance().add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
+          await (await MangasDB.getInstance()).add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
           this.logger('migrated:', manga.name, 'version:', remoteManga.mirror.version);
         }
       } catch(e) {
-        await MangasDB.getInstance().add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
+        await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: could not migrate');
         this.logger(e);
       }
