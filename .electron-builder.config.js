@@ -1,7 +1,7 @@
-
+const PACKAGEJSON = JSON.parse(require('fs').readFileSync('./package.json').toString())
 
 if (process.env.VITE_APP_VERSION === undefined) {
-  process.env.VITE_APP_VERSION = JSON.parse(require('fs').readFileSync('./package.json').toString()).version;
+  process.env.VITE_APP_VERSION = PACKAGEJSON.version;
 }
 
 /**
@@ -11,6 +11,7 @@ if (process.env.VITE_APP_VERSION === undefined) {
 const config = {
   appId: 'com.electron.fukayo',
   productName: 'Fukayo',
+  asar: false,
   directories: {
     output: 'dist',
     buildResources: 'buildResources',
@@ -23,7 +24,7 @@ const config = {
   },
   linux: {
     target: "appImage",
-    synopsis: 'Read your favorite manga',
+    synopsis: PACKAGEJSON.description,
     category: 'AudioVideo',
     icon: 'icon_256.png',
   },
