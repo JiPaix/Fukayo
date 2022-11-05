@@ -79,7 +79,7 @@ jobs:
 
       - name: Delete outdated drafts
         if: steps.version-updated.outputs.has-updated
-        uses: hugo19941994/delete-draft-releases@v1.0.0
+        uses: f5io/delete-draft-releases@8bed71a41148229ebed1b813958040c51646af67
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
