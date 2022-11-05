@@ -46,7 +46,7 @@
   "conventionalCommits.showEditor": false,
   "editor.codeActionsOnSave": {
     "source.fixAll": true,
-    "source.organizeImports": true
+    "source.organizeImports": false
   },
   "gitlens.statusBar.enabled": false,
   "typescript.tsdk": "node_modules/typescript/lib",
