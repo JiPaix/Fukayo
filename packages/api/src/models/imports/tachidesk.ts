@@ -36,7 +36,7 @@ class TachideskImporter extends Importer implements ImporterInterface {
 
     socket.emit('showImports', id, lists.length);
 
-    const db = MangasDB.getInstance();
+    const db = await MangasDB.getInstance();
     const indexes = (await db.getIndexes()).filter(m => m.mirror.name === tachidesk.name && m.mirror.version === tachidesk.version);
 
     const nodb:typeof lists = [];

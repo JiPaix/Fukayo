@@ -60,7 +60,7 @@ class MangadexImporter extends Importer implements ImporterInterface {
       return;
     }
 
-    const db = MangasDB.getInstance();
+    const db = await MangasDB.getInstance();
     /** this id is a test entry from mangadex: f9c33607-9180-4ba6-b85c-e4b5faee7192 */
     const mangas = Array.from(new Set(lists.map(l => l.relationships.filter(m => m.type === 'manga').map(m=> m.id)).flat()));
     const indexes = (await db.getIndexes()).filter(m => m.mirror.name === mangadex.name && m.mirror.version === mangadex.version);
