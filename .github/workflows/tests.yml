@@ -38,6 +38,6 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: Run tests
-        uses: GabrielBB/xvfb-action@v1
+        uses: hankolsen/xvfb-action@dcb076c1c3802845f73bb6fe14a009d8d3377255
         with:
           run: npm run test:e2e
