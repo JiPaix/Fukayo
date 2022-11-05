@@ -2,6 +2,8 @@ import type { mirrorsLangsType } from '@i18n/availableLangs';
 import { mirrorsLang } from '@i18n/availableLangs';
 
 export function BC47_TO_ISO639_1(input: string|mirrorsLangsType): mirrorsLangsType {
+  // xx
+  if(input == 'xx') return 'xx';
   // if BC47 == ISO391-1
   if(mirrorsLang.includes(input as mirrorsLangsType)) return input as mirrorsLangsType;
   // if BC47 start with ISO391-1
