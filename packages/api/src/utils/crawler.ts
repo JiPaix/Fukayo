@@ -3,12 +3,14 @@ import { resolve } from 'path';
 import { env } from 'process';
 import type { Page } from 'puppeteer';
 import { Cluster } from 'puppeteer-cluster';
-import puppeteer from 'puppeteer-extra';
+import vanillaPuppeteer from 'puppeteer';
+import { addExtra } from 'puppeteer-extra';
 import AdblockerPlugin from 'puppeteer-extra-plugin-adblocker-no-vulnerabilities';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import si from 'systeminformation';
 import UserAgent from 'user-agents';
 
+const puppeteer = addExtra(vanillaPuppeteer);
 puppeteer.use(StealthPlugin());
 puppeteer.use(AdblockerPlugin());
 const userAgent = new UserAgent(/Chrome/);
@@ -51,7 +53,7 @@ async function useCluster() {
     concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: nbOfChromeTabs,
     timeout: 1000*20,
-    puppeteer,
+    puppeteer: puppeteer,
     puppeteerOptions: {
       userDataDir: resolve(env.USER_DATA, '.cache', 'puppeteer'),
       headless: env.MODE === 'development' ? false : true,
