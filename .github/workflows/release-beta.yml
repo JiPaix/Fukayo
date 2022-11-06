@@ -23,7 +23,6 @@ defaults:
 
 
 jobs:
-
   draft:
     runs-on: ubuntu-latest
     outputs:
@@ -32,27 +31,31 @@ jobs:
       draft-id: ${{ steps.draft-create.outputs.id }}
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
-
-      - uses: JiPaix/package-json-updated-action@v1.0.3
+      - name: package.json version check
+        uses: JiPaix/package-json-updated-action@v1.0.4
         id: version-updated
         with:
           path: package.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v3
-        if: steps.version-updated.outputs.has-updated
+      - name: version check results
+        run: echo "Has Updated" ${{ steps.version-updated.outputs.has-updated }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v3
+      - name: Setup NodeJS
         if: steps.version-updated.outputs.has-updated
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 16
 
       - name: Get version
-        id: version
         if: steps.version-updated.outputs.has-updated
+        id: version
         run: echo "build-version=${{steps.version-updated.outputs.current-package-version}}-beta" >> $GITHUB_OUTPUT
 
       - name: Get last git tag
