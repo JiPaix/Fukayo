@@ -260,6 +260,7 @@
     "categories": "Categories",
     "chapter": "Chapter | Chapters",
     "chapter_order": "Chapter order",
+    "date": "Date",
     "displayname": {
       "reset": "Reset manga's name to its default value",
       "title": "Change this manga's title"

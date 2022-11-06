@@ -73,7 +73,7 @@ export interface MangaPage {
      *
      * to use if mirror can provide the same chapter from multiple scanlators
      */
-    group?: string|number
+    group?: string
     /**
      * Chapter's read status
      *
