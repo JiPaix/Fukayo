@@ -36,32 +36,30 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: version check results
-        run: echo "Has Updated" ${{ steps.version-updated.outputs.has-updated }}
-
       - name: Checkout
+        if: steps.version-updated.outputs.has-updated == 'true'
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: Setup NodeJS
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
       - name: Get version
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         id: version
         run: echo "build-version=${{steps.version-updated.outputs.current-package-version}}" >> $GITHUB_OUTPUT
 
       - name: Get last git tag
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         id: tag
         run: echo "last-tag=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}})" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         uses: ./.github/actions/release-notes
         id: release-note
         with:
@@ -71,7 +69,7 @@ jobs:
           include-abbreviated-commit: true
 
       - name: Waiting on All checks
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         uses: lewagon/wait-on-check-action@v0.2
         with:
           ref: ${{ github.ref }}
@@ -79,13 +77,13 @@ jobs:
           running-workflow-name: 'draft'
 
       - name: Delete outdated drafts
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         uses: hugo19941994/delete-draft-releases@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release Draft
-        if: steps.version-updated.outputs.has-updated
+        if: steps.version-updated.outputs.has-updated == 'true'
         id: draft-create
         uses: ncipollo/release-action@v1.11.1
         env:
@@ -99,7 +97,7 @@ jobs:
 
   upload_artifacts:
     needs: [ draft ]
-    if: needs.draft.outputs.has-updated
+    if: needs.draft.outputs.has-updated == 'true'
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest ]
