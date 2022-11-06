@@ -23,7 +23,7 @@ type searchContent = {
       status: 'ENDED' | 'ONGOING' | 'HIATUS' | 'ABANDONED'
     },
     booksMetadata: {
-      authors: string[],
+      authors: {name: string, role: string}[],
       tags: string[],
     },
   }[]
@@ -220,25 +220,14 @@ class Komga extends SelfHosted implements MirrorInterface {
       if(img) covers.push(img);
 
       let status:MangaPage['status'] = 'unknown';
-      switch(result.metadata.status) {
-        case 'ABANDONED':
-          status = 'cancelled';
-          break;
-        case 'ENDED':
-          status = 'completed';
-          break;
-        case 'HIATUS':
-          status = 'hiatus';
-          break;
-        case 'ONGOING':
-          status = 'ongoing';
-          break;
-        default:
-          status = 'unknown';
-          break;
-      }
+      if(result.metadata.status === 'ABANDONED') status = 'cancelled';
+      else if (result.metadata.status === 'ONGOING') status = 'ongoing';
+      else if(result.metadata.status === 'ENDED') status = 'completed';
+      else if(result.metadata.status === 'HIATUS') status = 'hiatus';
+      else status = 'unknown';
+
       const synopsis = result.metadata.summary;
-      const authors:string[] = result.booksMetadata.authors;
+      const authors:string[] = result.booksMetadata.authors.map(x => x.name);
       const tags:string[] = [...result.booksMetadata.tags, ...result.metadata.genres, ...result.metadata.tags];
 
       const chapters:MangaPage['chapters'] = [];
