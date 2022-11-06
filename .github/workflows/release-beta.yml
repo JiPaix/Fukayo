@@ -32,7 +32,7 @@ jobs:
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
     steps:
       - name: package.json version check
-        uses: JiPaix/package-json-updated-action@v1.0.4
+        uses: JiPaix/package-json-updated-action@v1.0.5
         id: version-updated
         with:
           path: package.json
