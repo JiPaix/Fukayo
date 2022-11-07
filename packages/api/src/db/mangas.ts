@@ -281,25 +281,27 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     // check if the displayName has changed
     if(data.displayName !== manga.displayName) hasNewStuff = true;
 
-    if(alreadyInDB) {
-      // covers in db start with "{number}_cover_"
-      const mangaCoverClone = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
-      // covers from the view start with "/files/"
-      const fetchedCoverClone = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
+    // covers from the view start with "/files/"
+    manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
+    // covers in db start with "{number}_cover_"
+    data.covers = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
 
-      if(!arraysEqual(fetchedCoverClone, mangaCoverClone)) {
+    if(alreadyInDB) {
+      if(!arraysEqual(manga.covers, data.covers)) {
         hasNewStuff = true;
-        manga.covers = manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+        manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+      } else {
+        manga.covers = manga.covers.map((c, i) => `${i}_cover_${c}`);
       }
     } else {
       hasNewStuff = true;
-      manga.covers = manga.covers = this.#saveCovers(Array.from(new Set(manga.covers)));
+      manga.covers = this.#saveCovers(Array.from(new Set(manga.covers)));
     }
 
     // we check if the manga has been updated by previous operations OR by the Scheduler
     const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
     if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
-      data = {...manga, covers: manga.covers, _v: data._v };
+      data = {...manga, _v: data._v };
       await mangadb.write(data);
       const find = db.mangas.find(m => m.id === manga.id);
       if(find) {
