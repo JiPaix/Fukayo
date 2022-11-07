@@ -6,6 +6,14 @@ import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+const props = defineProps<{
+  stepper?: boolean;
+}>();
+
+const emits = defineEmits<{
+  (event: 'continue'): void
+}>();
+
 /** stored settings */
 const settings = useSettingsStore();
 /** i18n */
@@ -42,26 +50,34 @@ function unselectAll() {
     <q-card-section
       class="row items-center"
     >
-      <q-banner class="q-mx-auto bg-grey-9 text-white">
+      <q-banner
+        class="q-mx-auto"
+        :class="$q.dark.isActive ? 'bg-grey-9 text-white': 'bg-grey-3 text-black'"
+      >
         <template #avatar>
           <q-icon
             name="translate"
-            color="white"
           />
         </template>
         {{ $t('settings.language.description') }}
         <template #action>
           <q-btn
             flat
-            color="white"
             :label="$t('settings.language.selectall')"
             @click="selectAll"
           />
           <q-btn
             flat
-            color="white"
             :label="$t('settings.language.unselectall')"
             @click="unselectAll"
+          />
+          <q-btn
+            v-if="props.stepper"
+            color="orange"
+            push
+            :label="$t('settings.confirm')"
+            class="q-ml-auto"
+            @click="emits('continue')"
           />
         </template>
       </q-banner>
@@ -75,6 +91,8 @@ function unselectAll() {
         <q-checkbox
           :model-value="!settings.i18n.ignored.includes(lang)"
           :label="$t(`languages.${lang}`)"
+          color="orange-4"
+          keep-color
           @update:model-value="(val:boolean) => updateval(lang, val)"
         />
       </div>

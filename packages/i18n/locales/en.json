@@ -237,9 +237,13 @@
     "zu": "Zulu"
   },
   "library": {
+    "change_settings_anytime": "You can change these settings any time you want here:",
     "filter_by_name": "Search your library",
     "hide_unread": "Hide mangas for which you have read all the chapters",
     "left_to_read": "Chapter left | Chapters left",
+    "letsgo": "Let's go!",
+    "ready": "You're ready to enjoy tons of mangas!",
+    "setup_preferences": "Setup Fukayo to your liking:",
     "show_unread": "Show manga for which you have read all chapters",
     "sort_by_name": "Sort by name",
     "sort_by_read": "Sort by number of unread chapters",
@@ -371,6 +375,7 @@
     "app_version": "Version",
     "cache": "Cache",
     "change": "Modify",
+    "confirm": "CONFIRM",
     "darkmode": "Enable dark mode",
     "disable": "Disable",
     "displaymodes": "Display modes",
@@ -425,6 +430,7 @@
     "source": {
       "adult": "Adult content",
       "dataSaver": "Save bandwidth",
+      "description": "Configure the different sources. Activate or deactivate them, connect to synchronize the playback progress or enabled advanced options",
       "enabled": "Enabled",
       "excludedGroups": "Scanlators groups to ignore",
       "excludedGroupsHints": "Type an ID and press enter to add it",

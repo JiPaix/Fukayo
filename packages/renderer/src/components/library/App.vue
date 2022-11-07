@@ -3,6 +3,7 @@ import type { socketClientInstance } from '@api/client/types';
 import { mirrorInfo } from '@api/models/types/shared';
 import type { mirrorsLangsType } from '@i18n/availableLangs';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import type { MangaGroup, MangaInDBwithLabel } from '@renderer/components/library/@types';
 import GroupCard from '@renderer/components/library/GroupCard.vue';
 import GroupFilter from '@renderer/components/library/GroupFilter.vue';
@@ -11,14 +12,20 @@ import { chapterLabel } from '@renderer/components/reader/helpers';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { transformIMGurl } from '../helpers/transformIMGurl';
+import { useRouter } from 'vue-router';
+import langOptions from '@renderer/components/settings/languageList.vue';
+import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
 
 /** quasar */
 const $q = useQuasar();
+/** router */
+const router = useRouter();
 /** web socket */
 let socket: socketClientInstance | undefined;
 /** settings */
 const settings = useSettingsStore();
+/** first start stepper */
+const step = ref(settings.library.firstTimer);
 /** mangas in db */
 const mangasRAW = ref<MangaGroup[]>([]);
 /** mangas in db from dead mirrors */
@@ -212,12 +219,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div
+    v-if="mirrorList.length && mangas.length"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     :dark="$q.dark.isActive"
   >
     <group-filter
-      v-if="mirrorList.length"
       :mirror-list="(mirrorList as mirrorInfo[])"
       :lang-list="langs"
       :user-categories="userCategories"
@@ -246,6 +253,89 @@ onBeforeUnmount(() => {
         />
       </div>
     </q-infinite-scroll>
+  </div>
+  <div
+    v-else
+    class="w-100 q-pa-lg"
+  >
+    <div class="flex column">
+      <span class="text-h4 q-mb-lg">{{ $t('library.setup_preferences') }}</span>
+    </div>
+    <q-stepper
+      ref="stepper"
+      v-model="step"
+      active-color="orange"
+      inactive-color="grey-7"
+      animated
+      header-nav
+    >
+      <q-step
+        :name="1"
+        :title="$t('languages.language', 20).toLocaleUpperCase()"
+        icon="translate"
+        :done="settings.library.firstTimer > 1"
+      >
+        <lang-options
+          :stepper="true"
+          @continue="() => { settings.library.firstTimer = 2; step = 2 }"
+        />
+      </q-step>
+      <q-step
+        :name="2"
+        :title="$t('mangas.source', 20).toLocaleUpperCase()"
+        icon="travel_explore"
+        :done="settings.library.firstTimer > 2"
+      >
+        <mirrors-options
+          :stepper="true"
+          @continue="() => { settings.library.firstTimer = 3; step = 3 }"
+        />
+      </q-step>
+      <q-step
+        :name="3"
+        :title="$t('library.letsgo', 20).toLocaleUpperCase()"
+        icon="explore"
+        :done="mirrorList.length > 0 && mangas.length > 0"
+      >
+        <div class="flex column">
+          <span class="text-h5">{{ $t('library.ready') }}</span>
+          <div class="flex items-center">
+            <span>{{ $t('library.change_settings_anytime') }}</span>
+            <q-btn
+              class="q-mx-sm"
+              push
+              :color="$q.dark.isActive ? 'grey-7': ''"
+              :text-color="$q.dark.isActive ? 'white': 'dark'"
+              icon="settings"
+              size="sm"
+              @click="router.push({name: 'settings'})"
+            >
+              {{ $t('settings.tab') }}
+            </q-btn>
+          </div>
+          <div class="flex items-center q-mt-lg">
+            <q-btn
+              class="q-mx-sm"
+              push
+              color="orange"
+              :text-color="$q.dark.isActive ? 'white': 'black'"
+              icon="explore"
+              :label="$t('explore.tab')"
+              @click="router.push({name: 'explore'})"
+            />
+            <q-btn
+              class="q-mx-sm"
+              push
+              color="orange"
+              :text-color="$q.dark.isActive ? 'white': 'black'"
+              icon="o_screen_search_desktop"
+              :label="$t('search.tab')"
+              @click="router.push({name: 'search'})"
+            />
+          </div>
+        </div>
+      </q-step>
+    </q-stepper>
   </div>
 </template>
 <style lang="css">

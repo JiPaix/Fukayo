@@ -36,7 +36,7 @@ const $q = useQuasar();
       />
       <q-tab
         name="languages"
-        icon="travel_explore"
+        icon="translate"
         :label="$t('languages.language', 20)"
       />
       <q-tab
