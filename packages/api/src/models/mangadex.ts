@@ -274,6 +274,26 @@ type Routes = {
         }[]
       }[]
     }
+  },
+  '/user/{id}/list': {
+    err: Routes['/auth/login']['err'],
+    ok: {
+      result: 'ok',
+      response: 'collection',
+      data: {
+        id: string,
+        type: 'custom_list',
+        attributes: {
+          name: string,
+          visibility: string,
+          version: number
+        },
+        relationships: {
+          id: string,
+          type: 'manga' | 'user'
+        }[]
+      }[]
+    }
   }
 }
 
@@ -464,6 +484,48 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return 'https://api.mangadex.org'+path;
   }
 
+  #season():{ current : { season: string, year: number }, previous: { season: string, year: number} } {
+    // It's plus one because January is index 0
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    const previousYear = now.getFullYear()-1;
+
+    if (month > 3 && month < 6) {
+      return { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
+    }
+
+    if (month > 6 && month < 9) {
+      return { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
+    }
+
+    if (month > 9 && month < 12) {
+      return { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
+    }
+
+    if (month >= 1 && month < 3) {
+      return { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
+    }
+
+    const day = now.getDate();
+    if (month === 3) {
+      return day < 22 ? { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } } : { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
+    }
+
+    if (month === 6) {
+      return day < 22 ? { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } } : { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
+    }
+
+    if (month === 9) {
+      return day < 22 ? { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } } : { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
+    }
+
+    if (month === 12) {
+      return day < 22 ? { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } }: { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
+    }
+    throw new Error('what season are we in?!!');
+  }
+
   // until SEASONAL lists are made public we show last released chapters
   async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
     let cancel = false;
@@ -477,60 +539,67 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
     if(cancel) return;
     try {
-      // limit to 8 results as mangas with multiple langs will be shown twice
-      let url = this.#path('/chapter?limit=32&offset=0&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[readableAt]=desc');
-      if(this.options.excludedGroups.length) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
-      if(this.options.excludedUploaders) url += this.options.excludedUploaders.map(g=> `&excludedGroups[]=${g}`).join('');
 
-      const res = await this.fetch<Routes['/chapter']['ok']|Routes['/chapter']['err']>({
-        url,
+      const list = await this.fetch<Routes['/user/{id}/list']['ok']|Routes['/user/{id}/list']['err']>({
+        url: this.#path('/user/d2ae45e0-b5e2-4e7f-a688-17925c2d7d6b/list?limit=100'),
         headers: this.#headers,
       }, 'json');
 
-      if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
+      if(list.result !== 'ok') throw new Error(`${list.errors[0].title}: ${list.errors[0].detail}`);
+      const filteredList = list.data.filter(l => l.type === 'custom_list');
+      const seasoned = filteredList.find(f =>
+        (
+        f.attributes.name.toLocaleLowerCase().includes(this.#season().current.season)
+        && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().current.year))
+        )
+        ||
+        (
+          f.attributes.name.toLocaleLowerCase().includes(this.#season().previous.season)
+          && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().previous.year))
+        ));
+      if(!seasoned) throw new Error('couldnt find seasonal!');
+      const unfilteredIds = seasoned.relationships;
+      const ids = unfilteredIds.filter(i => i.type === 'manga').map(r=>r.id);
+      const idsChunk = ids.reduce((resultArray:string[][], item, index) => {
+        const chunkIndex = Math.floor(index / 10);
+        if (!resultArray[chunkIndex]) {
+          resultArray[chunkIndex] = [] as string[];
+        }
+        resultArray[chunkIndex].push(item);
+        return resultArray;
+      }, []);
 
-      const toTreat = res.data.filter(x => !x.attributes.externalUrl)
-        .filter((v,i,a)=> {
-          return a.findIndex(v2 => (v2.relationships.find(x => x.type === 'manga')?.id ===v.relationships.find(x => x.type === 'manga')?.id))===i;
-        });
-
-      for(const chapdata of toTreat) {
-        if(cancel) break;
-        const mangadata = chapdata.relationships.find(x => x.type === 'manga');
-        if(!mangadata) return;
-        if(mangadata.type !== 'manga') return this.logger('type is not manga', mangadata.type); // impossible, but typescript..
-        const url = `/manga/${mangadata.id}`;
-        // get the first name that shows up (usually en)
-        const name = mangadata.attributes.title[Object.keys(mangadata.attributes.title)[0]];
-
-        const manga = await this.fetch<
-          Routes['/manga/{id}']['ok']|Routes['/manga/{id}']['err']
-        >({
-          url: this.#path(`${url}?includes[]=artist&includes[]=author&includes[]=cover_art`),
+      for(const arrIds of idsChunk) {
+        let url = this.#path('/manga?includes[]=cover_art&');
+        url += arrIds.map(i => 'ids[]='+i).join('&');
+        const res = await this.fetch<Routes['/manga']['ok']|Routes['/manga']['err']>({
+          url,
           headers: this.#headers,
         }, 'json');
 
-        if(manga.result !== 'ok') return this.logger('error', manga.errors[0]);
+        if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
-        let coverURL: undefined | string = undefined;
+        res.data = res.data.filter(d => d.attributes.availableTranslatedLanguages.some(l => requestLangs.includes(l)));
 
-        const langs = manga.data.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
+        for(const d of res.data) {
+          if(cancel) break;
+          let coverURL: undefined | string = undefined;
+          const coverData = d.relationships.find(x => x.type === 'cover_art');
+          if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
+          if(!coverURL) return this.logger('no coverURL');
+          const cover = await this.downloadImage(`${this.host}/covers/${d.id}/${coverURL}.512.jpg`);
+          const langs = d.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
+          const name = d.attributes.title[Object.keys(d.attributes.title)[0]];
 
-        const coverData = manga.data.relationships.find(x => x.type === 'cover_art');
-        if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
-        if(!coverURL) return this.logger('no coverURL');
-
-        const cover = await this.downloadImage(`${this.host}/covers/${mangadata.id}/${coverURL}.512.jpg`);
-
-        const searchResult = await this.searchResultsBuilder({
-          id: manga.data.id,
-          name,
-          url,
-          langs: langs,
-          covers: cover ? [cover] : [],
-        });
-
-        if(!cancel) socket.emit('showRecommend', id, searchResult);
+          const searchResult = await this.searchResultsBuilder({
+            id: d.id,
+            name,
+            url: `/manga/${d.id}`,
+            langs: langs,
+            covers: cover ? [cover] : [],
+          });
+          if(!cancel) socket.emit('showRecommend', id, searchResult);
+        }
       }
     } catch(e) {
         this.logger('error while recommending mangas', e);
