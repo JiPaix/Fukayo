@@ -465,7 +465,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   // until SEASONAL lists are made public we show last released chapters
-  async recommend(socket: socketInstance, id: number) {
+  async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowRecommend', () => {

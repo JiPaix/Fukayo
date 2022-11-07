@@ -273,7 +273,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async recommend(socket: socketInstance|Scheduler, id: number) {
+  async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
     try {
       // we will check if user don't need results anymore at different intervals
       let cancel = false;

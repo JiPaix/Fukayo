@@ -11,6 +11,7 @@ import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { mirrorsLang } from '@i18n/availableLangs';
 
 /** current route */
 const route = useRoute();
@@ -55,7 +56,7 @@ onBeforeMount(async () => {
     name = route.params.mirror;
   }
 
-  socket.emit('showRecommend', now, name);
+  socket.emit('showRecommend', now, name,mirrorsLang.filter(l => !settings.i18n.ignored.includes(l)));
   socket.on('showRecommend', (id, result) => {
     if(id === now) {
       if(Array.isArray(result)){
