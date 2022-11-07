@@ -10,6 +10,14 @@ import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+const props = defineProps<{
+  stepper?: boolean;
+}>();
+
+const emits = defineEmits<{
+  (event: 'continue'): void
+}>();
+
 /** stored settings */
 const settings = useSettingsStore();
 /** socket */
@@ -169,6 +177,27 @@ onBeforeMount(async () => {
     <q-card-section
       class="row items-center"
     >
+      <q-banner
+        class="col-12 q-mb-lg"
+        :class="$q.dark.isActive ? 'bg-grey-9 text-white': 'bg-grey-3 text-black'"
+      >
+        <template #avatar>
+          <q-icon
+            name="travel_explore"
+          />
+        </template>
+        {{ $t('settings.source.description') }}
+        <template #action>
+          <q-btn
+            v-if="props.stepper"
+            color="orange"
+            push
+            :label="$t('settings.confirm')"
+            class="q-ml-auto"
+            @click="emits('continue')"
+          />
+        </template>
+      </q-banner>
       <div class="col-xs-12 col-sm-4 offset-sm-4 col-md-6 offset-md-3 text-center">
         <q-input
           ref="inputRef"

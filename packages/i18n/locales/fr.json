@@ -237,9 +237,13 @@
     "zu": "Zoulou"
   },
   "library": {
+    "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
     "filter_by_name": "Recherche dans votre bibliothèque",
     "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
     "left_to_read": "{chapterWord} restant | {chapterWord} restants",
+    "letsgo": "C'est parti !",
+    "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
+    "setup_preferences": "Configurez Fukayo comme vous le souhaitez :",
     "show_unread": "Afficher les mangas pour lesquels vous avez lu tous les chapitres",
     "sort_by_name": "Trier par nom",
     "sort_by_read": "Trier par nombre de chapitres non lus",
@@ -371,6 +375,7 @@
     "app_version": "Version",
     "cache": "Cache",
     "change": "Modifier",
+    "confirm": "CONFIRMER",
     "darkmode": "Activer le mode sombre",
     "disable": "Désactiver",
     "displaymodes": "Modes d'affichage",
@@ -425,6 +430,7 @@
     "source": {
       "adult": "Contenu pour adulte",
       "dataSaver": "Économiser de la bande passante",
+      "description": "Configurer les différentes sources. Activez ou désactivez les, connectez-vous afin de synchroniser l'avancement de lecture ou activer des options avancées",
       "enabled": "Activée",
       "excludedGroups": "Groupes de scanlators à ignorer",
       "excludedGroupsHints": "Tapez un ID et appuyez sur Entrée pour l'ajouter",

@@ -34,6 +34,7 @@ export const useStore = defineStore('settings', {
       library: {
         showUnread: true,
         sort: 'AZ' as 'AZ' | 'ZA' | 'unread' | 'read',
+        firstTimer: 1 as 1|2|3,
       },
       i18n: {
         ignored: [] as mirrorsLangsType[],
