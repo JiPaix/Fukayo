@@ -20,6 +20,8 @@ export type mirrorInfo = {
    * @example 'https://www.mirror.com'
    */
   host:string,
+  /** is the site self hosted? */
+  selfhosted:boolean,
   /**
    * Whether the mirror is enabled
    */

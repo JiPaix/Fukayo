@@ -375,73 +375,9 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
-    try {
-      if (!this.options.host || !this.options.port) throw 'no credentials';
-      if (!this.options.host.length) throw 'no credentials';
-      // we will check if user don't need results anymore at different intervals
-      let cancel = false;
-      if (!(socket instanceof Scheduler)) {
-        socket.once('stopShowRecommend', () => {
-          this.logger('fetching recommendations canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
-      const SourceList = await this.#getSourceList();
-
-      const catUrl = this.#path('/category');
-      const categories = await this.fetch<CategoryList[]>({
-        url: catUrl,
-        withCredentials: true,
-      }, 'json');
-      const inputArray = await this.#mangaFromCat(categories);
-
-      //splitting the array in to 100 item chunks
-      const result = inputArray.reduce((resultArray: CategoryManga[][], item: CategoryManga, index) => {
-        const chunkIndex = Math.floor(index / 100);
-        if (!resultArray[chunkIndex]) {
-          resultArray[chunkIndex] = [];
-        }
-        resultArray[chunkIndex].push(item);
-        return resultArray;
-      }, []);
-
-      await Promise.all(result.map(async (res) => {
-
-        const mangaList = (await Promise.all(res.map(async (manga) => {
-          if (cancel) return;
-
-          const currentSource = SourceList.find(ele => ele.id === manga.sourceId) || {
-            id: '',
-            lang: 'xx',
-          };
-          const lang = currentSource.lang;
-          const covers: string[] = [];
-
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-
-          if (img) covers.push(img);
-
-          if (cancel) return;
-          const searchResult = await this.searchResultsBuilder({
-            name: manga.title,
-            url: `/manga/${manga.id}`,
-            covers,
-            langs: [lang],
-          });
-          return searchResult;
-        }))).filter(ele => ele !== undefined) as SearchResult[];
-        if (cancel) return;
-        if (!cancel) socket.emit('showRecommend', id, mangaList);
-      }));
-    } catch (e) {
-      this.logger('error while recommending mangas', e);
-      if (e instanceof Error) socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e.message });
-      else if (typeof e === 'string') socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: e });
-      else socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error_unknown' });
-    }
-    socket.emit('showRecommend', id, { done: true });
+  async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
+    socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: 'selfhosted mirror'});
+    // self hosted don't need recommendations
     return this.stopListening(socket);
   }
 

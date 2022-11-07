@@ -62,6 +62,7 @@ function pick(lang:mirrorsLangsType) {
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   socket.emit('getMirrors', false, (m) => {
+    m = m.filter(m => !m.selfhosted);
     setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, settings.i18n.ignored);
   });
 });

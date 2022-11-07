@@ -64,6 +64,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   host: string;
   /** alternative hostnames were the site can be reached */
   althost?: string[];
+  /** is the site self hosted? (komga/tachidesk etc..) */
+  selfhosted?: boolean;
   /**
    * Languages supported by the mirror
    *
@@ -223,6 +225,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       isDead: this.isDead,
       name: this.name,
       displayName: this.displayName,
+      selfhosted: this.selfhosted || false,
       host: this.host,
       enabled: this.enabled,
       icon: this.icon,
