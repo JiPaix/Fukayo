@@ -11,6 +11,7 @@ type options = {
 }
 
 export class SelfHosted extends Mirror<options> {
+  selfhosted = true;
   #credentialRequired: boolean;
   constructor(opts: MirrorConstructor<options>, credentialRequired:boolean) {
     super(opts);

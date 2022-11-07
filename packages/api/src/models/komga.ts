@@ -330,68 +330,8 @@ class Komga extends SelfHosted implements MirrorInterface {
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
-    // we will check if user don't need results anymore at different intervals
-    let cancel = false;
-    if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowRecommend', () => {
-        this.logger('fetching recommendations canceled');
-        cancel = true;
-      });
-    }
-
-    try {
-      if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'no credentials';
-      if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'no credentials';
-
-      const url = this.#path('/series?size=20000');
-      const $ = await this.fetch<searchContent>({
-        url,
-        auth: {username: this.options.login, password: this.options.password},
-      }, 'json');
-
-      const result = $.content.reduce((resultArray:typeof $.content[], item, index) => {
-        const chunkIndex = Math.floor(index / 100);
-        if (!resultArray[chunkIndex]) {
-          resultArray[chunkIndex] = [];
-        }
-        resultArray[chunkIndex].push(item);
-        return resultArray;
-      }, []);
-
-      await Promise.all(result.map(async res => {
-        const mangaList = (await Promise.all(res.map(async manga => {
-          if (cancel) return;
-          if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) return;
-          if(!this.options.login.length || !this.options.password.length || !this.options.host.length) return;
-
-          let lang = 'xx' as mirrorsLangsType;
-          if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
-          const covers: string[] = [];
-
-          const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-          if (img) covers.push(img);
-
-          if (cancel) return;
-          const mg = await this.searchResultsBuilder({
-            id: manga.id,
-            url: `/series/${manga.id}`,
-            name: manga.metadata.title,
-            covers,
-            langs: [lang],
-          });
-          return mg;
-        }))).filter(ele => ele !== undefined) as SearchResult[];
-        if (cancel) return;
-        else socket.emit('showRecommend', id, mangaList);
-      }));
-      if(cancel) return;
-      socket.emit('showRecommend', id, { done: true });
-    } catch(e) {
-      this.logger('error while recommending mangas', e);
-      if(e instanceof Error) socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e.message});
-      else if(typeof e === 'string') socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error', trace: e});
-      else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
-    }
+    socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: 'selfhosted mirror'});
+    // self hosted don't need recommendations
     return this.stopListening(socket);
   }
 
