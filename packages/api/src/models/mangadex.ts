@@ -16,7 +16,7 @@ type MangaAttributes = {
     [key: string]: string
   },
   description: {
-    [key: string]: string | null
+    [key in mirrorsLangsType]: string | null | undefined
   },
   lastChapter: string | null
   lastVolume: string | null
@@ -612,7 +612,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return this.stopListening(socket);
   }
 
-  async search(query:string, langs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+  async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     try {
       let cancel = false;
       if(!(socket instanceof Scheduler)) {
@@ -624,7 +624,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
 
       const url =
-        this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(langs, 'available')}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
+        this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(requestedLangs, 'available')}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
       const res = await this.fetch<Routes['/manga/{search}']['ok']|Routes['/manga/{search}']['err']>({url}, 'json');
       if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
@@ -638,7 +638,16 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(!coverURL) return;
         const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`);
 
-        const synopsis = result.attributes.description[Object.keys(result.attributes.description)[0]] || undefined;
+        // search for synopsis that matches requestedLangs
+        const descriptions = requestedLangs.map(m => result.attributes.description[m]).filter(Boolean);
+        let synopsis:string|undefined|null = undefined;
+        // join different languages together
+        if(descriptions.length) synopsis = descriptions.join('\r\n');
+        // if none where found try english
+        else synopsis = result.attributes.description['en'];
+        // if none of the above worked set undefined
+        if(!synopsis) synopsis = undefined;
+
         const last_release =
           result.attributes.lastChapter && isNaN(parseFloat(result.attributes.lastChapter)) ?
             { chapter: parseFloat(result.attributes.lastChapter) } : undefined;
@@ -730,7 +739,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const name =  manga.data.attributes.title[Object.keys(manga.data.attributes.title)[0]];
       const status = manga.data.attributes.status || undefined;
       const tags = manga.data.attributes.tags.map(x => x.attributes.name[Object.keys(x.attributes.name)[0]]);
-      const synopsis = manga.data.attributes.description[Object.keys(manga.data.attributes.description)[0]] || undefined;
+
+      // search for synopsis that matches requestedLangs
+      const descriptions = requestedLangs.map(m => manga.data.attributes.description[m]).filter(Boolean);
+      let synopsis:string|undefined|null = undefined;
+      // join different languages together
+      if(descriptions.length) synopsis = descriptions.join('\r\n');
+      // if none where found try english
+      else synopsis = manga.data.attributes.description['en'];
+      // if none of the above worked set undefined
+      if(!synopsis) synopsis = undefined;
+
       const authors = manga.data.relationships
         .filter(x => x.type === 'artist' || x.type === 'author')
         .map(x => (x.attributes as {name: string}).name);
