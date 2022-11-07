@@ -256,8 +256,8 @@ export default class IOWrapper {
      * Show recommendations for a given mirror
      * the mirror will reply for each mangas with a 'showRecommend'event containing the manga's data
      */
-    socket.on('showRecommend', (id, mirror) => {
-      mirrors.find(m=>m.name === mirror)?.recommend(socket, id);
+    socket.on('showRecommend', (id, mirror, lang) => {
+      mirrors.find(m=>m.name === mirror)?.recommend(lang, socket, id);
     });
 
     /**

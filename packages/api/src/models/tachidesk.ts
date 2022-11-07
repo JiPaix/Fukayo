@@ -375,7 +375,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     return this.stopListening(socket);
   }
 
-  async recommend(socket: socketInstance | Scheduler, id: number) {
+  async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
     try {
       if (!this.options.host || !this.options.port) throw 'no credentials';
       if (!this.options.host.length) throw 'no credentials';

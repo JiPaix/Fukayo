@@ -140,7 +140,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     socket.emit('searchInMirrors', id, { done: true });
   }
 
-  async recommend(socket: socketInstance, id: number) {
+  async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
