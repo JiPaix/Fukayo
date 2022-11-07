@@ -15,7 +15,7 @@ RUN useradd -m fukayo && \
     chmod -R 755 /home/fukayo/.config/fukayo
 
 WORKDIR /home/fukayo/app
-COPY dist/linux-unpacked/ ./
+COPY --chown=fukayo:fukayo dist/linux-unpacked/ ./
 VOLUME ["/home/fukayo/.config/fukayo"]
 USER fukayo
 EXPOSE $FUKAYO_PORT
