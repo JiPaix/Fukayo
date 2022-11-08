@@ -269,6 +269,7 @@
       "reset": "Reset manga's name to its default value",
       "title": "Change this manga's title"
     },
+    "edit_categories": "...",
     "errors": {
       "bad_request": "Bad request: {code}",
       "invalid_auth": "Authentification error",
@@ -291,6 +292,7 @@
     },
     "original_title": "Original title: {title}",
     "publication": "Publication status:",
+    "select_language": "Select a language",
     "source": "Source | Sources",
     "status_cancelled": "cancelled",
     "status_completed": "completed",
