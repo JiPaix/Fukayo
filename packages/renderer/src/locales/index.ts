@@ -12,7 +12,7 @@ type MessageSchema = typeof en
 
 export function setupI18n(options:I18nOptions<{ message: MessageSchema }, appLangsType>) {
   if(!options.globalInjection) options.globalInjection = true;
-  const lang = findAppLocale('en');
+  const lang = findAppLocale(navigator.language);
   const i18n = createI18n<[MessageSchema], appLangsType>({
     locale: lang,
   });
