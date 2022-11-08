@@ -1,12 +1,13 @@
 import { DatabaseIO } from '@api/db';
 import { isMangaInDB } from '@api/db/helpers';
+import mirrors from '@api/models';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
-import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import { FileServer } from '@api/utils/fileserv';
 import type { mirrorsLangsType } from '@i18n/index';
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import isEqual from 'lodash.isequal';
 import { resolve } from 'path';
 import { env } from 'process';
 
@@ -220,105 +221,101 @@ export default class MangasDB extends DatabaseIO<Mangas> {
    * @param alreadyInDB if the manga is already in db
    */
   async #upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
-    // create or get file
-    const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), manga);
-    const db = await this.read();
+    try {
+      this.logger('opening', resolve(this.#path, `${filename}.json`));
 
-    let data = await mangadb.read();
+      const mirror = mirrors.find(m => m.name === manga.mirror.name);
+      if(!mirror) throw new Error(`Mirror ${manga.mirror} doesn't exist`);
 
-    // we check differences between the manga in the db and the manga we want to save
-    let hasNewStuff = false;
-    let k: keyof typeof manga.meta.options;
+      // create or get file
+      const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), manga);
+      const db = await this.read();
+      let data = await mangadb.read();
+      // get the scheduler instance
+      const scheduler = Scheduler.getInstance();
 
-    // if manga is already in db we will check if we added new languages
-    if(alreadyInDB) {
-      if(!data.langs.every(l => manga.langs.includes(l))) {
-        // new languages must also be saved in the index db
-        manga.langs = Array.from(new Set(data.langs.concat(manga.langs)));
-        const find = db.mangas.find(m => m.id === manga.id);
-        if(find) {
-          find.langs = manga.langs;
+      // we check differences between the manga in the db and the manga we want to save
+      let hasNewStuff = false;
+
+      // sorting stuff before comparison
+      manga.langs = manga.langs.sort();
+      data.langs = data.langs.sort();
+      manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort(); // can include prefix: "http://xx.xx.xx:xx/files/"
+      data.covers = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort(); // have prefix: "{number}_cover_"
+      manga.userCategories = manga.userCategories.sort();
+      data.userCategories = data.userCategories.sort();
+
+      if(!alreadyInDB) manga.covers = this.#saveCovers(Array.from(new Set(manga.covers)));
+      else {
+        if(manga.name !== data.name) hasNewStuff = true;
+        if(manga.status !== data.status) hasNewStuff = true;
+        if(manga.displayName !== data.displayName) hasNewStuff = true;
+        if(!isEqual(manga.userCategories, data.userCategories)) hasNewStuff = true;
+        if(!isEqual(manga.meta, data.meta)) hasNewStuff = true;
+
+        if(!isEqual(manga.covers, data.covers)) {
+          hasNewStuff = true;
+          manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+        } else {
+          // repopulating because we stripped covers from their prefix
+          manga.covers = manga.covers.map((c, i) => `${i}_cover_${c}`);
+        }
+
+        if(!isEqual(manga.langs, data.langs)) {
+          if(mirror.langs.length === 1 || mirror.mirrorInfo.entryLanguageHasItsOwnURL) {
+          // if mirror has one language change its chapter's language
+            if(manga.langs[0] !== data.langs[0]) {
+              manga.chapters.map(x => {
+                return { ...x, lang: manga.langs[0] };
+              });
+            }
+          } else if(manga.langs.some(x => !data.langs.includes(x))) {
+          // if manga.langs has some language that data.langs doesn't
+            manga.langs = Array.from(new Set([...data.langs, ... manga.langs]));
+          }
+          hasNewStuff = true;
+          scheduler.addMangaLog({date: Date.now(), id: manga.id, message: 'log_manga_metadata', data: { tag: 'langs', oldVal: data.langs, newVal: manga.langs }});
+        }
+
+        // checking for new chapters, or new chapter's read status
+        for(const chapter of manga.chapters) {
+          const chapterInDB = data.chapters.find(c => c.id === chapter.id && c.lang === chapter.lang);
+          if(chapterInDB) {
+            if(!chapterInDB.read && chapter.read) {
+              hasNewStuff = true;
+              chapterInDB.read = true;
+              scheduler.addMangaLog({ date: Date.now(), id: data.id, message: 'log_chapter_read', data: chapterInDB });
+            }
+          } else {
+            hasNewStuff = true;
+            data.chapters.push(chapter); // chapters are stored in data to avoid an additional loop
+            scheduler.addMangaLog({ date: Date.now(), id:data.id, message: 'log_chapter_new', data: chapter });
+          }
+        }
+      }
+
+      // chapter are stored in different place depending on alreadyInDB value (see manga.chapters loop)
+      data = { ...manga, chapters: alreadyInDB ? data.chapters : manga.chapters, _v: data._v };
+
+      const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
+
+      if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
+        await mangadb.write(data);
+        const find = db.mangas.find(m => m.id === data.id);
+        if(!find) return data; // should not happen
+
+        if(find.lastUpdate !== data.meta.lastUpdate || find.update !== data.meta.update || !isEqual(find.langs, data.langs)) {
+          find.lastUpdate = data.meta.lastUpdate;
+          find.update = data.meta.update;
+          find.langs = data.langs;
           await this.write(db);
         }
-        // retrieve languages of chapters in the database
-        const chapterLanguagesInDB = Array.from(new Set(data.chapters.map(x => x.lang)));
-        // we only keep chapters with languages NOT in the database
-        const chapter2add = manga.chapters.filter(c => !chapterLanguagesInDB.includes(c.lang));
-        // concat
-        manga.chapters = data.chapters.concat(chapter2add);
-        hasNewStuff = true;
       }
+      return data;
+    } catch(e) {
+      this.logger('error', e);
+      throw e;
     }
-    // check if manga name changed
-    if(manga.name !== data.name) hasNewStuff = true;
-    // check if manga publication's status changed
-    if(manga.status !== manga.status) hasNewStuff = true;
-
-    // check if categories changed
-    if(!arraysEqual(data.userCategories.sort(), manga.userCategories.sort())) {
-      hasNewStuff = true;
-    }
-
-    // check if meta changed
-    if(manga.meta.broken !== data.meta.broken) hasNewStuff = true;
-    if(manga.meta.notify !== data.meta.notify) hasNewStuff = true;
-    if(manga.meta.update !== data.meta.update) hasNewStuff = true;
-    if(manga.mirror.version !== data.mirror.version) hasNewStuff = true;
-
-    // check if the manga has new options
-    for (k in manga.meta.options) {  // const k: string
-      if(data.meta.options[k] !== manga.meta.options[k]) hasNewStuff = true;
-    }
-
-    // check if existing chapters have been read
-    manga.chapters.forEach(c => {
-      const chapter = data.chapters.find(c2 => c2.id === c.id && c2.lang === c.lang);
-      if(chapter && chapter.read !== c.read) {
-        hasNewStuff = true;
-      }
-    });
-
-    // check if the displayName has changed
-    if(data.displayName !== manga.displayName) hasNewStuff = true;
-
-    // covers from the view start with "/files/"
-    manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
-    // covers in db start with "{number}_cover_"
-    data.covers = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
-
-    if(alreadyInDB) {
-      if(!arraysEqual(manga.covers, data.covers)) {
-        hasNewStuff = true;
-        manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
-      } else {
-        manga.covers = manga.covers.map((c, i) => `${i}_cover_${c}`);
-      }
-    } else {
-      hasNewStuff = true;
-      manga.covers = this.#saveCovers(Array.from(new Set(manga.covers)));
-    }
-
-    // we check if the manga has been updated by previous operations OR by the Scheduler
-    const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
-    if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
-      data = {...manga, _v: data._v };
-      await mangadb.write(data);
-      const find = db.mangas.find(m => m.id === manga.id);
-      if(find) {
-        let updateIndex = false;
-        if(find.lastUpdate !== manga.meta.lastUpdate) {
-          find.lastUpdate = manga.meta.lastUpdate;
-          updateIndex = true;
-        }
-        if(find.update !== manga.meta.update) {
-          find.update = manga.meta.update;
-          updateIndex = true;
-        }
-
-        if(updateIndex) await this.write(db);
-      }
-    }
-    return data;
   }
 
   /** save base64 images to files and returns their filenames */

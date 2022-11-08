@@ -8,7 +8,6 @@ import type { MangaErrorMessage, SearchErrorMessage } from '@api/models/types/er
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { TaskDone } from '@api/models/types/shared';
-import { arraysEqual } from '@api/server/helpers/arrayEquals';
 import type { ServerToClientEvents } from '@api/server/types/index';
 import type { LogChapterError, LogChapterNew, LogChapterRead, LogMangaNewMetadata } from '@api/server/types/scheduler';
 import EventEmitter from 'events';
@@ -90,7 +89,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     return;
   }
 
-  #addMangaLog(log: LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata):void {
+  addMangaLog(log: LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata):void {
     if(!this.settings.library.logs.enabled) return;
     this.mangaLogs.push(log);
     if(this.mangaLogs.length > this.settings.library.logs.max) {
@@ -303,76 +302,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    */
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
     const db = await MangasDB.getInstance();
+    const indexes = await db.getIndexes();
+
     for(const manga of mangas) {
-      this.logger('updating', manga.name, '@', manga.mirror);
-      try {
-        const fetched = await this.#fetch(mirror, manga);
-        const id = manga.id;
-
-        // check if some keys changed
-        if(manga.name !== fetched.name) {
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'name', oldVal: manga.name, newVal: fetched.name }});
-          manga.name = fetched.name;
-        }
-
-        if(manga.status !== fetched.status) {
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'status', oldVal: manga.status, newVal: fetched.status }});
-          manga.name = fetched.name;
-        }
-
-        // For mirror which only have 1 lang, which might change
-        if(mirror.langs.length === 1 || mirror.mirrorInfo.entryLanguageHasItsOwnURL) {
-          if(manga.langs[0] !== fetched.langs[0]) {
-            this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'langs', oldVal: manga.langs, newVal: fetched.langs }});
-            manga.langs = fetched.langs;
-            fetched.chapters.map(x => {
-              return { ...x, lang: fetched.langs[0] };
-            });
-          }
-        }
-
-        if(manga.synopsis !== fetched.synopsis) {
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'synopsis', oldVal: manga.synopsis, newVal: fetched.synopsis }});
-          manga.synopsis = fetched.synopsis;
-        }
-        if(!arraysEqual(manga.authors, fetched.authors)) {
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'authors', oldVal: manga.authors, newVal: fetched.authors }});
-          manga.authors = fetched.authors;
-        }
-
-        const mangaCoverClone = [...manga.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort();
-        const fetchedCoverClone = [...fetched.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort();
-        if(!arraysEqual(mangaCoverClone, fetchedCoverClone)) {
-          manga.covers = fetched.covers;
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'covers' }});
-        }
-
-        const mangaTagClone = [...manga.tags].sort();
-        const fetchedTagClone = [...fetched.tags].sort();
-        if(!arraysEqual(mangaTagClone, fetchedTagClone)) {
-          manga.tags = fetched.tags;
-          this.#addMangaLog({date: Date.now(), id, message: 'log_manga_metadata', data: { tag: 'tags' }});
-        }
-
-        for(const chapter of fetched.chapters) {
-          const chapterInDB = manga.chapters.find(c => c.id === chapter.id);
-          if(chapterInDB) {
-            if(!chapterInDB.read && chapter.read) {
-              chapterInDB.read = true;
-              this.#addMangaLog({ date: Date.now(), id, message: 'log_chapter_read', data: chapterInDB });
-            }
-          } else {
-            manga.chapters.push(chapter);
-            this.#addMangaLog({ date: Date.now(), id, message: 'log_chapter_new', data: chapter });
-          }
-        }
-        await db.add({manga: {...manga, meta: {...manga.meta, lastUpdate: Date.now() } } });
-      } catch(e) {
-        let err = '';
-        if(e instanceof Error) err = e.message;
-        if(typeof e === 'string') err = e;
-        this.#addMangaLog({ date: Date.now(), id: manga.id, message: 'log_chapter_error', data: err});
+      const index = indexes.find(i => i.id === manga.id);
+      if(!index) {
+        await db.add({ manga });
+        continue;
       }
+      const fetched = await this.#fetch(mirror, manga);
+      await db.add({ manga: fetched, settings: manga.meta.options });
     }
   }
 
