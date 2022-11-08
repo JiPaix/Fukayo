@@ -77,6 +77,7 @@ export class FileServer {
 
     if(hasTimeout) { // && !fileExist
       clearTimeout(hasTimeout.timeout);
+      this.#timeouts = this.#timeouts.filter(({filename: f}) => f !== filename);
     }
     return false;
   }
