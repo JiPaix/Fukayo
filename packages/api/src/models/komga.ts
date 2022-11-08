@@ -67,6 +67,7 @@ class Komga extends SelfHosted implements MirrorInterface {
       name: 'komga',
       displayName: 'Komga',
       langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
+      entryLanguageHasItsOwnURL: true,
       requestLimits: {
         time: 10,
         concurrent: 5,
