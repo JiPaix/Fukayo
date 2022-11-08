@@ -311,7 +311,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         continue;
       }
       const fetched = await this.#fetch(mirror, manga);
-      await db.add({ manga: fetched, settings: manga.meta.options });
+      await db.add({ manga: fetched, settings: manga.meta.options }, true);
     }
   }
 

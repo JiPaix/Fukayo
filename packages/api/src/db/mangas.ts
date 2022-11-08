@@ -49,7 +49,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
   }
 
   /** add or update a manga */
-  async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }) {
+  async add(payload: { manga: MangaPage | MangaInDB, settings?: MangaInDB['meta']['options'] }, fromScheduler?: boolean) {
     if(typeof this.#filenamify === 'undefined') throw new Error('call MangasDB.getInstance() first');
     const db = await this.read();
     const alreadyInDB = db.mangas.find(m => m.id === payload.manga.id);
@@ -68,7 +68,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       // We define "meta" for this new entry:
       // and past "meta.options" from either the payload, the database (if any), or use default settings
       (payload.manga as MangaInDB).meta = {
-        lastUpdate: Date.now(),
+        lastUpdate: !alreadyInDB || fromScheduler ? Date.now() : alreadyInDB.lastUpdate,
         broken: false,
         notify: true,
         update: true,
