@@ -57,11 +57,18 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
   async search(query:string, langs: mirrorsLangsType[] , socket: socketInstance, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    socket.once('stopSearchInMirrors', () => {
-      this.logger('search canceled');
-      this.stopListening(socket);
-      cancel = true;
-    });
+    if (!(socket instanceof Scheduler)) {
+      socket.once('stopSearchInMirrors', () => {
+        this.logger('search canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
+        this.logger('search canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+    }
 
     const url = `${this.host}/search?query=${query}`;
     if(cancel) return; //=> 1st cancel check before request
@@ -149,6 +156,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('fetching recommendations canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
     try {
       const $ = await this.fetch({
@@ -199,6 +211,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
         cancel = true;
@@ -309,6 +326,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowChapter', () => {
+        this.logger('fetching chapter canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching chapter canceled');
         this.stopListening(socket);
         cancel = true;

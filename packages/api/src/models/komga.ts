@@ -129,6 +129,11 @@ class Komga extends SelfHosted implements MirrorInterface {
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('search canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
 
     try {
@@ -191,6 +196,11 @@ class Komga extends SelfHosted implements MirrorInterface {
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
         cancel = true;
@@ -288,6 +298,10 @@ class Komga extends SelfHosted implements MirrorInterface {
         this.logger('fetching chapter canceled');
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('fetching chapter canceled');
+        cancel = true;
+      });
     }
 
     // safeguard, we return an error if the link is not a chapter page
@@ -381,6 +395,11 @@ class Komga extends SelfHosted implements MirrorInterface {
         let cancel = false;
         if (!(socket instanceof Scheduler)) {
           socket.once('stopShowImports', () => {
+            this.logger('fetching imports canceled');
+            this.stopListening(socket);
+            cancel = true;
+          });
+          socket.once('disconnect', () => {
             this.logger('fetching imports canceled');
             this.stopListening(socket);
             cancel = true;
