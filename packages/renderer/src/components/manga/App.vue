@@ -114,11 +114,11 @@ const columns = [
 ];
 
 function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
-  if(a.volume && b.volume) {
-    const diff = a.volume - b.volume;
-    if(diff) return diff;
-  }
-  return a.number - b.number;
+  const avol = a.volume || 999999,
+        bvol = b.volume || 999999,
+        voldif = avol - bvol;
+  if(voldif === 0) return a.number - b.number;
+  return voldif;
 }
 
 function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
