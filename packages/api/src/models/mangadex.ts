@@ -529,6 +529,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   // until SEASONAL lists are made public we show last released chapters
   async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
+    // TODO: handle empty chapters
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowRecommend', () => {
@@ -615,6 +616,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     try {
+      // TODO: handle empty chapters
       let cancel = false;
       if(!(socket instanceof Scheduler)) {
         socket.once('stopSearchInMirrors', () => {
@@ -728,6 +730,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async manga(url:string, requestedLangs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number) {
+    // TODO: handle empty chapters
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     if(!(socket instanceof Scheduler)) {

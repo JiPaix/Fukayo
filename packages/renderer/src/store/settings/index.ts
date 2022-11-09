@@ -20,6 +20,11 @@ export const useStore = defineStore('settings', {
         chapters: {
           sort: 'ASC' as 'ASC' | 'DESC',
           hideRead: false,
+          /** list of manga ids that enable "special" sorting */
+          KomgaTryYourBest: [] as string[],
+          scanlators : {
+            ignore: [] as { /** manga id */ id: string, /** scanlator's name (undefined = nogroup) */ name: string }[],
+          },
         },
       },
       reader : {

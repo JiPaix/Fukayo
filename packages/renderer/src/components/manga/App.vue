@@ -44,101 +44,39 @@ const settings = useSettingsStore();
 const historyStore = useHistoryStore();
 /** web socket */
 let socket: socketClientInstance | undefined;
+type Manga = MangaInDB | MangaPage;
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+/** manga infos as retrieved by the server */
+const mangaRaw = ref<PartialBy<Manga, 'chapters'>>();
+/** manga failed to load*/
+const nodata = ref<string[]|null>(null);
 /** selected language */
 const selectedLanguage = ref(props.lang);
 /** mirror info */
 const mirrorinfo = ref<mirrorInfo|undefined>();
-/** the number of chapters */
-const nbOfChapters = computed(() => {
-  if(!mangaRaw.value) return 0;
-  if(!mangaRaw.value.chapters) return 0;
-  return mangaRaw.value.chapters.filter(c => c.lang === props.lang).length;
-});
 /** carrousel slides */
 const slide = ref(0);
-/** manga failed to load*/
-const nodata = ref<string[]|null>(null);
-
+/** height of the carrousel */
 const thumbnailHeight = computed(() => {
   if($q.screen.xs) return '400px';
   else if($q.screen.sm) return '400px';
   else if($q.screen.md) return '500px';
   return '400px';
 });
-
-/** return the color class for the manga's publication status */
-function statusClass(status:MangaPage['status']) {
-  switch(status) {
-    case 'cancelled':
-      return 'negative';
-    case 'completed':
-      return 'primary';
-    case 'hiatus':
-      return 'accent';
-    case 'ongoing':
-      return 'positive';
-    case 'unknown':
-      return 'accent';
-  }
+/** hide caret in <select> language */
+function hideCaret() {
+  const style = document.querySelector('#hidecaret') as HTMLStyleElement || document.createElement('style');
+  style.id = '#hidecaret';
+  style.textContent = '.q-icon.notranslate.material-icons.q-select__dropdown-icon { display: none; }';
+  document.body.appendChild(style);
+}
+/** show caret in <select> language */
+function showCaret() {
+  const style = document.getElementById('#hidecaret') as HTMLStyleElement || null;
+  if(style) style.textContent = '';
 }
 
-type Manga = MangaInDB | MangaPage;
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-/** manga infos as retrieved by the server */
-const mangaRaw = ref<PartialBy<Manga, 'chapters'>>();
-
-/** manga's chapters */
-const chapters = computed(() => {
-  if (mangaRaw.value && mangaRaw.value.chapters) {
-    return sortChapter(mangaRaw.value.chapters);
-  }
-  return [];
-});
-
-/** chapter table column */
-const columns = [
-  {
-    name: 'chap',
-    label: 'chapter',
-    field: 'number',
-    sortable: true,
-    sort: (a:number, b:number, rowA:MangaPage['chapters'][number], rowB:MangaPage['chapters'][number]) => sortChapInTable(rowA, rowB),
-  },
-  {
-    name: 'fetch',
-    label: 'date',
-    field: 'date',
-    format: (val:number) => dayJS ? dayJS(val).fromNow() : val,
-  },
-];
-
-function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
-  const avol = a.volume || 999999,
-        bvol = b.volume || 999999,
-        voldif = avol - bvol;
-  if(voldif === 0) return a.number - b.number;
-  return voldif;
-}
-
-function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
-  if(settings.mangaPage.chapters.sort === 'ASC') {
-    return chapters.sort((a, b) => {
-      if(a.volume && b.volume) {
-        const diff = a.volume - b.volume;
-        if (diff) return diff;
-      }
-      return a.number - b.number;
-    });
-  }
-  return chapters.sort((a, b) => {
-    if(a.volume && b.volume) {
-      const diff = b.volume - a.volume;
-      if (diff) return diff;
-    }
-    return b.number - a.number;
-  });
-}
 /** manga infos */
 const manga = computed(() => {
   if(!mangaRaw.value) return undefined;
@@ -156,40 +94,48 @@ const manga = computed(() => {
   };
 });
 
-/** list of unread chapters */
-const unreadChaps = computed(() => {
-  return chapters.value.filter((c) => !c.read);
+/** the manga name OR display name */
+const displayName = computed<string>({
+  get() {
+    if(!manga.value) return '';
+    return manga.value.displayName || manga.value.name;
+  },
+  set(newValue: string | number | null) {
+    if(!manga.value) return;
+    if(typeof newValue !== 'string') return;
+    const trimmed = newValue.trim();
+    if(trimmed.length < 1) return;
+    const updatedManga:MangaInDB|MangaPage = {...manga.value, displayName: trimmed };
+    updateManga(updatedManga);
+  },
 });
 
-/** move to the reader */
-function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]) {
-  if(!mirrorinfo.value || !manga.value) return;
-
-  if(mangaRaw.value && mangaRaw.value.chapters) {
-    // chapters needs to use the default sorting
-    historyStore.manga = { ...mangaRaw.value, chapters: chapters.value.sort((a, b) => a.number - b.number) };
+/** url pointing to the manga */
+const mirrorInfoURL = computed(() => {
+  if(!mirrorinfo.value || !manga.value) return '';
+  let url = '';
+  const { protocol, host, port} = mirrorinfo.value.options;
+  if(protocol && host && port) {
+    url += protocol + '://' + host + ':' + port;
   }
+  else url += mirrorinfo.value.host;
+  url += manga.value.url;
+  return url;
+});
 
-  const params = routeTypeHelper('reader', {
-    mirror: mirrorinfo.value.name,
-    lang: chapter.lang,
-    id: manga.value.id,
-    chapterId: chapter.id,
-  });
-
-
-  router.push(params);
-}
-
-/** toggle manga in and out of library */
-function toggleInLibrary() {
-  if(!manga.value) return;
-  if(!isMangaInDB(manga.value)) {
-    add();
-  } else {
-    remove();
-  }
-}
+/** user-defined categories */
+const userCategories = computed({
+  get() {
+    if(!mangaRaw.value) return [];
+    return mangaRaw.value.userCategories;
+  },
+  set(newValue:string[]) {
+    if(!manga.value) return;
+    newValue = newValue.sort();
+    manga.value.userCategories = newValue;
+    updateManga(manga.value);
+  },
+});
 
 /** add manga to library */
 async function add() {
@@ -216,7 +162,8 @@ async function remove() {
     socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
       mangaRaw.value = { ...res, covers: res.covers.map(c => transformIMGurl(c, settings)) };
       // automatically select another language when current is deleted
-      changeRouteLang(langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex]);
+      const lang = langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex];
+      routeLang.value = { label: $t(`languages.${lang}`), value: lang};
       if(res.langs.length === 1) hideCaret();
     });
   }
@@ -233,6 +180,186 @@ async function updateManga(updatedManga:MangaInDB|MangaPage) {
   } else {
     mangaRaw.value = updatedManga;
   }
+}
+
+/** toggle manga in and out of library */
+function toggleInLibrary() {
+  if(!manga.value) return;
+  if(!isMangaInDB(manga.value)) {
+    add();
+  } else {
+    remove();
+  }
+}
+/** return the color class for the manga's publication status */
+const statusClass = computed(() => {
+  if(!manga.value) return 'white';
+  switch(manga.value.status) {
+    case 'cancelled':
+      return 'negative';
+    case 'completed':
+      return 'primary';
+    case 'hiatus':
+      return 'accent';
+    case 'ongoing':
+      return 'positive';
+    case 'unknown':
+      return 'accent';
+    default:
+      return 'white';
+  }
+});
+
+
+/** function that sort chapters */
+function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
+  if(settings.mangaPage.chapters.sort === 'ASC') {
+    return chapters.sort((a, b) => {
+      if(a.volume && b.volume) {
+        const diff = a.volume - b.volume;
+        if (diff) return diff;
+      }
+      return a.number - b.number;
+    });
+  }
+  return chapters.sort((a, b) => {
+    if(a.volume && b.volume) {
+      const diff = b.volume - a.volume;
+      if (diff) return diff;
+    }
+    return b.number - a.number;
+  });
+}
+
+/** manga's chapters */
+const chapters = computed(() => {
+  if (mangaRaw.value && mangaRaw.value.chapters) {
+    let chap = sortChapter(mangaRaw.value.chapters).filter(c => !ignoredScanlators.value.includes(c.group || '')).filter(ch => {
+      if(hideReadChapters.value && ch.read) return false;
+      return true;
+    });
+    // komga specific
+    if(mangaRaw.value.mirror.name === 'komga' && settings.mangaPage.chapters.KomgaTryYourBest.find(x => x === mangaRaw.value?.id)) {
+      chap = chap.map(c => {
+        let volume:RegExpMatchArray | null | undefined | string | number = c.name ? /(v\d{2,3})/gi.exec(c.name) : undefined;
+        if(volume) volume = parseFloat(volume[1].replace('v', ''));
+        else volume = undefined;
+        const regexp = new RegExp(`^${mangaRaw.value?.name}\\s(\\d{1,4}(\\.\\d{1,4})?)`, 'gi');
+        let number:RegExpMatchArray | null | string = c.name ? regexp.exec(c.name) : null;
+        if(number) c.number = parseFloat(number[1]);
+        return {
+          ...c,
+          number: volume ? -1 : c.number,
+          volume: volume,
+        };
+      });
+    }
+    return chap;
+  }
+  return [];
+});
+
+/** function to sort chapter in the table */
+function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
+  const avol = a.volume || 999999,
+        bvol = b.volume || 999999,
+        voldif = avol - bvol;
+  if(voldif === 0) return a.number - b.number;
+  return voldif;
+}
+
+/** chapter table column */
+const columns = [
+  {
+    name: 'chap',
+    label: 'chapter',
+    field: 'number',
+    sortable: true,
+    sort: (a:number, b:number, rowA:MangaPage['chapters'][number], rowB:MangaPage['chapters'][number]) => sortChapInTable(rowA, rowB),
+  },
+  {
+    name: 'fetch',
+    label: 'date',
+    field: 'date',
+    format: (val:number) => dayJS ? dayJS(val).fromNow() : val,
+  },
+];
+
+/** the number of chapters */
+const nbOfChapters = computed(() => {
+  if(!mangaRaw.value) return 0;
+  if(!mangaRaw.value.chapters) return 0;
+  return mangaRaw.value.chapters.filter(c => c.lang === props.lang).length;
+});
+
+/** filter dialog */
+const filterDialog = ref(false);
+/** list of ignored scanlator for this entry */
+const ignoredScanlators = computed({
+  get() {
+    if(!mangaRaw.value) return [];
+    const id = mangaRaw.value.id;
+    return settings.mangaPage.chapters.scanlators.ignore.filter(s => s.id === id).map(s => s.name);
+  },
+  set(newValue:string[]) {
+    if(!mangaRaw.value) return;
+    const id = mangaRaw.value.id;
+    const scanlatorsMapped = newValue
+      .map(s => { return { id:id, name: s }; });
+    settings.mangaPage.chapters.scanlators.ignore = settings.mangaPage.chapters.scanlators.ignore.filter(s=>s.id !== s.id);
+    scanlatorsMapped.forEach(m => settings.mangaPage.chapters.scanlators.ignore.push(m));
+  },
+});
+
+/** is komga special regex enabled? */
+const isKomgaTryingItsBest = computed({
+  get() {
+    if(!mangaRaw.value) return false;
+    if(mangaRaw.value.mirror.name !== 'komga') return false;
+    const id = mangaRaw.value.id;
+    const find = settings.mangaPage.chapters.KomgaTryYourBest.find(x => x === id);
+    return typeof find === 'string';
+  },
+  set(newValue:boolean) {
+    if(!mangaRaw.value) return;
+    if(mangaRaw.value.mirror.name !== 'komga') return false;
+    const id = mangaRaw.value.id;
+    if(newValue) settings.mangaPage.chapters.KomgaTryYourBest.push(id);
+    else settings.mangaPage.chapters.KomgaTryYourBest = settings.mangaPage.chapters.KomgaTryYourBest.filter(x => x !== id);
+  },
+});
+
+/** toggle hide read chapters */
+const hideReadChapters = computed({
+  get() {
+    return settings.mangaPage.chapters.hideRead;
+  },
+  set(newValue:boolean) {
+    settings.mangaPage.chapters.hideRead = newValue;
+  },
+});
+
+/** list of unread chapters */
+const unreadChaps = computed(() => {
+  return chapters.value.filter((c) => !c.read);
+});
+
+/** move to the reader */
+function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]) {
+  if(!mirrorinfo.value || !manga.value) return;
+
+  if(mangaRaw.value && mangaRaw.value.chapters) {
+    // chapters needs to use the default sorting
+    historyStore.manga = { ...mangaRaw.value, chapters: chapters.value.sort((a, b) => a.number - b.number) };
+  }
+
+  const params = routeTypeHelper('reader', {
+    mirror: mirrorinfo.value.name,
+    lang: chapter.lang,
+    id: manga.value.id,
+    chapterId: chapter.id,
+  });
+  router.push(params);
 }
 
 /** Mark a chapter as read */
@@ -365,54 +492,6 @@ async function markNextAsUnread(index: number) {
   socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
-/** Opens the "change display name" dialog, calls `updateManga` when user press "OK" */
-async function changeDisplayName(displayName?: string | number | null) {
-  if(!manga.value) return;
-  if(displayName) {
-    if(typeof displayName === 'number') return;
-    if(displayName.trim() === '') return;
-    const updatedManga:MangaInDB|MangaPage = {...manga.value, displayName };
-    await updateManga(updatedManga);
-  }
-}
-
-/** parse the "source" link for self-hosted mirrors */
-function getMirrorInfoUrl(link:string) {
-  if(!mirrorinfo.value) return;
-  let url = '';
-  const { protocol, host, port} = mirrorinfo.value.options;
-  if(protocol && host && port) {
-    url += protocol + '://' + host + ':' + port;
-  }
-  else url += mirrorinfo.value.host;
-  url += link;
-  return url;
-}
-
-const userCategories = ref<string[]>([]);
-
-/** edit categories */
-function editCategories(vals:string[]) {
-  if(!manga.value) return;
-  userCategories.value = vals.sort();
-  if(isMangaInDB(manga.value)) {
-    manga.value.userCategories = userCategories.value;
-    updateManga(manga.value);
-  }
-}
-
-function hideCaret() {
-  const style = document.querySelector('#hidecaret') as HTMLStyleElement || document.createElement('style');
-  style.id = '#hidecaret';
-  style.textContent = '.q-icon.notranslate.material-icons.q-select__dropdown-icon { display: none; }';
-  document.body.appendChild(style);
-}
-
-function showCaret() {
-  const style = document.getElementById('#hidecaret') as HTMLStyleElement || null;
-  if(style) style.textContent = '';
-}
-
 async function startFetch() {
   nodata.value = null;
   const reqId = Date.now();
@@ -428,9 +507,7 @@ async function startFetch() {
           mg.chapters = mg.chapters.filter(c => !settings.i18n.ignored.includes(c.lang));
         }
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
-        mangaRaw.value = { ...mg, covers: mg.covers.map(c => transformIMGurl(c, settings)) };
-        // user categories have to be stored in a Ref in order to be reactive
-        userCategories.value = mg.userCategories.sort();
+        mangaRaw.value = { ...mg, covers: mg.covers.map(c => transformIMGurl(c, settings)), userCategories: mg.userCategories.sort() };
 
         socket?.emit('getMirrors', true, (mirrors) => {
           const m = mirrors.find((m) => m.name === mg.mirror.name);
@@ -482,11 +559,17 @@ onBeforeUnmount(async () => {
   socket.off('showChapter');
 });
 
-function changeRouteLang(lang: mirrorsLangsType) {
-  selectedLanguage.value = lang;
-  const newURL = window.location.href.replace(/\/\w+$/gi, `/${lang}`);
-  history.pushState({}, '', newURL);
-}
+const routeLang = computed<OptionLanguage>({
+  get() {
+    return { value: selectedLanguage.value, label: $t(`languages.${selectedLanguage.value}`) };
+  },
+  set(lang:OptionLanguage) {
+    console.log(lang);
+    selectedLanguage.value = lang.value;
+    const newURL = window.location.href.replace(/\/\w+$/gi, `/${lang.value}`);
+    history.pushState({}, '', newURL);
+  },
+});
 
 </script>
 <template>
@@ -548,23 +631,23 @@ function changeRouteLang(lang: mirrorsLangsType) {
             </span>
             <q-popup-edit
               v-slot="scope"
-              :model-value="manga.displayName || manga.name"
+              :model-value="displayName"
               :cover="true"
             >
               <q-input
-                :model-value="manga.displayName || manga.name"
+                :model-value="displayName"
                 dense
                 autofocus
                 counter
                 :debounce="500"
-                @update:model-value="(v?:string|number|null) => changeDisplayName(v)"
+                @update:model-value="(v:string) => displayName = v"
                 @keyup.enter="scope.set"
               >
                 <template #append>
                   <q-icon
                     class="cursor-pointer"
                     name="restart_alt"
-                    @click="manga ? changeDisplayName(manga.name) : null"
+                    @click="manga ? displayName = manga.name : null"
                   >
                     <q-tooltip>
                       {{ $t('mangas.displayname.reset') }}
@@ -600,7 +683,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
             class="text-weight-medium"
             :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
             style="text-decoration: none"
-            :href="getMirrorInfoUrl(manga.url)"
+            :href="mirrorInfoURL"
             target="_blank"
           >
             {{ mirrorinfo.displayName }}
@@ -645,7 +728,6 @@ function changeRouteLang(lang: mirrorsLangsType) {
               class="flex flex-center"
             >
               <q-btn
-
                 size="md"
                 class="q-mt-xs w-100"
                 style="max-width:300px;"
@@ -694,7 +776,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                 <q-select
                   :label="manga.langs.length < 2 ? $t('languages.language', manga.langs) : $t('mangas.select_language')"
                   :readonly="manga.langs.length < 2"
-                  :behavior="$q.screen.gt.md ? 'default': 'dialog'"
+                  :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
                   :dark="$q.dark.isActive"
                   outlined
                   :input-debounce="0"
@@ -703,9 +785,9 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   color="orange"
                   :class="$q.dark.isActive ? 'bg-grey-9' : 'bg-grey-4'"
                   style="flex-grow:1;  border-radius: 0px 4px 4px 0px!important;"
-                  :model-value="{ value: selectedLanguage, label: $t(`languages.${selectedLanguage}`) }"
+                  :model-value="routeLang"
                   :options="manga.langs.map(v=> { return { value: v, label: $t(`languages.${v}`) } })"
-                  @update:model-value="(v:OptionLanguage) => changeRouteLang(v.value)"
+                  @update:model-value="(v:OptionLanguage) => routeLang = v"
                 />
                 <div
                   class="flex q-ml-lg"
@@ -729,7 +811,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
                     >{{ $t('mangas.publication') }}</span>
                     <span
                       class="text-weight-bold text-center q-ml-sm"
-                      :class="'text-'+statusClass(manga.status)"
+                      :class="'text-'+statusClass"
                     >
                       {{ $t(`mangas.status_${manga.status}`).toLocaleUpperCase() }}
                     </span>
@@ -813,9 +895,8 @@ function changeRouteLang(lang: mirrorsLangsType) {
                     {{ $t('mangas.categories').toLocaleUpperCase() }}
                   </span>
                 </div>
-
                 <q-select
-                  v-model:model-value="manga.userCategories"
+                  v-model="userCategories"
                   :placeholder="$t('mangas.edit_categories')"
                   outlined
                   use-input
@@ -823,14 +904,13 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   multiple
                   hide-dropdown-icon
                   new-value-mode="add-unique"
-                  :behavior="$q.screen.gt.md ? 'default': 'dialog'"
+                  :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
                   :dark="$q.dark.isActive"
                   color="orange"
                   dense
                   :style="`background: rgba(255, 255, 255, ${$q.dark.isActive ? '0.3': '1'})`"
                   style="border-radius: 0px 0px 4px 4px;"
                   options-dense
-                  @update:model-value="(v:string[]) => editCategories(v)"
                 />
               </div>
               <div v-if="manga.synopsis">
@@ -865,6 +945,7 @@ function changeRouteLang(lang: mirrorsLangsType) {
               </div>
             </div>
           </div>
+
           <q-table
             v-if="manga"
             binary-state-sort
@@ -874,6 +955,82 @@ function changeRouteLang(lang: mirrorsLangsType) {
             class="w-100 q-mt-sm"
             :pagination="{sortBy: 'chap', rowsPerPage:0, descending: settings.mangaPage.chapters.sort === 'DESC'}"
           >
+            <template #top-right>
+              <q-btn
+                push
+                :color="'orange'"
+                :text-color="$q.dark.isActive ? 'white' : 'white'"
+                icon="filter_alt"
+                class="shadow-5"
+                @click="filterDialog = !filterDialog"
+              />
+              <q-dialog
+                v-model="filterDialog"
+                :full-width="$q.screen.lt.lg"
+                :full-height="$q.screen.lt.lg"
+                :position="$q.screen.lt.md ? undefined : 'top'"
+              >
+                <q-card
+                  :class="$q.dark.isActive ? 'bg-dark' : 'bg-white'"
+                  :style="$q.screen.lt.md ? '':'width:500px;'"
+                  class="q-pa-md"
+                >
+                  <div class="flex items-center justify-between w-100">
+                    <span>{{ $t('mangas.hide_unread') }}</span>
+                    <q-toggle
+                      v-model="hideReadChapters"
+                      color="orange"
+                    />
+                  </div>
+                  <div
+                    v-if="manga"
+                    id="scanlatorFilter"
+                    class="flex items-center justify-between w-100"
+                  >
+                    <q-select
+                      v-if="mangaRaw && mangaRaw.chapters && mangaRaw.chapters.some(x => x.group)"
+                      v-model="ignoredScanlators"
+                      color="orange"
+                      :label="$q.screen.lt.md || $q.platform.has.touch ? $t('mangas.hide_scanlators_tap') : $t('mangas.hide_scanlators_click')"
+                      :options="Array.from(new Set(manga.chapters.map(c => c.group)))"
+                      multiple
+                      use-chips
+                      class=" w-100"
+                      filled
+                      dense
+                      options-dense
+                      :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
+                    >
+                      <template #prepend>
+                        <q-icon :name="$q.screen.lt.md || $q.platform.has.touch ? 'touch_app' : 'ads_click'" />
+                      </template>
+                    </q-select>
+                  </div>
+                  <div
+                    v-if="mangaRaw && mangaRaw.mirror.name === 'komga'"
+                    class="flex items-center justify-between w-100"
+                  >
+                    <span>{{ $t('mangas.komga_tries_its_best') }}</span>
+                    <q-toggle
+                      v-model="isKomgaTryingItsBest"
+                      color="orange"
+                    />
+                  </div>
+                  <div
+                    v-if="$q.screen.lt.md"
+                    class="absolute-bottom-right q-mb-lg q-mr-lg"
+                  >
+                    <q-btn
+                      push
+                      color="orange"
+                      size="lg"
+                    >
+                      {{ $t('mangas.close_filter') }}
+                    </q-btn>
+                  </div>
+                </q-card>
+              </q-dialog>
+            </template>
             <template #header="properties">
               <q-tr
                 :props="properties"
@@ -911,23 +1068,24 @@ function changeRouteLang(lang: mirrorsLangsType) {
                   @click="showChapter(properties.row)"
                 >
                   <div class="text-body1 q-ma-none q-pa-none">
-                    <span v-if="properties.row.volume !== undefined">{{ $t("mangas.volume") }} {{ properties.row.volume }} - </span>
-                    <span>{{ $t("mangas.chapter") }} {{ properties.row.number }}</span>
+                    <span v-if="properties.row.volume !== undefined">{{ $t("mangas.volume") }} {{ properties.row.volume }}</span>
+                    <span v-if="(!isKomgaTryingItsBest && properties.row.volume !== undefined) || (isKomgaTryingItsBest && properties.row.number > -1 && typeof properties.row.volume !== 'undefined')"> - </span>
+                    <span v-if="!isKomgaTryingItsBest || (isKomgaTryingItsBest && properties.row.number > -1 && properties.row.volume === undefined)">{{ $t("mangas.chapter") }} {{ properties.row.number }}</span>
                   </div>
                   <div class="text-caption">
                     <span
                       class="text-caption"
                       :class="properties.row.read ? '' : 'text-orange'"
                     >
-                      {{ properties.row.name || '--' }}
+                      {{ properties.row.name || '&nbsp;' }}
                     </span>
                   </div>
                   <div class="text-caption">
                     <span
                       class="text-caption"
-                      :class="properties.row.read ? '' : 'text-grey-6'"
+                      :class="properties.row.read ? '&nbsp;' : 'text-grey-6'"
                     >
-                      {{ properties.row.group || '--' }}
+                      {{ properties.row.group || '&nbsp;' }}
                     </span>
                   </div>
                 </q-td>
@@ -1122,12 +1280,12 @@ function changeRouteLang(lang: mirrorsLangsType) {
 #categories .q-field--auto-height.q-field--dense .q-field__control, #categories .q-field--auto-height.q-field--dense .q-field__native {
   min-height: 41px!important;
 }
-#categories .q-chip, #categories .q-chip .ellipsis {
+#categories .q-chip, #categories .q-chip .ellipsis, #scanlatorFilter .q-chip, #scanlatorFilter .q-chip .ellipsis {
   color: black;
   background:orange;
   max-width: 300px;
 }
-#categories .q-chip .q-icon {
+#categories .q-chip .q-icon, #scanlatorFilter .q-chip .q-icon {
   color: black;
 }
 </style>

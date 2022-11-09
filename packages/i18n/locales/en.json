@@ -264,6 +264,7 @@
     "categories": "Categories",
     "chapter": "Chapter | Chapters",
     "chapter_order": "Chapter order",
+    "close_filter": "Close",
     "date": "Date",
     "displayname": {
       "reset": "Reset manga's name to its default value",
@@ -280,8 +281,11 @@
       "unknown": "Unexpected error"
     },
     "forceupdate": "Update",
+    "hide_scanlators_click": "Click to select scanlation groups to filter out",
+    "hide_scanlators_tap": "Tap to select scanlation groups to filter out",
     "hide_unread": "Hide read chapters",
     "inlibrary": "library",
+    "komga_tries_its_best": "Sort entries by filenames (KOMGA: experimental)",
     "markasread": {
       "current": "Mark this chapter as read",
       "current_unread": "Mark this chapter as unread",
