@@ -257,6 +257,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     // check data integrity
     if(!mg) throw new Error('mirror_might_be_outdated');
     if(!mg.langs || !mg.langs.length) throw new Error('mirror_might_be_outdated');
+    // TODO: test if no chapter works
     if(!mg.chapters || !mg.chapters.length) throw new Error('mirror_might_be_outdated');
     if(!mg.url || !mg.url.length) throw new Error('mirror_might_be_outdated');
     if(!mg.name || !mg.name.length) throw new Error('mirror_might_be_outdated');
