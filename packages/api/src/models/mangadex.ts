@@ -302,6 +302,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   authToken: string|null = null;
   sessionInterval: NodeJS.Timer|null = null;
   authInterval: NodeJS.Timer|null = null;
+  #scanlatorCache:Set<{id:string, name:string}> = new Set();
   constructor() {
     super({
       version: 1,
@@ -683,10 +684,25 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     ids = [...new Set(ids)];
 
     try {
-      const size = 99;
-      const arrayOfArrays:string[][] = [];
       const results:{id: string, name: string}[] = [];
 
+      // we will look into cache first
+      for(const id of ids) {
+        const find = Array.from(this.#scanlatorCache).find(s => s.id === id);
+        if(find) {
+          results.push(find);
+          // we remove the cached id from ids
+          ids = ids.filter(id => id !== find.id);
+        }
+      }
+
+      // return results if we found everything in cache
+      if(results.length === ids.length) return results;
+
+
+      const size = 99;
+      const arrayOfArrays:string[][] = [];
+      // put remaining ids into chunks (because of MD limitation)
       for (let i=0; i<ids.length; i+=size) {
         arrayOfArrays.push(ids.slice(i,i+size));
       }
@@ -700,7 +716,9 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if(res.result !== 'ok') continue;
         for(const group of res.data) {
-          results.push({id: group.id, name: group.attributes.name});
+          const val = {id: group.id, name: group.attributes.name};
+          results.push(val);
+          this.#scanlatorCache.add(val);
         }
       }
       return results;
