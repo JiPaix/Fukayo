@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { LoginAuth } from '@api/client/types';
 import icon from '@assets/icon.svg';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';

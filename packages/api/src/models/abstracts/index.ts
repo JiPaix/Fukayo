@@ -12,7 +12,7 @@ import type { socketInstance } from '@api/server/types';
 import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axios, { AxiosError } from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import fileSystem from '@renderer/components/settings/fileSystem.vue';
 import languageList from '@renderer/components/settings/languageList.vue';
 import mainOptions from '@renderer/components/settings/mainOptions.vue';

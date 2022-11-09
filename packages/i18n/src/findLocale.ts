@@ -1,4 +1,4 @@
-import { appLangs } from '@i18n/index';
+import { appLangs } from '@i18n';
 
 export function findAppLocale(lang:string) {
   const locale = appLangs.find(locale => {

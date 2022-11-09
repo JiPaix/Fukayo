@@ -1,6 +1,6 @@
 
 /* eslint-disable @typescript-eslint/consistent-type-imports */
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import type { ConfigType } from 'dayjs'; //=> this is just because we need ILocale interface which isn't exported
 import type { QuasarLanguage } from 'quasar';
 

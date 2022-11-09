@@ -4,7 +4,7 @@ import type { MangaErrorMessage } from '@api/models/types/errors';
 import { ChapterErrorMessage, ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType, mirrorsLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';

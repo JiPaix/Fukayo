@@ -7,7 +7,7 @@ import type { ImportResults } from '@api/models/imports/types';
 import type MangaDex from '@api/models/mangadex';
 import { isErrorMessage } from '@api/models/types/errors';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 
 
 const mangadex = mirrors.find(m=> m.name === 'mangadex') as typeof MangaDex;

@@ -2,7 +2,7 @@
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';

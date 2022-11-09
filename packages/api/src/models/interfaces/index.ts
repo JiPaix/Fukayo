@@ -1,6 +1,6 @@
 import type Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 /** Interface for Mirror classes */
 export default interface MirrorInterface {
   /**

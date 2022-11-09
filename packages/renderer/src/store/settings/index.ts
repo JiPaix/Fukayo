@@ -1,4 +1,4 @@
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 import { defineStore } from 'pinia';
 
 export const useStore = defineStore('settings', {

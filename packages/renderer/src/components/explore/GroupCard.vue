@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 import GroupMenu from '@renderer/components/explore/GroupMenu.vue';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useQuasar } from 'quasar';

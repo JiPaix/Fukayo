@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import icon from '@assets/icon.svg';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import { certifColor, hostNameHint, isHostNameValid, isLoginValid, isPasswordValid, isPortValid, isProvidedCertificateValid, isProvidedKeyValid, keyColor, passwordHint } from '@renderer/components/helpers/login';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';

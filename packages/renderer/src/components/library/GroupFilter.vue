@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType, mirrorsLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
 import { computed, onMounted, ref, watch } from 'vue';

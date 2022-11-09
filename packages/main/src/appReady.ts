@@ -1,6 +1,6 @@
 import type { startPayload } from '@api/app/types';
 import icon from '@buildResources/icon_32.png';
-import { findAppLocale, loadLocale } from '@i18n/index';
+import { findAppLocale, loadLocale } from '@i18n';
 import type { Paths } from '@preload/config';
 import { app, clipboard, ipcMain, Menu, nativeImage, Tray } from 'electron';
 import type { ForkResponse } from './../../api/src/app/types/index';

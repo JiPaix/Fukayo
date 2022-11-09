@@ -5,8 +5,8 @@ import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
-import { BC47_TO_ISO639_1, mirrorsLang } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
+import { BC47_TO_ISO639_1, mirrorsLang } from '@i18n';
 import type { ImportResults } from './imports/types';
 import type { importErrorMessage } from './types/errors';
 
