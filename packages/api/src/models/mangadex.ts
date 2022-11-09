@@ -537,6 +537,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('fetching recommendations canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
 
     if(cancel) return;
@@ -620,6 +625,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       let cancel = false;
       if(!(socket instanceof Scheduler)) {
         socket.once('stopSearchInMirrors', () => {
+          this.logger('search canceled');
+          this.stopListening(socket);
+          cancel = true;
+        });
+        socket.once('disconnect', () => {
           this.logger('search canceled');
           this.stopListening(socket);
           cancel = true;
@@ -735,6 +745,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
         cancel = true;
@@ -878,6 +893,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('fetching chapter canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
 
     if(cancel) return;
@@ -987,6 +1007,11 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     let cancel = false;
     if(socket) {
       socket.once('stopShowImports', () => {
+        this.logger('fetching imports canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching imports canceled');
         this.stopListening(socket);
         cancel = true;

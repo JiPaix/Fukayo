@@ -65,6 +65,11 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('search canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
     const url = `${this.host}/search?page=1&title=${query}`;
     if(cancel) return; //=> 1st cancel check before request
@@ -142,6 +147,11 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowManga', () => {
+        this.logger('fetching manga canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching manga canceled');
         this.stopListening(socket);
         cancel = true;
@@ -266,6 +276,11 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         this.stopListening(socket);
         cancel = true;
       });
+      socket.once('disconnect', () => {
+        this.logger('fetching chapter canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
     }
 
 
@@ -358,6 +373,11 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     let cancel = false;
     if(!(socket instanceof Scheduler)) {
       socket.once('stopShowRecommend', () => {
+        this.logger('fetching recommendations canceled');
+        this.stopListening(socket);
+        cancel = true;
+      });
+      socket.once('disconnect', () => {
         this.logger('fetching recommendations canceled');
         this.stopListening(socket);
         cancel = true;
