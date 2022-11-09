@@ -37,13 +37,13 @@ const config = {
   envDir: process.cwd(),
   resolve: {
     alias: {
-      '@renderer/': join(PACKAGE_ROOT, '..', 'renderer', 'src') + '/',
-      '@api/': join(PACKAGE_ROOT, '..', 'api', 'src') + '/',
-      '@main/': join(PACKAGE_ROOT, '..', 'main', 'src') + '/',
-      '@preload/': join(PACKAGE_ROOT, '..', 'preload', 'src') + '/',
-      '@assets/': join(PACKAGE_ROOT, '..', 'renderer', 'assets') + '/',
-      '@buildResources/': join(PACKAGE_ROOT, '..', '..', 'buildResources') + '/',
-      '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src') + '/',
+      '@renderer': join(PACKAGE_ROOT, '..', 'renderer', 'src'),
+      '@api': join(PACKAGE_ROOT, '..', 'api', 'src'),
+      '@main': join(PACKAGE_ROOT, '..', 'main', 'src'),
+      '@preload': join(PACKAGE_ROOT, '..', 'preload', 'src'),
+      '@assets': join(PACKAGE_ROOT, '..', 'renderer', 'assets'),
+      '@buildResources': join(PACKAGE_ROOT, '..', '..', 'buildResources'),
+      '@i18n': join(PACKAGE_ROOT, '..', 'i18n', 'src'),
     },
   },
   build: {

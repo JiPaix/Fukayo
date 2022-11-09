@@ -5,7 +5,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import { FileServer } from '@api/utils/fileserv';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 import { existsSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import isEqual from 'lodash.isequal';
 import { resolve } from 'path';

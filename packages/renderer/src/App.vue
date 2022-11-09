@@ -2,7 +2,7 @@
 import type { LoginAuth } from '@api/client/types';
 import favicon from '@assets/icon.svg';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';

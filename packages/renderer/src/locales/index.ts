@@ -1,6 +1,6 @@
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
-import { findAppLocale, importLocale, loadLocale } from '@i18n/index';
+import type { appLangsType } from '@i18n';
+import { findAppLocale, importLocale, loadLocale } from '@i18n';
 import dayjs from 'dayjs';
 import dayjslocalizedformat from 'dayjs/plugin/localizedFormat';
 import dayjsrelative from 'dayjs/plugin/relativeTime';

@@ -5,7 +5,7 @@ import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type Scheduler from '@api/server/scheduler';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';

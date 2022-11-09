@@ -4,7 +4,7 @@ import type { SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType, mirrorsLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';

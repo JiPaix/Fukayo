@@ -1,4 +1,4 @@
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 export interface MangaPage {
   /**
    * ID of the manga

@@ -1,6 +1,6 @@
 /* eslint-disable semi */
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 
 export default interface ImporterInterface {
   name: string;

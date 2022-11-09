@@ -4,7 +4,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type Scheduler from '@api/server/scheduler';
 import type { ServerToClientEvents } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 import type { Socket } from 'socket.io-client';
 
 export type SocketClientConstructor = {

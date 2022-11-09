@@ -2,7 +2,7 @@
 import type { socketClientInstance } from '@api/client/types';
 import type SettingsDB from '@api/db/settings';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType } from '@i18n/index';
+import type { appLangsType } from '@i18n';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useStoreSettings } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';

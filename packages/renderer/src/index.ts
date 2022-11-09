@@ -90,7 +90,7 @@ const QuasarConfig = {
 };
 
 // localization
-import { findAppLocale } from '@i18n/index';
+import { findAppLocale } from '@i18n';
 import { setupI18n } from '@renderer/locales';
 import dayjs from 'dayjs';
 

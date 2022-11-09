@@ -1,5 +1,5 @@
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
 
 export type SearchResult = {
   /**

@@ -5,8 +5,8 @@ import type { importErrorMessage } from '@api/models/types/errors';
 import type { MangaPage } from '@api/models/types/manga';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/index';
-import { mirrorsLang } from '@i18n/index';
+import type { mirrorsLangsType } from '@i18n';
+import { mirrorsLang } from '@i18n';
 
 type MangaAttributes = {
   title: {

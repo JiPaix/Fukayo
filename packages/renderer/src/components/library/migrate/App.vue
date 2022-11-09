@@ -6,7 +6,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo, TaskDone } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
-import type { appLangsType, mirrorsLangsType } from '@i18n/index';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
