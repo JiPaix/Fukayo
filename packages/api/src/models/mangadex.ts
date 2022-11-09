@@ -804,8 +804,14 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
         // retrieving scanlators names
-        const groups = res.data.map(x=>x.relationships.find(y=>y.type==='scanlation_group')?.id);
-        const scanlators = await this.#findGroup(groups.filter(x => typeof x !== 'undefined') as string[]);
+        const groups = res.data
+          .map(
+            x=> x.relationships.filter(y=>y.type==='scanlation_group'),
+          )
+          .flat()
+          .map(g => g.id);
+
+        const scanlators = await this.#findGroup(groups);
         scanlators.forEach(s => scanlationGroups.add(s));
         // retrieving read markers
         const readMarkers = await this.#getReadMarker(url.replace('/manga/', ''));
@@ -822,7 +828,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
             volume: x.attributes.volume ? parseFloat(x.attributes.volume) : undefined,
             name: x.attributes.title ? x.attributes.title : undefined,
             read: readMarkers.includes(x.id),
-            group: Array.from(scanlationGroups).find(s => s.id === x.relationships.find(r => r.type === 'scanlation_group')?.id)?.name,
+            group: scanlationGroups.size > 0 ? Array.from(scanlationGroups).map(g => g.name).join(', ') : undefined,
           });
           chapters.push(built);
         }
