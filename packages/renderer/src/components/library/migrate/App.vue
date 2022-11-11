@@ -16,6 +16,7 @@ import { useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 
 /** props */
 const props = defineProps<{
@@ -260,7 +261,7 @@ onBeforeMount(async() => {
                           v-for="(mangaCover, ci) in manga.covers"
                           :key="ci"
                           :name="ci"
-                          :img-src="mangaCover"
+                          :img-src="transformIMGurl(mangaCover, settings)"
                         />
                       </q-carousel>
                     </div>
@@ -471,7 +472,7 @@ onBeforeMount(async() => {
                       <div
                         class="col-12"
                       >
-                        <q-img :src="candidate.covers[0]" />
+                        <q-img :src="transformIMGurl(candidate.covers[0], settings)" />
                       </div>
                       <div class="col-12">
                         <q-btn
