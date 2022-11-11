@@ -259,6 +259,15 @@ const chapters = computed(() => {
   return [];
 });
 
+/** resume or start reading */
+const resume = computed(() => {
+  if(!chapters.value || !chapters.value.length) return { label:  $t('mangas.start_reading') };
+  const firstChap = settings.mangaPage.chapters.sort === 'ASC' ? chapters.value[0] : chapters.value[chapters.value.length-1];
+  const readChaps = chapters.value.filter(c => c.read);
+  if(readChaps.length) return { label: $t('mangas.resume_reading'), value: readChaps[settings.mangaPage.chapters.sort === 'ASC' ? 0 : readChaps.length-1] };
+  return { label:  $t('mangas.start_reading'), value: firstChap };
+});
+
 /** function to sort chapter in the table */
 function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
   const avol = a.volume || 999999,
@@ -1237,6 +1246,16 @@ const routeLang = computed<OptionLanguage>({
             </template>
           </q-table>
         </div>
+        <q-btn
+          v-if="resume.value"
+          :push="$q.screen.gt.sm"
+          :square="$q.screen.lt.md"
+          class="bg-orange"
+          :class="$q.screen.lt.md || $q.platform.has.touch ? 'fixed-bottom w-100' : 'fixed-bottom-right q-mr-lg q-mb-lg'"
+          :label="resume.label"
+          size="lg"
+          @click="() => resume.value ? showChapter(resume.value) : null"
+        />
       </q-page>
     </q-page-container>
   </q-layout>
