@@ -231,4 +231,4 @@ jobs:
           discord-channel: ${{ secrets.DISCORD_CHANNEL }}
           discord-role: ${{ secrets.DISCORD_BETAROLE }}
           version: v${{ needs.draft.outputs.version }}
-          release-note-json: {{ needs.draft.outputs.release-note }}
+          release-note-json: ${{ needs.draft.outputs.release-note }}
