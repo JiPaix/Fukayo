@@ -966,8 +966,8 @@ const routeLang = computed<OptionLanguage>({
               />
               <q-dialog
                 v-model="filterDialog"
-                :full-width="$q.screen.lt.lg"
-                :full-height="$q.screen.lt.lg"
+                :full-width="$q.screen.lt.md"
+                :full-height="$q.screen.lt.md"
                 :position="$q.screen.lt.md ? undefined : 'top'"
               >
                 <q-card
