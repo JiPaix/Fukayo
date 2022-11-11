@@ -260,6 +260,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const index of indexesToUpdate) {
       const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
+      if(manga.meta.broken) continue; // to not update broken entries.
       mangasToUpdate.push(manga);
     }
     // mangas to update by mirror
@@ -284,6 +285,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const fix of indexesToFix) {
       const manga = await (await MangasDB.getInstance()).getByFilename(fix.file);
+      if(manga.meta.broken) continue; // do not try to fix already-broken entries
       mangasToFix.push(manga);
     }
     // mangas to fix by mirror
@@ -292,7 +294,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(!mangasToFixByMirror[manga.mirror.name]) mangasToFixByMirror[manga.mirror.name] = [];
       mangasToFixByMirror[manga.mirror.name].push(manga);
     });
-
 
     return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror };
   }
