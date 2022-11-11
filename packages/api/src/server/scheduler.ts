@@ -304,6 +304,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
     const db = await MangasDB.getInstance();
     const indexes = await db.getIndexes();
+    const broken:{manga: MangaInDB, mirror: Mirror & MirrorInterface}[] = [];
 
     for(const manga of mangas) {
       const index = indexes.find(i => i.id === manga.id);
@@ -311,8 +312,21 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         await db.add({ manga });
         continue;
       }
-      const fetched = await this.#fetch(mirror, manga);
-      await db.add({ manga: fetched, settings: manga.meta.options }, true);
+      try {
+        const fetched = await this.#fetch(mirror, manga);
+        await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);
+      } catch(e) {
+        broken.push({ manga, mirror });
+      }
+    }
+
+    const group = broken.reduce((acc, value) => {
+      (acc[value.mirror.name] ||= []).push(value);
+      return acc;
+    }, {} as { [key: string]: typeof broken });
+
+    for(const broke in group) {
+      await this.#fixMangas(group[broke][0].mirror, group[broke].map(x => x.manga));
     }
   }
 
