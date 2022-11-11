@@ -10,15 +10,18 @@ on:
       - '.gitignore'
       - '.github/**'
       - '!.github/workflows/release.yml'
-      - '!.github/workflows/release-beta.yml'
+      - '!.github/workflows/beta.yml'
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
-
-
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 defaults:
   run:
     shell: 'bash'
+
+
 jobs:
   draft:
     runs-on: ubuntu-latest
