@@ -240,7 +240,7 @@
     "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
     "filter_by_name": "Recherche dans votre bibliothèque",
     "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
-    "left_to_read": "{chapterWord} restant | {chapterWord} restants",
+    "left_to_read": "Chapitre restant | Chapitres restants",
     "letsgo": "C'est parti !",
     "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
     "setup_preferences": "Configurez Fukayo comme vous le souhaitez :",
@@ -341,7 +341,7 @@
       "value": "Modes d'affichage"
     },
     "error": {
-      "chapter": "Le {chapterWord} n'a pas pu être chargé",
+      "chapter": "Le chapitre n'a pas pu être chargé",
       "chapterLang": "La langue sélectionnée n'a pas de chapitre",
       "reload": "Recharger"
     },
