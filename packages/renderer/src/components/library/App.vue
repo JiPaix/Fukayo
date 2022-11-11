@@ -153,7 +153,7 @@ const userCategories = computed(() => {
 onMounted(async () => {
   if (!socket) socket = await useSocket(settings.server);
   const id = Date.now();
-  socket.emit('getMirrors', true, async (m) => {
+  socket.emit('getMirrors', false, async (m) => {
     mirrors.value = m;
     if (!socket) socket = await useSocket(settings.server);
 
