@@ -223,6 +223,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ needs.draft.outputs.draft-id }}
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Need for npm >=7.7
+          cache: 'npm'
       - name: Discord announce
         uses: ./.github/actions/discord-release
         with:
