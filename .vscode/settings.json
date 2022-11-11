@@ -39,7 +39,8 @@
     "build",
     "reader",
     "experimental",
-    "docker"
+    "docker",
+    "scheduler"
   ],
   "conventionalCommits.gitmoji": false,
   "conventionalCommits.lineBreak": "  ",

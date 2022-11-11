@@ -217,14 +217,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(nbMangas > 0) this.logger('updating...');
     // fixes mangas
     for(const mirrorName of Object.keys(fixes)) {
-      const mirror = mirrors.find(m => m.name === mirrorName);
+      const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
       if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
     }
 
     if(!onlyfixes) {
       // update mangas
       for(const mirrorName of Object.keys(updates)) {
-        const mirror = mirrors.find(m => m.name === mirrorName);
+        const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
         if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
       }
     }
