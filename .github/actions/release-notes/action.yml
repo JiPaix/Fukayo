@@ -18,6 +18,8 @@ inputs:
 outputs:
   release-note: # id of output
     description: 'Release notes'
+  release-note-json: # id of output
+    description: 'JSON formatted Release notes'
 runs:
   using: 'node16'
   main: 'main.js'

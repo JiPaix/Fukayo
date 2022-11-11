@@ -1,0 +1,21 @@
+name: 'Release Notes on discord'
+description: 'Return release notes based on Git Commits (extension)'
+inputs:
+  discord-token:
+    description: 'Discord Token'
+    required: true
+  discord-channel:
+    description: 'Discord Channel ID'
+    required: true
+  discord-role:
+    description: 'Discord Role (ID) to ping'
+    required: true
+  release-note-json:
+    description: 'json formatted release notes'
+    required: true
+  version:
+    description: 'version'
+    required: true
+runs:
+  using: 'node18'
+  main: 'index.js'

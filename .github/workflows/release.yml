@@ -223,6 +223,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ needs.draft.outputs.draft-id }}
+      - name: Discord announce
+        uses: ./.github/actions/discord-release
+        with:
+          discord-token: ${{ secrets.DISCORD_TOKEN }}
+          discord-channel: ${{ secrets.DISCORD_CHANNEL }}
+          discord-role: ${{ secrets.DISCORD_MAINROLE }}
+          version: v${{ needs.draft.outputs.version }}
+          release-note-json: {{ needs.draft.outputs.release-note }}
 
   fast_forward:
     needs: [ publish ]

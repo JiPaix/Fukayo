@@ -3161,6 +3161,8 @@
     const grouped = getGroupedCommits(commits);
     const changelog = getChangeLog(grouped);
     setOutput('release-note', escapeData(changelog) + '\r\n')
+    const toJson = Array.from(grouped).map(g => Array.from(g[1].scopes).map(x => x[1].commits )).flat().flat()
+    setOutput('release-note-json', JSON.stringify(toJson))
   } catch (e) {
     console.error(e);
     process.exit(1);
