@@ -1024,6 +1024,7 @@ const routeLang = computed<OptionLanguage>({
                       push
                       color="orange"
                       size="lg"
+                      @click="filterDialog = false"
                     >
                       {{ $t('mangas.close_filter') }}
                     </q-btn>
