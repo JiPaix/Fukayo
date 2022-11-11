@@ -191,7 +191,7 @@ onMounted(async () => {
             }),
             langs: manga.langs,
           };
-          if(mg.dead) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
+          if(mg.dead || mg.broken) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
           else if(!group) {
             mangasRAW.value.push({
               name: manga.displayName || manga.name,
