@@ -312,6 +312,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         await db.add({ manga });
         continue;
       }
+      this.logger('updating', manga.name, '@', manga.mirror.name, new Date(manga.meta.lastUpdate).toString());
       try {
         const fetched = await this.#fetch(mirror, manga);
         await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);
