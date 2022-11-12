@@ -72354,8 +72354,9 @@ async function go() {
         const grouped = {};
         if(!releasenotes.length) throw new Error('Empty release notes?')
         releasenotes.forEach(r => {
-            if(!grouped[`${r.type} ${r.scope}`]) grouped[`${r.type} ${r.scope}`] = []
-            grouped[`${r.type} ${r.scope}`].push(r.subject)
+            const key = r.scope ? `${r.type} ${r.scope}` : r.type
+            if(!grouped[key]) grouped[key] = []
+            grouped[key].push(r.subject)
         })
 
         const sortedNotes = Object.keys(grouped).map(k => {return { name: k, value: grouped[k].join('\r\n').substring(1020, 0)+' ...' } } ).sort((a, b) => {
