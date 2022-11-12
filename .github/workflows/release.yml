@@ -235,7 +235,7 @@ jobs:
           discord-channel: ${{ secrets.DISCORD_CHANNEL }}
           discord-role: ${{ secrets.DISCORD_MAINROLE }}
           release-version: v${{ needs.draft.outputs.version }}
-          release-note-json: ${{ needs.draft.outputs.release-note }}
+          release-note-json: ${{ needs.draft.outputs.release-note-json }}
 
   fast_forward:
     needs: [ publish ]
