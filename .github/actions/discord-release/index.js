@@ -72337,6 +72337,39 @@ const sortObjectByKeys = (object, asc = true) => Object.fromEntries(
     Object.entries(object).sort(([k1], [k2]) => k1 < k2 ^ !asc ? -1 : 1),
 )
 
+function replaceHeader(str) {
+  switch (str) {
+    case 'feat':
+      return 'New Features';
+    case 'fix':
+      return 'Bug Fixes';
+    case 'docs':
+      return 'Documentation Changes';
+    case 'build':
+      return 'Build System';
+    case 'chore':
+      return 'Chores';
+    case 'ci':
+      return 'Continuous Integration';
+    case 'refactor':
+      return 'Refactors';
+    case 'style':
+      return 'Code Style Changes';
+    case 'test':
+      return 'Tests';
+    case 'perf':
+      return 'Performance improvements';
+    case 'revert':
+      return 'Reverts';
+    case 'deps':
+      return 'Dependency updates';
+    case 'other':
+      return 'Other Changes';
+    default:
+      return str;
+  }
+}
+
 async function go() {
     try {
         // Get inputs
@@ -72354,13 +72387,24 @@ async function go() {
         const grouped = {};
         if(!releasenotes.length) throw new Error('Empty release notes?')
         releasenotes.forEach(r => {
-            const key = r.scope ? `${r.type} ${r.scope}` : r.type
+            const key = r.scope ? `${replaceHeader(r.type)}` : r.type
             if(!grouped[key]) grouped[key] = []
-            grouped[key].push(r.subject)
+            const val = r.scope ? `- ${r.scope}: ${r.subject}` : `- ${r.subject}`
+            grouped[key].push(val)
         })
 
-        const sortedNotes = Object.keys(grouped).map(k => {return { name: k, value: grouped[k].join('\r\n').substring(1020, 0)+' ...' } } ).sort((a, b) => {
-            return a.name.localeCompare(b.name)
+        const sortedNotes = Object.keys(grouped)
+        .map(k => {
+          const value = grouped[k]
+          .sort()
+          .join('\r\n')
+          .substring(1020, 0);
+          return {
+            name: k, value: value.length === 1020 ? value+' ...' : value
+          }
+        })
+        .sort((a, b) => {
+          return a.name.localeCompare(b.name)
         })
 
         client.login(TOKEN);
