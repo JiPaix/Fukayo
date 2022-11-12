@@ -13,7 +13,7 @@ inputs:
   release-note-json:
     description: 'json formatted release notes'
     required: true
-  version:
+  release-version:
     description: 'version'
     required: true
 runs:

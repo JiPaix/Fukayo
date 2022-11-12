@@ -234,7 +234,7 @@ jobs:
           discord-token: ${{ secrets.DISCORD_TOKEN }}
           discord-channel: ${{ secrets.DISCORD_CHANNEL }}
           discord-role: ${{ secrets.DISCORD_MAINROLE }}
-          version: v${{ needs.draft.outputs.version }}
+          release-version: v${{ needs.draft.outputs.version }}
           release-note-json: ${{ needs.draft.outputs.release-note }}
 
   fast_forward:
