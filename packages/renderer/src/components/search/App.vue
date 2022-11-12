@@ -57,7 +57,7 @@ const includedMirrors = ref<string[]>([]);
 const results = computed(() => {
   return rawResults.value.map<SearchResult>(r => {
     const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirrorinfo.name);
-    if(!mirrorinfo) throw Error($t('search.not_found', { sourceWord: $t('mangas.source'), websitename: r.mirrorinfo.name }));
+    if(!mirrorinfo) throw Error($t('search.not_found', { source: r.mirrorinfo.name }));
       return {
         ...r,
         mirrorinfo,

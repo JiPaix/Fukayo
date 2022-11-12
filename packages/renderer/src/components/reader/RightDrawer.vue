@@ -257,7 +257,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         >
           <q-icon :name="chapters[currentChapterIndex].read ? 'o_visibility_off' : 'o_visibility'" />
           <q-tooltip>
-            <span>{{ chapters[currentChapterIndex].read ? $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter')}) : $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter')}) }}</span>
+            <span>{{ chapters[currentChapterIndex].read ? $t('mangas.markasread.current_unread') : $t('mangas.markasread.current') }}</span>
           </q-tooltip>
         </q-btn>
       </q-btn-group>

@@ -6,7 +6,7 @@
   "dialog": {
     "quickadd": {
       "bad_url": "Mauvaise URL",
-      "no_match": "L'URL ne correspond à aucune {sourceWord}",
+      "no_match": "L'URL ne correspond à aucune source",
       "tab": "Importer URL",
       "title": "Importer un manga par son URL",
       "url": "URL du manga ou d'un chapitre"
@@ -28,9 +28,6 @@
     },
     "placeholder": "Filtrer les sources par nom",
     "tab": "Explorer"
-  },
-  "global": {
-    "colon_word": "{word} :"
   },
   "import": {
     "close": "Fermer",
@@ -240,7 +237,7 @@
     "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
     "filter_by_name": "Recherche dans votre bibliothèque",
     "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
-    "left_to_read": "{chapterWord} restant | {chapterWord} restants",
+    "left_to_read": "Chapitre restant | Chapitres restants",
     "letsgo": "C'est parti !",
     "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
     "setup_preferences": "Configurez Fukayo comme vous le souhaitez :",
@@ -341,7 +338,7 @@
       "value": "Modes d'affichage"
     },
     "error": {
-      "chapter": "Le {chapterWord} n'a pas pu être chargé",
+      "chapter": "Le chapitre n'a pas pu être chargé",
       "chapterLang": "La langue sélectionnée n'a pas de chapitre",
       "reload": "Recharger"
     },
@@ -369,7 +366,7 @@
   "search": {
     "all": "Tous",
     "no_results": "Aucun résultat pour : \"{query}\"",
-    "not_found": "Impossible de trouver {sourceWord} : {websitename}",
+    "not_found": "Impossible de trouver source : {source}",
     "placeholder": "Rechercher des mangas",
     "tab": "Rechercher"
   },
@@ -408,15 +405,15 @@
     },
     "logs": "Journaux",
     "reader": {
-      "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
+      "info": "Ce sont les paramètres par défaut. \r\nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
       "overlay": "Afficher l'overlay de navigation lors du survol des images",
       "preload": "Précharger le chapitre suivant pendant la lecture",
       "title": "Lecteur"
     },
     "scheduler": {
       "cache": {
-        "GB": "Gigaoctet | \nGigaoctets",
-        "MB": "Mégaoctet | \nMégaoctets",
+        "GB": "Gigaoctet | Gigaoctets",
+        "MB": "Mégaoctet | Mégaoctets",
         "error": {
           "lessthan10min": "L'âge du cache ne peut pas être inférieur à 10 minutes",
           "negative": "L'âge du cache ne peut pas être négatif",
@@ -453,7 +450,7 @@
       "day": "Jour | Jours",
       "hour": "Heure | Heures",
       "minute": "Minute | Minutes",
-      "wait": "Mettre à jour les listes de {chapterWord} tous les"
+      "wait": "Mettre à jour les listes de chapitres tous les"
     }
   },
   "setup": {
@@ -468,7 +465,7 @@
     "badpassword": "Mauvais mot de passe",
     "error": "Erreur",
     "login": "Login",
-    "message": "Avant de commencer une petite configuration est nécessaire",
+    "message": "Avant de commencer une petite configuration est nécessaire :",
     "password": "Mot de passe",
     "password_hints": {
       "average": "Fiabilité: <b class=\"text-warning\">NORMAL</b>",

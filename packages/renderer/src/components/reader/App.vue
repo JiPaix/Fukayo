@@ -683,17 +683,7 @@ function scrollToPage(index: number) {
           >
             <div class="flex-column">
               <div>
-                {{ $t(
-                  'global.colon_word' ,
-                  {
-                    word: $t(
-                      'reader.error.chapter',
-                      {
-                        chapterWord: $t('mangas.chapter').toLocaleLowerCase()
-                      }
-                    )
-                  }
-                ) }}
+                {{ $t('reader.error.chapter') }}
               </div>
               <div class="text-caption text-yellow-8">
                 {{ currentChapterFormatted.imgs[0].trace || currentChapterFormatted.imgs[0].error }}

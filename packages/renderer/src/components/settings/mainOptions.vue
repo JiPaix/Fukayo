@@ -414,7 +414,7 @@ async function kill(password:string) {
             >
               <q-item-section>
                 <q-item-label>
-                  {{ $t('settings.update.wait', {chapterWord: $t('mangas.chapter', 20).toLocaleLowerCase()}) }}
+                  {{ $t('settings.update.wait') }}
                 </q-item-label>
               </q-item-section>
               <q-item-section>
