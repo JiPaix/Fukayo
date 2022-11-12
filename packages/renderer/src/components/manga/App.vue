@@ -240,12 +240,15 @@ const chapters = computed(() => {
     });
     // komga specific
     if(mangaRaw.value.mirror.name === 'komga' && settings.mangaPage.chapters.KomgaTryYourBest.find(x => x === mangaRaw.value?.id)) {
+      const mg = mangaRaw.value;
       chap = chap.map(c => {
         let volume:RegExpMatchArray | null | undefined | string | number = c.name ? /(v\d{2,3})/gi.exec(c.name) : undefined;
         if(volume) volume = parseFloat(volume[1].replace('v', ''));
         else volume = undefined;
-        const regexp = new RegExp(`^${mangaRaw.value?.name}\\s(\\d{1,4}(\\.\\d{1,4})?)`, 'gi');
-        let number:RegExpMatchArray | null | string = c.name ? regexp.exec(c.name) : null;
+        if(!c.name) return { ...c };
+        const chapterName = c.name.replace(mg.name, '').replace(mg.displayName ? mg.displayName : '', '');
+        const regexp = new RegExp('^\\s(\\d{1,4}(\\.\\d{1,4})?)', 'gi');
+        let number:RegExpMatchArray | null | string = c.name ? regexp.exec(chapterName) : null;
         if(number) c.number = parseFloat(number[1]);
         return {
           ...c,
