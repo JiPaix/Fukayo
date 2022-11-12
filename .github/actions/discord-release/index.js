@@ -72340,8 +72340,8 @@ const sortObjectByKeys = (object, asc = true) => Object.fromEntries(
 async function go() {
     try {
         // Get inputs
-        const TOKEN = getInput('discord-token', { required: true }) 
-        const JSON = getInput('release-note-json', { required: true })
+        const TOKEN = getInput('discord-token', { required: true })
+        const RELEASE_NOTE = getInput('release-note-json', { required: true })
         const VERSION = getInput('release-version', { required: true })
         const DISCORD_CHANNEL = getInput('discord-channel', { required: true })
         const DISCORD_ROLE = getInput('discord-role', { required: true })
@@ -72349,10 +72349,10 @@ async function go() {
         // group by type+scope
         /** @type {Array.<Object.<string, string>>} */
         // const releasenotes = JSON.parse(json);
-        const releasenotes = JSON
+        const releasenotes = JSON.parse(RELEASE_NOTE);
         /** @type {Object.<string, Array<string>>} Obj */
         const grouped = {};
-    
+        if(!releasenotes.length) throw new Error('Empty release notes?')
         releasenotes.forEach(r => {
             if(!grouped[`${r.type} ${r.scope}`]) grouped[`${r.type} ${r.scope}`] = []
             grouped[`${r.type} ${r.scope}`].push(r.subject)
