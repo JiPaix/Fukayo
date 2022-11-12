@@ -72358,7 +72358,7 @@ async function go() {
             grouped[`${r.type} ${r.scope}`].push(r.subject)
         })
 
-        const sortedNotes = Object.keys(grouped).map(k => {return { name: k, value: grouped[k].join('\r\n') } } ).sort((a, b) => {
+        const sortedNotes = Object.keys(grouped).map(k => {return { name: k, value: grouped[k].join('\r\n').substring(1020, 0)+' ...' } } ).sort((a, b) => {
             return a.name.localeCompare(b.name)
         })
 
@@ -72370,7 +72370,7 @@ async function go() {
             .setDescription(`<@&${DISCORD_ROLE}>`)
             .setURL(`https://github.com/JiPaix/Fukayo/releases/tag/${VERSION}`)
             .setThumbnail('https://github.com/JiPaix/Fukayo/raw/beta/buildResources/icon_128.png')
-            .addFields(sortedNotes)
+            .addFields(sortedNotes.slice(0, 25))
             .setTimestamp()
 
         client.on('ready', async () => {
