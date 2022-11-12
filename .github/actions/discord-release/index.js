@@ -72368,7 +72368,7 @@ async function go() {
         const Embed = new EmbedBuilder()
             .setColor(VERSION.includes('-beta') ? 0x0099FF : 0xFF9900)
             .setTitle(`Fukayo release ${VERSION}`)
-            .setDescription(`<@&${DISCORD_ROLE}>`)
+            .setDescription(`Release notes`)
             .setURL(`https://github.com/JiPaix/Fukayo/releases/tag/${VERSION}`)
             .setThumbnail('https://github.com/JiPaix/Fukayo/raw/beta/buildResources/icon_128.png')
             .addFields(sortedNotes.slice(0, 25))
@@ -72376,7 +72376,10 @@ async function go() {
 
         client.on('ready', async () => {
             const channel = await client.channels.fetch(DISCORD_CHANNEL)
-            if(channel) await channel.send({ embeds: [Embed] });
+            if(channel) {
+              channel.send(`<@&${DISCORD_ROLE}>`)
+              await channel.send({ embeds: [Embed] });
+            }
             client.destroy()
             client.removeAllListeners();
         }).on('error', (e) => console.log('error:', e))
