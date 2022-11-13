@@ -76,6 +76,7 @@
     "nano-staged": "0.8.0",
     "nock": "^13.2.9",
     "playwright": "^1.27.1",
+    "postcss-rtlcss": "^4.0.1",
     "rimraf": "^3.0.2",
     "simple-git": "^3.14.1",
     "simple-git-hooks": "2.8.1",

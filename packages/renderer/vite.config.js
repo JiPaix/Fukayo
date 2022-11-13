@@ -31,6 +31,7 @@ const config = {
     },
   },
   plugins: [
+    require('postcss-rtlcss')(),
     vue({template: transformAssetUrls}),
     vueI18n({
       include: join(PACKAGE_ROOT, '..', 'i18n', 'locales') + '/**',
