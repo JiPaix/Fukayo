@@ -3161,6 +3161,14 @@
     const grouped = getGroupedCommits(commits);
     const changelog = getChangeLog(grouped);
     setOutput('release-note', escapeData(changelog) + '\r\n')
+    const toObj = []
+    grouped.forEach(g => {
+      g.scopes.forEach(s => s.commits.forEach(c => toObj.push(c)))
+      if(g.commits.flat().length) {
+        g.commits.forEach(c => toObj.push(c))
+      }
+    })
+    setOutput('release-note-json', JSON.stringify(toObj.filter(x => x.type !== 'release')))
   } catch (e) {
     console.error(e);
     process.exit(1);

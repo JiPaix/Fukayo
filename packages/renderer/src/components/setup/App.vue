@@ -129,7 +129,7 @@ async function startServer () {
       />
       <q-card-section>
         <div class="text-h6">
-          {{ $t('global.colon_word', { word: $t('setup.message') }) }}
+          {{ $t('setup.message') }}
         </div>
       </q-card-section>
       <q-form

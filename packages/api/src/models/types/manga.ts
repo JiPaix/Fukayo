@@ -109,6 +109,8 @@ export interface MangaInDB extends MangaPage {
       zoomValue: number,
       longStrip:boolean,
       overlay: boolean,
+      longStripDirection: 'horizontal'|'vertical'
+      rtl: boolean,
     }
   }
 }

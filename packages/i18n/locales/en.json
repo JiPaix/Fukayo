@@ -6,7 +6,7 @@
   "dialog": {
     "quickadd": {
       "bad_url": "Bad URL",
-      "no_match": "URL doesn't match any {sourceWord}",
+      "no_match": "URL doesn't match any sources",
       "tab": "Import url",
       "title": "Import a manga by its URL",
       "url": "Manga or Chapter URL"
@@ -28,9 +28,6 @@
     },
     "placeholder": "Filter sources by name",
     "tab": "Explore"
-  },
-  "global": {
-    "colon_word": "{word}:"
   },
   "import": {
     "close": "Close",
@@ -251,7 +248,7 @@
   },
   "logs": {
     "cache": "Cache",
-    "cache_delete": "Deteleted {number} files",
+    "cache_delete": "Deleted {number} files",
     "cache_error": "Failed to empty cache",
     "error_chapter": "Update failed",
     "found_chapter": "New chapter",
@@ -355,6 +352,8 @@
     },
     "next": "Go to the next chapter:",
     "next_chapter": "Next chapter",
+    "no_next_to_read": "This is the latest chapter",
+    "no_prev_to_read": "This is the first chapter",
     "page": {
       "count": "Page {current}/{total}"
     },
@@ -369,7 +368,7 @@
   "search": {
     "all": "All",
     "no_results": "No results for: \"{query}\"",
-    "not_found": "Couldn't find {sourceWord}: {websitename}",
+    "not_found": "Couldn't find source: {source}",
     "placeholder": "Search mangas",
     "tab": "Search"
   },
@@ -408,7 +407,7 @@
     },
     "logs": "Logs",
     "reader": {
-      "info": "This are the default settings. If you change this settings on the reader's page only the manga you are reading will be affected.",
+      "info": "This are the default settings. \r\nIf you change this settings on the reader's page only the manga you are reading will be affected.",
       "overlay": "Display navigation overlay when hovering images",
       "preload": "Preload next chapter while reading",
       "title": "Reader"
@@ -468,7 +467,7 @@
     "badpassword": "Wrong Password",
     "error": "Error",
     "login": "Login",
-    "message": "Before we start a little setup is needed",
+    "message": "Before we start a little setup is needed:",
     "password": "Password",
     "password_hints": {
       "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",

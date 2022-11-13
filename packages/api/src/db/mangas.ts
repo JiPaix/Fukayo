@@ -68,7 +68,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       // We define "meta" for this new entry:
       // and past "meta.options" from either the payload, the database (if any), or use default settings
       (payload.manga as MangaInDB).meta = {
-        lastUpdate: !alreadyInDB || fromScheduler ? Date.now() : alreadyInDB.lastUpdate,
+        lastUpdate: !alreadyInDB || !fromScheduler ? Date.now() : alreadyInDB.lastUpdate,
         broken: false,
         notify: true,
         update: true,
@@ -78,7 +78,9 @@ export default class MangasDB extends DatabaseIO<Mangas> {
           zoomMode: 'auto',
           zoomValue: 100,
           longStrip: false,
+          longStripDirection: 'vertical',
           overlay: false,
+          rtl: false,
         },
       };
     }
@@ -91,12 +93,12 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     if(alreadyInDB) {
       this.logger('updating manga');
       if(payload.settings) mangadata.meta.options = payload.settings;
-      return this.#upsert(mangadata, filename, true);
+      return this.#upsert(mangadata, filename, true, fromScheduler);
     }
     else {
       this.logger('new manga added');
       // save manga data in its own table
-      const manga = await this.#upsert(mangadata, filename, false);
+      const manga = await this.#upsert(mangadata, filename, false, fromScheduler);
       db.mangas.push({ id: manga.id, url: manga.url, mirror: manga.mirror, langs: manga.langs, file: filename, update: manga.meta.update, lastUpdate: Date.now() });
       await this.write(db);
       return manga;
@@ -220,7 +222,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
    * @param filename file containing the data
    * @param alreadyInDB if the manga is already in db
    */
-  async #upsert(manga:MangaInDB, filename:string, alreadyInDB?:boolean):Promise<MangaInDB> {
+  async #upsert(manga:MangaInDB, filename:string, alreadyInDB:boolean, updatedByScheduler?:boolean):Promise<MangaInDB> {
     try {
       this.logger('opening', resolve(this.#path, `${filename}.json`));
 
@@ -296,8 +298,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
 
       // chapter are stored in different place depending on alreadyInDB value (see manga.chapters loop)
       data = { ...manga, chapters: alreadyInDB ? data.chapters : manga.chapters, _v: data._v };
-
-      const updatedByScheduler = data.meta.lastUpdate < manga.meta.lastUpdate;
+      if(updatedByScheduler) data.meta.lastUpdate = Date.now();
 
       if(updatedByScheduler || hasNewStuff || !alreadyInDB) {
         await mangadb.write(data);
@@ -309,6 +310,13 @@ export default class MangasDB extends DatabaseIO<Mangas> {
           find.update = data.meta.update;
           find.langs = data.langs;
           await this.write(db);
+          const indexDB = await MangasDB.getInstance();
+          const indexes = await indexDB.getIndexes();
+          const index = indexes.find(i => i.id === data.id);
+          if(index) {
+            index.lastUpdate = data.meta.lastUpdate;
+            indexDB.write({ mangas: indexes });
+          }
         }
       }
       return data;

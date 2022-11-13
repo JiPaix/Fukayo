@@ -53,8 +53,15 @@ export default class Ready {
 
   async prodSetup() {
     try {
-      const imp = await import('electron-updater');
-      await imp.autoUpdater.checkForUpdatesAndNotify();
+      const { autoUpdater } = await import('electron-updater');
+      await autoUpdater.checkForUpdatesAndNotify();
+      // check for updates every 5 minutes
+      const check = setInterval(() => {
+        autoUpdater.checkForUpdatesAndNotify().catch(e => console.error('[api]', e));
+        autoUpdater.once('update-downloaded', () => {
+          clearInterval(check);
+        });
+      }, 5*60*1000);
     } catch(e) {
       console.log('[main]', 'failed to check for updates', e);
     }

@@ -247,7 +247,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
         const find = mirrors.find(m => m.name === i.mirror.name);
         if(find && !find.enabled) return false;
-        if(find && find.version !== i.mirror.version) return false;
+        if(find && (find.version !== i.mirror.version || find.isDead)) return false;
         // do not update manga's explicitly marked as "do not update";
         if(!i.update) return false;
         // update if force is true or enough time has passed
@@ -312,6 +312,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         await db.add({ manga });
         continue;
       }
+      this.logger('updating', manga.name, '@', manga.mirror.name, new Date(manga.meta.lastUpdate).toString());
       try {
         const fetched = await this.#fetch(mirror, manga);
         await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);

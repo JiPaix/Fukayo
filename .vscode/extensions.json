@@ -8,6 +8,15 @@
     "editorconfig.editorconfig",
     "cschleiden.vscode-github-actions",
     "lokalise.i18n-ally",
-    "eamodio.gitlens"
+    "gruntfuggly.todo-tree",
+    "dbaeumer.vscode-eslint",
+    "github.vscode-pull-request-github",
+    "visualstudioexptteam.vscodeintellicode",
+    "mflo999.lintel",
+    "christian-kohler.path-intellisense",
+    "abdelaziz18003.quasar-snippets",
+    "lihui.vs-color-picker",
+    "vue.volar",
+    "sdras.vue-vscode-snippets"
   ]
 }

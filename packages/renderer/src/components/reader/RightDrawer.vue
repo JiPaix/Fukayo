@@ -125,13 +125,16 @@ const localSettings = ref<MangaInDB['meta']['options']>({
   zoomMode: props.readerSettings.zoomMode,
   zoomValue: props.readerSettings.zoomValue,
   longStrip: props.readerSettings.longStrip,
+  longStripDirection: props.readerSettings.longStripDirection,
+  rtl: props.readerSettings.rtl,
   overlay: props.readerSettings.overlay,
 });
 
 /** make sure user can't use webtoon + screen mode 'fit-height' */
 watch(() => ({ ...localSettings.value }), (nval, oval) => {
-  if(nval.webtoon && nval.zoomMode === 'fit-height') {
-    nval.zoomMode = 'fit-width';
+  if(nval.webtoon && nval.zoomMode === 'fit-height' && props.readerSettings.longStrip && props.readerSettings.longStripDirection !== 'horizontal') {
+    nval.zoomMode = 'auto';
+    localSettings.value.zoomMode = 'auto';
   }
   emit('updateSettings', Object.assign({}, nval), Object.assign({}, oval));
 }, {deep: true});
@@ -257,7 +260,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         >
           <q-icon :name="chapters[currentChapterIndex].read ? 'o_visibility_off' : 'o_visibility'" />
           <q-tooltip>
-            <span>{{ chapters[currentChapterIndex].read ? $t('mangas.markasread.current_unread', { chapterWord: $t('mangas.chapter')}) : $t('mangas.markasread.current', { chapterWord: $t('mangas.chapter')}) }}</span>
+            <span>{{ chapters[currentChapterIndex].read ? $t('mangas.markasread.current_unread') : $t('mangas.markasread.current') }}</span>
           </q-tooltip>
         </q-btn>
       </q-btn-group>
@@ -269,6 +272,52 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         color="orange"
         :dark="$q.dark.isActive"
       />
+      <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
+        <q-slide-transition>
+          <q-btn-group
+            v-if="localSettings.longStrip"
+          >
+            <q-btn
+              :color="localSettings.longStripDirection === 'vertical' ? 'orange':''"
+              class="q-ml-auto"
+              icon="swap_vert"
+              dense
+              @click="localSettings.longStripDirection = 'vertical'"
+            >
+              <q-tooltip>{{ $t('reader.horizontal') }}</q-tooltip>
+            </q-btn>
+            <q-btn
+              :color="localSettings.longStripDirection === 'horizontal' ? 'orange':''"
+              icon="swap_horiz"
+              dense
+              @click="localSettings.longStripDirection = 'horizontal'"
+            >
+              <q-tooltip>{{ $t('reader.vertical') }}</q-tooltip>
+            </q-btn>
+          </q-btn-group>
+        </q-slide-transition>
+        <q-slide-transition>
+          <q-btn-group v-if="localSettings.longStripDirection === 'horizontal' || !localSettings.longStrip">
+            <q-btn
+              :color="localSettings.rtl ? '':'orange'"
+              dense
+              icon="format_textdirection_l_to_r"
+              @click="localSettings.rtl = false"
+            >
+              <q-tooltip>{{ $t('reader.ltr') }}</q-tooltip>
+            </q-btn>
+            <q-btn
+              :color="localSettings.rtl ? 'orange':''"
+              dense
+              icon="format_textdirection_r_to_l"
+              @click="localSettings.rtl = true"
+            >
+              <q-tooltip>{{ $t('reader.rtl') }}</q-tooltip>
+            </q-btn>
+          </q-btn-group>
+        </q-slide-transition>
+      </div>
+
       <q-toggle
         v-model="localSettings.webtoon"
         :label="$t('reader.webtoon')"
@@ -299,6 +348,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         </q-btn>
         <q-btn
           icon="fit_screen"
+          :disable="localSettings.longStrip && localSettings.longStripDirection === 'horizontal'"
           :color="localSettings.zoomMode === 'fit-width' ? 'orange' : undefined"
           @click="localSettings.zoomMode = 'fit-width'"
         >
@@ -311,7 +361,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
           icon="height"
           :text-color="localSettings.webtoon ?'grey-1' : undefined"
           :color="localSettings.zoomMode === 'fit-height' ? 'orange' : undefined"
-          :disable="localSettings.webtoon"
+          :disable="localSettings.webtoon && localSettings.longStrip && localSettings.longStripDirection !== 'horizontal'"
           @click="localSettings.zoomMode = 'fit-height';localSettings.webtoon = false"
         >
           <q-tooltip>
@@ -320,6 +370,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         </q-btn>
         <q-btn
           icon="pageview"
+          :disable="localSettings.longStrip && localSettings.longStripDirection === 'horizontal'"
           :color="localSettings.zoomMode === 'custom' ? 'orange' : undefined"
           @click="localSettings.zoomMode = 'custom'"
         >

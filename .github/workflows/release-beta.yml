@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-note: ${{ steps.release-note.outputs.release-note }}
+      release-note-json: ${{ steps.release-note.outputs.release-note-json }}
       version: ${{ steps.version.outputs.build-version }}
       draft-id: ${{ steps.draft-create.outputs.id }}
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
@@ -223,3 +224,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           release_id: ${{ needs.draft.outputs.draft-id }}
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Need for npm >=7.7
+          cache: 'npm'
+      - name: Discord announce
+        uses: ./.github/actions/discord-release
+        with:
+          discord-token: ${{ secrets.DISCORD_TOKEN }}
+          discord-channel: ${{ secrets.DISCORD_CHANNEL }}
+          discord-role: ${{ secrets.DISCORD_BETAROLE }}
+          release-version: v${{ needs.draft.outputs.version }}
+          release-note-json: ${{ needs.draft.outputs.release-note-json }}

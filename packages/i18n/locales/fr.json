@@ -6,7 +6,7 @@
   "dialog": {
     "quickadd": {
       "bad_url": "Mauvaise URL",
-      "no_match": "L'URL ne correspond à aucune {sourceWord}",
+      "no_match": "L'URL ne correspond à aucune source",
       "tab": "Importer URL",
       "title": "Importer un manga par son URL",
       "url": "URL du manga ou d'un chapitre"
@@ -29,9 +29,6 @@
     "placeholder": "Filtrer les sources par nom",
     "tab": "Explorer"
   },
-  "global": {
-    "colon_word": "{word} :"
-  },
   "import": {
     "close": "Fermer",
     "failed": "Erreur",
@@ -41,7 +38,7 @@
     "subtitle": "Importez les titres que vous avez enregistrés sur une source externe",
     "tab": "Importer",
     "title": "Importer des titres",
-    "unauthorized": "Non autorisé : identification erronées (?)"
+    "unauthorized": "Non autorisé : identification erronées (?)"
   },
   "languages": {
     "aa": "Afar",
@@ -237,12 +234,12 @@
     "zu": "Zoulou"
   },
   "library": {
-    "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
+    "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
     "filter_by_name": "Recherche dans votre bibliothèque",
     "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
-    "left_to_read": "{chapterWord} restant | {chapterWord} restants",
+    "left_to_read": "Chapitre restant | Chapitres restants",
     "letsgo": "C'est parti !",
-    "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
+    "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
     "setup_preferences": "Configurez Fukayo comme vous le souhaitez :",
     "show_unread": "Afficher les mangas pour lesquels vous avez lu tous les chapitres",
     "sort_by_name": "Trier par nom",
@@ -251,7 +248,7 @@
   },
   "logs": {
     "cache": "Cache",
-    "cache_delete": "{number} fichiers supprimés",
+    "cache_delete": "{number} fichiers supprimés",
     "cache_error": "Impossible de vider le cache",
     "error_chapter": "Mise à jour a échoué",
     "found_chapter": "Nouveau chapitre",
@@ -272,10 +269,10 @@
     },
     "edit_categories": "...",
     "errors": {
-      "bad_request": "Requête incorrecte : {code}",
+      "bad_request": "Requête incorrecte : {code}",
       "invalid_auth": "Erreur d'authentification",
       "invalid_json": "Impossible d'obtenir les données attendues (timeout ou source cassée)",
-      "invalid_link": "Impossible de valider l'url du manga : {url}",
+      "invalid_link": "Impossible de valider l'url du manga : {url}",
       "nodata": "Impossible de charger le manga",
       "timeout": "Aucune réponse de l'hôte (timeout) : {source}",
       "unknown": "Erreur inattendue"
@@ -295,8 +292,8 @@
       "previous_unread": "Marquer les chapitres précédents comme non lus"
     },
     "original_title": "Titre d'origine : {title}",
-    "publication": "Statut de publication :",
-    "resume_reading": "CV",
+    "publication": "Statut de publication :",
+    "resume_reading": "Reprendre",
     "select_language": "Sélectionner une langue",
     "source": "Source | Sources",
     "start_reading": "Commencez à lire",
@@ -341,24 +338,26 @@
       "value": "Modes d'affichage"
     },
     "error": {
-      "chapter": "Le {chapterWord} n'a pas pu être chargé",
+      "chapter": "Le chapitre n'a pas pu être chargé",
       "chapterLang": "La langue sélectionnée n'a pas de chapitre",
       "reload": "Recharger"
     },
     "first": "Retourner au premier chapitre :",
-    "last": "Aller au dernier chapitre :",
+    "last": "Aller au dernier chapitre :",
     "loading": "Chargement",
     "longstrip": "Afficher tout le chapitre sous la forme d'une longue bande",
     "manga": {
       "add": "Ajouter à la bibliothèque",
       "remove": "Supprimer de la bibliothèque"
     },
-    "next": "Passer au chapitre suivant :",
+    "next": "Passer au chapitre suivant :",
     "next_chapter": "Chapitre suivant",
+    "no_next_to_read": "C'est le dernier chapitre",
+    "no_prev_to_read": "C'est le premier chapitre",
     "page": {
       "count": "Page {current}/{total}"
     },
-    "previous": "Revenir au chapitre précédent :",
+    "previous": "Revenir au chapitre précédent :",
     "previous_chapter": "Chapitre précédent",
     "reload": "Recharger ce chapitre",
     "reloadImage": "Recharger cette image",
@@ -368,8 +367,8 @@
   },
   "search": {
     "all": "Tous",
-    "no_results": "Aucun résultat pour : \"{query}\"",
-    "not_found": "Impossible de trouver {sourceWord} : {websitename}",
+    "no_results": "Aucun résultat pour : \"{query}\"",
+    "not_found": "Impossible de trouver source : {source}",
     "placeholder": "Rechercher des mangas",
     "tab": "Rechercher"
   },
@@ -377,7 +376,7 @@
     "app_ask_password": "Veuillez saisir votre mot de passe",
     "app_ask_password_retry": "Mauvais mot de passe",
     "app_client": "Client",
-    "app_confirm_quit": "Voulez-vous vraiment fermer le serveur ?",
+    "app_confirm_quit": "Voulez-vous vraiment fermer le serveur ?",
     "app_env": "Environnement",
     "app_shutdown": "Fermer",
     "app_version": "Version",
@@ -408,17 +407,17 @@
     },
     "logs": "Journaux",
     "reader": {
-      "info": "Ce sont les paramètres par défaut. \nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
+      "info": "Ce sont les paramètres par défaut. \r\nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
       "overlay": "Afficher l'overlay de navigation lors du survol des images",
       "preload": "Précharger le chapitre suivant pendant la lecture",
       "title": "Lecteur"
     },
     "scheduler": {
       "cache": {
-        "GB": "Gigaoctet | \nGigaoctets",
-        "MB": "Mégaoctet | \nMégaoctets",
+        "GB": "Gigaoctet | Gigaoctets",
+        "MB": "Mégaoctet | Mégaoctets",
         "error": {
-          "lessthan10min": "L'âge du cache ne peut pas être inférieur à 10 minutes",
+          "lessthan10min": "L'âge du cache ne peut pas être inférieur à 10 minutes",
           "negative": "L'âge du cache ne peut pas être négatif",
           "size": "La taille limite du cache ne peut pas être inférieure à 1 Go"
         }
@@ -453,7 +452,7 @@
       "day": "Jour | Jours",
       "hour": "Heure | Heures",
       "minute": "Minute | Minutes",
-      "wait": "Mettre à jour les listes de {chapterWord} tous les"
+      "wait": "Mettre à jour les listes de chapitres tous les"
     }
   },
   "setup": {
@@ -464,11 +463,11 @@
       "protocol": "L'URL doit commencer par <b>https://</b>",
       "space": "L'URL ne doit pas contenir d'espace"
     },
-    "address_hint": "Exemple : <b>https://monsiteweb.com</b>",
+    "address_hint": "Exemple : <b>https://monsiteweb.com</b>",
     "badpassword": "Mauvais mot de passe",
     "error": "Erreur",
     "login": "Login",
-    "message": "Avant de commencer une petite configuration est nécessaire",
+    "message": "Avant de commencer une petite configuration est nécessaire :",
     "password": "Mot de passe",
     "password_hints": {
       "average": "Fiabilité: <b class=\"text-warning\">NORMAL</b>",

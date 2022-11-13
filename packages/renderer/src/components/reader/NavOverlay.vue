@@ -3,6 +3,7 @@ import { getCssVar, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
 
 const props = defineProps<{
+  rtl: boolean;
   drawerOpen: boolean;
   position: 'left' | 'right'|'center';
   currentPage: number;
@@ -25,12 +26,14 @@ const style = computed(() => {
   const width = ($q.screen.width- (props.drawerOpen ? 300: 0))/3+'px';
   const background = props.hintColor ? getCssVar(props.hintColor) : 'none';
   const marginLeft = props.position === 'center' ? width : 0;
+  const marginBottom = '15px';
   if(show.value) {
     return {
       opacity: 0.1,
       background:  background ? background : 'none',
       width,
       marginLeft,
+      marginBottom,
     };
   }
   return {
@@ -38,16 +41,19 @@ const style = computed(() => {
     background: 'none',
     width,
     marginLeft,
+    marginBottom,
   };
 });
 
 function nav() {
   if(props.position === 'center') return emit('toggleDrawer');
-  if(props.position === 'left') {
+  const isPrev = (props.position === 'right' && props.rtl) || (props.position === 'left' && !props.rtl);
+  const isNext = (props.position === 'left' && props.rtl) || (props.position === 'right' && !props.rtl);
+  if(isPrev) {
     if(props.currentPage > 1) return emit('scrollToPage', props.currentPage-2);
     else return emit('loadPrevious', true);
   }
-  if(props.position === 'right') {
+  if(isNext) {
     if(props.currentPage < props.totalPages) return emit('scrollToPage', props.currentPage);
     else return emit('loadNext');
   }
