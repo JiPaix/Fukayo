@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release-note: ${{ steps.release-note.outputs.release-note }}
+      release-note-json: ${{ steps.release-note.outputs.release-note-json }}
       version: ${{ steps.version.outputs.build-version }}
       draft-id: ${{ steps.draft-create.outputs.id }}
       has-updated: ${{ steps.version-updated.outputs.has-updated }}
