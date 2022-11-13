@@ -352,6 +352,8 @@
     },
     "next": "Go to the next chapter:",
     "next_chapter": "Next chapter",
+    "no_next_to_read": "This is the latest chapter",
+    "no_prev_to_read": "This is the first chapter",
     "page": {
       "count": "Page {current}/{total}"
     },

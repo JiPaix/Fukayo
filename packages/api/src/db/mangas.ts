@@ -78,7 +78,9 @@ export default class MangasDB extends DatabaseIO<Mangas> {
           zoomMode: 'auto',
           zoomValue: 100,
           longStrip: false,
+          longStripDirection: 'vertical',
           overlay: false,
+          rtl: false,
         },
       };
     }

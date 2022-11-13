@@ -293,7 +293,7 @@
     },
     "original_title": "Titre d'origine : {title}",
     "publication": "Statut de publication :",
-    "resume_reading": "CV",
+    "resume_reading": "Reprendre",
     "select_language": "Sélectionner une langue",
     "source": "Source | Sources",
     "start_reading": "Commencez à lire",
@@ -352,6 +352,8 @@
     },
     "next": "Passer au chapitre suivant :",
     "next_chapter": "Chapitre suivant",
+    "no_next_to_read": "C'est le dernier chapitre",
+    "no_prev_to_read": "C'est le premier chapitre",
     "page": {
       "count": "Page {current}/{total}"
     },

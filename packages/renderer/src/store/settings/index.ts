@@ -33,8 +33,10 @@ export const useStore = defineStore('settings', {
         zoomMode: 'auto' as 'auto' | 'fit-width' | 'fit-height' | 'custom',
         zoomValue: 100,
         longStrip: true,
+        longStripDirection: 'vertical' as 'vertical' | 'horizontal',
         preloadNext: true,
         overlay: true,
+        rtl: false,
       },
       library: {
         showUnread: true,
