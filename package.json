@@ -61,7 +61,7 @@
     "@types/user-agents": "^1.0.2",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "5.42.1",
-    "@typescript-eslint/parser": "^5.42.1",
+    "@typescript-eslint/parser": "^5.43.0",
     "@vitejs/plugin-vue": "3.2.0",
     "@vue/test-utils": "2.2.1",
     "@vueuse/core": "^9.5.0",
