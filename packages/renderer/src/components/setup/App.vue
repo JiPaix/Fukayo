@@ -201,6 +201,9 @@ async function startServer () {
               />
             </div>
           </template>
+          <template #error>
+            {{ $t('setup.port_error') }}
+          </template>
           <template #hint>
             <q-slider
               dense

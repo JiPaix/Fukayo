@@ -30,10 +30,12 @@ export const useStore = defineStore('settings', {
       reader : {
         webtoon: false,
         showPageNumber: true,
-        zoomMode: 'auto' as 'auto' | 'fit-width' | 'fit-height' | 'custom',
+        zoomMode: 'auto' as 'auto' | 'fit-width' | 'fit-height',
         zoomValue: 100,
         longStrip: true,
         longStripDirection: 'vertical' as 'vertical' | 'horizontal',
+        book: false,
+        bookOffset: false,
         preloadNext: true,
         overlay: true,
         rtl: false,

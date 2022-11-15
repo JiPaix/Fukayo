@@ -250,29 +250,6 @@ onBeforeUnmount(async () => {
     </q-footer>
     <q-page-container>
       <q-page
-        v-if="error && !rawResults.length"
-        class="q-pa-md"
-      >
-        <q-banner
-          inline-actions
-          class="text-dark bg-grey-5"
-        >
-          <template #avatar>
-            <q-icon
-              name="signal_wifi_off"
-              color="negative"
-            />
-          </template>
-          <div class="flex">
-            <span class="text-bold">{{ $t('error') }}:</span>
-          </div>
-          <div class="flex">
-            <span class="text-caption">{{ error.trace || error.error }}</span>
-          </div>
-        </q-banner>
-      </q-page>
-      <q-page
-        v-else
         class="q-pa-md"
       >
         <q-form
@@ -460,7 +437,10 @@ onBeforeUnmount(async () => {
             </q-btn-dropdown>
           </q-btn-group>
         </q-form>
-        <div class="flex flex-center">
+        <div
+          v-if="rawResults.length"
+          class="flex flex-center"
+        >
           <group-card
             v-for="(group, i) in mangaGroups"
             :key="i"
@@ -471,6 +451,50 @@ onBeforeUnmount(async () => {
             :covers="group.covers"
             class="q-my-lg"
           />
+        </div>
+        <div
+          v-else-if="error"
+          class="q-my-lg"
+        >
+          <q-banner
+            inline-actions
+            class="text-dark bg-grey-5"
+          >
+            <template #avatar>
+              <q-icon
+                name="signal_wifi_off"
+                color="negative"
+              />
+            </template>
+            <div class="flex">
+              <span class="text-bold">{{ $t('error') }}:</span>
+            </div>
+            <div class="flex">
+              <span class="text-caption">{{ error.trace || error.error }}</span>
+            </div>
+          </q-banner>
+        </div>
+        <div
+          v-else-if="done"
+          class="q-my-lg"
+        >
+          <q-banner
+            inline-actions
+            class="text-dark bg-grey-5"
+          >
+            <template #avatar>
+              <q-icon
+                name="error"
+                color="primary"
+              />
+            </template>
+            <div class="flex">
+              <span class="text-bold">{{ $t('search.no_result_for') }}</span>
+            </div>
+            <div class="flex">
+              <span class="text-caption">{{ currentQuery }}</span>
+            </div>
+          </q-banner>
         </div>
       </q-page>
     </q-page-container>

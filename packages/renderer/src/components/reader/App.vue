@@ -494,19 +494,15 @@ function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
   if(isMouseEvent(event)) return;
 
   if(rtl.value && event.key === 'ArrowRight') {
-    console.log('cond 1', {rtl: rtl.value});
     return scrollToPrevPage();
   }
   else if(rtl.value && event.key === 'ArrowLeft') {
-    console.log('cond 2', {rtl: rtl.value});
     return scrollToNextPage();
   }
   else if(event.key === 'ArrowLeft') {
-    console.log('cond 3', {rtl: rtl.value});
     return scrollToPrevPage();
   }
   else if(event.key === 'ArrowRight') {
-    console.log('cond 4', {rtl: rtl.value});
     return scrollToNextPage();
   }
 }
@@ -735,6 +731,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
           >
             <images-container
               ref="virtscroll"
+              :drawer-open="rightDrawerOpen"
               :next-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, nextChapter)"
               :prev-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, prevChapter)"
               :chapter-id="currentChapterFormatted.id"
@@ -798,7 +795,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
                 :items="currentChapterFormatted.imgs"
                 virtual-scroll-horizontal
                 class="q-ml-auto q-mr-auto rounded-borders"
-                style="max-width:500px;overflow-x:hidden;max-height:250px;"
+                style="max-width:500px;max-height:250px;"
                 :dir="rtl ? 'rtl':'ltr'"
               >
                 <div

@@ -5,11 +5,6 @@
   },
   "dialog": {
     "quickadd": {
-      "bad_url": "Bad URL",
-      "no_match": "URL doesn't match any sources",
-      "tab": "Import url",
-      "title": "Import a manga by its URL",
-      "url": "Manga or Chapter URL"
     }
   },
   "electron": {
@@ -20,7 +15,6 @@
   },
   "error": "Error",
   "explore": {
-    "inlibrary": "Followed",
     "meta": {
       "popularity": "Popularity",
       "quality": "Quality",
@@ -237,7 +231,6 @@
     "change_settings_anytime": "You can change these settings any time you want here:",
     "filter_by_name": "Search your library",
     "hide_unread": "Hide mangas for which you have read all the chapters",
-    "left_to_read": "Chapter left | Chapters left",
     "letsgo": "Let's go!",
     "ready": "You're ready to enjoy tons of mangas!",
     "setup_preferences": "Setup Fukayo to your liking:",
@@ -256,7 +249,6 @@
     "read_chapter": "Read markers imported"
   },
   "mangas": {
-    "add_new_category": "Add a new category",
     "authors_and_artists": "Authors and Artists",
     "categories": "Categories",
     "chapter": "Chapter | Chapters",
@@ -264,8 +256,7 @@
     "close_filter": "Close",
     "date": "Date",
     "displayname": {
-      "reset": "Reset manga's name to its default value",
-      "title": "Change this manga's title"
+      "reset": "Reset manga's name to its default value"
     },
     "edit_categories": "...",
     "errors": {
@@ -291,7 +282,6 @@
       "previous": "Mark previous chapters as read",
       "previous_unread": "Mark previous chapters as unread"
     },
-    "original_title": "Original title: {title}",
     "publication": "Publication status:",
     "resume_reading": "Resume",
     "select_language": "Select a language",
@@ -317,8 +307,6 @@
     "new": "New",
     "old": "Old",
     "search_candidates": "Start searching for migration candidates",
-    "search_different_mirror": "Migrate using a different source",
-    "search_same_mirror": "Migrate using the same source",
     "select_candidate": "Migrate",
     "select_mirror": "Select one or multiple sources",
     "solutions": "Available migration options",
@@ -328,14 +316,15 @@
     "results": "Migration's candidate"
   },
   "reader": {
+    "book_mode": "Display as a book",
+    "book_mode_off": "Disable book mode",
+    "book_mode_offset": "Display as a book (offset the first page)",
     "copytoclipboard": "Copy image to clipboard",
     "displaymode": {
       "auto": "Auto",
       "compatibility": "not compatibile with webtoon mode",
-      "fit-custom": "Manual",
       "fit-height": "Fit to screen's height",
-      "fit-width": "Fit to screen's width",
-      "value": "Display modes"
+      "fit-width": "Fit to screen's width"
     },
     "error": {
       "chapter": "Couldn't load chapter",
@@ -343,31 +332,32 @@
       "reload": "Reload"
     },
     "first": "Go back to the first chapter:",
+    "horizontal": "Horizontal",
     "last": "Go to the latest chapter:",
     "loading": "Loading",
     "longstrip": "Display the whole chapter as a long strip",
+    "ltr": "Read from left to right",
     "manga": {
       "add": "Add to library",
       "remove": "Remove from the library"
     },
     "next": "Go to the next chapter:",
-    "next_chapter": "Next chapter",
     "no_next_to_read": "This is the latest chapter",
     "no_prev_to_read": "This is the first chapter",
     "page": {
       "count": "Page {current}/{total}"
     },
     "previous": "Go back to the previous chapter:",
-    "previous_chapter": "Previous chapter",
-    "reload": "Reload this chapter",
     "reloadImage": "Reload this image",
     "reload_chapter": "Reload this chapter",
+    "rtl": "Read from right to left",
     "showpagenumber": "Show page number",
+    "vertical": "Vertical",
     "webtoon": "Webtoon mode"
   },
   "search": {
     "all": "All",
-    "no_results": "No results for: \"{query}\"",
+    "no_result_for": "No result for:",
     "not_found": "Couldn't find source: {source}",
     "placeholder": "Search mangas",
     "tab": "Search"
@@ -380,13 +370,11 @@
     "app_env": "Environment",
     "app_shutdown": "Shutdown",
     "app_version": "Version",
+    "bookmode": "Display as a book",
     "cache": "Cache",
-    "change": "Modify",
     "confirm": "CONFIRM",
     "darkmode": "Enable dark mode",
-    "disable": "Disable",
     "displaymodes": "Display modes",
-    "enable": "Enable",
     "file": "File | Files",
     "files": {
       "tab": "Storage"
@@ -406,8 +394,9 @@
       "unselectall": "Unselect All"
     },
     "logs": "Logs",
+    "longstripDirection": "Choose the image orientation",
     "reader": {
-      "info": "This are the default settings. \r\nIf you change this settings on the reader's page only the manga you are reading will be affected.",
+      "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
       "overlay": "Display navigation overlay when hovering images",
       "preload": "Preload next chapter while reading",
       "title": "Reader"
@@ -415,7 +404,6 @@
     "scheduler": {
       "cache": {
         "GB": "Gigabyte | Gigabytes",
-        "MB": "Megabyte | Megabytes",
         "error": {
           "lessthan10min": "Cache age can't be lower than 10 minutes",
           "negative": "Cache age can't be negative",
@@ -458,7 +446,6 @@
   "setup": {
     "address": "Address",
     "address_errors": {
-      "hasparam": "URL must not contain any parameter",
       "length": "Required",
       "protocol": "URL must start with <b>https://</b>",
       "space": "URL cannot contain spaces"
@@ -476,6 +463,7 @@
       "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
     },
     "port": "Port",
+    "port_error": "Port must be between 1024 and 65535",
     "retry": "Retry",
     "security": {
       "app": "Auto",
