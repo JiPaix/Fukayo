@@ -60,7 +60,7 @@ jobs:
       - name: Get last git tag
         if: steps.version-updated.outputs.has-updated == 'true'
         id: tag
-        run: echo "last-tag=$(git describe --tags --abbrev=0 || git rev-list --max-parents=0 ${{github.ref}})" >> $GITHUB_OUTPUT
+        run: echo "last-tag=$(git describe --tags --abbrev=0 --match "*-beta" ${{github.ref}})" >> $GITHUB_OUTPUT
 
       - name: Generate release notes
         if: steps.version-updated.outputs.has-updated == 'true'
