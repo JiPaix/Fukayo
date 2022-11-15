@@ -49,17 +49,14 @@ function imageVisibility(imageIndex:number) {
 
 const style = computed(() => {
   const base = {
-    'vertical-align': 'middle',
-    'margin-top': '30px',
-    'margin-bottom': '0',
-    'padding-top': '0',
-    'padding-bottom': '0',
-    'width': 'auto',
     'height': 'auto',
-    'padding-right': '0',
-    'padding-left': '0',
+    'width': 'auto',
     'max-width': 'auto',
     'max-height': 'auto',
+    'padding': '0',
+    'margin-top': '30px',
+    'margin-left': '0',
+    'vertical-align': 'middle',
   };
 
   if(!props.readerSettings.longStrip) base['margin-top'] = '0px';
@@ -68,7 +65,7 @@ const style = computed(() => {
     base['margin-top'] = '0px';
     base['width'] = 'auto';
     base['height'] = `${$q.screen.height-82-15}px`; //=> -15 to hide to scroll bar
-    base['padding-left'] = '30px';
+    base['margin-left'] = '30px';
 
 
     if(props.readerSettings.zoomMode === 'fit-height') {
@@ -79,19 +76,16 @@ const style = computed(() => {
 
     if(props.readerSettings.zoomMode === 'auto') {
       if($q.screen.xl || $q.screen.lg) {
-        base['padding-top'] = '10%';
-        base['padding-bottom'] = '10%';
+        base['padding'] = '5%';
       }
       if($q.screen.md) {
-        base['padding-top'] = '5%';
-        base['padding-bottom'] = '5%';
+        base['padding'] = '2%';
       }
       if($q.screen.sm || $q.screen.xs) {
-        base['padding-top'] = '0';
-        base['padding-bottom'] = '0';
+        base['padding'] = '0';
       }
     }
-    if(props.readerSettings.webtoon) base['padding-left'] = '0';
+    if(props.readerSettings.webtoon) base['margin-left'] = '0';
     return base;
   }
 
@@ -110,26 +104,22 @@ const style = computed(() => {
     base['height'] = 'auto';
   }
   if(props.readerSettings.zoomMode === 'auto') {
-    base['width'] = '100%';
-    base['height'] = '100%';
-    if($q.screen.xl || $q.screen.lg) {
-      base['padding-left'] = '10%';
-      base['padding-right'] = '10%';
-    }
+    base['width'] = '80%';
+    base['height'] = '80%';
     if($q.screen.md) {
-      base['padding-left'] = '5%';
-      base['padding-right'] = '5%';
+      base['width'] = '95%';
+      base['height'] = '95%';
     }
     if($q.screen.sm || $q.screen.xs) {
-      base['padding-left'] = '0';
-      base['padding-right'] = '0';
+      base['width'] = '100%';
+      base['height'] = '100%';
     }
   }
   return base;
 });
 
 const firstPageStyle = computed(() => {
-  return { ...style.value,  'margin-top': '0px', 'padding-left': '0px' };
+  return { ...style.value,  'margin-top': '0px', 'margin-left': '0' };
 });
 
 const reloading = ref(false);
