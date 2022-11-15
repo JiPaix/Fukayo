@@ -5,11 +5,6 @@
   },
   "dialog": {
     "quickadd": {
-      "bad_url": "Mauvaise URL",
-      "no_match": "L'URL ne correspond à aucune source",
-      "tab": "Importer URL",
-      "title": "Importer un manga par son URL",
-      "url": "URL du manga ou d'un chapitre"
     }
   },
   "electron": {
@@ -20,7 +15,6 @@
   },
   "error": "Erreur",
   "explore": {
-    "inlibrary": "Suivi",
     "meta": {
       "popularity": "Popularité",
       "quality": "Qualité",
@@ -237,7 +231,6 @@
     "change_settings_anytime": "Vous pouvez modifier ces paramètres à tout moment ici :",
     "filter_by_name": "Recherche dans votre bibliothèque",
     "hide_unread": "Cacher les mangas dont vous avez lu tous les chapitres",
-    "left_to_read": "Chapitre restant | Chapitres restants",
     "letsgo": "C'est parti !",
     "ready": "Vous êtes prêt à profiter de tonnes de mangas !",
     "setup_preferences": "Configurez Fukayo comme vous le souhaitez :",
@@ -256,7 +249,6 @@
     "read_chapter": "Marqueurs de lecture importés"
   },
   "mangas": {
-    "add_new_category": "Ajouter une nouvelle catégorie",
     "authors_and_artists": "Auteurs et Artistes",
     "categories": "Catégories",
     "chapter": "Chapitre | Chapitres",
@@ -264,8 +256,7 @@
     "close_filter": "Fermer",
     "date": "Date",
     "displayname": {
-      "reset": "Réinitialiser le nom du manga à sa valeur par défaut",
-      "title": "Changer le titre de ce manga"
+      "reset": "Réinitialiser le nom du manga à sa valeur par défaut"
     },
     "edit_categories": "...",
     "errors": {
@@ -291,7 +282,6 @@
       "previous": "Marquer les chapitres précédents comme lus",
       "previous_unread": "Marquer les chapitres précédents comme non lus"
     },
-    "original_title": "Titre d'origine : {title}",
     "publication": "Statut de publication :",
     "resume_reading": "Reprendre",
     "select_language": "Sélectionner une langue",
@@ -317,8 +307,6 @@
     "new": "Nouveau",
     "old": "Ancien",
     "search_candidates": "Commencez à chercher des candidats à la migration",
-    "search_different_mirror": "Migrer à l'aide d'une autre source",
-    "search_same_mirror": "Migrer en utilisant la même source",
     "select_candidate": "Migrer",
     "select_mirror": "Sélectionnez une ou plusieurs sources",
     "solutions": "Options de migration disponibles",
@@ -328,14 +316,15 @@
     "results": "Candidat à la migration"
   },
   "reader": {
+    "book_mode": "Afficher sous forme de livre",
+    "book_mode_off": "Désactiver le mode livre",
+    "book_mode_offset": "Afficher comme un livre (décalage de la première page)",
     "copytoclipboard": "Copier l'image dans le presse-papiers",
     "displaymode": {
       "auto": "Auto",
       "compatibility": "incompatible avec le mode webtoon",
-      "fit-custom": "Manuel",
       "fit-height": "Ajuster à la hauteur de l'écran",
-      "fit-width": "Ajuster à la largeur de l'écran",
-      "value": "Modes d'affichage"
+      "fit-width": "Ajuster à la largeur de l'écran"
     },
     "error": {
       "chapter": "Le chapitre n'a pas pu être chargé",
@@ -343,31 +332,32 @@
       "reload": "Recharger"
     },
     "first": "Retourner au premier chapitre :",
+    "horizontal": "Horizontal",
     "last": "Aller au dernier chapitre :",
     "loading": "Chargement",
     "longstrip": "Afficher tout le chapitre sous la forme d'une longue bande",
+    "ltr": "Lire de gauche à droite",
     "manga": {
       "add": "Ajouter à la bibliothèque",
       "remove": "Supprimer de la bibliothèque"
     },
     "next": "Passer au chapitre suivant :",
-    "next_chapter": "Chapitre suivant",
     "no_next_to_read": "C'est le dernier chapitre",
     "no_prev_to_read": "C'est le premier chapitre",
     "page": {
       "count": "Page {current}/{total}"
     },
     "previous": "Revenir au chapitre précédent :",
-    "previous_chapter": "Chapitre précédent",
-    "reload": "Recharger ce chapitre",
     "reloadImage": "Recharger cette image",
     "reload_chapter": "Recharger ce chapitre",
+    "rtl": "Lire de droite à gauche",
     "showpagenumber": "Afficher le numéro de page",
+    "vertical": "Vertical",
     "webtoon": "Mode Webtoon"
   },
   "search": {
     "all": "Tous",
-    "no_results": "Aucun résultat pour : \"{query}\"",
+    "no_result_for": "Aucun résultat pour :",
     "not_found": "Impossible de trouver source : {source}",
     "placeholder": "Rechercher des mangas",
     "tab": "Rechercher"
@@ -380,13 +370,11 @@
     "app_env": "Environnement",
     "app_shutdown": "Fermer",
     "app_version": "Version",
+    "bookmode": "Afficher comme un livre",
     "cache": "Cache",
-    "change": "Modifier",
     "confirm": "CONFIRMER",
     "darkmode": "Activer le mode sombre",
-    "disable": "Désactiver",
     "displaymodes": "Modes d'affichage",
-    "enable": "Activer",
     "file": "Fichier | Fichiers",
     "files": {
       "tab": "Stockage"
@@ -406,8 +394,9 @@
       "unselectall": "Tout déselectionner"
     },
     "logs": "Journaux",
+    "longstripDirection": "Choisissez l'orientation des images",
     "reader": {
-      "info": "Ce sont les paramètres par défaut. \r\nSi vous modifiez ces paramètres sur la page du lecteur, seul le manga que vous lisez sera affecté.",
+      "info": "Les paramètres ci-dessous sont les paramètres par défaut,\nIls sont automatiquement attribués aux nouveaux titres\n\nSi vous modifiez l'un de ces paramètres lors de la lecture d'un titre alors seul celui-ci sera affecté par les changements.",
       "overlay": "Afficher l'overlay de navigation lors du survol des images",
       "preload": "Précharger le chapitre suivant pendant la lecture",
       "title": "Lecteur"
@@ -415,7 +404,6 @@
     "scheduler": {
       "cache": {
         "GB": "Gigaoctet | Gigaoctets",
-        "MB": "Mégaoctet | Mégaoctets",
         "error": {
           "lessthan10min": "L'âge du cache ne peut pas être inférieur à 10 minutes",
           "negative": "L'âge du cache ne peut pas être négatif",
@@ -458,7 +446,6 @@
   "setup": {
     "address": "Adresse",
     "address_errors": {
-      "hasparam": "L'URL ne doit contenir aucun paramètre",
       "length": "Requis",
       "protocol": "L'URL doit commencer par <b>https://</b>",
       "space": "L'URL ne doit pas contenir d'espace"
@@ -476,6 +463,7 @@
       "weak": "Fiabilité: <b class=\"text-negative\">FAIBLE</b>"
     },
     "port": "Port",
+    "port_error": "Le port doit être compris entre 1024 et 65535",
     "retry": "Reesayer",
     "security": {
       "app": "Auto",
