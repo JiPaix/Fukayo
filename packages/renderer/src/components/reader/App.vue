@@ -731,6 +731,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
           >
             <images-container
               ref="virtscroll"
+              :drawer-open="rightDrawerOpen"
               :next-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, nextChapter)"
               :prev-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, prevChapter)"
               :chapter-id="currentChapterFormatted.id"
@@ -794,7 +795,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
                 :items="currentChapterFormatted.imgs"
                 virtual-scroll-horizontal
                 class="q-ml-auto q-mr-auto rounded-borders"
-                style="max-width:500px;overflow-x:hidden;max-height:250px;"
+                style="max-width:500px;max-height:250px;"
                 :dir="rtl ? 'rtl':'ltr'"
               >
                 <div

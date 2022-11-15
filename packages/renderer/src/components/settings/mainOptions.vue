@@ -128,6 +128,10 @@ const longStripIcon = computed(() => {
   return settings.reader.longStrip ? 'swipe_vertical' : 'queue_play_next';
 });
 
+const rtlIcon = computed(() => {
+  return settings.reader.rtl ? 'format_textdirection_r_to_l' : 'format_textdirection_l_to_r';
+});
+
 const webtoonIcon = computed(() => {
   return settings.reader.webtoon ? 'smartphone' : 'aod';
 });
@@ -249,6 +253,37 @@ async function kill(password:string) {
       prompt(true);
     });
 }
+
+watch(() => ({ ...settings.reader }), (nval) => {
+  if(nval.longStrip) {
+    if(nval.longStripDirection === 'horizontal') {
+      if(nval.zoomMode === 'fit-width') {
+        settings.reader.zoomMode = 'fit-height';
+      }
+      if(nval.webtoon && (nval.book || nval.bookOffset)) {
+        settings.reader.webtoon = false;
+      }
+    } else {
+      if(nval.rtl) {
+        settings.reader.rtl = false;
+      }
+      if(nval.webtoon && nval.zoomMode === 'fit-height') {
+        settings.reader.zoomMode = 'auto';
+      }
+      if(nval.book || nval.bookOffset) {
+        settings.reader.book = false;
+        settings.reader.bookOffset = false;
+      }
+    }
+  } else {
+    if(nval.book || nval.bookOffset) {
+      settings.reader.book = false;
+      settings.reader.bookOffset = false;
+    }
+    if(nval.webtoon) settings.reader.webtoon = false;
+  }
+}, {deep: true});
+
 </script>
 <template>
   <q-card
@@ -605,9 +640,6 @@ async function kill(password:string) {
             :class="$q.dark.isActive ? '' : 'bg-grey-2'"
             :dark="$q.dark.isActive"
           >
-            <q-banner class="bg-primary text-white">
-              {{ $t('settings.reader.info') }}
-            </q-banner>
             <q-item
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
@@ -629,6 +661,13 @@ async function kill(password:string) {
                   size="lg"
                   :dark="$q.dark.isActive"
                 />
+              </q-item-section>
+            </q-item>
+            <q-item class="bg-primary text-white">
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.reader.info') }}
+                </q-item-label>
               </q-item-section>
             </q-item>
             <q-item
@@ -658,6 +697,119 @@ async function kill(password:string) {
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.longstripDirection') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-btn-group class="q-ml-auto q-mr-auto justify-center">
+                  <q-btn
+                    :disable="!settings.reader.longStrip"
+                    :text-color="!settings.reader.longStrip ? 'negative': ''"
+                    icon="swap_vert"
+                    :color="settings.reader.longStripDirection === 'vertical' && settings.reader.longStrip ? 'orange' : undefined"
+                    @click="settings.reader.longStripDirection = 'vertical'"
+                  >
+                    <q-tooltip>
+                      {{ $t('reader.vertical') }}
+                    </q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    :disable="!settings.reader.longStrip"
+                    :text-color="!settings.reader.longStrip ? 'negative': ''"
+                    icon="swap_horiz"
+                    :color="settings.reader.longStripDirection === 'horizontal' && settings.reader.longStrip ? 'orange' : undefined"
+                    @click="settings.reader.longStripDirection = 'horizontal'"
+                  >
+                    <q-tooltip>
+                      {{ $t('reader.horizontal') }}
+                    </q-tooltip>
+                  </q-btn>
+                </q-btn-group>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('settings.bookmode') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-btn-group class="q-ml-auto q-mr-auto justify-center">
+                  <q-btn
+                    icon="menu_book"
+                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
+                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
+                    :color="settings.reader.book && !settings.reader.bookOffset ? 'orange' : undefined"
+                    @click="settings.reader.book = true;settings.reader.bookOffset = false;"
+                  >
+                    <q-tooltip>
+                      {{ $t('reader.book_mode') }}
+                    </q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
+                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
+                    icon="auto_stories"
+                    :color="settings.reader.book && settings.reader.bookOffset ? 'orange':''"
+                    @click="settings.reader.book = true;settings.reader.bookOffset = true;"
+                  >
+                    <q-tooltip>
+                      {{ $t('reader.book_mode_offset') }}
+                    </q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
+                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
+                    :color="!settings.reader.book && !settings.reader.bookOffset && (settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal') ? 'orange':''"
+                    icon="not_interested"
+                    @click="settings.reader.book = false;settings.reader.bookOffset = false;"
+                  >
+                    <q-tooltip>{{ $t('reader.book_mode_off') }}</q-tooltip>
+                  </q-btn>
+                </q-btn-group>
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
+              clickable
+              @click="settings.reader.rtl = !settings.reader.rtl"
+            >
+              <q-item-section>
+                <q-item-label>
+                  {{ $t('reader.rtl') }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+              >
+                <q-toggle
+                  v-model="settings.reader.rtl"
+                  :disable="settings.reader.longStripDirection !== 'horizontal' && settings.reader.longStrip"
+                  :color="settings.reader.longStripDirection !== 'horizontal' && settings.reader.longStrip ? 'negative': ''"
+                  keep-color
+                  :icon="rtlIcon"
+                  size="lg"
+                  :dark="$q.dark.isActive"
+                />
+              </q-item-section>
+            </q-item>
+            <q-item
+              style="background:rgba(255, 255, 255, 0.3)"
+              class="flex items-center"
+              :dark="$q.dark.isActive"
               clickable
               @click="settings.reader.webtoon = !settings.reader.webtoon"
             >
@@ -671,7 +823,9 @@ async function kill(password:string) {
               >
                 <q-toggle
                   v-model="settings.reader.webtoon"
-                  :disable="settings.reader.zoomMode === 'fit-height'"
+                  :disable="settings.reader.zoomMode === 'fit-height' || !settings.reader.longStrip"
+                  :color="settings.reader.zoomMode === 'fit-height' || !settings.reader.longStrip ? 'negative' : ''"
+                  keep-color
                   :icon="webtoonIcon"
                   size="lg"
                   :dark="$q.dark.isActive"
@@ -750,33 +904,24 @@ async function kill(password:string) {
                   </q-btn>
                   <q-btn
                     icon="fit_screen"
-                    :color="settings.reader.zoomMode === 'fit-width' ? 'orange' : undefined"
+                    :disable="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal'"
+                    :text-color="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal' ? 'negative' : ''"
+                    :color="settings.reader.zoomMode === 'fit-width' && (!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal') ? 'orange' : undefined"
                     @click="settings.reader.zoomMode = 'fit-width'"
                   >
                     <q-tooltip>
                       {{ $t('reader.displaymode.fit-width') }}
                     </q-tooltip>
                   </q-btn>
-
-                  <div class="q-pa-none q-ma-none no-box-shadows">
-                    <q-btn
-                      icon="height"
-                      :text-color="settings.reader.webtoon ? 'negative' : undefined"
-                      :color="settings.reader.zoomMode === 'fit-height' ? 'orange' : undefined"
-                      :disable="settings.reader.webtoon"
-                      @click="settings.reader.zoomMode = 'fit-height';settings.reader.webtoon = false"
-                    />
-                    <q-tooltip>
-                      {{ $t('reader.displaymode.fit-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
-                    </q-tooltip>
-                  </div>
                   <q-btn
-                    icon="pageview"
-                    :color="settings.reader.zoomMode === 'custom' ? 'orange' : undefined"
-                    @click="settings.reader.zoomMode = 'custom'"
+                    icon="height"
+                    :text-color="settings.reader.webtoon ? 'negative' : undefined"
+                    :color="settings.reader.zoomMode === 'fit-height' ? 'orange' : undefined"
+                    :disable="settings.reader.webtoon"
+                    @click="settings.reader.zoomMode = 'fit-height';settings.reader.webtoon = false"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-custom') }}
+                      {{ $t('reader.displaymode.fit-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
                     </q-tooltip>
                   </q-btn>
                 </q-btn-group>

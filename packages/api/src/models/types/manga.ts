@@ -105,11 +105,13 @@ export interface MangaInDB extends MangaPage {
     options: {
       webtoon: boolean,
       showPageNumber: boolean,
-      zoomMode: 'auto' | 'fit-width' | 'fit-height' | 'custom',
+      zoomMode: 'auto' | 'fit-width' | 'fit-height',
       zoomValue: number,
       longStrip:boolean,
       overlay: boolean,
       longStripDirection: 'horizontal'|'vertical'
+      book: boolean,
+      bookOffset: boolean,
       rtl: boolean,
     }
   }
