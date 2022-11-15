@@ -132,9 +132,13 @@ const localSettings = ref<MangaInDB['meta']['options']>({
 
 /** make sure user can't use webtoon + screen mode 'fit-height' */
 watch(() => ({ ...localSettings.value }), (nval, oval) => {
-  if(nval.webtoon && nval.zoomMode === 'fit-height' && props.readerSettings.longStrip && props.readerSettings.longStripDirection !== 'horizontal') {
+  if(nval.webtoon && nval.zoomMode === 'fit-height' && nval.longStrip && nval.longStripDirection !== 'horizontal') {
     nval.zoomMode = 'auto';
     localSettings.value.zoomMode = 'auto';
+  }
+  if(nval.longStrip && nval.longStripDirection === 'horizontal' && (nval.zoomMode === 'custom' || nval.zoomMode === 'fit-width') ) {
+    nval.zoomMode = 'fit-height';
+    localSettings.value.zoomMode = 'fit-height';
   }
   emit('updateSettings', Object.assign({}, nval), Object.assign({}, oval));
 }, {deep: true});
