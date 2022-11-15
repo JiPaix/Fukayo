@@ -160,7 +160,6 @@ function listenScrollBeyondPage(detail: WheelEvent) {
   const initialHeight = vdiv.scrollHeight;
   const initialWidth = hdiv.$el.scrollWidth;
 
-  console.log({hpos});
   if(!isNext && !isPrev) return;
   if((isPrev && showPrevBuffer.value) || (isNext && showNextBuffer.value)) return load(isPrev, isNext);
   if(isPrev && !showPrevBuffer.value) showPrevBuffer.value = true;
