@@ -530,18 +530,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   // until SEASONAL lists are made public we show last released chapters
   async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
     // TODO: handle empty chapters
+    // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowRecommend', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowRecommend', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     if(cancel) return;
@@ -616,26 +615,24 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
     }
     if(!cancel) socket.emit('showRecommend', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
+        cancel = true;
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
+    }
     try {
       // TODO: handle empty chapters
-      let cancel = false;
-      if(!(socket instanceof Scheduler)) {
-        socket.once('stopSearchInMirrors', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-        socket.once('disconnect', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
-
       const url =
         this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(requestedLangs, 'available')}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
       const res = await this.fetch<Routes['/manga/{search}']['ok']|Routes['/manga/{search}']['err']>({url}, 'json');
@@ -686,7 +683,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async #findGroup(ids: string[]):Promise<{
@@ -743,17 +740,15 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     // TODO: handle empty chapters
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     try {
@@ -880,24 +875,21 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(link: string, lang: mirrorsLangsType, socket: socketInstance, id: number, callback?: ((nbOfPagesToExpect: number) => void) | undefined, retryIndex?: number | undefined) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     if(cancel) return;
@@ -930,7 +922,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   isChapterPage(url: string): boolean {
@@ -1002,20 +994,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async getMangasFromList(id:number, socket:socketInstance, requestedLangs: mirrorsLangsType[],ids:string[]) {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(socket) {
-      socket.once('stopShowImports', () => {
-        this.logger('fetching imports canceled');
-        this.stopListening(socket);
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching imports canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowImports', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowImports', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     const idChunks = ids.reduce((res: string[][], item: string, index) => {
@@ -1057,7 +1046,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, langs: this.mirrorInfo.langs } });
       }
       if(!cancel) socket.emit('showImports', id, { done: true });
-      if(cancel) return this.stopListening(socket);
     } catch(e) {
       this.logger('error while fetching manga', e);
       // we catch any errors because the client needs to be able to handle them
@@ -1065,6 +1053,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else if(typeof e === 'string') socket.emit('showImports', id, {error: 'import_error', trace: e});
       else socket.emit('showImports', id, {error: 'import_error'});
     }
+    if(stopListening) stopListening();
   }
 }
 

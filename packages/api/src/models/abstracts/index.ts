@@ -7,8 +7,6 @@ import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import Scheduler from '@api/server/scheduler';
-import type { socketInstance } from '@api/server/types';
 import { crawler } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
@@ -653,15 +651,5 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return {filename, identifier};
   }
 
-  /** stop listening to "stop" messages */
-  protected stopListening(socket:socketInstance|Scheduler) {
-    if(!(socket instanceof Scheduler)) {
-      socket.removeAllListeners('stopShowManga');
-      socket.removeAllListeners('stopShowChapter');
-      socket.removeAllListeners('stopSearchInMirrors');
-      socket.removeAllListeners('stopShowRecommend');
-      socket.removeAllListeners('stopShowImports');
-    }
-  }
 }
 

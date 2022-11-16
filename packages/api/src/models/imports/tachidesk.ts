@@ -22,10 +22,14 @@ class TachideskImporter extends Importer implements ImporterInterface {
   async getMangas(socket: socketInstance, id: number, langs: mirrorsLangsType[]) {
     let cancel = false;
 
-    socket.on('stopShowImports', () => {
+    const stopListening = () => {
       cancel = true;
-      socket.removeAllListeners('stopShowImports');
-    });
+      socket.removeListener('disconnect', stopListening);
+      socket.removeListener('stopShowImports', stopListening);
+    };
+
+    socket.once('disconnect', stopListening);
+    socket.once('stopShowImports', stopListening);
 
     const lists = await tachidesk.getLists();
     if(isErrorMessage(lists)) {
@@ -62,9 +66,8 @@ class TachideskImporter extends Importer implements ImporterInterface {
         },
       });
     }
-
+    stopListening();
     if(!cancel) tachidesk.getMangasToImport(id, socket, langs, nodb);
-
   }
 
 }

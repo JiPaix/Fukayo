@@ -22,11 +22,15 @@ class KomgaImporter extends Importer implements ImporterInterface {
 
   async getMangas(socket: socketInstance, id: number, langs: mirrorsLangsType[]) {
     let cancel = false;
-    console.log('[api]', 'GOT IMPORT REQUEST');
-    socket.on('stopShowImports', () => {
+
+    const stopListening = () => {
       cancel = true;
-      socket.removeAllListeners('stopShowImports');
-    });
+      socket.removeListener('disconnect', stopListening);
+      socket.removeListener('stopShowImports', stopListening);
+    };
+
+    socket.once('disconnect', stopListening);
+    socket.once('stopShowImports', stopListening);
 
     const lists = await komga.getLists();
     if(isErrorMessage(lists)) {
@@ -66,31 +70,8 @@ class KomgaImporter extends Importer implements ImporterInterface {
     }
     socket.emit('showImports', id, indb.length+nodb.length);
     socket.emit('showImports', id, indb);
+    stopListening();
     if(!cancel) komga.getMangasToImport(id, socket, langs, nodb);
-
-    // socket.emit('showImports', id, nodb.map((x) => {
-    //   return {
-    //     name: x.metadata.title,
-    //     langs: [BC47_TO_ISO639_1(x.metadata.language)],
-    //     inLibrary: false,
-    //     url: `/series/${x.id}`,
-    //     covers: [],
-    //     mirror: {
-    //       name: komga.name,
-    //       langs: komga.langs,
-    //     },
-    //   };
-    // }));
-    // for(const manga of nodb) {
-    //   if(cancel) break;
-
-    //   socket.emit('');
-    //   //=>
-    // }
-
-    // nodb.filter(x => langs.includes(x.metadata.language));
-    // if(!cancel) komga.getMangasToImport(id, socket, langs, nodb);
-
   }
 
 }

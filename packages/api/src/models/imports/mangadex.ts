@@ -47,10 +47,14 @@ class MangadexImporter extends Importer implements ImporterInterface {
   async getMangas(socket: socketInstance, id:number, langs:mirrorsLangsType[]) {
     let cancel = false;
 
-    socket.on('stopShowImports', () => {
+    const stopListening = () => {
       cancel = true;
-      socket.removeAllListeners('stopShowImports');
-    });
+      socket.removeListener('disconnect', stopListening);
+      socket.removeListener('stopShowImports', stopListening);
+    };
+
+    socket.once('disconnect', stopListening);
+    socket.once('stopShowImports', stopListening);
 
     if(!mangadex) throw Error('couldnt find mangadex mirror impl.');
     const lists = await mangadex.getLists();
@@ -90,10 +94,8 @@ class MangadexImporter extends Importer implements ImporterInterface {
 
     socket.emit('showImports', id, nodb.length+indb.length);
     if(indb.length) socket.emit('showImports', id, indb);
-    if(!cancel) {
-      socket.removeAllListeners('stopShowImports');
-      mangadex.getMangasFromList(id, socket, langs, nodb);
-    }
+    stopListening();
+    if(!cancel) mangadex.getMangasFromList(id, socket, langs, nodb);
   }
 }
 

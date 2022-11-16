@@ -123,17 +123,15 @@ class Komga extends SelfHosted implements MirrorInterface {
   async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopSearchInMirrors', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     try {
@@ -187,29 +185,28 @@ class Komga extends SelfHosted implements MirrorInterface {
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number)  {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     const isMangaPage = this.isMangaPage(url);
     if(!isMangaPage) {
       socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
-      return this.stopListening(socket);
+      if(stopListening) return stopListening();
+      return;
     }
 
     try {
@@ -287,28 +284,29 @@ class Komga extends SelfHosted implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(url);
     if(!isLinkaChapter) {
-      this.stopListening(socket);
-      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      if(stopListening) return stopListening();
+      return;
     }
 
     if(cancel) return;
@@ -341,13 +339,12 @@ class Komga extends SelfHosted implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
     socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: 'selfhosted mirror'});
     // self hosted don't need recommendations
-    return this.stopListening(socket);
   }
 
   async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
@@ -387,24 +384,21 @@ class Komga extends SelfHosted implements MirrorInterface {
     }
 
     async getMangasToImport(id:number, socket:socketInstance, langs: mirrorsLangsType[], inputArray:searchContent['content']) {
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      let stopListening: (() => void) | undefined = undefined;
+      if(!(socket instanceof Scheduler)) {
+        stopListening = () => {
+          cancel = true;
+          socket.removeListener('stopShowImports', stopListening as () => void);
+          socket.removeListener('disconnect', stopListening as () => void);
+        };
+        socket.once('stopShowImports', stopListening);
+        socket.once('disconnect', stopListening);
+      }
       try {
         if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'unauthorized';
         if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'unauthorized';
-
-        // we will check if user don't need results anymore at different intervals
-        let cancel = false;
-        if (!(socket instanceof Scheduler)) {
-          socket.once('stopShowImports', () => {
-            this.logger('fetching imports canceled');
-            this.stopListening(socket);
-            cancel = true;
-          });
-          socket.once('disconnect', () => {
-            this.logger('fetching imports canceled');
-            this.stopListening(socket);
-            cancel = true;
-          });
-        }
 
         for(const manga of inputArray) {
           if(cancel) break;
@@ -431,7 +425,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
         else socket.emit('showImports', id, {error: 'import_error' });
       }
-      return this.stopListening(socket);
+      if(stopListening) stopListening();
     }
   }
 
