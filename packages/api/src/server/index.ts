@@ -71,6 +71,12 @@ export default class IOWrapper {
     }
   }
 
+  async shutdown() {
+    const dbs = [this.db, await MangasDB.getInstance(), SettingsDB.getInstance(), UUID.getInstance()];
+    await Promise.all(dbs.map(m => m.shutdown()));
+    await Promise.all(mirrors.map(m => m.shutdown()));
+  }
+
   authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: 'token'|'refreshToken', payload:string}[]}) {
     if(!o.socket.rooms.has('authorized')) {
       o.socket.join('authorized');

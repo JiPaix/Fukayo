@@ -168,10 +168,10 @@ export class forkAPI {
       const timeout = setTimeout(() => {
         this.forceShutdown();
         resolve({ type: 'shutdown', success: false, message: 'timeout' });
-      }, 5000);
+      }, 50000);
 
       // sending stop message to fork and setting up a watch to see if it responds
-      this.fork?.send({type: 'shutdown'});
+      this.fork?.send({type: 'shutdown', message: 'gracefully'});
       this.stopPending = true;
 
       // if fork responds, clear timeout, watcher and resolve

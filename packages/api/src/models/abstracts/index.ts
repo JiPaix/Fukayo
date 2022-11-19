@@ -29,7 +29,7 @@ import { env } from 'process';
  * // if mirror has no options use undefined
  * class myMirror extends Mirror<undefined> {}
  */
-export default class Mirror<T extends Record<string, unknown> = Record<string, unknown>>  {
+export default class Mirror<T extends Record<string, unknown> = Record<string, unknown>> extends Database<MirrorConstructor<T>['options']> {
   #concurrency = 0;
   protected crawler = crawler;
   #icon;
@@ -102,10 +102,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   };
 
 
-  /**
-   * mirror specific options
-   */
-  #db: Database<MirrorConstructor<T>['options']>;
   #axios: AxiosInstance;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   #filenamify?: typeof import('filenamify').default;
@@ -113,6 +109,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #fileTypeFromBuffer?: typeof import('file-type').fileTypeFromBuffer;
   constructor(opts: MirrorConstructor<T>) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
+    super(resolve(env.USER_DATA, '.options', opts.name+'.json'), opts.options);
     this.name = opts.name;
     this.displayName = opts.displayName;
     this.host = opts.host;
@@ -129,8 +126,6 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       const cacheDir = resolve(env.USER_DATA, '.cache', this.name);
       if(!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
     }
-    this.#db = new Database(resolve(env.USER_DATA, '.options', this.name+'.json'), opts.options);
-
     // make sure we don't have concurrent requests and wait time is forced
 
     this.#axios = axios.create();
@@ -157,14 +152,14 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   async init() {
-    const init = await this.#db.init();
-    if(this.#db.data.host && typeof this.#db.data.host === 'string') {
-      this.host = this.#db.data.host;
-      if(this.#db.data.protocol && typeof this.#db.data.host === 'string') {
-        this.host = this.#db.data.protocol + '://' + this.host;
+    const init = await super.init();
+    if(this.data.host && typeof this.data.host === 'string') {
+      this.host = this.data.host;
+      if(this.data.protocol && typeof this.data.host === 'string') {
+        this.host = this.data.protocol + '://' + this.host;
       }
-      if(this.#db.data.port && typeof this.#db.data.port === 'number') {
-        this.host = this.host + ':' + this.#db.data.port;
+      if(this.data.port && typeof this.data.port === 'number') {
+        this.host = this.host + ':' + this.data.port;
       }
     }
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -172,6 +167,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.#filenamify = imp.default;
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     this.#fileTypeFromBuffer = (await (eval('import("file-type")') as Promise<typeof import('file-type')>)).fileTypeFromBuffer;
+    await this.login();
     return init;
   }
 
@@ -180,22 +176,22 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   public get enabled() {
-    return this.#db.data.enabled && !this.isDead;
+    return this.data.enabled && !this.isDead;
   }
 
   public set enabled(val:boolean) {
     this.options.enabled = val;
-    this.#db.write();
+    this.write();
   }
 
   public get options() {
-    return this.#db.data;
+    return this.data;
   }
 
   public set options(opts: MirrorConstructor<T>['options']) {
-    this.#db.data = { ...this.#db.data, ...opts };
+    this.data = { ...this.data, ...opts };
     this.logger('options changed', opts);
-    this.#db.write();
+    this.write();
   }
 
   public get cacheEnabled() {
@@ -622,7 +618,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       writeFileSync(resolve(env.USER_DATA, '.cache', this.name, filename), buffer);
-      this.logger('saved to cache', filename);
+      this.logger('caching:', filename);
     }
   }
 
@@ -637,7 +633,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
         cacheResult = undefined;
       }
       if(cacheResult) {
-        this.logger('cache hit', id.filename);
+        this.logger('cache hit:', id.filename);
         return cacheResult.buffer;
       }
     }

@@ -51,6 +51,9 @@ export class Writer {
   #nextPromise: Promise<void> | null = null;
   #nextData: string | null = null;
 
+  get isFree() {
+    return !this.#locked && !this.#nextData;
+  }
   // File is locked, add data for later
   #add(data: string): Promise<void> {
     // Only keep most recent data

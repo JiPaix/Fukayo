@@ -25,10 +25,10 @@ const defaultSettings = {
   ids: [],
 };
 
-export default class UUID extends Database<uuids> {
+export default class uuidDatabase extends Database<uuids> {
   readonly #NAMESPACE = 'af68caec-20c3-495a-90ff-0350710bc7a3';
   #pending: number;
-  static #instance: UUID;
+  static #instance: uuidDatabase;
 
   private constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
@@ -42,7 +42,7 @@ export default class UUID extends Database<uuids> {
     }, 1000 * 60);
   }
 
-  static getInstance(): UUID {
+  static getInstance(): uuidDatabase {
     if (!this.#instance) {
       this.#instance = new this();
     }

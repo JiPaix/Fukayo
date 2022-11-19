@@ -335,7 +335,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         excludedUploaders: [],
       },
     });
-    this.login();
   }
 
   get #headers() {

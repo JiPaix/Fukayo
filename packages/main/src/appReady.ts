@@ -18,18 +18,28 @@ export default class Ready {
     this.#api = undefined;
     this.#headless = app.commandLine.hasSwitch('server');
     /** close the API before quitting */
-    app.on('before-quit', async() => {
-      this.#isAppQuitting = true;
-      if(!this.#api) return;
-      const stop = await this.#api.stop();
-      if(import.meta.env.DEV) {
-        if(stop.success) console.log('[api]', 'SHUTDOWN SUCCESS');
-        else console.error('[api]', 'SHUTDOWN FAILED');
-      }
-    });
-
     const setup = import.meta.env.DEV ? this.devSetup : this.prodSetup;
     setup().then(() => this.#headless ? this.serverSetup() : this.desktopSetup());
+  }
+
+  #logger(err: boolean, ...args: unknown[]) {
+    if(import.meta.env.DEV) {
+      if(!err) return console.log(...args);
+      return console.error(...args);
+    }
+  }
+
+  async quit() {
+    this.#logger(false, '\x1b[1mSHUTTING DOWN...\x1b[0m');
+    this.#isAppQuitting = true;
+    if(this.#api) {
+      const stop = await this.#api.stop();
+      if(import.meta.env.DEV) {
+        if(stop.success) this.#logger(false, '\x1b[1mSHUTDOWN SUCCESS\x1b[0m');
+        else this.#logger(true, '\x1b[1mSHUTDOWN FORCED\x1b[0m');
+      }
+    }
+    app.quit();
   }
 
   async devSetup() {
@@ -107,7 +117,7 @@ export default class Ready {
     const contextMenu = Menu.buildFromTemplate([
       { label: locale.electron.systemtray.show, click: showWindow, type: 'normal'},
       { type: 'separator'},
-      { label: locale.electron.systemtray.quit, role: 'quit', type: 'normal' },
+      { label: locale.electron.systemtray.quit, click: this.quit.bind(this), type: 'normal' },
     ]);
     this.#tray.setToolTip('Fukayo');
     this.#tray.setContextMenu(contextMenu);
