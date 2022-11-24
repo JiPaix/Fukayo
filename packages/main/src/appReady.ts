@@ -20,6 +20,7 @@ export default class Ready {
     /** close the API before quitting */
     const setup = import.meta.env.DEV ? this.devSetup : this.prodSetup;
     setup().then(() => this.#headless ? this.serverSetup() : this.desktopSetup());
+    app.on('before-quit', this.quit.bind(this));
   }
 
   #logger(err: boolean, ...args: unknown[]) {
@@ -39,7 +40,6 @@ export default class Ready {
         else this.#logger(true, '\x1b[1mSHUTDOWN FORCED\x1b[0m');
       }
     }
-    app.quit();
   }
 
   async devSetup() {
@@ -117,7 +117,7 @@ export default class Ready {
     const contextMenu = Menu.buildFromTemplate([
       { label: locale.electron.systemtray.show, click: showWindow, type: 'normal'},
       { type: 'separator'},
-      { label: locale.electron.systemtray.quit, click: this.quit.bind(this), type: 'normal' },
+      { label: locale.electron.systemtray.quit, role: 'quit', type: 'normal' },
     ]);
     this.#tray.setToolTip('Fukayo');
     this.#tray.setContextMenu(contextMenu);

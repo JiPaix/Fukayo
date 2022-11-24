@@ -43,7 +43,7 @@ test('Main window web content', async () => {
   const page = await electronApp.firstWindow();
   // on startup the app tries to directly connect the user to the server
   await page.waitForLoadState('networkidle'); // we wait for the connection to fail
-  await pause(1000); // add an extra second in-case vue runs at potato speed
+  await pause(5000); // add an extra second in-case vue runs at potato speed
   const root = await page.$('#app', {strict: true});
   expect(root).to.not.be.null;
   if(!root) return;
