@@ -40,5 +40,5 @@ jobs:
       - name: Run tests
         uses: jipaix/xvfb-action@6eca54959bc78602653fd7dbaa6e25d6d53e4c42
         with:
-          options: -s "-screen 5 1280x800x16"
+          options: -s \"-screen 5 1280x800x16\"
           run: npm run test:e2e
