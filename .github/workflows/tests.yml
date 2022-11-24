@@ -38,7 +38,7 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: Run tests
-        uses: jipaix/xvfb-action@f3ef90b0d0bd1b611024fad833491a79ffecbebf
+        uses: jipaix/xvfb-action@6eca54959bc78602653fd7dbaa6e25d6d53e4c42
         with:
           options: -s "-screen 5 1280x800x16" -e /dev/stdout -a
           run: npm run test:e2e
