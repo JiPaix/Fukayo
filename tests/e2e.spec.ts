@@ -7,6 +7,7 @@ let electronApp: ElectronApplication;
 
 beforeAll(async () => {
   electronApp = await electron.launch({args: ['.']});
+  await electronApp.waitForEvent('window');
 });
 
 afterAll(async () => {
