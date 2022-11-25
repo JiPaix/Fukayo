@@ -38,7 +38,7 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: Run tests
-        uses: jipaix/xvfb-action@21870833db880304beb74160a1b094f1e05a9664
+        uses: jipaix/xvfb-action@a9057f664c0a02953498d6f175e2cd766ab12901
         with:
           options: -n 5
           run: npm run test:e2e
