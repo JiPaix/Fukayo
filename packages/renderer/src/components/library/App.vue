@@ -9,12 +9,12 @@ import GroupCard from '@renderer/components/library/GroupCard.vue';
 import GroupFilter from '@renderer/components/library/GroupFilter.vue';
 import MigrateManga from '@renderer/components/library/migrate/App.vue';
 import { chapterLabel } from '@renderer/components/reader/helpers';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { useQuasar } from 'quasar';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import langOptions from '@renderer/components/settings/languageList.vue';
 import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
+import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useQuasar } from 'quasar';
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 /** quasar */
 const $q = useQuasar();
@@ -26,6 +26,8 @@ let socket: socketClientInstance | undefined;
 const settings = useSettingsStore();
 /** first start stepper */
 const step = ref(settings.library.firstTimer);
+/** are we fetching the api? */
+const fetching = ref(true);
 /** mangas in db */
 const mangasRAW = ref<MangaGroup[]>([]);
 /** mangas in db from dead mirrors */
@@ -44,6 +46,7 @@ const filters = ref<{
   langs: [],
   userCategories: [],
 });
+
 // sort groups with most unread first
 function sortByMostUnread(group: MangaGroup[]) {
   return group.sort((a, b) => {
@@ -150,7 +153,7 @@ const userCategories = computed(() => {
   return Array.from(set);
 });
 
-onMounted(async () => {
+onBeforeMount(async () => {
   if (!socket) socket = await useSocket(settings.server);
   const id = Date.now();
   socket.emit('getMirrors', false, async (m) => {
@@ -159,6 +162,7 @@ onMounted(async () => {
 
     socket.on('showLibrary', (resid, manga) => {
       if(resid === id) {
+        fetching.value = false;
         const mirrorInfo = m.find(mirror => mirror.name === manga.mirror.name);
         if(mirrorInfo) {
           manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
@@ -219,7 +223,16 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    v-if="mirrorList.length && mangas.length"
+    v-if="fetching"
+    class="flex w-100 flex-center items-center justify-center"
+  >
+    <q-circular-progress
+      indeterminate
+      size="lg"
+    />
+  </div>
+  <div
+    v-else-if="mirrorList.length && mangas.length"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     :dark="$q.dark.isActive"
