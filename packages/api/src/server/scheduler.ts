@@ -251,7 +251,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         // do not update manga's explicitly marked as "do not update";
         if(!i.update) return false;
         // update if force is true or enough time has passed
-        if(force) return true;
+        if(force && find && find.enabled) return true;
         else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
         else return false;
     });
