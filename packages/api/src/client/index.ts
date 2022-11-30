@@ -91,7 +91,6 @@ export default class socket {
         auth: authentification,
         reconnection: true,
       });
-
       socket.once('authorized', () => {
         this.socket = socket;
         resolve(this.initSocket());
@@ -105,6 +104,8 @@ export default class socket {
       socket.once('connect_error', (e) => {
         if(e.message === 'xhr poll error') {
           reject(this.unplugSocket(socket, e.message));
+        } else {
+          reject(e.message);
         }
       });
     });

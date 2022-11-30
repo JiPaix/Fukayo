@@ -16,6 +16,7 @@ import axios, { AxiosError } from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
 import { load } from 'cheerio';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import net from 'net';
 import { resolve } from 'path';
 import { env } from 'process';
 
@@ -35,6 +36,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   #icon;
   /** mirror's implementation version */
   version: number;
+  /** is online? */
+  isOnline:boolean;
   /** is the mirror dead */
   isDead: boolean;
   /**
@@ -106,6 +109,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   #filenamify?: typeof import('filenamify').default;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  #imageSize?: typeof import('image-size').default;
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   #fileTypeFromBuffer?: typeof import('file-type').fileTypeFromBuffer;
   constructor(opts: MirrorConstructor<T>) {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
@@ -120,6 +125,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.meta = opts.meta;
     this.version = opts.version;
     this.isDead = opts.isDead;
+    this.isOnline = false;
+
     if(typeof opts.entryLanguageHasItsOwnURL === 'boolean') this.entryLanguageHasItsOwnURL = opts.entryLanguageHasItsOwnURL;
 
     if(this.cacheEnabled) {
@@ -149,6 +156,9 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       return Promise.reject(error);
     });
 
+    setTimeout(() => {
+      this.checkOnline();
+    }, 1000*60*15);
   }
 
   async init() {
@@ -166,9 +176,34 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
     this.#filenamify = imp.default;
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+    const is = await (eval('import("image-size")') as Promise<typeof import('image-size')>);
+    this.#imageSize = is.default;
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     this.#fileTypeFromBuffer = (await (eval('import("file-type")') as Promise<typeof import('file-type')>)).fileTypeFromBuffer;
-    await this.login();
+    this.isOnline = await this.checkOnline();
+    if(this.isOnline) await this.login();
     return init;
+  }
+
+  protected checkOnline():Promise<boolean> {
+    const socket = new net.Socket();
+    socket.setTimeout(2500);
+    const port = this.options.port as number || this.host.includes('https') ? 443 : 80;
+    const host = this.options.host as string || this.host.replace(/http(s?):\/\//, '');
+    return new Promise(ok => {
+      const resolve = (bool:boolean) => {
+        socket.removeAllListeners();
+        socket.destroy();
+        this.logger('is', bool ? 'online' : 'offline');
+        this.isOnline = bool;
+        ok(bool);
+      };
+      socket
+        .on('connect', () => resolve(true))
+        .on('error', ()=> resolve(false))
+        .on('timeout', () => resolve(false))
+        .connect(port, host);
+    });
   }
 
   async login():Promise<boolean|void> {
@@ -218,6 +253,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       version: this.version,
       isDead: this.isDead,
       name: this.name,
+      isOnline: this.isOnline,
       displayName: this.displayName,
       selfhosted: this.selfhosted || false,
       host: this.host,
@@ -410,7 +446,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * const url = 'https://www.example.com/images/some-image.jpg?token=123';
    * downloadImage(url, false)
    */
-  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<string|undefined> {
+  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<{src: string, height: number, width: number}|undefined> {
     const {identifier, filename} = await this.#generateCacheFilename(url, dependsOnParams);
 
     const cache = await this.#loadFromCache({identifier, filename});
@@ -488,9 +524,11 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(type === 'html') return this.#returnFetch(this.#loadHTML(res));
       if(type === 'json') {
         try {
+          this.logger('RESPONSE:', res);
           return this.#returnFetch<T>(JSON.parse(res));
         } catch {
-          throw new Error('invalid_json');
+          this.logger('REAL ERROR:', res);
+          throw new Error('invalid_json @ '+config.url );
         }
       }
       throw new Error(`unknown_type: ${type}`);
@@ -548,10 +586,14 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   #returnFetch<T>(data : T, filename?: undefined):T
-  #returnFetch<T>(data : T, filename: string):string
-  #returnFetch<T>(data : T, filename?: string|undefined):T|string {
+  #returnFetch(data: Buffer, filename: string): {src: string, height: number, width: number}
+  #returnFetch<T>(data : T, filename?: string|undefined):T|{src: string, height: number, width: number} {
     if(data instanceof Buffer && filename) {
-      return FileServer.getInstance('fileserver').serv(data, filename);
+      if(!this.#imageSize) throw new Error('calling imageSize before init');
+      const sizes = this.#imageSize(data);
+      const { height, width } = sizes;
+      if(!height || !width) throw new Error('invalid image format');
+      return { src: FileServer.getInstance('fileserver').serv(data, filename), height, width };
     }
     return data;
   }
@@ -622,7 +664,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     }
   }
 
-  async #loadFromCache(id:{ identifier: string, filename:string }):Promise<Buffer|string|undefined> {
+  async #loadFromCache(id:{ identifier: string, filename:string }):Promise<Buffer|undefined> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(this.cacheEnabled) {
       let cacheResult:{mime: string|undefined, buffer:Buffer} | undefined;

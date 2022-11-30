@@ -9,6 +9,8 @@ export type TaskDone = {
 export type mirrorInfo = {
   /** mirror's implementation version `Integer`*/
   version: number,
+  /** is online? */
+  isOnline: boolean,
   /** isdead */
   isDead: boolean,
   /** Mirror's slug */

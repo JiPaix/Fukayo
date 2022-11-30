@@ -11,8 +11,8 @@ import { createServer as createHttp } from 'http';
 import type { Server as httpsServer } from 'https';
 import { createServer as createHttps } from 'https';
 import { env } from 'process';
-import type TypedEmitter from 'typed-emitter';
 import type internal from 'stream';
+import type TypedEmitter from 'typed-emitter';
 
 const isMessage = (message: unknown): message is Message => {
   if(typeof message !== 'object') return false;
@@ -99,7 +99,7 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private startRunner(port:number) {
     if(!this.runner) return; // shouldn't happen
     this.runner
-      .once('listening', this.event_start_listening.bind(this))
+      .once('listening', this.#event_start_listening.bind(this))
       .once('error', this.event_start_error.bind(this))
       .on('connection', socket => {
         this.#sockets.add(socket);
@@ -108,17 +108,17 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
       .listen(port);
   }
 
-  private event_start_listening() {
+  async #event_start_listening() {
     const accessToken = crypto.randomBytes(32).toString('hex');
     const refreshToken = crypto.randomBytes(32).toString('hex');
     if(!this.runner) throw new Error('runner_not_created, unexpected');
-    this.#wrapper = IOWrapper.getInstance(this.runner, this.credentials, { accessToken, refreshToken });
+    this.#wrapper = await IOWrapper.getInstance(this.runner, this.credentials, { accessToken, refreshToken });
     this.send('start', true, accessToken+'[split]'+refreshToken);
     this.runner.off('error', this.event_start_error.bind(this));
   }
 
   private event_start_error(e:Error) {
-    if(this.runner /** should not happen */) this.runner.off('listening', this.event_start_listening.bind(this));
+    if(this.runner /** should not happen */) this.runner.off('listening', this.#event_start_listening.bind(this));
     this.send('start', false, e.message);
     this.killRunner(true, e.message);
   }

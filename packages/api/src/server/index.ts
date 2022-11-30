@@ -32,31 +32,25 @@ export default class IOWrapper {
     this.password = CREDENTIALS.password;
     this.io = new ioServer(runner, {cors: { origin: '*'}, maxHttpBufferSize: 1e+9});
     this.db = TokenDatabase.getInstance({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
-    this.use();
-    this.io.on('connection', this.routes.bind(this));
-    // async hell
-    // in memory database need to perform async operation
-    this.db.init().then(() => {
-      this.logger('token database loaded');
-      this.#initMirrors().then(() => {
-        this.logger('mirrors databases loaded');
-        // the Scheduler needs io to broadcast events
-        Scheduler.getInstance().registerIO(this.io).then(() => {
-          this.#isReady = true; // this makes the server available only after the Scheduler is done
-          this.logger('scheduler is ready');
-          // loading mirror import modules
-          import('../models/imports').then(l => {
-            this.#importer = l.default;
-          });
-        });
-      });
-    });
-
   }
 
-  static getInstance(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}): IOWrapper {
+  async #init() {
+    await this.db.init();
+    this.logger('token database loaded');
+    await Promise.allSettled(mirrors.map(m => m.init()));
+    this.#importer = (await import('../models/imports')).default;
+    this.logger('mirrors databases loaded');
+    await Scheduler.getInstance().registerIO(this.io);
+    this.logger('scheduler is ready');
+    this.use();
+    this.io.on('connection', this.routes.bind(this));
+    this.#isReady = true;
+  }
+
+  static async getInstance(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}): Promise<IOWrapper> {
     if (!this.#instance) {
       this.#instance = new this(runner, CREDENTIALS, tokens);
+      await this.#instance.#init();
     }
     return this.#instance;
   }
@@ -65,10 +59,8 @@ export default class IOWrapper {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[33m${this.constructor.name}\x1b[0m)` ,...args);
   }
 
-  async #initMirrors() {
-    for(const mirror of mirrors) {
-        await mirror.init();
-    }
+  #initMirrors() {
+    return Promise.allSettled(mirrors.map(m => m.init()));
   }
 
   async shutdown() {
