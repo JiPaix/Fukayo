@@ -211,14 +211,21 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     this.#ongoing.updates = true;
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
-    const {updates, fixes} = await this.#getMangasToUpdate(force);
+    const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
 
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
     if(nbMangas > 0) this.logger('updating...');
+
     // fixes mangas
     for(const mirrorName of Object.keys(fixes)) {
       const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
       if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
+    }
+
+    // selfhosted offline
+    for(const mirrorName of Object.keys(offlines)) {
+      const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
+      if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
     }
 
     if(!onlyfixes) {
@@ -241,7 +248,35 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @param force if true, will force the update of all the mangas
    */
   async #getMangasToUpdate(force?:boolean) {
-    const indexes = await (await MangasDB.getInstance()).getIndexes();
+    let indexes = await (await MangasDB.getInstance()).getIndexes();
+
+    const indexesOffline = indexes.filter(i => {
+      const find = mirrors.find(m => m.name === i.mirror.name);
+      if(!find) return false;
+      if(find.selfhosted && !find.isOnline) {
+        indexes.filter(main => i.id !== main.id);
+        if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
+        else {
+          indexes.filter(main => i.id !== main.id);
+          return false;
+        }
+      }
+      return false;
+    });
+
+    const mangaOfflines:MangaInDB[] = [];
+
+    for(const index of indexesOffline) {
+      const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
+      if(manga.meta.broken) continue; // to not update broken entries.
+      mangaOfflines.push(manga);
+    }
+    // mangas to update by mirror
+    const mangaOfflinesByMirror: sortedMangas<typeof mangaOfflines[0]> = {};
+    mangaOfflines.forEach(manga => {
+      if(!mangasToUpdateByMirror[manga.mirror.name]) mangasToUpdateByMirror[manga.mirror.name] = [];
+      mangasToUpdateByMirror[manga.mirror.name].push(manga);
+    });
 
     const indexesToUpdate = indexes.filter(i => {
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
@@ -251,8 +286,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         // do not update manga's explicitly marked as "do not update";
         if(!i.update) return false;
         // update if force is true or enough time has passed
-        if(force && find && find.enabled) return true;
-        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
+        if(force && find && find.enabled) {
+          indexes = indexes.filter(main => main.id !== i.id);
+          return true;
+        }
+        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) {
+          indexes = indexes.filter(main => main.id !== i.id);
+          return true;
+        }
         else return false;
     });
 
@@ -276,7 +317,10 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
      */
     const indexesToFix = indexes.filter(manga => {
       const find = mirrors.find(m => m.name === manga.mirror.name);
-      if(find && (find.version !== manga.mirror.version || find.isDead)) return true;
+      if(find && (find.version !== manga.mirror.version || find.isDead)) {
+        indexes = indexes.filter(main => main.id !== manga.id);
+        return true;
+      }
       else return false;
     });
 
@@ -295,7 +339,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       mangasToFixByMirror[manga.mirror.name].push(manga);
     });
 
-    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror };
+    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflinesByMirror };
   }
 
   /**
@@ -305,14 +349,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     const db = await MangasDB.getInstance();
     const indexes = await db.getIndexes();
     const broken:{manga: MangaInDB, mirror: Mirror & MirrorInterface}[] = [];
-
-    // if mirror is selfhosted and offline just updates the .lastUpdate value, so we can try again next time
-    if(mirror.selfhosted && !mirror.isOnline) {
-      for(const manga of mangas) {
-        await db.add({ manga }, true);
-      }
-    }
-
 
     for(const manga of mangas) {
       const index = indexes.find(i => i.id === manga.id);
