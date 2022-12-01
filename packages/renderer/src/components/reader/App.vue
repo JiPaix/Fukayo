@@ -15,8 +15,9 @@ import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
+import type { QScrollArea } from 'quasar';
 import { debounce, QVirtualScroll, useQuasar } from 'quasar';
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 /** props */
@@ -53,7 +54,12 @@ const currentPagesLength = computed(() => {
   return currentChapterFormatted.value.imgsExpectedLength;
 });
 
+/** thumbnail scrollbar */
 const thumbscroll = ref<null|QVirtualScroll>();
+/** image container div */
+const virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null);
+/** if this is put to true mousewheel scrolls are ignored */
+const ignoreScroll = ref(false);
 
 /** manga data */
 const manga = ref<MangaPage|MangaInDB|null>(null);
@@ -62,11 +68,6 @@ const error = ref<MangaErrorMessage|ChapterErrorMessage|null>(null);
 
 /** make sure we don't load chapter twice */
 const loadingAchapter = ref(false);
-/** show next chapter div */
-const showPrevChapterDiv = ref(false);
-/** show previous chapter div */
-const showNextChapterDiv = ref(false);
-
 /** count double-taps left when first page is onscreen */
 const doubleTapLeft = ref(0);
 /** count double-taps right when last page is onscreen */
@@ -151,15 +152,7 @@ const prevChapter = computed(() => {
 });
 
 const rtl = computed(() => {
-
-  if(localReaderSettings.value.longStripDirection === 'horizontal' && localReaderSettings.value.longStrip && localReaderSettings.value.rtl) {
-    return true;
-  }
-
-  if(!localReaderSettings.value.longStrip && localReaderSettings.value.rtl) {
-    return true;
-  }
-  return false;
+  return localReaderSettings.value.rtl;
 });
 
 async function loadIndex(index: number) {
@@ -224,8 +217,9 @@ async function getManga():Promise<void> {
   currentPage.value = 0;
   currentChapterId.value = props.chapterId;
   // hide previous/next chapter divs
-  showPrevChapterDiv.value = false;
-  showNextChapterDiv.value = false;
+  showNextBuffer.value = false;
+  showPrevBuffer.value = false;
+  reachedPrev.value = false;
 
   RAWchapters.value = [];
   if(historyStore.manga) {
@@ -275,15 +269,21 @@ async function getManga():Promise<void> {
 
 /** change current chapter variables and make sure scroll position doesn't mess with UI */
 async function chapterTransition(opts: { chapterId:string, PageToShow:number }) {
+
+  showNextBuffer.value = false;
+  showPrevBuffer.value = false;
+  reachedPrev.value = false;
+
   showPageSelector.value = false;
   currentChapterId.value = opts.chapterId;
-  currentPage.value = opts.PageToShow;
+  currentPage.value = opts.PageToShow+1;
   loadingAchapter.value = false;
+  ignoreScroll.value = true;
+  await scrollToPage(opts.PageToShow, true);
   await nextTick();
-  const vs = virtscroll.value;
-  if(!vs) return;
-  const page = vs.$refs[`page-${opts.PageToShow}`] as HTMLElement | null;
-  if (page) page.scrollIntoView();
+  setTimeout(() => {
+    ignoreScroll.value = false;
+  }, 500);
 }
 
 
@@ -307,8 +307,9 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
     currentPage.value = 0;
     currentChapterId.value = chapterId;
     // hide previous/next chapter divs
-    showPrevChapterDiv.value = false;
-    showNextChapterDiv.value = false;
+    showNextBuffer.value = false;
+    showPrevBuffer.value = false;
+    reachedPrev.value = false;
   }
 
   // if chapter is already in cache and has all its images, just show it
@@ -317,7 +318,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
     const needToFetch = alreadyFetched.imgsExpectedLength < alreadyFetched.imgs.length;
     chapterTransition({
       chapterId,
-      PageToShow: opts.scrollup ? alreadyFetched.imgs.length : 1,
+      PageToShow: opts.scrollup ? alreadyFetched.imgs.length-1 : 0,
     });
     if(!needToFetch) {
       if(!nextChapter.value) return;
@@ -368,7 +369,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
         if(!opts.prefetch && !opts.reloadIndex) {
           chapterTransition({
               chapterId,
-              PageToShow: 1,
+              PageToShow: 0,
           });
         }
       }
@@ -388,7 +389,9 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
           }
         }
         // add new image
-        else exist.imgs.push(chapter);
+        else {
+          exist.imgs.push(chapter);
+        }
       }
       // if this is the first page, trigger the page transition
       if(firstPage) {
@@ -473,7 +476,12 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
     // using good old timeout because we don't know when changes will be applied
     // if browser couldn't update within 500ms, the scroll position isn't changed
     // 500ms is a good compromise between responsiveness and performance
-    setTimeout(() => scrollToPage(index), 500);
+    ignoreScroll.value = true;
+    await scrollToPage(index, true);
+    await nextTick();
+    setTimeout(() => {
+      ignoreScroll.value = false;
+     }, 500);
   }
   localReaderSettings.value = { ...localReaderSettings.value, ...newSettings };
   historyStore.manga = manga.value;
@@ -492,7 +500,6 @@ const saveSettings = debounce(async(manga: MangaInDB | MangaPage | null, newSett
 function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
   if(!currentChapterFormatted.value) return;
   if(isMouseEvent(event)) return;
-
   if(rtl.value && event.key === 'ArrowRight') {
     return scrollToPrevPage();
   }
@@ -508,24 +515,43 @@ function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
 }
 
 function scrollToPrevPage() {
-  const div = document.querySelector('.fit.scroll.chapters');
-  if(!div) return;
-  let index = currentPage.value-2; // current page is 1-based while index is 0-based, so previous page is -2
-  if(index < 0) {
+  const currentIndex = currentPage.value - 1;
+
+  if(!localReaderSettings.value.longStrip) {
+    const min = currentPage.value - 1 < 1;
+    if(!min) return currentPage.value--;
+  }
+
+  const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
+  if(!div) scrollToPage(currentIndex-1);
+
+  const prev = div?.previousElementSibling;
+  if(prev) prev.scrollIntoView({behavior: 'smooth'});
+  else {
     if(doubleTapLeft.value === 1) {
       doubleTapLeft.value = 0;
-      return loadPrev(true);
+      return loadPrev();
     }
     doubleTapLeft.value++;
     return;
   }
-  return scrollToPage(index, true);
 }
 
 function scrollToNextPage() {
   if(!currentChapterFormatted.value) return;
-  let index = currentPage.value;
-  if(index+1 > currentChapterFormatted.value.imgs.length) {
+  const currentIndex = currentPage.value - 1;
+
+  if(!localReaderSettings.value.longStrip) {
+    const max = currentPage.value + 1 > currentChapterFormatted.value.imgsExpectedLength;
+    if(!max) return currentPage.value++;
+  }
+
+  const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
+  if(!div) scrollToPage(currentIndex+1);
+
+  const next = div?.nextElementSibling;
+  if(next) next.scrollIntoView({behavior: 'smooth'});
+  else {
     if(doubleTapRight.value === 1) {
       doubleTapRight.value = 0;
       return loadNext();
@@ -533,7 +559,6 @@ function scrollToNextPage() {
     doubleTapRight.value++;
     return;
   }
-  return scrollToPage(index, false);
 }
 
 function thumbnailScroll(evt:WheelEvent) {
@@ -564,63 +589,119 @@ async function restart() {
 onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
 
+async function scrollToPage(index: number, fastforward?:boolean) {
+  await nextTick();
 
-let scrollInterval: ReturnType<typeof setInterval> | null = null;
-
-function scrollToPage(index: number, upward?:boolean) {
-
-  if(!localReaderSettings.value.longStrip) {
-    currentPage.value = index+1;
-    return;
-  }
-  // scroll the thumbnail previews to the right page
-  if(thumbscroll.value) thumbscroll.value.scrollTo(index-1, 'start-force');
-
-  const vs = virtscroll.value as InstanceType<typeof ImagesContainer>;
-  if(!vs) return;
-  // horizontal method
-  if(localReaderSettings.value.longStripDirection === 'horizontal') {
-    const page = vs.$refs[`page-${index+1}`] as HTMLElement | null;
-    if(!page) return;
-    showPageSelector.value = false;
-    page.scrollIntoView({behavior: 'smooth'});
-    currentPage.value = index+1;
+  if(index === 0) {
+    virtscroll.value?.scrollArea?.setScrollPercentage('horizontal', 0);
+    virtscroll.value?.scrollArea?.setScrollPercentage('vertical', 0);
     return;
   }
 
-  if(localReaderSettings.value.longStrip) {
-    const container = document.querySelector('.fit.scroll.chapters') as HTMLElement | null;
-    if(!container) return;
-    if(scrollInterval) {
-      clearInterval(scrollInterval);
-      scrollInterval = null;
-    }
-    if(localReaderSettings.value.webtoon) {
-      const percent = ($q.screen.height * 80)/100;
-      let toScroll = percent;
-      scrollInterval = setInterval( () => {
-        if(!scrollInterval) return;
-        container.scrollBy(0, upward ? -20 : 20);
-        toScroll = toScroll - 20;
-        if(toScroll <= 0) return clearInterval(scrollInterval);
-      }, 1);
-    } else {
-      const page = vs.$refs[`page-${index+1}`] as HTMLElement | null;
-      if(!page) return;
-      page.scrollIntoView({behavior: 'smooth'});
-    }
+  const div = document.querySelector(`.group[data-indexes*="${index}"]`);
+  // const div = await waitForDiv(`.group[data-indexes*="${index}"]`);
+
+  // in order for scroll to happen the thumbnail previews must be closed first.
+  showPageSelector.value = false;
+  await nextTick();
+
+
+  if(div) {
+    await nextTick();
+    setTimeout(() => {
+      div.scrollIntoView({behavior: fastforward ? undefined : 'smooth'});
+    }, 200);
+
   }
 }
 
-const virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null);
+const showPrevBuffer = ref(false);
+const showNextBuffer = ref(false);
+const reachedPrev = ref(false);
 
-function useWheelToScrollHorizontally(evt:WheelEvent) {
- if(!localReaderSettings.value.longStrip || localReaderSettings.value.longStripDirection !== 'horizontal') return;
- if(virtscroll.value) {
-  (virtscroll.value.$refs.virtscroll as QVirtualScroll).$el.scrollLeft += evt.deltaY;
+function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }) {
+  if(ignoreScroll.value) return;
+  if(!virtscroll.value) return;
+
+  const scrollArea = virtscroll.value.$refs['scrollArea'] as QScrollArea;
+  const add=ev.deltaY;
+  let pos = scrollArea.getScrollPosition();
+
+
+  if(localReaderSettings.value.longStrip && localReaderSettings.value.longStripDirection === 'horizontal') {
+    scrollArea.setScrollPosition('horizontal', pos.left+add);
+    const percentage = scrollArea.getScrollPercentage();
+
+    if(localReaderSettings.value.rtl && pos.left+add >= 0) {
+      showPrevBuffer.value = true;
+      if(!reachedPrev.value) nextTick(() =>scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*-1));
+      reachedPrev.value = true;
+    }
+    else if(!localReaderSettings.value.rtl && pos.left+add <= 0) {
+      showPrevBuffer.value = true;
+      if(!reachedPrev.value) nextTick(() => scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)));
+      reachedPrev.value = true;
+    }
+
+    if(percentage.left >= 0.99) showNextBuffer.value = true;
+
+  } else {
+    scrollArea.setScrollPosition('vertical', pos.top+add);
+    if(!localReaderSettings.value.longStrip) return;
+    if(pos.top+add < 0) {
+      showPrevBuffer.value = true;
+      if(!reachedPrev.value) nextTick(() => scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5)));
+      reachedPrev.value = true;
+    }
+    if(scrollArea.getScrollPercentage().top >= 1) showNextBuffer.value = true;
   }
 }
 
+let touchTrack = {screenY: 0, screenX: 0 };
+
+function setTouch(ev:TouchEvent) {
+  touchTrack.screenX = ev.touches[0].screenX;
+  touchTrack.screenY = ev.touches[0].screenY;
+}
+
+function resetTouch() {
+  touchTrack.screenX = 0;
+  touchTrack.screenY = 0;
+}
+
+function touch(ev:TouchEvent) {
+  const current = ev.changedTouches[0];
+
+  if(current.screenX !== touchTrack.screenX) {
+    if(localReaderSettings.value.longStripDirection === 'horizontal' || !localReaderSettings.value.longStrip) return;
+    const add = touchTrack.screenX - current.screenX;
+    useWheelToScrollHorizontally({ deltaY: add });
+  }
+
+  if(current.screenY !== touchTrack.screenY) {
+    if(localReaderSettings.value.longStripDirection === 'horizontal') return;
+    const add = touchTrack.screenY - current.screenY;
+    useWheelToScrollHorizontally({ deltaY: add });
+  }
+  touchTrack.screenX = current.screenX;
+  touchTrack.screenY = current.screenY;
+}
+
+watch(() => localReaderSettings.value, (nval, oval) => {
+  let worthReloading = false;
+  if(nval.book !== oval.book) worthReloading = true;
+  if(nval.bookOffset !== oval.bookOffset) worthReloading = true;
+  if(nval.longStripDirection !== oval.longStripDirection) worthReloading = true;
+  if(nval.longStrip !== oval.longStrip) worthReloading = true;
+  if(nval.webtoon !== oval.webtoon) worthReloading = true;
+  if(nval.zoomMode !== oval.zoomMode) worthReloading = true;
+
+  if(worthReloading) {
+    nextTick(() => {
+      scrollToPage(currentPage.value-1, true);
+    });
+  }
+}, {deep: true});
 </script>
 <template>
   <q-layout
@@ -632,6 +713,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
     >
       <reader-header
         v-if="manga && currentChapter"
+        :current-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, currentChapter)"
         :manga="manga"
         :chapter="currentChapter"
         :nb-of-pages="currentPagesLength"
@@ -671,22 +753,45 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
     >
       <div
         v-if="error"
-        class="bg-negative"
+        class="bg-negative fit flex flex-center"
+        style="height:100%;width:100%"
       >
-        <div v-if="error.error.startsWith('chapter') && isChapterErrorMessage(error as ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage)">
-          <span class="text-white text-bold">{{ error.error }}</span>
-          <span v-if="error.trace">: {{ error.trace }}</span>
+        <div
+          v-if="error.error.startsWith('chapter') && isChapterErrorMessage(error as ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage)"
+          class="flex flex-center column"
+        >
+          <div class="text-white text-bold">
+            {{ error.error.toLocaleUpperCase() }}
+          </div>
+          <div
+            v-if="error.trace"
+            class="text-caption"
+          >
+            {{ error.trace }}
+          </div>
           <q-btn
+            class="q-mt-lg"
             size="lg"
             @click="getChapter(currentChapter ? currentChapter.id : props.chapterId, {})"
           >
             {{ $t('reader.reload_chapter') }}
           </q-btn>
         </div>
-        <div v-else>
-          <span class="text-white text-bold">{{ error.error }}</span>
-          <span v-if="error.trace">: {{ error.trace }}</span>
+        <div
+          v-else
+          class="flex flex-center column"
+        >
+          <div class="text-white text-bold">
+            {{ error.error }}
+          </div>
+          <div
+            v-if="error.trace"
+            class="text-caption"
+          >
+            {{ error.trace }}
+          </div>
           <q-btn
+            class="q-mt-lg"
             size="lg"
             @click="restart"
           >
@@ -697,84 +802,53 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
       <div
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
         ref="chaptersRef"
-        class="fit scroll chapters"
+        class="fit scroll chapters zoom"
       >
-        <div v-if="isChapterErrorMessage(currentChapterFormatted.imgs[0])">
-          <div
-            class="bg-negative flex flex-center"
-            :style="`height:${$q.screen.height-82}px;width:100%;`"
-          >
-            <div class="flex-column">
-              <div>
-                {{ $t('reader.error.chapter') }}
-              </div>
-              <div class="text-caption text-yellow-8">
-                {{ currentChapterFormatted.imgs[0].trace || currentChapterFormatted.imgs[0].error }}
-              </div>
-              <q-btn
-                icon-right="broken_image"
-                color="white"
-                text-color="black"
-                class="w-100"
-                @click.once="getChapter(currentChapter!.id, { })"
-              >
-                {{ $t('reader.error.reload') }}
-              </q-btn>
-            </div>
-          </div>
-        </div>
-        <div v-else>
-          <div
-            id="chaploop"
-            style="position:relative;height:100%;"
-            @wheel="useWheelToScrollHorizontally"
-          >
-            <images-container
-              ref="virtscroll"
-              :drawer-open="rightDrawerOpen"
-              :next-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, nextChapter)"
-              :prev-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, prevChapter)"
-              :chapter-id="currentChapterFormatted.id"
-              :chapter-u-r-l="currentChapter.url"
-              :page-index="currentChapterFormatted.index"
-              :expected-length="currentChapterFormatted.imgsExpectedLength"
-              :imgs="currentChapterFormatted.imgs"
-              :current-page="currentPage"
-              :reader-settings="localReaderSettings"
-              @load-next="loadNext"
-              @load-prev="loadPrev(true)"
-              @change-page="onImageVisible"
-              @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
-            />
-            <nav-overlay
-              :rtl="rtl"
-              :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
-              :drawer-open="rightDrawerOpen"
-              position="left"
-              :current-page="currentPage"
-              :total-pages="currentChapterFormatted.imgs.length"
-              @scroll-to-page="scrollToPage"
-              @load-previous="loadPrev"
-            />
-            <nav-overlay
-              :rtl="rtl"
-              :drawer-open="rightDrawerOpen"
-              position="center"
-              :current-page="currentPage"
-              :total-pages="currentChapterFormatted.imgs.length"
-              @toggle-drawer="rightDrawerOpen = !rightDrawerOpen"
-            />
-            <nav-overlay
-              :rtl="rtl"
-              :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
-              :drawer-open="rightDrawerOpen"
-              position="right"
-              :current-page="currentPage"
-              :total-pages="currentChapterFormatted.imgs.length"
-              @scroll-to-page="scrollToPage"
-              @load-next="loadNext"
-            />
-          </div>
+        <div
+          @wheel="useWheelToScrollHorizontally"
+          @touchstart="setTouch"
+          @touchend="resetTouch"
+          @touchmove="touch"
+        >
+          <images-container
+            ref="virtscroll"
+            :drawer-open="rightDrawerOpen"
+            :show-next-buffer="showNextBuffer"
+            :show-prev-buffer="showPrevBuffer"
+            :next-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, nextChapter)"
+            :prev-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, prevChapter)"
+            :chapter-id="currentChapterFormatted.id"
+            :chapter-u-r-l="currentChapter.url"
+            :page-index="currentChapterFormatted.index"
+            :expected-length="currentChapterFormatted.imgsExpectedLength"
+            :imgs="currentChapterFormatted.imgs"
+            :current-page="currentPage"
+            :reader-settings="localReaderSettings"
+            @load-next="loadNext"
+            @load-prev="loadPrev(true)"
+            @change-page="onImageVisible"
+            @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
+          />
+          <nav-overlay
+            v-if="!$q.platform.has.touch"
+            :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
+            :drawer-open="rightDrawerOpen"
+            position="left"
+            @click="localReaderSettings.rtl ? scrollToNextPage() : scrollToPrevPage()"
+          />
+          <nav-overlay
+            v-if="!$q.platform.has.touch"
+            :drawer-open="rightDrawerOpen"
+            position="center"
+            @click="rightDrawerOpen = !rightDrawerOpen"
+          />
+          <nav-overlay
+            v-if="!$q.platform.has.touch"
+            :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
+            :drawer-open="rightDrawerOpen"
+            position="right"
+            @click="localReaderSettings.rtl ? scrollToPrevPage() : scrollToNextPage()"
+          />
         </div>
 
         <div
@@ -784,7 +858,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
         >
           <q-slide-transition>
             <div
-              v-if="showPageSelector"
+              v-show="showPageSelector"
               class="q-mb-xs"
               :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px'"
               style="opacity:0.9;"
@@ -858,7 +932,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
                 rounded
                 icon="arrow_back_ios"
                 :disabled="currentPage === 1"
-                @click="scrollToPage(currentPage-2)"
+                @click="scrollToPrevPage"
               />
               <q-btn
                 rounded
@@ -870,7 +944,7 @@ function useWheelToScrollHorizontally(evt:WheelEvent) {
                 rounded
                 icon="arrow_forward_ios"
                 :disabled="currentPage === currentChapterFormatted.imgsExpectedLength"
-                @click="scrollToPage(currentPage)"
+                @click="scrollToNextPage"
               />
             </q-btn-group>
           </div>

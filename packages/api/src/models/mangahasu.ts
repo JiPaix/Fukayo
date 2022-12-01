@@ -84,7 +84,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
           const img = await this.downloadImage(coverLink, undefined, false);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
         }
 
         let last_release: SearchResult['last_release'];
@@ -159,7 +159,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
       const coverLink = $('.info-img > img').attr('src');
       if(coverLink) {
         const img = await this.downloadImage(coverLink, undefined, false);
-        if(img) covers.push(img);
+        if(img) covers.push(img.src);
       }
 
       // getting author(s) and tags
@@ -267,7 +267,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         if(imgLink) {
           const img = await this.downloadImage(imgLink, `${this.host}${link}`, false);
           if(img) {
-            socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+            socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
             continue;
           }
         }
@@ -315,7 +315,7 @@ class MangaHasu extends Mirror implements MirrorInterface {
         const coverLink = $('.wrapper_imgage img', el).attr('src');
         if(coverLink) {
           const img = await this.downloadImage(coverLink, undefined, false);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
         }
 
         const searchResult = await this.searchResultsBuilder({

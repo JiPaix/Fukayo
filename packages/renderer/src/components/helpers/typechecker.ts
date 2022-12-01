@@ -5,14 +5,17 @@ import type { TaskDone } from '@api/models/types/shared';
 export { isManga, isMangaInDB } from '@api/db/helpers';
 
 export function isChapterImage(res: ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage): res is ChapterImage {
+  if(!res) return false;
   return (res as ChapterImage).index !== undefined && (res as ChapterImage).src !== undefined && (res as ChapterImage).lastpage !== undefined;
 }
 
 export function isChapterErrorMessage(res: ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage): res is ChapterErrorMessage {
+  if(!res) return false;
   return (res as ChapterImage).index === undefined && (res as ChapterImageErrorMessage).error !== undefined;
 }
 
 export function isChapterImageErrorMessage(res: ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage): res is ChapterImageErrorMessage {
+  if(!res) return false;
   return (res as ChapterImage).src === undefined && (res as ChapterImageErrorMessage).error !== undefined && (res as ChapterImageErrorMessage).index !== undefined;
 }
 

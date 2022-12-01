@@ -10,4 +10,12 @@ export type ChapterImage = {
    * Weither this page is the last one
    */
   lastpage: boolean
+  /**
+   * height
+   */
+  height: number,
+  /**
+   * width
+   */
+  width: number
 }

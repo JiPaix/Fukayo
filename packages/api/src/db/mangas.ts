@@ -76,7 +76,6 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
           webtoon: false,
           showPageNumber: true,
           zoomMode: 'auto',
-          zoomValue: 100,
           longStrip: false,
           longStripDirection: 'vertical',
           book: false,

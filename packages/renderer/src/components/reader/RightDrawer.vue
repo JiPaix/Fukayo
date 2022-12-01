@@ -123,7 +123,6 @@ const localSettings = ref<MangaInDB['meta']['options']>({
   webtoon: props.readerSettings.webtoon,
   showPageNumber: props.readerSettings.showPageNumber,
   zoomMode: props.readerSettings.zoomMode,
-  zoomValue: props.readerSettings.zoomValue,
   longStrip: props.readerSettings.longStrip,
   longStripDirection: props.readerSettings.longStripDirection,
   book: props.readerSettings.book,
@@ -132,49 +131,45 @@ const localSettings = ref<MangaInDB['meta']['options']>({
   overlay: props.readerSettings.overlay,
 });
 
-/** make sure user use modes compatible with each others */
-watch(() => ({ ...localSettings.value }), (nval, oval) => {
 
-  if(nval.longStrip) {
-    if(nval.longStripDirection === 'horizontal') {
-      if(nval.zoomMode === 'fit-width') {
-        localSettings.value.zoomMode = 'fit-height';
-      }
-      if(nval.webtoon && (nval.book || nval.bookOffset)) {
-        localSettings.value.webtoon = false;
-      }
-    } else {
-      if(nval.rtl) {
-        localSettings.value.rtl = false;
-      }
-      if(nval.webtoon && nval.zoomMode === 'fit-height') {
-        localSettings.value.zoomMode = 'auto';
-      }
-      if(nval.book || nval.bookOffset) {
-        localSettings.value.book = false;
-        localSettings.value.bookOffset = false;
-      }
-    }
-  } else {
-    if(nval.book || nval.bookOffset) {
-      localSettings.value.book = false;
-      localSettings.value.bookOffset = false;
-    }
-    if(nval.webtoon) localSettings.value.webtoon = false;
+/** make sure options are compatible with each others */
+async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) {
+
+  if(key === 'book' && localSettings.value.book) {
+    if(localSettings.value.zoomMode === 'stretch-height' && localSettings.value.longStripDirection === 'vertical') localSettings.value.zoomMode = 'auto';
+    if(localSettings.value.webtoon) localSettings.value.webtoon = false;
   }
 
+  if(key === 'longStrip' && !localSettings.value.longStrip) {
+    localSettings.value.webtoon = false;
+    localSettings.value.book = false;
+    localSettings.value.bookOffset = false;
+  }
 
+  if(key === 'webtoon' && localSettings.value.webtoon) {
+    if(localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
+  }
 
+  if(key === 'longStripDirection' && localSettings.value.longStripDirection === 'vertical') {
+    if(localSettings.value.book && localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
+  }
 
-  emit('updateSettings', Object.assign({}, nval), Object.assign({}, oval));
-}, {deep: true});
+  if(key === 'longStripDirection' && localSettings.value.longStripDirection === 'horizontal') {
+    if(localSettings.value.zoomMode === 'stretch-width') localSettings.value.zoomMode = 'auto';
+  }
+
+}
+
+watch(() => localSettings.value, (nval, oval) => {
+  emit('updateSettings', nval, oval);
+}, { deep: true });
 
 </script>
 
 <template>
   <div
     class="q-pa-lg"
-    :style="`height: ${$q.screen.height - 82}px;`"
+    :style="`height: ${$q.screen.height - ($q.screen.gt.sm ? 82 : 0) }px;`"
   >
     <q-select
       v-model="selectedChap"
@@ -296,38 +291,39 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
       </q-btn-group>
     </div>
     <div class="q-mt-lg flex">
-      <q-toggle
-        v-model="localSettings.longStrip"
-        :label="$t('reader.longstrip')"
-        color="orange"
-        :dark="$q.dark.isActive"
-      />
-      <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
+      <div class="w-100 flex flex-center justify-around q-mb-xs q-mt-lg">
         <q-slide-transition>
-          <q-btn-group
-            v-if="localSettings.longStrip"
-          >
+          <q-btn-group>
             <q-btn
-              :color="localSettings.longStripDirection === 'vertical' ? 'orange':''"
+              :color="!localSettings.longStrip ? 'orange':''"
+              class="q-ml-auto"
+              icon="photo"
+              dense
+              @click="localSettings.longStrip = false;checkSettingsCompatibilty('longStrip')"
+            >
+              <q-tooltip>{{ $t('reader.singlePage') }}</q-tooltip>
+            </q-btn>
+            <q-btn
+              :color="localSettings.longStripDirection === 'vertical' && localSettings.longStrip ? 'orange':''"
               class="q-ml-auto"
               icon="swap_vert"
               dense
-              @click="localSettings.longStripDirection = 'vertical'"
+              @click="localSettings.longStrip = true;localSettings.longStripDirection = 'vertical';checkSettingsCompatibilty('longStripDirection');"
             >
               <q-tooltip>{{ $t('reader.vertical') }}</q-tooltip>
             </q-btn>
             <q-btn
-              :color="localSettings.longStripDirection === 'horizontal' ? 'orange':''"
+              :color="localSettings.longStripDirection === 'horizontal' && localSettings.longStrip ? 'orange':''"
               icon="swap_horiz"
               dense
-              @click="localSettings.longStripDirection = 'horizontal'"
+              @click="localSettings.longStrip = true;localSettings.longStripDirection = 'horizontal';checkSettingsCompatibilty('longStripDirection');"
             >
               <q-tooltip>{{ $t('reader.horizontal') }}</q-tooltip>
             </q-btn>
           </q-btn-group>
         </q-slide-transition>
         <q-slide-transition>
-          <q-btn-group v-if="localSettings.longStripDirection === 'horizontal' || !localSettings.longStrip">
+          <q-btn-group>
             <q-btn
               :color="localSettings.rtl ? '':'orange'"
               dense
@@ -349,12 +345,12 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
       </div>
       <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
         <q-slide-transition>
-          <q-btn-group v-if="localSettings.longStripDirection === 'horizontal' && localSettings.longStrip">
+          <q-btn-group v-if="localSettings.longStrip">
             <q-btn
               :color="localSettings.book && !localSettings.bookOffset ? 'orange':''"
               dense
               icon="menu_book"
-              @click="localSettings.book = true;localSettings.bookOffset = false;"
+              @click="localSettings.book = true;localSettings.bookOffset = false;checkSettingsCompatibilty('book');"
             >
               <q-tooltip>{{ $t('reader.book_mode') }}</q-tooltip>
             </q-btn>
@@ -362,7 +358,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
               :color="localSettings.book && localSettings.bookOffset ? 'orange':''"
               dense
               icon="auto_stories"
-              @click="localSettings.book = true;localSettings.bookOffset = true;"
+              @click="localSettings.book = true;localSettings.bookOffset = true;checkSettingsCompatibilty('book');"
             >
               <q-tooltip>{{ $t('reader.book_mode_offset') }}</q-tooltip>
             </q-btn>
@@ -370,7 +366,7 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
               :color="!localSettings.book && !localSettings.bookOffset ? 'orange':''"
               dense
               icon="not_interested"
-              @click="localSettings.book = false;localSettings.bookOffset = false;"
+              @click="localSettings.book = false;localSettings.bookOffset = false;checkSettingsCompatibilty('book');"
             >
               <q-tooltip>{{ $t('reader.book_mode_off') }}</q-tooltip>
             </q-btn>
@@ -379,9 +375,11 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
       </div>
       <q-toggle
         v-model="localSettings.webtoon"
+        :disable="localSettings.book || !localSettings.longStrip"
         :label="$t('reader.webtoon')"
         color="orange"
         :dark="$q.dark.isActive"
+        @update:model-value="checkSettingsCompatibilty('webtoon');"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
@@ -390,44 +388,49 @@ watch(() => ({ ...localSettings.value }), (nval, oval) => {
         :dark="$q.dark.isActive"
       />
       <q-toggle
+        v-if="!$q.platform.has.touch"
         v-model="localSettings.overlay"
         :label="$t('settings.reader.overlay')"
         color="orange"
         :dark="$q.dark.isActive"
       />
-      <q-btn-group class="q-ml-auto q-mr-auto q-mt-lg">
-        <q-btn
-          icon="width_wide"
-          :color="localSettings.zoomMode === 'auto' ? 'orange' : undefined"
-          @click="localSettings.zoomMode = 'auto'"
-        >
-          <q-tooltip>
-            {{ $t('reader.displaymode.auto') }}
-          </q-tooltip>
-        </q-btn>
-        <q-btn
-          icon="fit_screen"
-          :disable="localSettings.longStrip && localSettings.longStripDirection === 'horizontal'"
-          :color="localSettings.zoomMode === 'fit-width' ? 'orange' : undefined"
-          @click="localSettings.zoomMode = 'fit-width'"
-        >
-          <q-tooltip>
-            {{ $t('reader.displaymode.fit-width') }}
-          </q-tooltip>
-        </q-btn>
+      <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
+        <q-slide-transition>
+          <q-btn-group>
+            <q-btn
+              icon="width_wide"
+              :color="localSettings.zoomMode === 'auto' ? 'orange' : undefined"
+              @click="localSettings.zoomMode = 'auto';checkSettingsCompatibilty('zoomMode');"
+            >
+              <q-tooltip>
+                {{ $t('reader.displaymode.auto') }}
+              </q-tooltip>
+            </q-btn>
+            <q-btn
+              icon="fit_screen"
+              :disable="localSettings.longStrip && localSettings.longStripDirection === 'horizontal'"
+              :color="localSettings.zoomMode === 'stretch-width' ? 'orange' : undefined"
+              @click="localSettings.zoomMode = 'stretch-width';checkSettingsCompatibilty('zoomMode');"
+            >
+              <q-tooltip>
+                {{ $t('reader.displaymode.stretch-width') }}
+              </q-tooltip>
+            </q-btn>
 
-        <q-btn
-          icon="height"
-          :text-color="localSettings.webtoon ?'grey-1' : undefined"
-          :color="localSettings.zoomMode === 'fit-height' ? 'orange' : undefined"
-          :disable="localSettings.webtoon && localSettings.longStrip && localSettings.longStripDirection !== 'horizontal'"
-          @click="localSettings.zoomMode = 'fit-height';localSettings.webtoon = false"
-        >
-          <q-tooltip>
-            {{ $t('reader.displaymode.fit-height') }} ({{ localSettings.webtoon ? $t('reader.displaymode.compatibility') : '' }})
-          </q-tooltip>
-        </q-btn>
-      </q-btn-group>
+            <q-btn
+              icon="height"
+              :text-color="localSettings.webtoon ?'grey-1' : undefined"
+              :color="localSettings.zoomMode === 'stretch-height' ? 'orange' : undefined"
+              :disable="localSettings.webtoon || (localSettings.longStrip && localSettings.longStripDirection !== 'horizontal' && localSettings.book)"
+              @click="localSettings.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode');"
+            >
+              <q-tooltip>
+                {{ $t('reader.displaymode.stretch-height') }} ({{ $t('reader.displaymode.compatibility') }})
+              </q-tooltip>
+            </q-btn>
+          </q-btn-group>
+        </q-slide-transition>
+      </div>
     </div>
   </div>
 </template>

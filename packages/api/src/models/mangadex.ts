@@ -592,7 +592,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           const coverData = d.relationships.find(x => x.type === 'cover_art');
           if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
           if(!coverURL) return this.logger('no coverURL');
-          const cover = await this.downloadImage(`${this.host}/covers/${d.id}/${coverURL}.512.jpg`);
+          const cover = (await this.downloadImage(`${this.host}/covers/${d.id}/${coverURL}.512.jpg`))?.src;
           const langs = d.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
           const name = d.attributes.title[Object.keys(d.attributes.title)[0]];
 
@@ -645,7 +645,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const coverData = result.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
-        const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`);
+        const cover = (await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`))?.src;
 
         // search for synopsis that matches requestedLangs
         const descriptions = requestedLangs.map(m => result.attributes.description[m]).filter(Boolean);
@@ -788,7 +788,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const coverData = manga.data.relationships.find(x => x.type === 'cover_art');
       if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
       if(!coverURL) return;
-      const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`);
+      const cover = (await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`))?.src;
       const requestLangs = this.#includeLangs(requestedLangs);
 
       const scanlationGroups:Set<{id:string, name: string}> = new Set();
@@ -910,7 +910,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(`${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`);
-        if(img) socket.emit('showChapter', id, {index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
+        if(img) socket.emit('showChapter', id, {index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
         else socket.emit('showChapter', id, { error: 'chapter_error_no_image', trace: `cannot open: ${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`, index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
       }
       if(cancel) return;
@@ -1041,7 +1041,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const coverData = manga.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
-        const cover = await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`);
+        const cover = (await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`))?.src;
         socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, langs: this.mirrorInfo.langs } });
       }
       if(!cancel) socket.emit('showImports', id, { done: true });

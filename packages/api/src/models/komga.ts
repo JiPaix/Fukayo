@@ -162,7 +162,7 @@ class Komga extends SelfHosted implements MirrorInterface {
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-          if (img) covers.push(img);
+          if (img) covers.push(img.src);
 
           if (cancel) return;
           const mg = await this.searchResultsBuilder({
@@ -225,7 +225,7 @@ class Komga extends SelfHosted implements MirrorInterface {
       if(cancel) return;
       const covers:string[] = [];
       const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-      if(img) covers.push(img);
+      if(img) covers.push(img.src);
 
       let status:MangaPage['status'] = 'unknown';
       if(result.metadata.status === 'ABANDONED') status = 'cancelled';
@@ -326,7 +326,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
         const img = await this.downloadImage(this.#path(`/books/${res.id}/pages/${i+1}`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
-          if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         } else {
           if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         }
@@ -406,7 +406,7 @@ class Komga extends SelfHosted implements MirrorInterface {
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
           let lang = 'xx' as mirrorsLangsType;
           if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
           const res:ImportResults = {
             mirror: { name: this.name, langs: this.langs },
             name: manga.metadata.title,

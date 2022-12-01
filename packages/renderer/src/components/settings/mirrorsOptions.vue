@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
@@ -34,10 +34,10 @@ const allLangs = ref<string[]>([]);
 /** language(s) to include in the  results */
 const includedLangsRAW = ref<string[]>([]);
 /** Mirrors info as retrieved from the server */
-const mirrorsRAW = ref<Array<mirrorInfo & { isLoggedIn?: boolean }>>([]);
+const mirrorsRAW = ref<Array<mirrorInfo>>([]);
 
 const mirrors = computed(() => {
-  return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value) as Array<mirrorInfo & { isLoggedIn?: boolean }>;
+  return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value) as Array<mirrorInfo>;
 });
 
 const includedAllLanguage = computed(() => {
@@ -157,11 +157,20 @@ function toggleLang(lang:string) {
   }
 }
 
+function mirrorStatusIcon(mirror:mirrorInfo) {
+  if(mirror.isDead) return { color: 'negative', icon: 'o_broken_image', tooltip: $t('settings.mirror_is_dead')};
+  else if(!mirror.isOnline && mirror.selfhosted && mirror.options.host) return { color: 'red', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
+  else if(!mirror.isOnline && mirror.selfhosted) return {color: 'orange', icon: 'o_login', tooltip: $t('settings.source_requires_setup') };
+  else if(!mirror.isOnline) return { color: 'negative', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
+  else if(!mirror.enabled) return { color: 'negative', icon: 'not_interested'};
+  else return { color: 'positive', icon: 'done'};
+}
+
 // get available mirrors before rendering and start the search if params are present
 onBeforeMount(async () => {
   if(!socket) socket = await useSocket(settings.server);
   socket.emit('getMirrors', true, (m) => {
-    mirrorsRAW.value = m.map(m => { return {...m, isLoggedIn: false}; }).sort((a, b) => a.name.localeCompare(b.name));
+    mirrorsRAW.value = m.sort((a, b) => a.name.localeCompare(b.name));
     includedLangsRAW.value = Array.from(new Set(m.map(m => m.langs).flat()));
     allLangs.value = includedLangsRAW.value;
   });
@@ -312,6 +321,7 @@ onBeforeMount(async () => {
           <q-expansion-item
             v-for="mirror in mirrors"
             :key="mirror.name"
+            :dense="$q.screen.gt.md"
             group="sources"
             :icon="'img:'+mirror.icon"
             :label="mirror.displayName"
@@ -319,12 +329,33 @@ onBeforeMount(async () => {
             :dark="$q.dark.isActive"
             :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-2'"
           >
+            <template #header>
+              <div class="flex items-center q-mr-auto">
+                <q-icon
+                  :name="'img:'+mirror.icon"
+                  size="16px"
+                />
+                <q-icon
+                  :name="mirrorStatusIcon(mirror).icon"
+                  :color="mirrorStatusIcon(mirror).color"
+                  size="16px"
+                  class="q-mx-xs"
+                >
+                  <q-tooltip v-if="mirrorStatusIcon(mirror).tooltip">
+                    {{ mirrorStatusIcon(mirror).tooltip }}
+                  </q-tooltip>
+                </q-icon>
+                <span>{{ mirror.displayName }}</span>
+              </div>
+            </template>
             <q-list
               separator
               :dark="$q.dark.isActive"
+              :dense="$q.screen.gt.md"
             >
               <!-- Customized Enable -->
               <q-item
+                :dense="$q.screen.gt.md"
                 class="flex items-center"
                 clickable
                 :dark="$q.dark.isActive"
@@ -341,11 +372,12 @@ onBeforeMount(async () => {
                   side
                 >
                   <q-toggle
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
                     :color="toggleButtonColor('enabled')"
                     :checked-icon="toggleButtonIconChecked('enabled')"
                     :unchecked-icon="toggleButtonIconUnchecked('enabled')"
                     :model-value="mirror.options.enabled"
-                    size="lg"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'enabled', v)"
                   />
@@ -357,6 +389,7 @@ onBeforeMount(async () => {
                 :key="propertyName"
               >
                 <q-item
+                  :dense="$q.screen.gt.md"
                   class="flex items-center"
                   :clickable="typeof value === 'boolean'"
                   :dark="$q.dark.isActive"
@@ -374,11 +407,12 @@ onBeforeMount(async () => {
                     side
                   >
                     <q-toggle
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
                       :color="toggleButtonColor(propertyName)"
                       :checked-icon="toggleButtonIconChecked(propertyName)"
                       :unchecked-icon="toggleButtonIconUnchecked(propertyName)"
                       :model-value="value"
-                      size="lg"
+                      :dense="$q.screen.gt.md"
                       :dark="$q.dark.isActive"
                       @update:model-value="(v:unknown) => changeOption(mirror.name, propertyName, v)"
                     />
@@ -388,9 +422,9 @@ onBeforeMount(async () => {
                     side
                   >
                     <q-input
+                      :dense="$q.screen.gt.md"
                       :debounce="500"
                       :type="typeof value === 'number' ? 'number' : 'text'"
-                      dense
                       :model-value="value"
                       :dark="$q.dark.isActive"
                       @update:model-value="(v:unknown) => changeOption(mirror.name, propertyName, v)"
@@ -399,7 +433,7 @@ onBeforeMount(async () => {
                         <q-btn
                           class="q-mr-sm q-ml-lg"
                           round
-                          dense
+                          :dense="$q.screen.gt.md"
                           icon="save"
                         />
                       </template>
@@ -409,10 +443,18 @@ onBeforeMount(async () => {
               </div>
               <!-- Customized Login -->
               <div v-if="mirror.options.hasOwnProperty('login')">
+                <div
+                  dense
+                  style="background:rgba(255, 255, 255, 0.2)"
+                  class="flex flex-center justify-center items-center"
+                >
+                  <span class="text-h6 ">{{ $t('settings.credentials').toLocaleUpperCase() }}</span>
+                </div>
                 <q-item
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -421,7 +463,10 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-input
                     type="text"
-                    dense
+                    :dense="$q.screen.gt.md"
+                    outlined
+                    hide-bottom-space
+                    stack-label
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
                     :dark="$q.dark.isActive"
@@ -435,6 +480,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -443,8 +489,9 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-input
                     type="password"
-                    dense
+                    :dense="$q.screen.gt.md"
                     :debounce="500"
+                    outlined
                     :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'password', v)"
@@ -457,6 +504,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -465,8 +513,9 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-input
                     type="text"
-                    dense
+                    :dense="$q.screen.gt.md"
                     :debounce="500"
+                    outlined
                     :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'host', v)"
@@ -479,6 +528,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -487,7 +537,8 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-input
                     type="number"
-                    dense
+                    :dense="$q.screen.gt.md"
+                    outlined
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
                     :dark="$q.dark.isActive"
@@ -501,6 +552,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -508,7 +560,10 @@ onBeforeMount(async () => {
                     </q-item-label>
                   </q-item-section>
                   <q-select
-                    dense
+                    outlined
+                    :behavior="$q.screen.lt.md ? 'dialog': 'menu'"
+                    :dense="$q.screen.gt.md"
+                    :options-dense="$q.screen.gt.md"
                     :model-value="asTypeOrUndefined(mirror.options.protocol as string) || 'http'"
                     :dark="$q.dark.isActive"
                     :options="['http', 'https']"
@@ -519,6 +574,7 @@ onBeforeMount(async () => {
               <!-- Excluded Groups -->
               <div v-if="mirror.options.hasOwnProperty('excludedGroups')">
                 <q-item
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
@@ -529,7 +585,9 @@ onBeforeMount(async () => {
                     </q-item-label>
                   </q-item-section>
                   <q-select
-                    dense
+                    :dense="$q.screen.gt.md"
+                    :options-dense="$q.screen.gt.md"
+                    :behavior="$q.screen.lt.md ? 'dialog': 'menu'"
                     :model-value="mirror.options.excludedGroups"
                     :label="$t('settings.source.excludedGroupsHints')"
                     filled
@@ -537,9 +595,8 @@ onBeforeMount(async () => {
                     use-chips
                     multiple
                     hide-dropdown-icon
-                    input-debounce="0"
                     new-value-mode="add-unique"
-                    style="width: 250px"
+                    reactive-rules
                     :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'excludedGroups', v)"
                   />
@@ -551,6 +608,7 @@ onBeforeMount(async () => {
                   :dark="$q.dark.isActive"
                   style="background:rgba(255, 255, 255, 0.3)"
                   :class="$q.dark.isActive ? '' : 'bg-white'"
+                  :dense="$q.screen.gt.md"
                 >
                   <q-item-section>
                     <q-item-label>
@@ -559,7 +617,9 @@ onBeforeMount(async () => {
                   </q-item-section>
                   <q-select
                     color="orange"
-                    dense
+                    :behavior="$q.screen.lt.md ? 'dialog': 'menu'"
+                    :dense="$q.screen.gt.md"
+                    :options-dense="$q.screen.gt.md"
                     :model-value="mirror.options.excludedUploaders"
                     :label="$t('settings.source.excludedGroupsHints')"
                     filled
@@ -567,9 +627,7 @@ onBeforeMount(async () => {
                     use-chips
                     multiple
                     hide-dropdown-icon
-                    input-debounce="0"
                     new-value-mode="add-unique"
-                    style="width: 250px"
                     reactive-rules
                     :rules="[ val => isValidUUI(val) || $t('settings.source.validUUID') ]"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'excludedUploaders', v)"

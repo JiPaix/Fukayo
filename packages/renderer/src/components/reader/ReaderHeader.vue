@@ -10,6 +10,7 @@ defineProps<{
   chapter: MangaPage['chapters'][0]|MangaInDB['chapters'][0]
   nbOfPages: number
   page: number
+  currentChapterString: string
 }>();
 
 const emit = defineEmits<{
@@ -84,30 +85,8 @@ function toggleDarkMode() {
     v-if="chapter && manga"
     :dark="$q.dark.isActive"
     :class="$q.dark.isActive ? '' : 'bg-grey-4 text-dark'"
+    class="text-caption"
   >
-    <span
-      v-if="chapter.volume !== undefined"
-      class="text-caption"
-    >
-      {{ $t('mangas.volume') }} {{ chapter.volume }}
-    </span>
-    <span
-      v-if="chapter.volume !== undefined && chapter.number !== undefined"
-      class="text-caption"
-    >
-      -
-    </span>
-    <span
-      v-if="chapter.number !== undefined"
-      class="text-caption"
-    >
-      {{ $t('mangas.chapter') }} {{ chapter.number }}
-    </span>
-    <span
-      v-if="chapter.volume === undefined && chapter.number === undefined"
-      class="text-caption"
-    >
-      {{ chapter.name }}
-    </span>
+    <span>{{ currentChapterString }}</span>
   </q-bar>
 </template>

@@ -178,7 +178,9 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
           const lang = currentSource.lang;
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+
+          if (img) covers.push(img.src);
 
 
           const chapters = await this.fetch<Chapter[]>({
@@ -255,7 +257,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       const lang = currentSource.lang;
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-      if (img) covers.push(img);
+      if (img) covers.push(img.src);
       let status:MangaPage['status'];
       switch(manga.status) {
         case 'CANCELLED':
@@ -371,7 +373,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
 
         const img = await this.downloadImage(this.#path(url + '/page/' + i), undefined, false, { withCredentials: true });
         if (img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img.src, height:img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         } else {
           socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         }
@@ -472,7 +474,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
 
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
 
-          if (img) covers.push(img);
+          if (img) covers.push(img.src);
 
           if (cancel) return;
           const searchResult = await this.searchResultsBuilder({

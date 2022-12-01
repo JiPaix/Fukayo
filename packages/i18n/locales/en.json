@@ -323,8 +323,8 @@
     "displaymode": {
       "auto": "Auto",
       "compatibility": "not compatibile with webtoon mode",
-      "fit-height": "Fit to screen's height",
-      "fit-width": "Fit to screen's width"
+      "stretch-height": "Stretch to screen's height",
+      "stretch-width": "Stretch to screen's width"
     },
     "error": {
       "chapter": "Couldn't load chapter",
@@ -332,7 +332,7 @@
       "reload": "Reload"
     },
     "first": "Go back to the first chapter:",
-    "horizontal": "Horizontal",
+    "horizontal": "Display the whole chapter as a long horizontal strip",
     "last": "Go to the latest chapter:",
     "loading": "Loading",
     "longstrip": "Display the whole chapter as a long strip",
@@ -352,7 +352,8 @@
     "reload_chapter": "Reload this chapter",
     "rtl": "Read from right to left",
     "showpagenumber": "Show page number",
-    "vertical": "Vertical",
+    "singlePage": "Display one page at a time",
+    "vertical": "Display the whole chapter as a long vertical strip",
     "webtoon": "Webtoon mode"
   },
   "search": {
@@ -373,6 +374,7 @@
     "bookmode": "Display as a book",
     "cache": "Cache",
     "confirm": "CONFIRM",
+    "credentials": "Credentials",
     "darkmode": "Enable dark mode",
     "displaymodes": "Display modes",
     "file": "File | Files",
@@ -395,6 +397,7 @@
     },
     "logs": "Logs",
     "longstripDirection": "Choose the image orientation",
+    "mirror_is_dead": "This source has been reported as inactive",
     "reader": {
       "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
       "overlay": "Display navigation overlay when hovering images",
@@ -435,6 +438,8 @@
       "protocol": "Protocol",
       "validUUID": "Please use a valid UUID"
     },
+    "source_is_offline": "This source appears to be offline",
+    "source_requires_setup": "This source requires a setup to be active",
     "tab": "Configuration",
     "update": {
       "day": "Day | Days",

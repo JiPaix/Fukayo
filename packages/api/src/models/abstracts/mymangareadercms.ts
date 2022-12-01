@@ -96,7 +96,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img.img-responsive').attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink);
+          const img = (await this.downloadImage(coverLink))?.src;
           if(img) covers.push(img);
         }
 
@@ -179,7 +179,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img', el).attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink);
+          const img = (await this.downloadImage(coverLink))?.src;
           if(img) covers.push(img);
         }
 
@@ -242,7 +242,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       let coverLink = $('.boxed img').attr('src');
       if(coverLink) {
         if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-        const img = await this.downloadImage(coverLink);
+        const img = (await this.downloadImage(coverLink))?.src;
         if(img) covers.push(img);
       }
 
@@ -367,7 +367,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(imgLink, `${this.host}${link}`);
         if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img.src, width: img.width, height: img.height, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
           continue;
         }
         socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });

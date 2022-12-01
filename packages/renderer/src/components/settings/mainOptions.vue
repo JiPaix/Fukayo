@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import type SettingsDB from '@api/db/settings';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useStoreSettings } from '@renderer/store/settings';
 import { useQuasar } from 'quasar';
@@ -220,6 +220,34 @@ async function saveSettings() {
   });
 }
 
+/** make sure options are compatible with each others */
+async function checkSettingsCompatibilty(key: keyof typeof settings.reader) {
+
+if(key === 'book' && settings.reader.book) {
+  if(settings.reader.zoomMode === 'stretch-height' && settings.reader.longStripDirection === 'vertical') settings.reader.zoomMode = 'auto';
+  if(settings.reader.webtoon) settings.reader.webtoon = false;
+}
+
+if(key === 'longStrip' && !settings.reader.longStrip) {
+  settings.reader.webtoon = false;
+  settings.reader.book = false;
+  settings.reader.bookOffset = false;
+}
+
+if(key === 'webtoon' && settings.reader.webtoon) {
+  if(settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
+}
+
+if(key === 'longStripDirection' && settings.reader.longStripDirection === 'vertical') {
+  if(settings.reader.book && settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
+}
+
+if(key === 'longStripDirection' && settings.reader.longStripDirection === 'horizontal') {
+  if(settings.reader.zoomMode === 'stretch-width') settings.reader.zoomMode = 'auto';
+}
+
+}
+
 onBeforeMount(async () => {
   await getSettings();
 });
@@ -254,36 +282,6 @@ async function kill(password:string) {
     });
 }
 
-watch(() => ({ ...settings.reader }), (nval) => {
-  if(nval.longStrip) {
-    if(nval.longStripDirection === 'horizontal') {
-      if(nval.zoomMode === 'fit-width') {
-        settings.reader.zoomMode = 'fit-height';
-      }
-      if(nval.webtoon && (nval.book || nval.bookOffset)) {
-        settings.reader.webtoon = false;
-      }
-    } else {
-      if(nval.rtl) {
-        settings.reader.rtl = false;
-      }
-      if(nval.webtoon && nval.zoomMode === 'fit-height') {
-        settings.reader.zoomMode = 'auto';
-      }
-      if(nval.book || nval.bookOffset) {
-        settings.reader.book = false;
-        settings.reader.bookOffset = false;
-      }
-    }
-  } else {
-    if(nval.book || nval.bookOffset) {
-      settings.reader.book = false;
-      settings.reader.bookOffset = false;
-    }
-    if(nval.webtoon) settings.reader.webtoon = false;
-  }
-}, {deep: true});
-
 </script>
 <template>
   <q-card
@@ -303,6 +301,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
           :class="$q.dark.isActive ? '' : 'bg-grey-4'"
           group="global"
           :dark="$q.dark.isActive"
+          :dense="$q.screen.gt.md"
         >
           <q-list
             separator
@@ -406,6 +405,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
           </q-list>
         </q-expansion-item>
         <q-expansion-item
+          :dense="$q.screen.gt.md"
           :label="$t('settings.global.title').toLocaleUpperCase()"
           class="shadow-2"
           :class="$q.dark.isActive ? '' : 'bg-grey-4'"
@@ -422,6 +422,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="toggleDarkMode"
             >
               <q-item-section>
@@ -435,8 +436,9 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   :model-value="settings.theme === 'dark'"
                   :icon="darkIcon"
-                  size="lg"
                   :dark="$q.dark.isActive"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   @update:model-value="toggleDarkMode"
                 />
               </q-item-section>
@@ -446,6 +448,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+
+              :dense="$q.screen.gt.md"
             >
               <q-item-section>
                 <q-item-label>
@@ -455,31 +459,38 @@ watch(() => ({ ...settings.reader }), (nval) => {
               <q-item-section>
                 <div
                   v-if="typeof waitDay !== 'undefined' && typeof waitHour !== 'undefined' && typeof waitMinutes !== 'undefined'"
-                  class="row items-start w-100 flex justify-around"
+                  class="flex column q-ml-auto"
+                  style="max-width:150px;"
                 >
                   <q-input
                     v-model="waitDay"
-                    dense
                     type="number"
                     :min="0"
                     :label="$t('settings.update.day', waitDay)"
                     :dark="$q.dark.isActive"
+                    :dense="$q.screen.gt.md"
+                    outlined
+                    class="q-my-xs"
                   />
                   <q-input
                     v-model="waitHour"
-                    dense
+                    outlined
+                    :dense="$q.screen.gt.md"
                     type="number"
                     :min="0"
                     :label="$t('settings.update.hour', waitHour)"
                     :dark="$q.dark.isActive"
+                    xlass="q-my-xs"
                   />
                   <q-input
                     v-model="waitMinutes"
-                    dense
+                    outlined
+                    :dense="$q.screen.gt.md"
                     :min="0"
                     type="number"
                     :label="$t('settings.update.minute', waitMinutes)"
                     :dark="$q.dark.isActive"
+                    class="q-my-xs"
                   />
                 </div>
               </q-item-section>
@@ -489,6 +500,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="cacheSizeEnabled = !cacheSizeEnabled"
             >
               <q-item-section>
@@ -502,7 +514,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="cacheSizeEnabled"
                   :icon="cacheIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                 />
               </q-item-section>
@@ -513,6 +526,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+
+              :dense="$q.screen.gt.md"
             >
               <q-item-section>
                 <q-item-label>
@@ -523,14 +538,17 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <div
                   v-if="typeof cacheGB !== 'undefined'"
                   class="row items-start w-100 flex justify-around"
+                  style="max-width:150px;"
                 >
                   <q-input
                     v-model="cacheGB"
                     min="1"
-                    dense
+                    :dense="$q.screen.gt.md"
+                    outlined
                     type="number"
                     :label="$t('settings.scheduler.cache.GB', cacheGB)"
                     :dark="$q.dark.isActive"
+                    class="q-my-xs"
                   />
                 </div>
               </q-item-section>
@@ -540,6 +558,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="cacheAgeEnabled = !cacheAgeEnabled"
             >
               <q-item-section>
@@ -553,7 +572,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="cacheAgeEnabled"
                   :icon="cacheAgeIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                 />
               </q-item-section>
@@ -573,11 +593,14 @@ watch(() => ({ ...settings.reader }), (nval) => {
               <q-item-section>
                 <div
                   v-if="typeof cacheDay !== 'undefined' && typeof cacheHour !== 'undefined' && typeof cacheMinutes !== 'undefined'"
-                  class="row items-start w-100 flex justify-around"
+                  class="flex column q-ml-auto"
+                  style="max-width:150px;"
                 >
                   <q-input
                     v-model="cacheDay"
-                    dense
+                    :dense="$q.screen.gt.md"
+                    outlined
+                    class="q-my-xs"
                     type="number"
                     :min="0"
                     :label="$t('settings.update.day', cacheDay)"
@@ -585,7 +608,9 @@ watch(() => ({ ...settings.reader }), (nval) => {
                   />
                   <q-input
                     v-model="cacheHour"
-                    dense
+                    class="q-my-xs"
+                    outlined
+                    :dense="$q.screen.gt.md"
                     type="number"
                     :min="0"
                     :label="$t('settings.update.hour', cacheHour)"
@@ -593,7 +618,9 @@ watch(() => ({ ...settings.reader }), (nval) => {
                   />
                   <q-input
                     v-model="cacheMinutes"
-                    dense
+                    class="q-my-xs"
+                    outlined
+                    :dense="$q.screen.gt.md"
                     type="number"
                     :min="0"
                     :label="$t('settings.update.minute', cacheMinutes)"
@@ -634,6 +661,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
           class="shadow-2"
           :class="$q.dark.isActive ? '' : 'bg-grey-4'"
           group="reader"
+          :dense="$q.screen.gt.md"
         >
           <q-list
             separator
@@ -645,6 +673,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="settings.reader.preloadNext = !settings.reader.preloadNext"
             >
               <q-item-section>
@@ -658,7 +687,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="settings.reader.preloadNext"
                   :icon="preloadIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                 />
               </q-item-section>
@@ -675,7 +705,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
-              @click="settings.reader.longStrip = !settings.reader.longStrip"
+              :dense="$q.screen.gt.md"
+              @click="settings.reader.longStrip = !settings.reader.longStrip;checkSettingsCompatibilty('longStrip')"
             >
               <q-item-section>
                 <q-item-label>
@@ -688,8 +719,10 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="settings.reader.longStrip"
                   :icon="longStripIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
+                  @update:model-value="checkSettingsCompatibilty('longStrip')"
                 />
               </q-item-section>
             </q-item>
@@ -697,6 +730,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
+              :dense="$q.screen.gt.md"
             >
               <q-item-section>
                 <q-item-label>
@@ -706,24 +740,28 @@ watch(() => ({ ...settings.reader }), (nval) => {
               <q-item-section
                 side
               >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center">
+                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
                   <q-btn
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
                     :disable="!settings.reader.longStrip"
                     :text-color="!settings.reader.longStrip ? 'negative': ''"
                     icon="swap_vert"
                     :color="settings.reader.longStripDirection === 'vertical' && settings.reader.longStrip ? 'orange' : undefined"
-                    @click="settings.reader.longStripDirection = 'vertical'"
+                    @click="settings.reader.longStripDirection = 'vertical';checkSettingsCompatibilty('longStripDirection')"
                   >
                     <q-tooltip>
                       {{ $t('reader.vertical') }}
                     </q-tooltip>
                   </q-btn>
                   <q-btn
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
                     :disable="!settings.reader.longStrip"
                     :text-color="!settings.reader.longStrip ? 'negative': ''"
                     icon="swap_horiz"
                     :color="settings.reader.longStripDirection === 'horizontal' && settings.reader.longStrip ? 'orange' : undefined"
-                    @click="settings.reader.longStripDirection = 'horizontal'"
+                    @click="settings.reader.longStripDirection = 'horizontal';checkSettingsCompatibilty('longStripDirection')"
                   >
                     <q-tooltip>
                       {{ $t('reader.horizontal') }}
@@ -736,6 +774,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
+              :dense="$q.screen.gt.md"
             >
               <q-item-section>
                 <q-item-label>
@@ -745,35 +784,41 @@ watch(() => ({ ...settings.reader }), (nval) => {
               <q-item-section
                 side
               >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center">
+                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
                   <q-btn
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
                     icon="menu_book"
-                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
-                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
+                    :disable="!settings.reader.longStrip"
+                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
                     :color="settings.reader.book && !settings.reader.bookOffset ? 'orange' : undefined"
-                    @click="settings.reader.book = true;settings.reader.bookOffset = false;"
+                    @click="settings.reader.book = true;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
                   >
                     <q-tooltip>
                       {{ $t('reader.book_mode') }}
                     </q-tooltip>
                   </q-btn>
                   <q-btn
-                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
-                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
+                    :disable="!settings.reader.longStrip"
+                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
                     icon="auto_stories"
                     :color="settings.reader.book && settings.reader.bookOffset ? 'orange':''"
-                    @click="settings.reader.book = true;settings.reader.bookOffset = true;"
+                    @click="settings.reader.book = true;settings.reader.bookOffset = true;checkSettingsCompatibilty('book')"
                   >
                     <q-tooltip>
                       {{ $t('reader.book_mode_offset') }}
                     </q-tooltip>
                   </q-btn>
                   <q-btn
-                    :disable="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal'"
-                    :text-color="!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal' ? 'negative' : ''"
-                    :color="!settings.reader.book && !settings.reader.bookOffset && (settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal') ? 'orange':''"
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
+                    :disable="!settings.reader.longStrip"
+                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
+                    :color="!settings.reader.book && !settings.reader.bookOffset && settings.reader.longStrip ? 'orange':''"
                     icon="not_interested"
-                    @click="settings.reader.book = false;settings.reader.bookOffset = false;"
+                    @click="settings.reader.book = false;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
                   >
                     <q-tooltip>{{ $t('reader.book_mode_off') }}</q-tooltip>
                   </q-btn>
@@ -785,6 +830,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="settings.reader.rtl = !settings.reader.rtl"
             >
               <q-item-section>
@@ -797,11 +843,10 @@ watch(() => ({ ...settings.reader }), (nval) => {
               >
                 <q-toggle
                   v-model="settings.reader.rtl"
-                  :disable="settings.reader.longStripDirection !== 'horizontal' && settings.reader.longStrip"
-                  :color="settings.reader.longStripDirection !== 'horizontal' && settings.reader.longStrip ? 'negative': ''"
-                  keep-color
+                  color="orange"
                   :icon="rtlIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                 />
               </q-item-section>
@@ -811,7 +856,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
-              @click="settings.reader.webtoon = !settings.reader.webtoon"
+              :dense="$q.screen.gt.md"
+              @click="settings.reader.webtoon = !settings.reader.webtoon;checkSettingsCompatibilty('webtoon')"
             >
               <q-item-section>
                 <q-item-label>
@@ -823,12 +869,14 @@ watch(() => ({ ...settings.reader }), (nval) => {
               >
                 <q-toggle
                   v-model="settings.reader.webtoon"
-                  :disable="settings.reader.zoomMode === 'fit-height' || !settings.reader.longStrip"
-                  :color="settings.reader.zoomMode === 'fit-height' || !settings.reader.longStrip ? 'negative' : ''"
+                  :disable="settings.reader.book || !settings.reader.longStrip"
+                  :color="settings.reader.book || !settings.reader.longStrip ? 'negative' : ''"
                   keep-color
                   :icon="webtoonIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
+                  @update:model-value="checkSettingsCompatibilty('webtoon')"
                 />
               </q-item-section>
             </q-item>
@@ -837,6 +885,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
+
               @click="settings.reader.showPageNumber = !settings.reader.showPageNumber"
             >
               <q-item-section>
@@ -850,7 +900,8 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="settings.reader.showPageNumber"
                   :icon="showPageNumberIcon"
-                  size="lg"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                   :dark="$q.dark.isActive"
                 />
               </q-item-section>
@@ -860,6 +911,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
               @click="settings.reader.overlay = !settings.reader.overlay"
             >
               <q-item-section>
@@ -873,8 +925,9 @@ watch(() => ({ ...settings.reader }), (nval) => {
                 <q-toggle
                   v-model="settings.reader.overlay"
                   :icon="showOverlayIcon"
-                  size="lg"
                   :dark="$q.dark.isActive"
+                  :size="$q.screen.gt.md ? 'md' : 'xl'"
+                  :dense="$q.screen.gt.md"
                 />
               </q-item-section>
             </q-item>
@@ -883,6 +936,7 @@ watch(() => ({ ...settings.reader }), (nval) => {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
+              :dense="$q.screen.gt.md"
             >
               <q-item-section>
                 <q-item-label>
@@ -892,11 +946,13 @@ watch(() => ({ ...settings.reader }), (nval) => {
               <q-item-section
                 side
               >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center">
+                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
                   <q-btn
                     icon="width_wide"
                     :color="settings.reader.zoomMode === 'auto' ? 'orange' : undefined"
-                    @click="settings.reader.zoomMode = 'auto'"
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
+                    @click="settings.reader.zoomMode = 'auto';checkSettingsCompatibilty('zoomMode')"
                   >
                     <q-tooltip>
                       {{ $t('reader.displaymode.auto') }}
@@ -906,25 +962,30 @@ watch(() => ({ ...settings.reader }), (nval) => {
                     icon="fit_screen"
                     :disable="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal'"
                     :text-color="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal' ? 'negative' : ''"
-                    :color="settings.reader.zoomMode === 'fit-width' && (!settings.reader.longStrip || settings.reader.longStripDirection !== 'horizontal') ? 'orange' : undefined"
-                    @click="settings.reader.zoomMode = 'fit-width'"
+                    :color="settings.reader.zoomMode === 'stretch-width' ? 'orange' : undefined"
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
+                    @click="settings.reader.zoomMode = 'stretch-width';checkSettingsCompatibilty('zoomMode')"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-width') }}
+                      {{ $t('reader.displaymode.stretch-width') }}
                     </q-tooltip>
                   </q-btn>
                   <q-btn
                     icon="height"
-                    :text-color="settings.reader.webtoon ? 'negative' : undefined"
-                    :color="settings.reader.zoomMode === 'fit-height' ? 'orange' : undefined"
-                    :disable="settings.reader.webtoon"
-                    @click="settings.reader.zoomMode = 'fit-height';settings.reader.webtoon = false"
+                    :text-color="settings.reader.webtoon || (settings.reader.longStrip && settings.reader.longStripDirection !== 'horizontal' && settings.reader.book) ? 'negative' : undefined"
+                    :color="settings.reader.zoomMode === 'stretch-height' ? 'orange' : undefined"
+                    :disable="settings.reader.webtoon || (settings.reader.longStrip && settings.reader.longStripDirection !== 'horizontal' && settings.reader.book)"
+                    :size="$q.screen.gt.md ? 'md' : 'xl'"
+                    :dense="$q.screen.gt.md"
+                    @click="settings.reader.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode')"
                   >
                     <q-tooltip>
-                      {{ $t('reader.displaymode.fit-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
+                      {{ $t('reader.displaymode.stretch-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
                     </q-tooltip>
                   </q-btn>
                 </q-btn-group>
+                {{ settings.reader.zoomMode }}
               </q-item-section>
             </q-item>
           </q-list>
