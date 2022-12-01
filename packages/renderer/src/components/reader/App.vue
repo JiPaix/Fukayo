@@ -619,7 +619,7 @@ const showPrevBuffer = ref(false);
 const showNextBuffer = ref(false);
 const reachedPrev = ref(false);
 
-function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }) {
+function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }, fromTouch = false) {
   if(ignoreScroll.value) return;
   if(!virtscroll.value) return;
 
@@ -629,7 +629,13 @@ function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }) {
 
 
   if(localReaderSettings.value.longStrip && localReaderSettings.value.longStripDirection === 'horizontal') {
-    scrollArea.setScrollPosition('horizontal', pos.left+add);
+    if(!fromTouch) {
+      if(localReaderSettings.value.rtl) scrollArea.setScrollPosition('horizontal', (pos.left-add));
+      else scrollArea.setScrollPosition('horizontal', (pos.left+add));
+    } else {
+      scrollArea.setScrollPosition('horizontal', (pos.left+add));
+    }
+
     const percentage = scrollArea.getScrollPercentage();
 
     if(localReaderSettings.value.rtl && pos.left+add >= 0) {
@@ -675,13 +681,13 @@ function touch(ev:TouchEvent) {
   if(current.screenX !== touchTrack.screenX) {
     if(localReaderSettings.value.longStripDirection === 'horizontal' || !localReaderSettings.value.longStrip) return;
     const add = touchTrack.screenX - current.screenX;
-    useWheelToScrollHorizontally({ deltaY: add });
+    useWheelToScrollHorizontally({ deltaY: add }, true);
   }
 
   if(current.screenY !== touchTrack.screenY) {
     if(localReaderSettings.value.longStripDirection === 'horizontal') return;
     const add = touchTrack.screenY - current.screenY;
-    useWheelToScrollHorizontally({ deltaY: add });
+    useWheelToScrollHorizontally({ deltaY: add }, true);
   }
   touchTrack.screenX = current.screenX;
   touchTrack.screenY = current.screenY;
