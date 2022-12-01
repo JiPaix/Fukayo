@@ -188,7 +188,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   protected checkOnline():Promise<boolean> {
     const socket = new net.Socket();
     socket.setTimeout(2500);
-    const port = this.options.port as number || this.host.includes('https') ? 443 : 80;
+    const port = this.options.port as number || (this.host.includes('https') ? 443 : 80);
     const host = this.options.host as string || this.host.replace(/http(s?):\/\//, '');
     return new Promise(ok => {
       const resolve = (bool:boolean) => {
