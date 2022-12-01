@@ -4,8 +4,8 @@
  * - English: `en`
  * - French: `fr`
  */
- export const appLangs = ['en', 'fr'] as const;
- export type appLangsType = typeof appLangs[number];
+export const appLangs = ['en', 'fr', 'de'] as const;
+export type appLangsType = typeof appLangs[number];
 
  /**
   * available languages for mirrors (ISO 639-1):
@@ -200,7 +200,7 @@
   * - Zhuang, Chuang: `za`
   * - Zulu: `zu`
   */
- export const mirrorsLang = [
+export const mirrorsLang = [
      'xx',
      'ab',
      'aa',
@@ -391,9 +391,9 @@
      'yo',
      'za',
      'zu',
- ] as const;
+] as const;
 
- export type mirrorsLangsType = Mutable<typeof mirrorsLang[number]>
+export type mirrorsLangsType = Mutable<typeof mirrorsLang[number]>
 
  type Mutable<T> = {
    -readonly [Key in keyof T]: T[Key];
