@@ -113,7 +113,7 @@ function imageVisibility(indexes:number[]) {
             size="lg"
             color="negative"
           />
-          <span :class="prevChapterString ? '': 'text-negative'">{{ prevChapterString || $t('reader.no_next_to_read') }}</span>
+          <span :class="prevChapterString ? '': 'text-negative'">{{ prevChapterString || $t('reader.no_prev_to_read') }}</span>
         </div>
       </template>
       <template
