@@ -306,8 +306,18 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     const indexes = await db.getIndexes();
     const broken:{manga: MangaInDB, mirror: Mirror & MirrorInterface}[] = [];
 
+    // if mirror is selfhosted and offline just updates the .lastUpdate value, so we can try again next time
+    if(mirror.selfhosted && !mirror.isOnline) {
+      for(const manga of mangas) {
+        await db.add({ manga }, true);
+      }
+    }
+
+
     for(const manga of mangas) {
       const index = indexes.find(i => i.id === manga.id);
+      // The manga should be always be part of the indexes since this is where we got it from
+      // This case only happens if end-user messes with config files
       if(!index) {
         await db.add({ manga });
         continue;
@@ -317,10 +327,12 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         const fetched = await this.#fetch(mirror, manga);
         await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);
       } catch(e) {
+        // we will handle failed updates later..
         broken.push({ manga, mirror });
       }
     }
 
+    // grouping failed updates by mirrors
     const group = broken.reduce((acc, value) => {
       (acc[value.mirror.name] ||= []).push(value);
       return acc;
@@ -428,7 +440,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   }
 
   /**
-   * Fetch data directly from the mirror
+   * This function basically calls `mirror.manga()`
    */
   async #fetch(mirror:Mirror & MirrorInterface, manga: MangaInDB|SearchResult):Promise<MangaPage> {
     return new Promise((resolve, reject) => {
