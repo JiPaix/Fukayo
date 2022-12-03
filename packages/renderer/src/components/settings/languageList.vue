@@ -42,8 +42,7 @@ const optionsRAW = mirrorsLang.filter(l => l !== 'xx')
   .sort((a, b) => a.label.localeCompare(b.label));
 
 const options = ref(optionsRAW);
-
-function filterFn (val:string, update:(any:any)=>void) {
+function filterFn (val:string, update:(callbackFn:() => void)=>void) {
   if (val === '') {
     update(() => {
       options.value = optionsRAW;
