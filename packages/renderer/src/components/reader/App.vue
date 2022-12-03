@@ -742,7 +742,7 @@ watch(() => localReaderSettings.value, (nval, oval) => {
         style="background:rgba(255, 255, 255, 0.15);"
         :open="rightDrawerOpen"
         :dark="$q.dark.isActive"
-        :chapters="manga.chapters"
+        :chapters="manga.chapters.filter(c => c.lang === lang)"
         :current-chapter-id="currentChapterId"
         :in-library="manga.inLibrary"
         :reader-settings="isMangaInDB(manga) ? manga.meta.options : settings.reader"
