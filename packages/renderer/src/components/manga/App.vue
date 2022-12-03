@@ -652,7 +652,7 @@ const routeLang = computed<OptionLanguage>({
                 autofocus
                 counter
                 :debounce="500"
-                @update:model-value="(v:string) => displayName = v"
+                @update:model-value="(v) => displayName = (v as string)"
                 @keyup.enter="scope.set"
               >
                 <template #append>
