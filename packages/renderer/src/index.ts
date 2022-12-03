@@ -47,7 +47,7 @@ const router = createRouter({
       },
       {
         name: 'settings',
-        path: '/settings',
+        path: '/settings/:tab?',
         component: () => import('@renderer/components/settings/App.vue'),
       },
       {

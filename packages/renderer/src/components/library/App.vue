@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
     />
   </div>
   <div
-    v-else-if="mirrorList.length && mangas.length"
+    v-else-if="(mirrorList.length && (deadMangas.length || mangas.length))"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     :dark="$q.dark.isActive"

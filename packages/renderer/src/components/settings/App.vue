@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import fileSystem from '@renderer/components/settings/fileSystem.vue';
 import languageList from '@renderer/components/settings/languageList.vue';
 import mainOptions from '@renderer/components/settings/mainOptions.vue';
@@ -8,10 +8,17 @@ import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-const tab = ref<'general' | 'sources' | 'languages' | 'files'>('general');
+const route = useRoute();
+
+const tabList:['general', 'sources', 'languages', 'files'] = ['general', 'sources', 'languages', 'files'];
+const startTab:typeof tabList[number] = typeof route.params.tab === 'string' && tabList.includes(route.params.tab as typeof tabList[number]) ? route.params.tab as typeof tabList[number]: 'general';
+const tab = ref<'general' | 'sources' | 'languages' | 'files'>(startTab);
 const $q = useQuasar();
+
+
 </script>
 
 <template>
