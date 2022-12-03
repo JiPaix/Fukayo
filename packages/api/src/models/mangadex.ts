@@ -791,8 +791,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const cover = (await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`))?.src;
       const requestLangs = this.#includeLangs(requestedLangs);
 
-      const scanlationGroups:Set<{id:string, name: string}> = new Set();
-
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const [page, _] of Array(20).entries()) {
 
@@ -815,22 +813,18 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
-        // retrieving scanlators names
-        const groups = res.data
-          .map(
-            x=> x.relationships.filter(y=>y.type==='scanlation_group'),
-          )
-          .flat()
-          .map(g => g.id);
-
-        const scanlators = await this.#findGroup(groups);
-        scanlators.forEach(s => scanlationGroups.add(s));
         // retrieving read markers
         const readMarkers = await this.#getReadMarker(url.replace('/manga/', ''));
 
         const chapters:MangaPage['chapters'] = [];
 
         for(const x of res.data.filter(x => (!x.attributes.externalUrl || !x.attributes.chapter) && requestedLangs.includes(x.attributes.translatedLanguage))) {
+          // retrieving scanlators names
+          const groups = x.relationships.filter(y=>y.type==='scanlation_group').map(g => g.id);
+          const scanlators = await this.#findGroup(groups);
+          const scanlationGroups = new Set<string>();
+          scanlators.forEach(s => scanlationGroups.add(s.name));
+
           const built = await this.chaptersBuilder({
             id: x.id,
             url: '/chapter/'+x.id,
@@ -840,7 +834,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
             volume: x.attributes.volume ? parseFloat(x.attributes.volume) : undefined,
             name: x.attributes.title ? x.attributes.title : undefined,
             read: readMarkers.includes(x.id),
-            group: scanlationGroups.size > 0 ? Array.from(scanlationGroups).map(g => g.name).join(', ') : undefined,
+            group: scanlationGroups.size > 0 ? Array.from(scanlationGroups).join(', ') : undefined,
           });
           chapters.push(built);
         }
