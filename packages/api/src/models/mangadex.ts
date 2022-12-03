@@ -804,7 +804,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         // filter Boolean in just in case
         if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
-        if(this.options.excludedUploaders.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
+        if(this.options.excludedUploaders.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedUploaders[]=${g}`).join('');
 
         const res = await this.fetch<
           Routes['/manga/{id}/feed']['ok']|Routes['/manga/{id}/feed']['err']
