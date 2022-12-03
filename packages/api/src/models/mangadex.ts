@@ -1040,7 +1040,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       }
       if(!cancel) socket.emit('showImports', id, { done: true });
     } catch(e) {
-      this.logger('error while fetching manga', e);
+      this.logger('error while importing manga', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) socket.emit('showImports', id, {error: 'import_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showImports', id, {error: 'import_error', trace: e});

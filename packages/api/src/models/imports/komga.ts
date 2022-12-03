@@ -38,7 +38,7 @@ class KomgaImporter extends Importer implements ImporterInterface {
       socket.removeAllListeners('showImports');
       return;
     }
-    console.log('[api]', 'lists', lists);
+    this.logger('[api]', 'importing', lists.length, 'mangas');
     socket.emit('showImports', id, lists.length);
 
     const db = await MangasDB.getInstance();
@@ -70,8 +70,10 @@ class KomgaImporter extends Importer implements ImporterInterface {
     }
     socket.emit('showImports', id, indb.length+nodb.length);
     socket.emit('showImports', id, indb);
-    stopListening();
-    if(!cancel) komga.getMangasToImport(id, socket, langs, nodb);
+    if(!cancel) {
+      stopListening();
+      komga.getMangasToImport(id, socket, langs, nodb);
+    }
   }
 
 }

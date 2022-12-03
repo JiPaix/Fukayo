@@ -71,6 +71,8 @@ class MangadexImporter extends Importer implements ImporterInterface {
     const nodb:string[] = [];
     const indb:ImportResults[] = [];
 
+    this.logger('importing', mangas.length, 'mangas');
+
     for(const m of mangas) {
       const lookup = indexes.find(f => f.id === m);
       if(!lookup) {
@@ -94,8 +96,11 @@ class MangadexImporter extends Importer implements ImporterInterface {
 
     socket.emit('showImports', id, nodb.length+indb.length);
     if(indb.length) socket.emit('showImports', id, indb);
-    stopListening();
-    if(!cancel) mangadex.getMangasFromList(id, socket, langs, nodb);
+
+    if(!cancel) {
+      stopListening();
+      mangadex.getMangasFromList(id, socket, langs, nodb);
+    }
   }
 }
 

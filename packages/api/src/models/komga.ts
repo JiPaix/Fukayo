@@ -420,7 +420,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         if(cancel) return;
         socket.emit('showImports', id, { done: true });
       } catch(e) {
-        this.logger('error while recommending mangas', e);
+        this.logger('error while importing mangas', e);
         if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
         else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
         else socket.emit('showImports', id, {error: 'import_error' });

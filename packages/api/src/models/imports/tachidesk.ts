@@ -38,6 +38,7 @@ class TachideskImporter extends Importer implements ImporterInterface {
       return;
     }
 
+    this.logger('importing', lists.length, 'mangas');
     socket.emit('showImports', id, lists.length);
 
     const db = await MangasDB.getInstance();
@@ -66,8 +67,10 @@ class TachideskImporter extends Importer implements ImporterInterface {
         },
       });
     }
-    stopListening();
-    if(!cancel) tachidesk.getMangasToImport(id, socket, langs, nodb);
+    if(!cancel) {
+      stopListening();
+      tachidesk.getMangasToImport(id, socket, langs, nodb);
+    }
   }
 
 }

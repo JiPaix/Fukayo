@@ -498,7 +498,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         if (!cancel) socket.emit('showImports', id,  mangaList);
       }));
     } catch (e) {
-      this.logger('error while recommending mangas', e);
+      this.logger('error while importing mangas', e);
       if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
       else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
       else socket.emit('showImports', id, {error: 'import_error' });
