@@ -212,7 +212,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
     const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
-
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
     if(nbMangas > 0) this.logger('updating...');
 
@@ -222,10 +221,10 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
     }
 
-    // selfhosted offline
-    for(const mirrorName of Object.keys(offlines)) {
-      const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
-      if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
+    // selfhosted offline && broken entries are skipped
+    const db = await MangasDB.getInstance();
+    for(const manga of offlines) {
+      await db.add({manga}, true);
     }
 
     if(!onlyfixes) {
@@ -250,16 +249,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   async #getMangasToUpdate(force?:boolean) {
     let indexes = await (await MangasDB.getInstance()).getIndexes();
 
+    // these will be skipped and their lastupdate renewed
     const indexesOffline = indexes.filter(i => {
       const find = mirrors.find(m => m.name === i.mirror.name);
       if(!find) return false;
-      if(find.selfhosted && !find.isOnline) {
-        indexes.filter(main => i.id !== main.id);
-        if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
-        else {
-          indexes.filter(main => i.id !== main.id);
-          return false;
-        }
+      if( (find.selfhosted && !find.isOnline) || i.broken) {
+        indexes = indexes.filter(main => i.id !== main.id);
+        if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now() || force) return true;
+        else return false;
       }
       return false;
     });
@@ -268,15 +265,8 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const index of indexesOffline) {
       const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
-      if(manga.meta.broken) continue; // to not update broken entries.
       mangaOfflines.push(manga);
     }
-    // mangas to update by mirror
-    const mangaOfflinesByMirror: sortedMangas<typeof mangaOfflines[0]> = {};
-    mangaOfflines.forEach(manga => {
-      if(!mangasToUpdateByMirror[manga.mirror.name]) mangasToUpdateByMirror[manga.mirror.name] = [];
-      mangasToUpdateByMirror[manga.mirror.name].push(manga);
-    });
 
     const indexesToUpdate = indexes.filter(i => {
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
@@ -301,7 +291,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const index of indexesToUpdate) {
       const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
-      if(manga.meta.broken) continue; // to not update broken entries.
       mangasToUpdate.push(manga);
     }
     // mangas to update by mirror
@@ -329,7 +318,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const fix of indexesToFix) {
       const manga = await (await MangasDB.getInstance()).getByFilename(fix.file);
-      if(manga.meta.broken) continue; // do not try to fix already-broken entries
       mangasToFix.push(manga);
     }
     // mangas to fix by mirror
@@ -338,8 +326,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(!mangasToFixByMirror[manga.mirror.name]) mangasToFixByMirror[manga.mirror.name] = [];
       mangasToFixByMirror[manga.mirror.name].push(manga);
     });
-
-    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflinesByMirror };
+    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflines };
   }
 
   /**

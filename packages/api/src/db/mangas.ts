@@ -20,6 +20,7 @@ type Mangas = {
     langs: mirrorsLangsType[],
     lastUpdate: number
     update:boolean
+    broken?: boolean
   }[]
 }
 
@@ -306,18 +307,15 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
         const find = db.mangas.find(m => m.id === data.id);
         if(!find) return data; // should not happen
 
-        if(find.lastUpdate !== data.meta.lastUpdate || find.update !== data.meta.update || !isEqual(find.langs, data.langs)) {
+        if(find.lastUpdate !== data.meta.lastUpdate || find.update !== data.meta.update || find.broken !== data.meta.broken || !isEqual(find.langs, data.langs)) {
           find.lastUpdate = data.meta.lastUpdate;
           find.update = data.meta.update;
           find.langs = data.langs;
+          find.broken = data.meta.broken;
           await this.write(db);
           const indexDB = await MangasDatabase.getInstance();
           const indexes = await indexDB.getIndexes();
-          const index = indexes.find(i => i.id === data.id);
-          if(index) {
-            index.lastUpdate = data.meta.lastUpdate;
-            indexDB.write({ mangas: indexes });
-          }
+          indexDB.write({ mangas: indexes });
         }
       }
       return data;
