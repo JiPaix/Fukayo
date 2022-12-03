@@ -26,9 +26,9 @@
 </table>
 
 
-<p>This Application is translated using WebPlate:</p>
+<p>This application is translated using Weblate:</p>
 
 <a href="https://hosted.weblate.org/engage/fukayo/">
 <img src="https://hosted.weblate.org/widgets/fukayo/-/multi-auto.svg" alt="Translation status" />
 </a>
-<p>Your language is not supported yet? <a href="https://hosted.weblate.org/engage/fukayo/">Help us to translate Fukayo</a></p>
+<p>Your language is not supported yet? <a href="https://hosted.weblate.org/engage/fukayo/">Help us translate Fukayo</a></p>
