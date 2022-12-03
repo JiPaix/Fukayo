@@ -5,8 +5,7 @@ import type { MangaInDB } from '@api/models/types/manga';
 import { isChapterErrorMessage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
 import type FImg from '@renderer/components/reader/FImg.vue';
 import ImageStack from '@renderer/components/reader/ImageStack.vue';
-import { useQuasar } from 'quasar';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps<{
   drawerOpen: boolean,
@@ -24,15 +23,14 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  (event: 'progress', percentage:number):void,
+  (event: 'progressError'):void,
   (event: 'changePage', page: number, chapterId: string): void,
   (event: 'reload', pageIndex:number|undefined, chapterId: string, chapterURL:string, callback:() =>void): void
   (event: 'loadPrev'): void
   (event: 'loadNext'): void
 }>();
 
-
-/** Quasar */
-const $q = useQuasar();
 /** image-slot template ref */
 const imageslot = ref<InstanceType<typeof FImg>[]|null>(null);
 
@@ -42,8 +40,6 @@ defineExpose({
   imageslot,
   imagestack,
 });
-
-
 
 /** is the image reloading? */
 const reloading = ref(false);
@@ -61,20 +57,14 @@ function imageVisibility(indexes:number[]) {
   if(props.readerSettings.longStrip) emit('changePage', Math.max(...indexes), props.chapterId);
 }
 
+watch(() => props.imgs, (nval) => {
+    emit('progress', nval.length/props.expectedLength);
+  if(nval.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img))) emit('progressError');
+}, { deep: true });
+
 </script>
 
 <template>
-  <q-linear-progress
-    v-if="imgs.length !== expectedLength"
-    :dark="$q.dark.isActive"
-    class="fixed-bottom"
-    style="margin-left: 0;"
-    size="4px"
-    :color="imgs.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img)) ? 'negative' : 'positive'"
-    :value="imgs.length/expectedLength"
-    animation-speed="500"
-  />
-
   <image-stack
     ref="imagestack"
     :dir="readerSettings.rtl ? 'rtl' : 'ltr'"

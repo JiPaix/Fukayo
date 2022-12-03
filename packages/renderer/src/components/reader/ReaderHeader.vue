@@ -11,6 +11,9 @@ defineProps<{
   nbOfPages: number
   page: number
   currentChapterString: string
+  progress:number
+  progressError: boolean
+  drawerOpen: boolean
 }>();
 
 const emit = defineEmits<{
@@ -89,4 +92,13 @@ function toggleDarkMode() {
   >
     <span>{{ currentChapterString }}</span>
   </q-bar>
+  <q-linear-progress
+    v-if="progress < 1"
+    :color="progressError ? 'negative' : 'positive'"
+    :value="progress"
+    size="xs"
+    class="fixed-top"
+    :style="{ marginTop: '82px', width: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
+    animation-speed="500"
+  />
 </template>

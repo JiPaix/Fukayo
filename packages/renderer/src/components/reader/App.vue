@@ -40,6 +40,10 @@ const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 const currentURL = ref(document.location.href);
 /** sidebar */
 const rightDrawerOpen = ref(false);
+/** loading progress */
+const progress = ref(0);
+/** loading progress has error? */
+const progressError = ref(false);
 /** chapters ref */
 const chaptersRef = ref<null|HTMLDivElement>(null);
 /** chapter id user is currently reading */
@@ -219,6 +223,7 @@ async function getManga():Promise<void> {
   // hide previous/next chapter divs
   showNextBuffer.value = false;
   showPrevBuffer.value = false;
+  progress.value = 0;
 
   RAWchapters.value = [];
   if(historyStore.manga) {
@@ -269,6 +274,7 @@ async function getManga():Promise<void> {
 /** change current chapter variables and make sure scroll position doesn't mess with UI */
 async function chapterTransition(opts: { chapterId:string, PageToShow:number }) {
 
+  progress.value = 0;
   showNextBuffer.value = false;
   showPrevBuffer.value = false;
 
@@ -784,6 +790,9 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     >
       <reader-header
         v-if="manga && currentChapter"
+        :drawer-open="rightDrawerOpen"
+        :progress="progress"
+        :progress-error="progressError"
         :current-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, currentChapter)"
         :manga="manga"
         :chapter="currentChapter"
@@ -894,6 +903,8 @@ watch(() => localReaderSettings.value, (nval, oval) => {
             :imgs="currentChapterFormatted.imgs"
             :current-page="currentPage"
             :reader-settings="localReaderSettings"
+            @progress="(n) => progress = n"
+            @progress-error="() => progressError = true"
             @load-next="loadNext"
             @load-prev="loadPrev(true)"
             @change-page="onImageVisible"

@@ -119,7 +119,7 @@ const verticalNoBook = computed<CSSProperties>(() => {
 });
 
 const horizontal = computed<CSSProperties>(() => {
-  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - 84)+'px';
+  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - 82)+'px';
   let marginBottom:CSSProperties['marginBottom'] = '-6px';
   let height:CSSProperties['height'] = undefined;
   if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height - 82) + 'px';
@@ -323,7 +323,7 @@ defineExpose({
         v-for="(group, i) of packed[currentIndex].group"
         :key="i"
         class="flex flex-center justify-center items-center group"
-        :style="{minHeight: ($q.screen.height - 84)+'px'}"
+        :style="{minHeight: ($q.screen.height - 82)+'px'}"
       >
         <img
           v-if="isChapterImage(group)"

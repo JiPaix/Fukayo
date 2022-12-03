@@ -170,7 +170,7 @@ watch(() => localSettings.value, (nval, oval) => {
 <template>
   <div
     class="q-pa-lg"
-    :style="`height: ${$q.screen.height - ($q.screen.gt.sm ? 82 : 0) }px;`"
+    :style="`height: ${$q.screen.height - 82 }px;`"
   >
     <q-select
       v-model="selectedChap"
