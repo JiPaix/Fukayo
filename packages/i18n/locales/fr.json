@@ -351,7 +351,7 @@
     "rtl": "Lire de droite à gauche",
     "showpagenumber": "Afficher le numéro de page",
     "singlePage": "N'afficher qu'une page après l'autre",
-    "vertical": "Afficher tout le chapitre sous la forme d'une longue bande verticale",
+        "vertical": "Afficher tout le chapitre sous la forme d'une longue bande verticale",
     "webtoon": "Mode Webtoon"
   },
   "search": {
@@ -373,7 +373,7 @@
     "cache": "Cache",
     "confirm": "CONFIRMER",
     "credentials": "Identifiants",
-    "darkmode": "Activer le mode sombre",
+        "darkmode": "Activer le mode sombre",
     "displaymodes": "Modes d'affichage",
     "file": "Fichier | Fichiers",
     "files": {
@@ -396,7 +396,7 @@
     "logs": "Journaux",
     "longstripDirection": "Choisissez l'orientation des images",
     "mirror_is_dead": "Cette source a été signalée comme inactive",
-    "reader": {
+        "reader": {
       "info": "Les paramètres ci-dessous sont les paramètres par défaut,\nIls sont automatiquement attribués aux nouveaux titres\n\nSi vous modifiez l'un de ces paramètres lors de la lecture d'un titre alors seul celui-ci sera affecté par les changements.",
       "overlay": "Afficher la superposition de navigation lors du survol des images",
       "preload": "Précharger le chapitre suivant pendant la lecture",
@@ -437,8 +437,8 @@
       "validUUID": "Veuillez utiliser un UUID valide"
     },
     "source_is_offline": "Cette source semble être hors ligne",
-    "source_requires_setup": "Cette source nécessite une configuration pour être active",
-    "tab": "Configuration",
+        "source_requires_setup": "Cette source nécessite une configuration pour être active",
+        "tab": "Configuration",
     "update": {
       "day": "Jour | Jours",
       "hour": "Heure | Heures",
@@ -460,10 +460,10 @@
     "message": "Avant de commencer une petite configuration est nécessaire :",
     "password": "Mot de passe",
     "password_hints": {
-      "average": "Fiabilité: <b class=\"text-warning\">NORMAL</b>",
+      "average": "Fiabilité : <b class=\"text-warning\">NORMAL</b>",
       "default": "le mot de passe doit contenir au moins 6 caractères",
-      "strong": "Fiabilité: <b class=\"text-positive\">FORT</b>",
-      "weak": "Fiabilité: <b class=\"text-negative\">FAIBLE</b>"
+      "strong": "Fiabilité : <b class=\"text-positive\">FORT</b>",
+      "weak": "Fiabilité : <b class=\"text-negative\">FAIBLE</b>"
     },
     "port": "Port",
     "port_error": "Le port doit être compris entre 1024 et 65535",
