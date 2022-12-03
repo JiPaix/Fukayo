@@ -14,7 +14,7 @@ const style = computed(() => {
   const width = (($q.screen.width - (props.drawerOpen ? 300: 0)) / 3),
         background = props.hintColor ? getCssVar(props.hintColor) : 'none',
         marginBottom = '15px',
-        marginLeft = props.position === 'center' ? width : 0,
+        marginLeft = props.position === 'center' ? width : props.position === 'left' ? 12 : 0,
         marginRight = props.position === 'right' ? props.drawerOpen ? 300+12 : 12 : 0;
 
 

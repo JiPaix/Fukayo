@@ -5,7 +5,7 @@ import type { MangaInDB } from '@api/models/types/manga';
 import { isChapterErrorMessage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
 import type FImg from '@renderer/components/reader/FImg.vue';
 import ImageStack from '@renderer/components/reader/ImageStack.vue';
-import { QScrollArea, useQuasar } from 'quasar';
+import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 
 const props = defineProps<{
@@ -36,13 +36,9 @@ const $q = useQuasar();
 /** image-slot template ref */
 const imageslot = ref<InstanceType<typeof FImg>[]|null>(null);
 
-/** expose the scrollArea */
-const scrollArea = ref<null|QScrollArea>(null);
-
 const imagestack = ref<InstanceType<typeof ImageStack>|null>(null);
 
 defineExpose({
-  scrollArea,
   imageslot,
   imagestack,
 });
@@ -78,64 +74,52 @@ function imageVisibility(indexes:number[]) {
     :value="imgs.length/expectedLength"
     animation-speed="500"
   />
-  <q-scroll-area
-    ref="scrollArea"
-    :dir="readerSettings.rtl ? 'rtl': 'ltr'"
-    :style="`height: ${$q.screen.height-82}px;width: ${$q.screen.width - (drawerOpen ? 300 : 0)}px;`"
-    :vertical-thumb-style="{ backgroundColor: '#ff9800', opacity: '1', width: '4px', right:'2px', marginTop: '5px', marginBottom: '5px', borderRadius: '25px'}"
-    :vertical-bar-style="{backgroundColor: `${$q.dark.isActive ? '#616161' : '#eeeeee'}`, opacity: '0.8', width: '8px', marginTop: '3px', marginBottom: '3px', borderRadius: '25px' }"
-    :horizontal-thumb-style="{ backgroundColor: '#ff9800', opacity: '1', height: '4px', bottom:'2px', marginRight: '5px', marginLeft: '5px', borderRadius: '25px'}"
-    :horizontal-bar-style="{backgroundColor: `${$q.dark.isActive ? '#616161' : '#eeeeee'}`, opacity: '0.8', height: '8px', marginLeft: '3px', marginRight: '3px', borderRadius: '25px' }"
+
+  <image-stack
+    ref="imagestack"
+    :dir="readerSettings.rtl ? 'rtl' : 'ltr'"
+    :show-next-buffer="showNextBuffer"
+    :show-prev-buffer="showPrevBuffer"
+    :current-index="currentPage - 1"
+    :sources="imgs"
+    :drawer-open="drawerOpen"
+    :expected-length="expectedLength"
+    :settings="readerSettings"
+    @load-next="emit('loadNext')"
+    @load-prev="emit('loadPrev')"
+    @show-image="imageVisibility"
+    @reload="reload"
   >
-    <image-stack
-      ref="imagestack"
-      :show-next-buffer="showNextBuffer"
-      :show-prev-buffer="showPrevBuffer"
-      :current-index="currentPage - 1"
-      :sources="imgs"
-      :drawer-open="drawerOpen"
-      :expected-length="expectedLength"
-      :settings="readerSettings"
-      @load-next="emit('loadNext')"
-      @load-prev="emit('loadPrev')"
-      @show-image="imageVisibility"
-      @reload="reload"
+    <template
+      #prevBuffer
     >
-      <template
-        #prevBuffer
+      <div
+        class="flex flex-center"
       >
-        <div
-          class="flex flex-center"
-        >
-          <q-icon
-            v-if="prevChapterString"
-            :name="readerSettings.longStripDirection === 'vertical' ? 'keyboard_double_arrow_up' : readerSettings.rtl ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'"
-            size="lg"
-            color="negative"
-          />
-          <span :class="prevChapterString ? '': 'text-negative'">{{ prevChapterString || $t('reader.no_prev_to_read') }}</span>
-        </div>
-      </template>
-      <template
-        #nextBuffer
+        <q-icon
+          v-if="prevChapterString"
+          :name="readerSettings.longStripDirection === 'vertical' ? 'keyboard_double_arrow_up' : readerSettings.rtl ? 'keyboard_double_arrow_right' : 'keyboard_double_arrow_left'"
+          size="lg"
+          color="negative"
+        />
+        <span :class="prevChapterString ? '': 'text-negative'">{{ prevChapterString || $t('reader.no_prev_to_read') }}</span>
+      </div>
+    </template>
+    <template
+      #nextBuffer
+    >
+      <div
+        class="flex flex-center"
+        :style="{ direction: readerSettings.rtl ? 'rtl' : 'ltr' }"
       >
-        <div
+        <span :class="prevChapterString ? '': 'text-positive'">{{ nextChapterString || $t('reader.no_next_to_read') }}</span>
+        <q-icon
           v-if="nextChapterString"
-        >
-          <div
-            class="flex flex-center"
-            :style="{ direction: readerSettings.rtl ? 'rtl' : 'ltr' }"
-          >
-            <span :class="prevChapterString ? '': 'text-positive'">{{ nextChapterString || $t('reader.no_next_to_read') }}</span>
-            <q-icon
-              v-if="nextChapterString"
-              :name="readerSettings.longStripDirection === 'vertical' ? 'keyboard_double_arrow_down' : readerSettings.rtl ? 'keyboard_double_arrow_left' : 'keyboard_double_arrow_right'"
-              size="lg"
-              color="positive"
-            />
-          </div>
-        </div>
-      </template>
-    </image-stack>
-  </q-scroll-area>
+          :name="readerSettings.longStripDirection === 'vertical' ? 'keyboard_double_arrow_down' : readerSettings.rtl ? 'keyboard_double_arrow_left' : 'keyboard_double_arrow_right'"
+          size="lg"
+          color="positive"
+        />
+      </div>
+    </template>
+  </image-stack>
 </template>

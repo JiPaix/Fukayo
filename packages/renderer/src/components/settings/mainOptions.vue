@@ -223,28 +223,29 @@ async function saveSettings() {
 /** make sure options are compatible with each others */
 async function checkSettingsCompatibilty(key: keyof typeof settings.reader) {
 
-if(key === 'book' && settings.reader.book) {
-  if(settings.reader.zoomMode === 'stretch-height' && settings.reader.longStripDirection === 'vertical') settings.reader.zoomMode = 'auto';
-  if(settings.reader.webtoon) settings.reader.webtoon = false;
-}
+  if(key === 'book' && settings.reader.book) {
+    if(settings.reader.zoomMode === 'stretch-height' && settings.reader.longStripDirection === 'vertical') settings.reader.zoomMode = 'auto';
+    if(settings.reader.webtoon) settings.reader.webtoon = false;
+    if( (!settings.reader.longStrip && settings.reader.book) || (settings.reader.longStrip && settings.reader.longStripDirection === 'vertical')) {
+      if(settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
+    }
+  }
 
-if(key === 'longStrip' && !settings.reader.longStrip) {
-  settings.reader.webtoon = false;
-  settings.reader.book = false;
-  settings.reader.bookOffset = false;
-}
+  if(key === 'longStrip' && !settings.reader.longStrip) {
+    settings.reader.webtoon = false;
+  }
 
-if(key === 'webtoon' && settings.reader.webtoon) {
-  if(settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
-}
+  if(key === 'webtoon' && settings.reader.webtoon) {
+    if(settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
+  }
 
-if(key === 'longStripDirection' && settings.reader.longStripDirection === 'vertical') {
-  if(settings.reader.book && settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
-}
+  if(key === 'longStripDirection' && settings.reader.longStripDirection === 'vertical') {
+    if(settings.reader.book && settings.reader.zoomMode === 'stretch-height') settings.reader.zoomMode = 'auto';
+  }
 
-if(key === 'longStripDirection' && settings.reader.longStripDirection === 'horizontal') {
-  if(settings.reader.zoomMode === 'stretch-width') settings.reader.zoomMode = 'auto';
-}
+  if(key === 'longStripDirection' && settings.reader.longStripDirection === 'horizontal') {
+    if(settings.reader.zoomMode === 'stretch-width') settings.reader.zoomMode = 'auto';
+  }
 
 }
 
@@ -448,7 +449,6 @@ async function kill(password:string) {
               class="flex items-center"
               :dark="$q.dark.isActive"
               clickable
-
               :dense="$q.screen.gt.md"
             >
               <q-item-section>
@@ -744,8 +744,6 @@ async function kill(password:string) {
                   <q-btn
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
-                    :disable="!settings.reader.longStrip"
-                    :text-color="!settings.reader.longStrip ? 'negative': ''"
                     icon="swap_vert"
                     :color="settings.reader.longStripDirection === 'vertical' && settings.reader.longStrip ? 'orange' : undefined"
                     @click="settings.reader.longStripDirection = 'vertical';checkSettingsCompatibilty('longStripDirection')"
@@ -757,8 +755,6 @@ async function kill(password:string) {
                   <q-btn
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
-                    :disable="!settings.reader.longStrip"
-                    :text-color="!settings.reader.longStrip ? 'negative': ''"
                     icon="swap_horiz"
                     :color="settings.reader.longStripDirection === 'horizontal' && settings.reader.longStrip ? 'orange' : undefined"
                     @click="settings.reader.longStripDirection = 'horizontal';checkSettingsCompatibilty('longStripDirection')"
@@ -789,8 +785,6 @@ async function kill(password:string) {
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
                     icon="menu_book"
-                    :disable="!settings.reader.longStrip"
-                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
                     :color="settings.reader.book && !settings.reader.bookOffset ? 'orange' : undefined"
                     @click="settings.reader.book = true;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
                   >
@@ -801,8 +795,6 @@ async function kill(password:string) {
                   <q-btn
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
-                    :disable="!settings.reader.longStrip"
-                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
                     icon="auto_stories"
                     :color="settings.reader.book && settings.reader.bookOffset ? 'orange':''"
                     @click="settings.reader.book = true;settings.reader.bookOffset = true;checkSettingsCompatibilty('book')"
@@ -814,8 +806,6 @@ async function kill(password:string) {
                   <q-btn
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
-                    :disable="!settings.reader.longStrip"
-                    :text-color="!settings.reader.longStrip ? 'negative' : ''"
                     :color="!settings.reader.book && !settings.reader.bookOffset && settings.reader.longStrip ? 'orange':''"
                     icon="not_interested"
                     @click="settings.reader.book = false;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
@@ -855,9 +845,7 @@ async function kill(password:string) {
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
-              clickable
               :dense="$q.screen.gt.md"
-              @click="settings.reader.webtoon = !settings.reader.webtoon;checkSettingsCompatibilty('webtoon')"
             >
               <q-item-section>
                 <q-item-label>
@@ -871,7 +859,7 @@ async function kill(password:string) {
                   v-model="settings.reader.webtoon"
                   :disable="settings.reader.book || !settings.reader.longStrip"
                   :color="settings.reader.book || !settings.reader.longStrip ? 'negative' : ''"
-                  keep-color
+                  :keep-color="settings.reader.book || !settings.reader.longStrip"
                   :icon="webtoonIcon"
                   :size="$q.screen.gt.md ? 'md' : 'xl'"
                   :dense="$q.screen.gt.md"
@@ -886,7 +874,6 @@ async function kill(password:string) {
               :dark="$q.dark.isActive"
               clickable
               :dense="$q.screen.gt.md"
-
               @click="settings.reader.showPageNumber = !settings.reader.showPageNumber"
             >
               <q-item-section>
@@ -935,7 +922,6 @@ async function kill(password:string) {
               style="background:rgba(255, 255, 255, 0.3)"
               class="flex items-center"
               :dark="$q.dark.isActive"
-              clickable
               :dense="$q.screen.gt.md"
             >
               <q-item-section>
@@ -973,9 +959,9 @@ async function kill(password:string) {
                   </q-btn>
                   <q-btn
                     icon="height"
-                    :text-color="settings.reader.webtoon || (settings.reader.longStrip && settings.reader.longStripDirection !== 'horizontal' && settings.reader.book) ? 'negative' : undefined"
+                    :text-color="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal') ? 'negative' : undefined"
                     :color="settings.reader.zoomMode === 'stretch-height' ? 'orange' : undefined"
-                    :disable="settings.reader.webtoon || (settings.reader.longStrip && settings.reader.longStripDirection !== 'horizontal' && settings.reader.book)"
+                    :disable="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal')"
                     :size="$q.screen.gt.md ? 'md' : 'xl'"
                     :dense="$q.screen.gt.md"
                     @click="settings.reader.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode')"

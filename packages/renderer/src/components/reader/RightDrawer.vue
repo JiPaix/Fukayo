@@ -43,9 +43,9 @@ watch(() => props.currentChapterId, () => {
 
 /** label of the first chapter */
 const firstChapterLabel = computed(() => {
-  if(currentChapterIndex.value + 1 === props.chapters.length) return null;
+  if(currentChapterIndex.value === 0) return null;
   return {
-    label: chapterLabel(props.chapters[props.chapters.length - 1].number, props.chapters[props.chapters.length - 1].name),
+    label: chapterLabel(props.chapters[0].number, props.chapters[0].name),
     value: props.chapters.length - 1,
   };
 });
@@ -74,9 +74,9 @@ const previousChapterLabel = computed(() => {
 
 /** label of the last chapter */
 const lastChapterLabel = computed(() => {
-  if(currentChapterIndex.value === 0) return null;
+  if(currentChapterIndex.value === props.chapters.length - 1) return null;
   return {
-    label: chapterLabel(props.chapters[0].number, props.chapters[0].name),
+    label: chapterLabel(props.chapters[props.chapters.length - 1].number, props.chapters[props.chapters.length - 1].name),
     value: 0,
   };
 });
@@ -138,12 +138,13 @@ async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) 
   if(key === 'book' && localSettings.value.book) {
     if(localSettings.value.zoomMode === 'stretch-height' && localSettings.value.longStripDirection === 'vertical') localSettings.value.zoomMode = 'auto';
     if(localSettings.value.webtoon) localSettings.value.webtoon = false;
+    if( (!localSettings.value.longStrip && localSettings.value.book) || (localSettings.value.longStrip && localSettings.value.longStripDirection === 'vertical')) {
+      if(localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
+    }
   }
 
   if(key === 'longStrip' && !localSettings.value.longStrip) {
     localSettings.value.webtoon = false;
-    localSettings.value.book = false;
-    localSettings.value.bookOffset = false;
   }
 
   if(key === 'webtoon' && localSettings.value.webtoon) {
@@ -219,7 +220,7 @@ watch(() => localSettings.value, (nval, oval) => {
     <div class="flex flex-center">
       <q-btn-group>
         <q-btn
-          :text-color="firstChapterLabel ? undefined : 'grey-1'"
+          :text-color="firstChapterLabel ? undefined : 'negative'"
           :disable="!firstChapterLabel"
           @click="goFirstChapter"
         >
@@ -231,7 +232,7 @@ watch(() => localSettings.value, (nval, oval) => {
           </q-tooltip>
         </q-btn>
         <q-btn
-          :text-color="previousChapterLabel ? undefined : 'grey-1'"
+          :text-color="previousChapterLabel ? undefined : 'negative'"
           :disable="!previousChapterLabel"
           @click="goPrevChapter"
         >
@@ -243,7 +244,7 @@ watch(() => localSettings.value, (nval, oval) => {
           </q-tooltip>
         </q-btn>
         <q-btn
-          :text-color="nextChapterLabel ? undefined : 'grey-1'"
+          :text-color="nextChapterLabel ? undefined : 'negative'"
           :disable="!nextChapterLabel"
           @click="goNextChapter"
         >
@@ -255,7 +256,7 @@ watch(() => localSettings.value, (nval, oval) => {
           </q-tooltip>
         </q-btn>
         <q-btn
-          :text-color="lastChapterLabel ? undefined : 'grey-1'"
+          :text-color="lastChapterLabel ? undefined : 'negative'"
           :disable="!lastChapterLabel"
           @click="goLastChapter"
         >
@@ -328,7 +329,7 @@ watch(() => localSettings.value, (nval, oval) => {
               :color="localSettings.rtl ? '':'orange'"
               dense
               icon="format_textdirection_l_to_r"
-              @click="localSettings.rtl = false"
+              @click="localSettings.rtl = false;checkSettingsCompatibilty('rtl')"
             >
               <q-tooltip>{{ $t('reader.ltr') }}</q-tooltip>
             </q-btn>
@@ -345,7 +346,7 @@ watch(() => localSettings.value, (nval, oval) => {
       </div>
       <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
         <q-slide-transition>
-          <q-btn-group v-if="localSettings.longStrip">
+          <q-btn-group>
             <q-btn
               :color="localSettings.book && !localSettings.bookOffset ? 'orange':''"
               dense
@@ -376,8 +377,9 @@ watch(() => localSettings.value, (nval, oval) => {
       <q-toggle
         v-model="localSettings.webtoon"
         :disable="localSettings.book || !localSettings.longStrip"
+        :color="localSettings.book || !localSettings.longStrip ? 'negative' : 'orange'"
+        :keep-color="localSettings.book || !localSettings.longStrip"
         :label="$t('reader.webtoon')"
-        color="orange"
         :dark="$q.dark.isActive"
         @update:model-value="checkSettingsCompatibilty('webtoon');"
       />
@@ -408,6 +410,7 @@ watch(() => localSettings.value, (nval, oval) => {
             </q-btn>
             <q-btn
               icon="fit_screen"
+              :text-color="localSettings.longStrip && localSettings.longStripDirection === 'horizontal' ? 'negative' : undefined"
               :disable="localSettings.longStrip && localSettings.longStripDirection === 'horizontal'"
               :color="localSettings.zoomMode === 'stretch-width' ? 'orange' : undefined"
               @click="localSettings.zoomMode = 'stretch-width';checkSettingsCompatibilty('zoomMode');"
@@ -419,9 +422,9 @@ watch(() => localSettings.value, (nval, oval) => {
 
             <q-btn
               icon="height"
-              :text-color="localSettings.webtoon ?'grey-1' : undefined"
+              :text-color="localSettings.webtoon || (localSettings.book && localSettings.longStripDirection !== 'horizontal') ? 'negative' : undefined"
               :color="localSettings.zoomMode === 'stretch-height' ? 'orange' : undefined"
-              :disable="localSettings.webtoon || (localSettings.longStrip && localSettings.longStripDirection !== 'horizontal' && localSettings.book)"
+              :disable="localSettings.webtoon || (localSettings.book && localSettings.longStripDirection !== 'horizontal')"
               @click="localSettings.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode');"
             >
               <q-tooltip>

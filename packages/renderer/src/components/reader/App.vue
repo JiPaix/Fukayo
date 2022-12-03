@@ -10,12 +10,12 @@ import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
+import type ImageStack from '@renderer/components/reader/ImageStack.vue';
 import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/store/history';
 import { useStore as useSettingsStore } from '@renderer/store/settings';
-import type { QScrollArea } from 'quasar';
 import { debounce, QVirtualScroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -219,7 +219,6 @@ async function getManga():Promise<void> {
   // hide previous/next chapter divs
   showNextBuffer.value = false;
   showPrevBuffer.value = false;
-  reachedPrev.value = false;
 
   RAWchapters.value = [];
   if(historyStore.manga) {
@@ -272,7 +271,6 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
 
   showNextBuffer.value = false;
   showPrevBuffer.value = false;
-  reachedPrev.value = false;
 
   showPageSelector.value = false;
   currentChapterId.value = opts.chapterId;
@@ -309,7 +307,6 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
     // hide previous/next chapter divs
     showNextBuffer.value = false;
     showPrevBuffer.value = false;
-    reachedPrev.value = false;
   }
 
   // if chapter is already in cache and has all its images, just show it
@@ -515,11 +512,25 @@ function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
 }
 
 function scrollToPrevPage() {
+  if(!virtscroll.value?.imagestack) return;
+
   const currentIndex = currentPage.value - 1;
 
-  if(!localReaderSettings.value.longStrip) {
+  if(!localReaderSettings.value.longStrip && !localReaderSettings.value.book) {
     const min = currentPage.value - 1 < 1;
     if(!min) return currentPage.value--;
+  }
+
+  if(!localReaderSettings.value.longStrip && localReaderSettings.value.book) {
+    const currentGroup = document.querySelector('.group')?.getAttribute('data-indexes')?.split(',');
+    if(!currentGroup) return;
+    const bestMatch = Math.max(...currentGroup.map(o => parseInt(o)));
+    const currentTarget = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(bestMatch));
+    const target = virtscroll.value.imagestack.indexes[currentTarget-1];
+    if(target) {
+      const targetBestMAtch = Math.max(...target.indexes);
+      return currentPage.value = targetBestMAtch+1;
+    }
   }
 
   const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
@@ -539,11 +550,25 @@ function scrollToPrevPage() {
 
 function scrollToNextPage() {
   if(!currentChapterFormatted.value) return;
+  if(!virtscroll.value?.imagestack) return;
+
   const currentIndex = currentPage.value - 1;
 
-  if(!localReaderSettings.value.longStrip) {
+  if(!localReaderSettings.value.longStrip && !localReaderSettings.value.book) {
     const max = currentPage.value + 1 > currentChapterFormatted.value.imgsExpectedLength;
     if(!max) return currentPage.value++;
+  }
+
+  if(!localReaderSettings.value.longStrip && localReaderSettings.value.book) {
+    const currentGroup = document.querySelector('.group')?.getAttribute('data-indexes')?.split(',');
+    if(!currentGroup) return;
+    const bestMatch = Math.max(...currentGroup.map(o => parseInt(o)));
+    const currentTarget = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(bestMatch));
+    const target = virtscroll.value.imagestack.indexes[currentTarget+1];
+    if(target) {
+      const targetBestMAtch = Math.max(...target.indexes);
+      return currentPage.value = targetBestMAtch+1;
+    }
   }
 
   const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
@@ -560,6 +585,27 @@ function scrollToNextPage() {
     return;
   }
 }
+
+const prevNavDisabled = computed(() => {
+  if(!currentPage.value || !virtscroll.value?.imagestack) return true;
+  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === 1;
+
+  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
+  if(current?.group.some(c => c.index === 0)) return true;
+  return false;
+});
+
+const nextNavDisabled = computed(() => {
+  const expectedLength = currentChapterFormatted.value?.imgsExpectedLength;
+
+  if(!currentChapterFormatted.value || !virtscroll.value?.imagestack || !expectedLength || !currentPage.value) return true;
+  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === expectedLength;
+
+  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
+
+  if(current?.group.some(c => c.lastpage)) return true;
+  return false;
+});
 
 function thumbnailScroll(evt:WheelEvent) {
   if(thumbscroll.value) thumbscroll.value.$el.scrollLeft += evt.deltaY;
@@ -590,16 +636,22 @@ onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
 
 async function scrollToPage(index: number, fastforward?:boolean) {
-  await nextTick();
+
+  if(!localReaderSettings.value.longStrip) {
+    const target = virtscroll.value?.imagestack?.indexes.find(i => i.indexes.includes(index));
+    if(target) {
+      currentPage.value = Math.max(...target.indexes) + 1;
+    }
+    return;
+  }
 
   if(index === 0) {
-    virtscroll.value?.scrollArea?.setScrollPercentage('horizontal', 0);
-    virtscroll.value?.scrollArea?.setScrollPercentage('vertical', 0);
+    virtscroll.value?.imagestack?.setScrollPercentage('horizontal', 0);
+    virtscroll.value?.imagestack?.setScrollPercentage('vertical', 0);
     return;
   }
 
   const div = document.querySelector(`.group[data-indexes*="${index}"]`);
-  // const div = await waitForDiv(`.group[data-indexes*="${index}"]`);
 
   // in order for scroll to happen the thumbnail previews must be closed first.
   showPageSelector.value = false;
@@ -607,7 +659,6 @@ async function scrollToPage(index: number, fastforward?:boolean) {
 
 
   if(div) {
-    await nextTick();
     setTimeout(() => {
       div.scrollIntoView({behavior: fastforward ? undefined : 'smooth'});
     }, 200);
@@ -617,49 +668,63 @@ async function scrollToPage(index: number, fastforward?:boolean) {
 
 const showPrevBuffer = ref(false);
 const showNextBuffer = ref(false);
-const reachedPrev = ref(false);
 
-function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }, fromTouch = false) {
+async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }, fromTouch = false) {
   if(ignoreScroll.value) return;
   if(!virtscroll.value) return;
+  if(!currentPage.value || !currentChapterFormatted.value) return;
 
-  const scrollArea = virtscroll.value.$refs['scrollArea'] as QScrollArea;
+  const scrollArea = virtscroll.value.$refs['imagestack'] as InstanceType<typeof ImageStack>;
   const add=ev.deltaY;
   let pos = scrollArea.getScrollPosition();
 
-
   if(localReaderSettings.value.longStrip && localReaderSettings.value.longStripDirection === 'horizontal') {
+
     if(!fromTouch) {
       if(localReaderSettings.value.rtl) scrollArea.setScrollPosition('horizontal', (pos.left-add));
       else scrollArea.setScrollPosition('horizontal', (pos.left+add));
-    } else {
-      scrollArea.setScrollPosition('horizontal', (pos.left+add));
     }
+
+    pos = scrollArea.getScrollPosition();
 
     const percentage = scrollArea.getScrollPercentage();
+    if(localReaderSettings.value.rtl && pos.left+add > 0) {
+      if(!showPrevBuffer.value) {
+        showPrevBuffer.value = true;
+        await nextTick();
+        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*-1);
+      }
 
-    if(localReaderSettings.value.rtl && pos.left+add >= 0) {
-      showPrevBuffer.value = true;
-      if(!reachedPrev.value) nextTick(() =>scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*-1));
-      reachedPrev.value = true;
     }
-    else if(!localReaderSettings.value.rtl && pos.left+add <= 0) {
-      showPrevBuffer.value = true;
-      if(!reachedPrev.value) nextTick(() => scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)));
-      reachedPrev.value = true;
+    else if(!localReaderSettings.value.rtl && pos.left+add < 0) {
+      if(!showPrevBuffer.value) {
+        showPrevBuffer.value = true;
+        await nextTick();
+        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5));
+      }
     }
 
-    if(percentage.left >= 0.99) showNextBuffer.value = true;
+    if(currentPage.value === currentChapterFormatted.value.imgsExpectedLength) {
+      if(localReaderSettings.value.rtl && percentage.left >= 0.9) {
+        showNextBuffer.value = true;
+      }
+      else if(!localReaderSettings.value.rtl && percentage.left <= 1) {
+        showNextBuffer.value = true;
+      }
+    }
 
   } else {
     scrollArea.setScrollPosition('vertical', pos.top+add);
     if(!localReaderSettings.value.longStrip) return;
+
     if(pos.top+add < 0) {
-      showPrevBuffer.value = true;
-      if(!reachedPrev.value) nextTick(() => scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5)));
-      reachedPrev.value = true;
+      if(!showPrevBuffer.value) {
+        showPrevBuffer.value = true;
+        await nextTick();
+        scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5));
+      }
     }
-    if(scrollArea.getScrollPercentage().top >= 1) showNextBuffer.value = true;
+    if(scrollArea.getScrollPercentage().top >= 0.9 && currentPage.value === currentChapterFormatted.value.imgsExpectedLength) showNextBuffer.value = true;
   }
 }
 
@@ -809,13 +874,12 @@ watch(() => localReaderSettings.value, (nval, oval) => {
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
         ref="chaptersRef"
         class="fit scroll chapters zoom"
+        @wheel="useWheelToScrollHorizontally"
+        @touchstart="setTouch"
+        @touchend="resetTouch"
+        @touchmove="touch"
       >
-        <div
-          @wheel="useWheelToScrollHorizontally"
-          @touchstart="setTouch"
-          @touchend="resetTouch"
-          @touchmove="touch"
-        >
+        <div>
           <images-container
             ref="virtscroll"
             :drawer-open="rightDrawerOpen"
@@ -937,8 +1001,8 @@ watch(() => localReaderSettings.value, (nval, oval) => {
               <q-btn
                 rounded
                 icon="arrow_back_ios"
-                :disabled="currentPage === 1"
-                @click="scrollToPrevPage"
+                :disabled="localReaderSettings.rtl ? nextNavDisabled : prevNavDisabled"
+                @click="localReaderSettings.rtl ? scrollToNextPage() : scrollToPrevPage()"
               />
               <q-btn
                 rounded
@@ -949,8 +1013,8 @@ watch(() => localReaderSettings.value, (nval, oval) => {
               <q-btn
                 rounded
                 icon="arrow_forward_ios"
-                :disabled="currentPage === currentChapterFormatted.imgsExpectedLength"
-                @click="scrollToNextPage"
+                :disabled="localReaderSettings.rtl ? prevNavDisabled : nextNavDisabled"
+                @click="localReaderSettings.rtl ? scrollToPrevPage() : scrollToNextPage() "
               />
             </q-btn-group>
           </div>
