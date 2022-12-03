@@ -1,4 +1,4 @@
-Welcome to the Safe Fuyako community
+Welcome to the Safe Fukayo community
 
 Grant and indulge critique constructively, within desired privacy.
 Settle disputes within these confines.
