@@ -18,10 +18,6 @@ on:
       - 'package-lock.json'
       - '.github/workflows/lint.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: 'bash'

@@ -19,10 +19,6 @@ on:
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   e2e:
     strategy:
