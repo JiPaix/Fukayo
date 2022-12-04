@@ -244,8 +244,8 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
       // sorting stuff before comparison
       manga.langs = manga.langs.sort();
       data.langs = data.langs.sort();
-      manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort(); // can include prefix: "http://xx.xx.xx:xx/files/"
-      data.covers = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort(); // have prefix: "{number}_cover_"
+      manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '').replaceAll(/^(.*cover_)?/g, '')).sort(); // can include prefix: "http://xx.xx.xx:xx/files/"
+      data.covers = [...data.covers].map(c => c.replace(/^(.*files\/)?/g, '').replaceAll(/^(.*cover_)?/g, '')).sort(); // have prefix: "{number}_cover_"
       manga.userCategories = manga.userCategories.sort();
       data.userCategories = data.userCategories.sort();
 
@@ -260,6 +260,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
         if(!isEqual(manga.covers, data.covers)) {
           hasNewStuff = true;
           manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+          scheduler.addMangaLog({date: Date.now(), id: manga.id, message: 'log_manga_metadata', data: { tag: 'covers' } });
         } else {
           // repopulating because we stripped covers from their prefix
           manga.covers = manga.covers.map((c, i) => `${i}_cover_${c}`);
