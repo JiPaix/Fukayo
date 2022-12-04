@@ -692,31 +692,22 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
     }
 
     pos = scrollArea.getScrollPosition();
-
     const percentage = scrollArea.getScrollPercentage();
-    if(localReaderSettings.value.rtl && pos.left+add > 0) {
-      if(!showPrevBuffer.value) {
-        showPrevBuffer.value = true;
-        await nextTick();
-        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*-1);
-      }
 
-    }
-    else if(!localReaderSettings.value.rtl && pos.left+add < 0) {
+    if(percentage.left === 0 && add < 0) {
       if(!showPrevBuffer.value) {
+        const multiplier = localReaderSettings.value.rtl ? -1 : 1;
         showPrevBuffer.value = true;
         await nextTick();
-        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5));
+        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*multiplier);
       }
     }
 
-    if(currentPage.value === currentChapterFormatted.value.imgsExpectedLength) {
-      if(localReaderSettings.value.rtl && percentage.left >= 0.9) {
-        showNextBuffer.value = true;
-      }
-      else if(!localReaderSettings.value.rtl && percentage.left <= 1) {
-        showNextBuffer.value = true;
-      }
+    const imagesAreAllLoaded = currentChapterFormatted.value.imgs.length === currentChapterFormatted.value.imgsExpectedLength;
+    const currentPageIsLastPage = currentPage.value === currentChapterFormatted.value.imgsExpectedLength;
+
+    if(imagesAreAllLoaded || currentPageIsLastPage) {
+      if(percentage.left >= 0.8) showNextBuffer.value = true;
     }
 
   } else {
