@@ -9,7 +9,7 @@
         <img width="32" src="https://user-images.githubusercontent.com/26584973/205162228-da47dbdf-473b-4fe2-92c9-32a1a978e8b6.png">
         <img width="32" src="https://user-images.githubusercontent.com/26584973/205162072-a9d97b4f-ecb5-4261-8a5d-f791b7ef6a39.png">
       </h1>
-      <p>A desktop application to read your favorite mangas from your favorite websites:</p>
+      <p>A desktop application to read your favorite manga/manhwa/manhua from your favorite websites:</p>
       <ul>
         <li>Keep track of your reading progress</li>
         <li>Always get the latest releases directly from their sources</li>
@@ -18,9 +18,11 @@
       </ul>
       <sup>
         <a href="https://github.com/JiPaix/Fukayo/releases">
-          Download the latest version!
+          Download the latest version! 
+          <a href="INSTALL.md">
+          Alternatively click the link here to find out how to deploy it on Docker/Podman!
+          </a>
         </a>
-      </sup>
     </td>
   </tr>
   <tr>
