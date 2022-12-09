@@ -365,7 +365,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     this.#clearIntervals();
     this.#nullTokens();
     if(!this.options.login || !this.options.password) return this.logger('no credentials');
-    if(!this.options.enabled) return this.logger('mirror is disabled');
+    if(!this.enabled) return this.logger('mirror is disabled');
 
     const username = this.options.login,
           password = this.options.password;
