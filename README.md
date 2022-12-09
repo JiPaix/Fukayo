@@ -18,7 +18,7 @@
       </ul>
       <sup>
         <a href="https://github.com/JiPaix/Fukayo/releases">
-          Download the latest version! 
+          Download the latest version!<br>
           <a href="INSTALL.md">
           Alternatively click the link here to find out how to deploy it on Docker/Podman!
           </a>
