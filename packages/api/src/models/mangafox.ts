@@ -299,6 +299,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
       // we gather every parameters needed to build the request to the actual image
       const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
+      if(!imagecount) throw 'cannot find imagecount';
+
       let chapterurl = `${this.host}${link}`;
       if(!chapterurl.endsWith('/')) chapterurl += '/';
       const chapfunurl = chapterurl.substring(0, chapterurl.lastIndexOf('/') + 1) + 'chapterfun.ashx';
@@ -343,14 +345,16 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           const key = this.getVariableFromScript<string|undefined>('key', sc) || '',
                 pix = this.getVariableFromScript<string>('pix', sc),
                 pvalues = this.getVariableFromScript<string[]>('pvalue', sc), // array of scan urls (contains current one and next one)
-                pvalue = pvalues.map(img => pix + img + '?cid=' + cid + '&key=' + key);
+                pvalue = pvalues?.map(img => pix + img + '?cid=' + cid + '&key=' + key);
 
           // download and pass to client
-          const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
-          const img = await this.downloadImage(imageLink);
-          if(img) {
-            socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
-            continue;
+          if(pvalue && pvalue.length) {
+            const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
+            const img = await this.downloadImage(imageLink);
+            if(img) {
+              socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
+              continue;
+            }
           }
         }
         if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });

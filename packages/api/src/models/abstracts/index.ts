@@ -446,7 +446,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
    * const url = 'https://www.example.com/images/some-image.jpg?token=123';
    * downloadImage(url, false)
    */
-  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:AxiosRequestConfig):Promise<{src: string, height: number, width: number}|undefined> {
+  protected async downloadImage(url:string, referer?:string, dependsOnParams = false, config?:Omit<AxiosRequestConfig, 'url'>):Promise<{src: string, height: number, width: number}|undefined> {
     const {identifier, filename} = await this.#generateCacheFilename(url, dependsOnParams);
 
     const cache = await this.#loadFromCache({identifier, filename});
@@ -479,7 +479,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     else return { mime: 'image/jpeg' };
   }
 
-  protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:AxiosRequestConfig) {
+  protected async post<PLOAD, RESP = unknown>(url:string, data:PLOAD, type: 'post'|'patch'|'put'|'delete' = 'post', config?:Omit<AxiosRequestConfig, 'url'>) {
     try {
       const resp = await this.#axios[type]<RESP>(url, data, { ...config, timeout: 5000 });
       return this.#returnFetch(resp.data);
@@ -609,7 +609,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return load(content, options, isDocument);
   }
 
-  protected getVariableFromScript<Expected>(varname:string, sc:string):Expected {
+  protected getVariableFromScript<T>(varname:string, sc:string):T | undefined {
     let res = undefined;
     // eslint-disable-next-line no-useless-escape
     const rx = new RegExp('(var|let|const)\\s+' + varname + '\\s*=\\s*([0-9]+|\\"|\\\'|\\\{|\\\[|JSON\\s*\\\.\\s*parse\\\()', 'gmi');
