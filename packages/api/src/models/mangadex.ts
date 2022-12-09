@@ -927,7 +927,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
-    if(!this.options.login || !this.options.password || !this.options.markAsRead || chapterURLs.length) return;
+    if(!this.loggedIn || !this.options.markAsRead || chapterURLs.length) return;
 
     const mangaIdMatchArray = mangaURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
     if(!mangaIdMatchArray) return this.logger('markAsRead: incorrect manga id');
