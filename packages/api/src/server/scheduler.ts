@@ -257,6 +257,9 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(this.#ongoing.updates) return;
     // emit to all the clients that we are updating
     this.#ongoing.updates = true;
+    // try again later if we aren't connected
+    if(!this.connectivity) return this.restartUpdate();
+
     if(this.io) this.io.emit('startMangasUpdate');
     // get the list of mangas
     const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
