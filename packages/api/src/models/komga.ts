@@ -59,6 +59,7 @@ type book = {
 }
 
 class Komga extends SelfHosted implements MirrorInterface {
+  #logged = false;
   constructor() {
     super({
       version: 1,
@@ -91,11 +92,8 @@ class Komga extends SelfHosted implements MirrorInterface {
     }, true);
   }
 
-  /** needs at least these three options to be enabled */
-  get enabled(): boolean {
-    const { enabled, host, port, password, login} = this.options;
-    if(enabled && host && port && password && login) return true;
-    return false;
+  get enabled():boolean {
+    return this.#logged && super.enabled;
   }
 
   set enabled(val: boolean) {
@@ -118,6 +116,41 @@ class Komga extends SelfHosted implements MirrorInterface {
     const res = /^(\/books\/\w+)|(\/book\/\w+\/read)$/gmi.test(url);
     if(!res) this.logger('not a chapter page:', url);
     return res;
+  }
+
+  public get loggedIn():boolean {
+    const { login, password } = this.options;
+    if(!login || !password) return false;
+    return this.#logged;
+  }
+
+  async login(socket?: socketInstance) {
+    try {
+      const { login, password } = this.options;
+      if(!login || !password) {
+        this.logger('no credentials');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = false;
+        return false;
+      }
+      const data = await this.fetch({ url: this.#path('/'), auth: { username: login, password } }, 'json');
+      if(data) {
+        if(socket) socket.emit('loggedIn', this.name, true);
+        this.#logged = true;
+        this.logger('is logged-in');
+        return true;
+      } else {
+        this.logger('not logged in');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = true;
+        return false;
+      }
+    } catch(e) {
+      this.logger('not logged in', e);
+      if(socket) socket.emit('loggedIn', this.name, false);
+      this.#logged = true;
+      return false;
+    }
   }
 
   async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
