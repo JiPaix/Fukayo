@@ -18,6 +18,7 @@ export type LoginAuth = { login: string, password:string }
 
 
 export type ClientToServerEvents = {
+  getConnectivityStatus: () => void;
   getMirrors: (showdisabled:boolean, callback: (m: mirrorInfo[]) => void) => void;
   getImports: (showdisabled:boolean, callback: (m: Importer['showInfo'][]) => void) => void
   searchInMirrors: (query:string, id:number, mirrors: string[], langs:mirrorsLangsType[], callback: (nbOfDonesToExpect:number)=>void) => void;
