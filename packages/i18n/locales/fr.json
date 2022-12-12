@@ -6,7 +6,7 @@
             "please_wait": "Veuillez patienter…",
             "initializing": "Initialisation des <b>sources et bases de données</b>",
             "connection_lost": "Connexion perdue",
-            "check_internet": "Please check your Internet connection"
+            "check_internet": "Veuillez vérifier votre connexion Internet"
         }
     },
     "electron": {
