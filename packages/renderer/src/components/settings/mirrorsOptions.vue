@@ -35,6 +35,8 @@ const allLangs = ref<string[]>([]);
 const includedLangsRAW = ref<string[]>([]);
 /** Mirrors info as retrieved from the server */
 const mirrorsRAW = ref<Array<mirrorInfo>>([]);
+/** is user changing credentials? */
+const modifying = ref<Record<string, boolean>>({ });
 
 const mirrors = computed(() => {
   return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value) as Array<mirrorInfo>;
@@ -58,6 +60,9 @@ function changeOption(mirrorName:string, property:string, value:unknown) {
   if(typeof value === 'string' && property === 'port') {
     const toNb = parseInt(value);
     if(!isNaN(toNb)) value = toNb;
+  }
+  if(property === 'login') {
+    modifying.value[mirrorName] = true;
   }
   socket?.emit('changeMirrorSettings', mirrorName, { [property]: value }, (sources) => {
     mirrorsRAW.value = sources;
@@ -173,6 +178,12 @@ onBeforeMount(async () => {
     mirrorsRAW.value = m.sort((a, b) => a.name.localeCompare(b.name));
     includedLangsRAW.value = Array.from(new Set(m.map(m => m.langs).flat()));
     allLangs.value = includedLangsRAW.value;
+  });
+  socket.on('loggedIn', (name, val) => {
+    const find = mirrorsRAW.value.find(m => m.name === name);
+    if(find) find.loggedIn = val;
+    console.log(name, val);
+    modifying.value[name] = false;
   });
 });
 </script>
@@ -470,8 +481,17 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
                     :dark="$q.dark.isActive"
+                    :loading="modifying[mirror.name]"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'login', v)"
-                  />
+                  >
+                    <template #append>
+                      <q-icon
+                        v-if="!modifying[mirror.name]"
+                        :name="mirror.loggedIn ? 'check' : 'close'"
+                        :color="mirror.loggedIn ? 'positive' : 'negative'"
+                      />
+                    </template>
+                  </q-input>
                 </q-item>
               </div>
               <!-- Customized Password -->
@@ -494,8 +514,17 @@ onBeforeMount(async () => {
                     outlined
                     :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
                     :dark="$q.dark.isActive"
+                    :loading="modifying[mirror.name]"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'password', v)"
-                  />
+                  >
+                    <template #append>
+                      <q-icon
+                        v-if="!modifying[mirror.name]"
+                        :name="mirror.loggedIn ? 'check' : 'close'"
+                        :color="mirror.loggedIn ? 'positive' : 'negative'"
+                      />
+                    </template>
+                  </q-input>
                 </q-item>
               </div>
               <!-- Customized host -->
@@ -519,7 +548,15 @@ onBeforeMount(async () => {
                     :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
                     :dark="$q.dark.isActive"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'host', v)"
-                  />
+                  >
+                    <template #append>
+                      <q-icon
+                        v-if="!modifying[mirror.name]"
+                        :name="mirror.isOnline ? 'check' : 'close'"
+                        :color="mirror.isOnline ? 'positive' : 'negative'"
+                      />
+                    </template>
+                  </q-input>
                 </q-item>
               </div>
               <!-- Customized port -->
@@ -542,8 +579,17 @@ onBeforeMount(async () => {
                     :debounce="500"
                     :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
                     :dark="$q.dark.isActive"
+                    :loading="modifying[mirror.name]"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'port', v)"
-                  />
+                  >
+                    <template #append>
+                      <q-icon
+                        v-if="!modifying[mirror.name]"
+                        :name="mirror.isOnline ? 'check' : 'close'"
+                        :color="mirror.isOnline ? 'positive' : 'negative'"
+                      />
+                    </template>
+                  </q-input>
                 </q-item>
               </div>
               <!-- Customized protocol -->
@@ -568,7 +614,15 @@ onBeforeMount(async () => {
                     :dark="$q.dark.isActive"
                     :options="['http', 'https']"
                     @update:model-value="(v:unknown) => changeOption(mirror.name, 'protocol', v)"
-                  />
+                  >
+                    <template #append>
+                      <q-icon
+                        v-if="!modifying[mirror.name]"
+                        :name="mirror.isOnline ? 'check' : 'close'"
+                        :color="mirror.isOnline ? 'positive' : 'negative'"
+                      />
+                    </template>
+                  </q-select>
                 </q-item>
               </div>
               <!-- Excluded Groups -->
