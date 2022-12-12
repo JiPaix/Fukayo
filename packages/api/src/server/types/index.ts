@@ -12,6 +12,7 @@ export type ServerToClientEvents = {
   unauthorized: () => void;
   token: (acessToken: string) => void;
   refreshToken: (acessToken: string) => void;
+  connectivity: (status: boolean) => void;
   loggedIn: (mirrorName:string, status: boolean) => void;
   searchInMirrors: (id:number, mangas:SearchResult[]|SearchResult|SearchErrorMessage|TaskDone) => void;
   showManga: (id:number, manga:MangaPage|MangaInDB|MangaErrorMessage) =>void
