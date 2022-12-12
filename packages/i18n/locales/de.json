@@ -3,7 +3,8 @@
         "description": "Eine einfache electron-App zum Lesen von Mangas",
         "name": "Fukayo",
         "loading": {
-            "please_wait": "Please wait…"
+            "please_wait": "Please wait…",
+            "initializing": "Initializing <b>sources and databases</b>"
         }
     },
     "electron": {
