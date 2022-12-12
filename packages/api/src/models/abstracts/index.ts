@@ -7,7 +7,7 @@ import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import { crawler } from '@api/utils/crawler';
+import { crawler, puppeteerExec } from '@api/utils/crawler';
 import { FileServer } from '@api/utils/fileserv';
 import type { ClusterJob } from '@api/utils/types/crawler';
 import type { mirrorsLangsType } from '@i18n';
@@ -19,6 +19,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import { resolve } from 'path';
 import { env } from 'process';
+import type { socketInstance } from '@api/server/types';
 
 /**
  * The default mirror class
@@ -33,6 +34,7 @@ import { env } from 'process';
 export default class Mirror<T extends Record<string, unknown> = Record<string, unknown>> extends Database<MirrorConstructor<T>['options']> {
   #concurrency = 0;
   protected crawler = crawler;
+  protected puppeteer = puppeteerExec;
   #icon;
   /** mirror's implementation version */
   version: number;
@@ -206,7 +208,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     });
   }
 
-  async login():Promise<boolean|void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async login(socket?: socketInstance):Promise<boolean|void> {
     return;
   }
 
@@ -217,6 +220,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   public set enabled(val:boolean) {
     this.options.enabled = val;
     this.write();
+  }
+
+  public get loggedIn() {
+    return false;
   }
 
   public get options() {
@@ -254,6 +261,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       isDead: this.isDead,
       name: this.name,
       isOnline: this.isOnline,
+      loggedIn: this.loggedIn,
       displayName: this.displayName,
       selfhosted: this.selfhosted || false,
       host: this.host,
@@ -420,7 +428,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** change the mirror settings */
-  changeSettings(opts: Record<string, unknown>) {
+  changeSettings(opts: Record<string, unknown>, socket?: socketInstance) {
     this.options = { ...this.options, ...opts };
     // update this.host if mirror is self-hosted
     if(opts.host || opts.protocol || opts.port) {
@@ -428,8 +436,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(this.options.protocol && typeof this.options.protocol === 'string') this.host = this.options.protocol + '://' + this.host;
       if(this.options.port && typeof this.options.port === 'number') this.host = this.host + ':' + this.options.port;
     }
-    if(opts.login || opts.password) {
-      this.login();
+    if(opts.login || opts.password || (this.selfhosted && (opts.host || opts.port || opts.protocol))) {
+      this.login(socket);
     }
   }
 
