@@ -14,8 +14,6 @@ afterAll(async () => {
   await electronApp.close();
 });
 
-const pause = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
-
 test('Main window state', async () => {
   const windowState: { isVisible: boolean; isDevToolsOpened: boolean; isCrashed: boolean }
     = await electronApp.evaluate(({BrowserWindow}) => {
@@ -43,8 +41,7 @@ test('Main window state', async () => {
 test('Main window web content', async () => {
   const page = await electronApp.firstWindow();
   // on startup the app tries to directly connect the user to the server
-  await page.waitForLoadState('networkidle'); // we wait for the connection to fail
-  await pause(5000); // add an extra second in-case vue runs at potato speed
+  await page.waitForSelector('#app');
   const root = await page.$('#app', {strict: true});
   expect(root).to.not.be.null;
   if(!root) return;
@@ -97,6 +94,7 @@ test('Server setup', async () => {
 
 test('Server is running', async () => {
   const page = await electronApp.firstWindow();
-  const library = page.$('.w-100');
+  await page.waitForSelector('.w-100');
+  const library = await page.$('.w-100');
   expect(library).to.not.be.null;
 });
