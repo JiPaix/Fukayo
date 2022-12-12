@@ -471,7 +471,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   async #tokenLoop(client:BaseClient) {
     if(!this.#tokens.refresh_token) return;
-    this.logger('TOKEN LOOP');
     const now = Date.now();
     try {
       const { access_token, expires_at, refresh_token, expires_in } = await client.refresh(this.#tokens.refresh_token);
@@ -786,7 +785,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     }
 
     try {
-
+      this.logger('checking', url);
       const manga = await this.fetch<
       Routes['/manga/{id}']['ok']|Routes['/manga/{id}']['err']
       >({
