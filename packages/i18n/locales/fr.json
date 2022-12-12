@@ -1,7 +1,10 @@
 {
     "app": {
         "description": "Une application simple pour lire des mangas",
-        "name": "Fukayo"
+        "name": "Fukayo",
+        "loading": {
+            "please_wait": "Please wait…"
+        }
     },
     "electron": {
         "systemtray": {
