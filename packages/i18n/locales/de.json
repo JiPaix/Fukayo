@@ -5,7 +5,8 @@
         "loading": {
             "please_wait": "Please wait…",
             "initializing": "Initializing <b>sources and databases</b>",
-            "connection_lost": "Connection lost"
+            "connection_lost": "Connection lost",
+            "check_internet": "Please check your Internet connection"
         }
     },
     "electron": {
