@@ -41,6 +41,7 @@ export default class socket {
     this.removeListeners();
     this.socket.on('token', t => this.settings.accessToken = t);
     this.socket.on('refreshToken', t => this.settings.refreshToken = t);
+    this.socket.emit('getConnectivityStatus');
     return this.socket;
   }
 

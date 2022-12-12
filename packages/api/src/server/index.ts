@@ -158,6 +158,12 @@ export default class IOWrapper {
     /** Default Events */
     socket.on('disconnect', () => socket.removeAllListeners());
 
+    socket.emit('connectivity', Scheduler.getInstance().connectivity);
+
+    socket.on('getConnectivityStatus', () => {
+      socket.emit('connectivity', Scheduler.getInstance().connectivity);
+    });
+
     /** returns all mirror's mirrorInfo */
     socket.on('getMirrors', (showdisabled, callback) => {
       if(showdisabled) return callback(mirrors.map(m => m.mirrorInfo));
