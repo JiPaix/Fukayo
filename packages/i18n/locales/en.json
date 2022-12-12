@@ -4,7 +4,8 @@
         "name": "Fukayo",
         "loading": {
             "please_wait": "Please wait…",
-            "initializing": "Initializing <b>sources and databases</b>"
+            "initializing": "Initializing <b>sources and databases</b>",
+            "connection_lost": "Connection lost"
         }
     },
     "electron": {
