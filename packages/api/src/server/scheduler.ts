@@ -16,19 +16,25 @@ import { join, resolve } from 'path';
 import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
+import { Socket } from 'net';
 
 export default class Scheduler extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
   static #instance: Scheduler;
+
   #intervals: {
     updates: NodeJS.Timer;
     nextupdate: number;
     cache: NodeJS.Timer;
     nextcache: number;
+    connectivity: NodeJS.Timer
   };
+
   #ongoing = {
     updates: false,
     cache: false,
   };
+
+  connectivity = false;
 
   mangaLogs:(LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata)[] = [];
   cacheLogs: { date: number, message: 'cache'|'cache_error', files:number, size:number }[] = [];
@@ -46,6 +52,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       cache: setTimeout(this.#clearcache.bind(this), 60000),
       nextupdate: Date.now() + 60000,
       updates: setTimeout(this.update.bind(this), 60000),
+      connectivity: setInterval(this.#checkOnline.bind(this), 60000),
     };
   }
 
@@ -76,11 +83,52 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     return this.#ongoing.updates;
   }
 
+  async #checkOnline(attempt = 1) {
+    const connected = await this.#connect();
+
+    if(connected) {
+      this.io?.emit('connectivity', true);
+      this.connectivity = true;
+      if(attempt > 1) {
+        clearInterval(this.#intervals.connectivity);
+        this.#intervals.connectivity = setInterval(this.#checkOnline.bind(this), 60000);
+      }
+      return;
+    }
+
+    attempt++;
+    this.io?.emit('connectivity', false);
+    this.connectivity = false;
+    clearInterval(this.#intervals.connectivity);
+    this.#intervals.connectivity = setInterval(this.#checkOnline.bind(this), attempt*5000);
+
+  }
+
+  #connect() {
+    const socket = new Socket();
+    socket.setTimeout(2500);
+    return new Promise(ok => {
+      const resolve = (bool:boolean) => {
+        socket.removeAllListeners();
+        socket.destroy();
+        this.logger('is', bool ? 'online' : 'offline');
+
+        ok(bool);
+      };
+      socket
+        .on('connect', () => resolve(true))
+        .on('error', ()=> resolve(false))
+        .on('timeout', () => resolve(false))
+        .connect(443, '1.1.1.1');
+    });
+  }
+
   async registerIO(io:ioServer) {
     this.logger('Scheduler loaded');
     this.io = io;
     try {
       this.#clearcache();
+      await this.#checkOnline();
       await this.update(false, true);
     } catch(e) {
       this.logger('catch!', e);
