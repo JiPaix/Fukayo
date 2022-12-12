@@ -168,3 +168,18 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
   }
   return instance.execute(data, task) as Promise<string | Error | undefined>;
 }
+
+export async function puppeteerExec<T = void>(callback: ({ page }: { page: Page }) => Promise<T>) {
+  runningTask = runningTask+1;
+  try {
+    const instance = await useCluster();
+    const exec = instance.execute(callback);
+    runningTask = runningTask-1;
+    closeClusterIfAllDone();
+    return exec;
+  } catch(e) {
+    runningTask = runningTask-1;
+    closeClusterIfAllDone();
+    throw e;
+  }
+}

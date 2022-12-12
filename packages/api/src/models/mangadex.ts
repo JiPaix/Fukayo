@@ -7,6 +7,8 @@ import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
+import type { BaseClient } from 'openid-client';
+import { generators, Issuer } from 'openid-client';
 
 type MangaAttributes = {
   title: {
@@ -298,11 +300,18 @@ type Routes = {
 }
 
 class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean, excludedGroups:string[], excludedUploaders:string[]}> implements MirrorInterface {
-  sessionToken: string|null = null;
-  authToken: string|null = null;
-  sessionInterval: NodeJS.Timer|null = null;
-  authInterval: NodeJS.Timer|null = null;
   #scanlatorCache:Set<{id:string, name:string}> = new Set();
+  #openID = {
+    auth: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/auth?client_id=thirdparty-oauth-client&redirect_uri=http://localhost&response_type=code',
+    token: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/token',
+    redirect_uri: 'http://localhost',
+    client_id: 'thirdparty-oauth-client',
+  };
+  #tokens = {
+    session: null as string | null | undefined,
+    refresh_token: null as string | null | undefined,
+  };
+
   constructor() {
     super({
       version: 1,
@@ -344,8 +353,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36 Edg/104.0.1293.63',
     };
 
-    if(!this.sessionToken) return headers;
-    else return { ...headers, Authorization: `Bearer ${this.sessionToken}` };
+    if(!this.#tokens.session) return headers;
+    else return { ...headers, Authorization: `Bearer ${this.#tokens.session}` };
 
   }
 
@@ -357,110 +366,136 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   public get loggedIn():boolean {
     const { login, password } = this.options;
-    const { authToken, sessionToken } = this;
-    return ![login, password, authToken, sessionToken].some(x => x == null);
+    const { session, refresh_token } = this.#tokens;
+    return ![login, password, session, refresh_token].some(x => x == null);
   }
 
-  async login() {
-    this.#clearIntervals();
-    this.#nullTokens();
-    if(!this.options.login || !this.options.password) return this.logger('no credentials');
+  async #fillLoginForm(url: string, login:string, password: string):Promise<undefined|string> {
+    return await this.puppeteer((async ({ page }):Promise<undefined|string> => {
+      await page.goto(url);
+      await page.waitForSelector('#username');
+      await page.type('#username', login);
+      await page.type('#password', password);
+      page.click('#kc-login');
+
+      const request:undefined|string = await new Promise((resolve) => {
+        const tm = setTimeout(() => resolve(undefined), 15000);
+        let alreadyDone = false;
+
+        const done = (value:undefined|string) => {
+          clearTimeout(tm);
+          if(alreadyDone) return;
+          alreadyDone = true;
+          resolve(value);
+        };
+
+        page.on('request', request => {
+          if (request.isNavigationRequest() && request.redirectChain().length > 0) {
+            const match = /code=(.*)/.exec(request.url());
+            if(match) {
+              done(request.url());
+            }
+            else {
+              done(undefined);
+            }
+            request.continue();
+          }
+        });
+      });
+
+      await page.waitForNetworkIdle({ idleTime: 500 });
+      return request;
+    }));
+  }
+
+  async login(socket?: socketInstance) {
+    const {login, password} = this.options;
     if(!this.enabled) return this.logger('mirror is disabled');
 
-    const username = this.options.login,
-          password = this.options.password;
+    if(!login || !password || login.length === 0 || password.length === 0) {
+      if(socket) socket.emit('loggedIn', this.name, false);
+      return this.logger('no credentials');
+    }
 
+    // clear previous instances?
+    this.#nullTokens();
+
+    const now = Date.now();
     try {
-      const resp = await this.post<
-        Routes['/auth/login']['payload'], Routes['/auth/login']['ok'] | Routes['/auth/login']['err']
-      >(this.#path('/auth/login'), { username, password }, 'post', { headers: this.#headers });
 
-      if(!resp) {
-        this.logger('no response', '/auth/login');
+      const mangaDexIssuer = await Issuer.discover('https://auth.mangadex.dev/realms/mangadex/.well-known/openid-configuration');
+
+      const client = new mangaDexIssuer.Client({
+        client_id: this.#openID.client_id,
+        redirect_uris: [this.#openID.redirect_uri],
+        response_types: ['code'],
+        token_endpoint_auth_method: 'none',
+      });
+      const code_verifier = generators.codeVerifier();
+      const code_challenge = generators.codeChallenge(code_verifier);
+
+      const url = client.authorizationUrl({
+        scope: 'openid email profile',
+        resource: this.#openID.redirect_uri,
+        code_challenge,
+        code_challenge_method: 'S256',
+      });
+
+      const token = await this.#fillLoginForm(url, login, password);
+
+      if(!token) {
+        if(socket) socket.emit('loggedIn', this.name, false);
         return false;
       }
 
-      if(resp.result === 'ok') {
-        this.authToken = resp.token.refresh;
-        this.sessionToken = resp.token.session;
-        this.#loginLoop();
-        this.#refreshLoop();
-        this.logger('logged in!');
-        return true;
-      } else {
-        this.#nullTokens();
-        this.logger(resp.errors);
-        return false;
-      }
+      const params = client.callbackParams(token);
+      const { access_token, expires_at, refresh_token, expires_in } = await client.callback(this.#openID.redirect_uri, params, { code_verifier });
+      if(!access_token || !expires_at || !refresh_token || !expires_in) return false;
+      this.#tokens = {
+        session: access_token,
+        refresh_token: refresh_token,
+      };
+      setTimeout(() => this.#tokenLoop(client), (expires_at*1000) - now);
+      if(socket) socket.emit('loggedIn', this.name, true);
+      this.logger('is logged-in');
+      return true;
     } catch(e) {
       if(e instanceof Error) this.logger('not logged in:', e.message);
       else this.logger('not logged in:', e);
       this.#nullTokens();
+      if(socket) socket.emit('loggedIn', this.name, false);
       return false;
     }
   }
 
-  async #refresh():Promise<boolean> {
-    if(this.authToken) {
-      const resp = await this.post<
-        Routes['/auth/refresh']['payload'], Routes['/auth/refresh']['ok']|Routes['/auth/refresh']['err']
-      >(this.#path('/auth/refresh'), { token: this.authToken }, 'post', { headers: this.#headers } );
 
-      if(!resp) {
-        this.logger('no response', '/auth/refresh');
-        return false;
-      }
-      if(resp.result === 'ok') {
-        this.authToken = resp.token.refresh;
-        this.sessionToken = resp.token.session;
-        return true;
-      } else {
-        this.logger(resp.errors);
-        return false;
-      }
+  async #tokenLoop(client:BaseClient) {
+    if(!this.#tokens.refresh_token) return;
+    this.logger('TOKEN LOOP');
+    const now = Date.now();
+    try {
+      const { access_token, expires_at, refresh_token, expires_in } = await client.refresh(this.#tokens.refresh_token);
+      if(!access_token || !expires_at || !refresh_token || !expires_in) return this.login();
+      this.#tokens = {
+        session: access_token,
+        refresh_token: refresh_token,
+      };
+      setTimeout(() => this.#tokenLoop(client), (expires_at*1000) - now);
+    } catch(e) {
+      this.login();
     }
-    return false;
-  }
-
-  #clearIntervals() {
-    if(this.authInterval) clearInterval(this.authInterval);
-    if(this.authInterval) clearInterval(this.authInterval);
   }
 
   #nullTokens() {
-    this.authToken = null;
-    this.sessionToken = null;
-  }
-
-  #loginLoop() {
-    // 86400 seconds in a day
-    const msInDay = 86400*1000;
-    let dayCount = 0;
-    if(this.authInterval) clearInterval(this.authInterval);
-
-    this.authInterval = setInterval(() => {
-        dayCount++;  // a day has passed
-
-        if (dayCount === 29) {
-          if(this.authInterval) clearInterval(this.authInterval);
-          this.login();
-        }
-    }, msInDay);
-  }
-
-  #refreshLoop() {
-    this.sessionInterval = setInterval(async () => {
-      const res = await this.#refresh();
-      if(!res) {
-        // login will clear all intervals and null tokens
-        this.login();
-      }
-    }, 14 * 60 * 1000); // 14 minutes
+    this.#tokens = {
+      session: null,
+      refresh_token: null,
+    };
   }
 
   async #getReadMarker(mangaId: string):Promise<string[]> {
     if(!this.options.login || !this.options.password) return [];
-    if(!this.authToken || !this.sessionToken) return [];
+    if(!this.#tokens.session) return [];
 
     try {
       const res = await this.fetch<Routes['/manga/{id}/read']['ok']|Routes['/manga/{id}/read']['err']>({
@@ -481,7 +516,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   #path(path:string) {
     if(!path.startsWith('/')) path = '/'+path;
-    return 'https://api.mangadex.org'+path;
+    return 'https://api.mangadex.dev'+path;
   }
 
   #season():{ current : { season: string, year: number }, previous: { season: string, year: number} } {
@@ -927,8 +962,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
-    if(!this.loggedIn || !this.options.markAsRead || chapterURLs.length) return;
-
+    if(!!this.options.markAsRead || chapterURLs.length) return;
+    if(!this.loggedIn && this.options.login && this.options.password) {
+      return setTimeout(async () => {
+        try {
+          await this.login();
+          await this.markAsRead(mangaURL, lang, chapterURLs, read);
+        } catch(e) {
+          return;
+        }
+      }, 60*1000);
+    }
     const mangaIdMatchArray = mangaURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
     if(!mangaIdMatchArray) return this.logger('markAsRead: incorrect manga id');
     const mangaId = mangaIdMatchArray[0];

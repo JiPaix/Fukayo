@@ -24,6 +24,7 @@ const externals = [
   'user-agents',
   'form-data',
   'connect-history-api-fallback',
+  'openid-client',
 ];
 
 
