@@ -17,6 +17,8 @@ export type mirrorInfo = {
   name:string,
   /** Mirror's full name */
   displayName: string,
+  /** is mirror logged in? */
+  loggedIn?: boolean,
   /**
    * hostname without ending slash
    * @example 'https://www.mirror.com'

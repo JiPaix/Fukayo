@@ -291,7 +291,7 @@ export default class IOWrapper {
      * callback returns all mirrors' mirrorInfo
      */
     socket.on('changeMirrorSettings', (mirror, opts, callback) => {
-      mirrors.find(m=>m.name === mirror)?.changeSettings(opts);
+      mirrors.find(m=>m.name === mirror)?.changeSettings(opts, socket);
       callback(mirrors.map(m => m.mirrorInfo));
     });
 

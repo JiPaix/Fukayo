@@ -61,6 +61,7 @@ type Chapter = {
 
 export class Tachidesk extends SelfHosted implements MirrorInterface {
   #sourcelist: null | Source[];
+  #logged = false;
   constructor() {
     super({
       version: 1,
@@ -128,6 +129,38 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       withCredentials: true,
     }, 'json');
     return this.#sourcelist;
+  }
+
+  public get loggedIn():boolean {
+    return this.#logged;
+  }
+
+  get enabled():boolean {
+    return this.#logged && super.enabled;
+  }
+
+  async login(socket?: socketInstance) {
+    try {
+      const { login, password } = this.options;
+      const auth = login && password ? { username: login, password: password } : undefined;
+      const data = await this.fetch({ url: this.#path('/settings/about'), auth }, 'json');
+      if(data) {
+        if(socket) socket.emit('loggedIn', this.name, true);
+        this.logger('is logged-in');
+        this.#logged = true;
+        return true;
+      } else {
+        this.logger('not logged in');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = true;
+        return false;
+      }
+    } catch(e) {
+      this.logger('not logged in', e);
+      if(socket) socket.emit('loggedIn', this.name, false);
+      this.#logged = false;
+      return false;
+    }
   }
 
   async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
