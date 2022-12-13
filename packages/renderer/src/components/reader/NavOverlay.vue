@@ -17,9 +17,9 @@ const style = computed(() => {
         marginLeft = props.position === 'center' ? width : props.position === 'left' ? 12 : 0,
         marginRight = props.position === 'right' ? props.drawerOpen ? 300+12 : 12 : 0;
 
-
   return {
-
+    height: $q.screen.height - 82,
+    marginTop: '82px',
     background:  background ? background : 'none',
     width: width+'px',
     marginBottom,
@@ -35,15 +35,24 @@ const style = computed(() => {
 <template>
   <div
     :class="position === 'center' ? 'absolute-left' : `absolute-${position}`"
-    :style="style"
+    :style="{ ...style, background: 'none' }"
     class="hoverColor"
-  />
+  >
+    <q-icon
+      v-if="position === 'left' || position === 'right'"
+      class="absolute-center"
+      :color="hintColor"
+      :name="position === 'left' ? 'navigate_before' : position === 'right' ? 'navigate_next' : ''"
+      size="300px"
+      :style="{ width: style.width }"
+    />
+  </div>
 </template>
 <style lang="css">
 .hoverColor {
   opacity: 0
 }
 .hoverColor:hover {
-  opacity: 0.1;
+  opacity: 0.3;
 }
 </style>

@@ -208,7 +208,8 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
         cancel = true;
       });
     }
-    const results = [];
+    const results:MangaInDB[] = [];
+    //TODO: Envoyer tout les mangas d'un coup
     for(const manga of db.mangas) {
       if(cancel) break;
       const mg = await this.get({id: manga.id, langs: manga.langs});
