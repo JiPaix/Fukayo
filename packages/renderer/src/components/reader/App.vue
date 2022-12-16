@@ -873,13 +873,12 @@ watch(() => localReaderSettings.value, (nval, oval) => {
       <div
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
         ref="chaptersRef"
-        class="fit scroll chapters zoom"
-        @wheel="useWheelToScrollHorizontally"
+        class="fit chapters zoom"
         @touchstart="setTouch"
         @touchend="resetTouch"
         @touchmove="touch"
       >
-        <div>
+        <div @wheel.stop="useWheelToScrollHorizontally">
           <images-container
             ref="virtscroll"
             :drawer-open="rightDrawerOpen"

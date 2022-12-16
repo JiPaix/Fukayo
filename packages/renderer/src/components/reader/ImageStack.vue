@@ -190,7 +190,7 @@ defineExpose({
     ref="scrollArea"
     style="overflow:overlay;"
     :style="cssVars"
-    class="scrollarea"
+    class="scrollarea scroll"
   >
     <!-- Vertical long strip -->
     <div v-if="(!settings.longStrip && settings.book) || (settings.longStrip && settings.longStripDirection === 'vertical')">
