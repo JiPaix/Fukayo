@@ -527,31 +527,24 @@ function scrollToPrevPage() {
     if(!min) return currentPage.value--;
   }
 
-  if(!localReaderSettings.value.longStrip && localReaderSettings.value.book) {
-    const currentGroup = document.querySelector('.group')?.getAttribute('data-indexes')?.split(',');
-    if(!currentGroup) return;
-    const bestMatch = Math.max(...currentGroup.map(o => parseInt(o)));
-    const currentTarget = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(bestMatch));
-    const target = virtscroll.value.imagestack.indexes[currentTarget-1];
-    if(target) {
-      const targetBestMAtch = Math.max(...target.indexes);
-      return currentPage.value = targetBestMAtch+1;
-    }
-  }
-
-  const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
-  if(!div) scrollToPage(currentIndex-1);
-
-  const prev = div?.previousElementSibling;
-  if(prev) prev.scrollIntoView({behavior: 'smooth'});
-  else {
-    if(doubleTapLeft.value === 1) {
+  const currentGroup = document.querySelector(`[data-indexes*="${currentIndex}"]`);
+  if(!currentGroup) return;
+  const currentStack = currentGroup.getAttribute('data-indexes')?.split(',');
+  if(!currentStack) return;
+  const lastPageOfCurrentStack = Math.max(...currentStack.map(o => parseInt(o)));
+  const indexOfStack = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(lastPageOfCurrentStack));
+  const targetStack = virtscroll.value.imagestack.indexes[indexOfStack-1];
+  if(!targetStack) {
+      doubleTapLeft.value++;
+      if(doubleTapLeft.value <= 1) return;
       doubleTapLeft.value = 0;
       return loadPrev();
-    }
-    doubleTapLeft.value++;
-    return;
   }
+  const target = Math.max(...targetStack.indexes);
+  const div = document.querySelector(`[data-indexes*="${target}"]`);
+  if(div) div.scrollIntoView({ behavior: 'smooth' });
+  currentPage.value = target+1;
+
 }
 
 function scrollToNextPage() {
@@ -565,31 +558,23 @@ function scrollToNextPage() {
     if(!max) return currentPage.value++;
   }
 
-  if(!localReaderSettings.value.longStrip && localReaderSettings.value.book) {
-    const currentGroup = document.querySelector('.group')?.getAttribute('data-indexes')?.split(',');
-    if(!currentGroup) return;
-    const bestMatch = Math.max(...currentGroup.map(o => parseInt(o)));
-    const currentTarget = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(bestMatch));
-    const target = virtscroll.value.imagestack.indexes[currentTarget+1];
-    if(target) {
-      const targetBestMAtch = Math.max(...target.indexes);
-      return currentPage.value = targetBestMAtch+1;
-    }
-  }
-
-  const div = document.querySelector(`.group[data-indexes*="${currentIndex}"]`);
-  if(!div) scrollToPage(currentIndex+1);
-
-  const next = div?.nextElementSibling;
-  if(next) next.scrollIntoView({behavior: 'smooth'});
-  else {
-    if(doubleTapRight.value === 1) {
-      doubleTapRight.value = 0;
-      return loadNext();
-    }
+  const currentGroup = document.querySelector(`[data-indexes*="${currentIndex}"]`);
+  if(!currentGroup) return;
+  const currentStack = currentGroup.getAttribute('data-indexes')?.split(',');
+  if(!currentStack) return;
+  const lastPageOfCurrentStack = Math.max(...currentStack.map(o => parseInt(o)));
+  const indexOfStack = virtscroll.value.imagestack.indexes.findIndex(i => i.indexes.includes(lastPageOfCurrentStack));
+  const targetStack = virtscroll.value.imagestack.indexes[indexOfStack+1];
+  if(!targetStack) {
     doubleTapRight.value++;
-    return;
+      if(doubleTapRight.value <= 1) return;
+      doubleTapRight.value = 0;
+      return loadPrev();
   }
+  const target = Math.max(...targetStack.indexes);
+  const div = document.querySelector(`[data-indexes*="${target}"]`);
+  if(div) div.scrollIntoView({ behavior: 'smooth' });
+  currentPage.value = target+1;
 }
 
 const prevNavDisabled = computed(() => {
@@ -642,7 +627,6 @@ onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
 
 async function scrollToPage(index: number, fastforward?:boolean) {
-
   if(!localReaderSettings.value.longStrip) {
     const target = virtscroll.value?.imagestack?.indexes.find(i => i.indexes.includes(index));
     if(target) {
