@@ -128,9 +128,9 @@ onBeforeMount(async () => {
   socket.emit('getMirrors', true, (m) => {
     mirrors.value = m;
   });
-  socket.on('showLibrary', (id, manga) => {
+  socket.on('showLibrary', (id, mgs) => {
     if(id === now) {
-      mangas.value.push(manga);
+      mangas.value = mgs;
     }
   });
   socket.emit('showLibrary', now);

@@ -160,56 +160,56 @@ onBeforeMount(async () => {
     mirrors.value = m;
     if (!socket) socket = await useSocket(settings.server);
 
-    socket.on('showLibrary', (resid, manga) => {
-      if(resid === id) {
-        fetching.value = false;
+    socket.on('showLibrary', (resid, mangas) => {
+      fetching.value = false;
+      if(resid !== id) return;
+      mangas.forEach(manga => {
         const mirrorInfo = m.find(mirror => mirror.name === manga.mirror.name);
-        if(mirrorInfo) {
-          manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
-          manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
-          const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);
-          let chapterIndex = manga.chapters.findIndex(chapter => chapter.number === maxChapter);
-          if(chapterIndex === -1) chapterIndex = manga.chapters.length-1;
-          const group = mangasRAW.value.find(group => group.name === manga.displayName || group.name === manga.name);
-          const mg:MangaInDBwithLabel = {
-            id: manga.id,
-            name: manga.name,
-            displayName: manga.displayName,
-            synopsis: manga.synopsis,
-            tags: manga.tags,
-            authors: manga.authors,
-            mirror: mirrorInfo.name,
-            dead: mirrorInfo.isDead,
-            broken: manga.meta.broken,
-            url: manga.url,
-            meta: manga.meta,
-            status: manga.status,
-            userCategories: manga.userCategories,
+        if(!mirrorInfo) return;
+        manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
+        manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
+        const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);
+        let chapterIndex = manga.chapters.findIndex(chapter => chapter.number === maxChapter);
+        if(chapterIndex === -1) chapterIndex = manga.chapters.length-1;
+        const group = mangasRAW.value.find(group => group.name === manga.displayName || group.name === manga.name);
+        const mg:MangaInDBwithLabel = {
+          id: manga.id,
+          name: manga.name,
+          displayName: manga.displayName,
+          synopsis: manga.synopsis,
+          tags: manga.tags,
+          authors: manga.authors,
+          mirror: mirrorInfo.name,
+          dead: mirrorInfo.isDead,
+          broken: manga.meta.broken,
+          url: manga.url,
+          meta: manga.meta,
+          status: manga.status,
+          userCategories: manga.userCategories,
+          unread: manga.chapters.filter(c => !c.read).length,
+          chapters: manga.chapters.map((c, i) => {
+            return {
+              ...c,
+              label: chapterLabel(c.number, c.name),
+              value: i,
+            };
+          }),
+          langs: manga.langs,
+        };
+        if(mg.dead || mg.broken) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
+        else if(!group) {
+          mangasRAW.value.push({
+            name: manga.displayName || manga.name,
+            mangas: [mg as MangaInDBwithLabel],
+            covers: manga.covers,
             unread: manga.chapters.filter(c => !c.read).length,
-            chapters: manga.chapters.map((c, i) => {
-              return {
-                ...c,
-                label: chapterLabel(c.number, c.name),
-                value: i,
-              };
-            }),
-            langs: manga.langs,
-          };
-          if(mg.dead || mg.broken) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
-          else if(!group) {
-            mangasRAW.value.push({
-              name: manga.displayName || manga.name,
-              mangas: [mg as MangaInDBwithLabel],
-              covers: manga.covers,
-              unread: manga.chapters.filter(c => !c.read).length,
-            });
-          } else {
-            group.mangas.push(mg as MangaInDBwithLabel);
-            group.covers = [...new Set([...group.covers, ...manga.covers])];
-            group.unread += manga.chapters.filter(c => !c.read).length;
-          }
+          });
+        } else {
+          group.mangas.push(mg as MangaInDBwithLabel);
+          group.covers = [...new Set([...group.covers, ...manga.covers])];
+          group.unread += manga.chapters.filter(c => !c.read).length;
         }
-      }
+      });
     });
     socket.emit('showLibrary', id);
   });

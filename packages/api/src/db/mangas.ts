@@ -213,10 +213,10 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
     for(const manga of db.mangas) {
       if(cancel) break;
       const mg = await this.get({id: manga.id, langs: manga.langs});
-      if(mg && !id && !socket) results.push(mg);
-      if(mg && id && socket) socket.emit('showLibrary', id, mg);
+      if(mg) results.push(mg);
     }
-    if(!id && !socket) return results;
+    if(socket && id) socket.emit('showLibrary', id, results);
+    else return results;
   }
 
   /**

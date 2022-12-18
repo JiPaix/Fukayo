@@ -19,7 +19,7 @@ export type ServerToClientEvents = {
   showMangas: (id:number, mangas:(MangaInDB | MangaPage | MangaErrorMessage)[]) =>void
   showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult[]|SearchResult|RecommendErrorMessage|TaskDone) => void;
-  showLibrary: (id:number, manga:MangaInDB) => void;
+  showLibrary: (id:number, manga:MangaInDB[]) => void;
   showImports: (id: number, /** number = nb of mangas to expect */ manga:number|importErrorMessage|ImportResults[]|ImportResults|TaskDone) => void;
   finishedMangasUpdate: () => void;
   startMangasUpdate: () => void;
