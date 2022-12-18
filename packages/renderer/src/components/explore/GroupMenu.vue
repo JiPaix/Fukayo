@@ -2,7 +2,8 @@
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { mirrorsLangsType } from '@i18n';
-import { useQuasar } from 'quasar';
+import { QItem, useQuasar } from 'quasar';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
   width: number,
@@ -25,7 +26,17 @@ function sortLangs(langs: SearchResult['langs']) {
   return langs.sort((a, b) => a.localeCompare(b));
 }
 
-const itemSize = 32;
+// List config
+const titleitem = ref<HTMLSpanElement|null>();
+
+const itemMinHeight = 32;
+const nbOfItems = 5;
+
+const QListMaxHeight = computed(() => {
+  if(!titleitem.value) return itemMinHeight * nbOfItems;
+  if(!titleitem.value.parentElement) return itemMinHeight * nbOfItems;
+  return (itemMinHeight * nbOfItems) + titleitem.value.parentElement.offsetHeight;
+});
 
 </script>
 
@@ -34,20 +45,25 @@ const itemSize = 32;
     v-if="$q.screen.gt.md"
     anchor="center middle"
     self="center middle"
-    :style="{ 'max-height': `${itemSize*5}px` }"
+    :style="{ 'max-height': `${itemMinHeight*nbOfItems}px` }"
   >
     <q-list
-      :style="{ 'width': `${width-(width*0.2)}px`, 'max-height': `${itemSize*5}px` }"
+      :style="{ 'max-width': `${width-(width*0.2)}px`, 'max-height': `${QListMaxHeight}px` }"
       separator
       dense
     >
-      <q-bar
-        :style="{ 'width': `${width-(width*0.2)}px`, 'height': 'auto' }"
-        class="text-caption items-center q-pa-sm"
+      <q-item
+        class="q-pa-sm text-orange text-bold"
         :dark="$q.dark.isActive"
+        :style="{ 'width': `${width-(width*0.2)}px`, 'word-break': 'break-word' }"
       >
-        <span class="text-light">{{ sortedGroup.name }}</span>
-      </q-bar>
+        <span
+          ref="titleitem"
+          class="text-light"
+        >
+          {{ }}{{ sortedGroup.name }}
+        </span>
+      </q-item>
       <q-item
         v-for="(lang, i) in sortLangs(sortedGroup.langs)"
         :key="i"
