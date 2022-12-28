@@ -11,32 +11,32 @@
     },
     "electron": {
         "systemtray": {
-            "quit": "Quit",
-            "show": "Show"
+            "quit": "verlassen",
+            "show": "anzeigen"
         }
     },
     "error": "Fehler",
     "explore": {
         "meta": {
-            "popularity": "Popularity",
-            "quality": "Quality",
-            "speed": "Speed"
+            "popularity": "Beliebtheit",
+            "quality": "Qualität",
+            "speed": "Geschwindigkeit"
         },
-        "placeholder": "Filter sources by name",
-        "tab": "Explore"
+        "placeholder": "Quellen nach Namen filtern",
+        "tab": "Erkunden"
     },
     "import": {
-        "active_sources": "Available sources",
-        "close": "Close",
-        "failed": "Error",
-        "in_library": "Imported",
-        "not_in_library": "Not imported",
-        "sources_config_required": "Sources requiring configuration",
-        "start_import": "Import",
-        "subtitle": "Import titles you've saved to an external source",
-        "tab": "Import",
-        "title": "Import titles",
-        "unauthorized": "Unauthorized: wrong credentials (?)"
+        "active_sources": "Verfügbare Quellen",
+        "close": "schließen",
+        "failed": "Fehler",
+        "in_library": "Importiert",
+        "not_in_library": "Nicht importiert",
+        "sources_config_required": "Quellen, die konfiguriert werden müssen",
+        "start_import": "importieren",
+        "subtitle": "Titel aus externen Quelle  importieren",
+        "tab": "Importieren",
+        "title": "Titel importieren",
+        "unauthorized": "Nicht autorisiert: falsche Anmeldeinformationen (?)"
     },
     "languages": {
         "aa": "Afar",
