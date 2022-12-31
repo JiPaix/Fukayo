@@ -270,4 +270,7 @@
       "setup.password_hints.strong",
       "setup.password_hints.weak"
     ],
+    "volar.autoCompleteRefs": true,
+    "volar.doctor.checkVueTsc": true,
+    "volar.vueserver.textDocumentSync": "full",
 }
