@@ -104,7 +104,7 @@ onBeforeUnmount(async () => {
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-header
-      elevated
+      bordered
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     >
       <q-bar

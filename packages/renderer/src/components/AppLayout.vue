@@ -62,6 +62,7 @@ function toggleDarkMode() {
       v-if="route.name !== 'reader'"
       elevated
       class="bg-grey-10 text-white"
+      bordered
       height-hint="98"
     >
       <q-toolbar>

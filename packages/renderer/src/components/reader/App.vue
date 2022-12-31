@@ -765,7 +765,7 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     view="lHh lpR lFf"
   >
     <q-header
-      elevated
+      bordered
       class="bg-dark"
     >
       <reader-header

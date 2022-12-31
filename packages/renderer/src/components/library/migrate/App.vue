@@ -208,7 +208,7 @@ onBeforeMount(async() => {
   >
     <q-layout view="lHh lpR lFf">
       <q-header
-        elevated
+        bordered
         class="bg-dark"
       >
         <q-toolbar>
