@@ -1019,3 +1019,8 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     </q-page-container>
   </q-layout>
 </template>
+<style lang="css" scoped>
+body {
+  overflow:hidden!important;
+}
+</style>
