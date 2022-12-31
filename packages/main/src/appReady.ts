@@ -86,9 +86,13 @@ export default class Ready {
     const password = app.commandLine.getSwitchValue('password');
     const portStr = app.commandLine.getSwitchValue('port');
 
-    if(!portStr || typeof portStr !== 'string') throw new Error('--port unexpected value');
+    // checking values
+    if(!login.length) throw new Error('--login cannot be an empty string');
+    if(!password.length) throw new Error('--password cannot be an empty string');
+    if(!portStr || typeof portStr !== 'string') throw new Error(`--port unexpected value: ${typeof portStr}`);
     const port = parseInt(portStr);
-    if(isNaN(port)) throw new Error('--port unexpected value');
+    if(isNaN(port)) throw new Error(`--port unexpected value: ${typeof portStr}, ${port}`);
+    if(port <= 1024 || port >= 65535) throw new Error(`--port must be between 1024 and 65535: got ${port}`);
 
     this.#api = new forkAPI({login,password, port, ssl: 'false' });
     const { fork } = await this.#api.start();
