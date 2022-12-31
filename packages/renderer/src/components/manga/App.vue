@@ -964,17 +964,24 @@ const routeLang = computed<OptionLanguage>({
             :columns="columns"
             :rows="manga.chapters"
             color="orange"
-            class="w-100 q-mt-sm"
+            class="w-100 q-mt-lg q-mb-lg"
             :pagination="{sortBy: 'chap', rowsPerPage:0, descending: settings.mangaPage.chapters.sort === 'DESC'}"
           >
             <template #top-right>
               <q-btn
-                push
-                :color="'orange'"
-                :text-color="$q.dark.isActive ? 'white' : 'white'"
+                color="orange"
+                text-color="white"
                 icon="filter_alt"
-                class="shadow-5"
+                class="shadow-5 q-mr-lg"
                 @click="filterDialog = !filterDialog"
+              />
+              <q-btn
+                v-if="resume.value"
+                color="orange"
+                text-color="white"
+                class="shadow-5"
+                :label="resume.label"
+                @click="() => resume.value ? showChapter(resume.value) : null"
               />
               <q-dialog
                 v-model="filterDialog"
@@ -1249,16 +1256,6 @@ const routeLang = computed<OptionLanguage>({
             </template>
           </q-table>
         </div>
-        <q-btn
-          v-if="resume.value"
-          :push="$q.screen.gt.sm"
-          :square="$q.screen.lt.md"
-          class="bg-orange"
-          :class="$q.screen.lt.md || $q.platform.has.touch ? 'fixed-bottom w-100' : 'fixed-bottom-right q-mr-lg q-mb-lg'"
-          :label="resume.label"
-          size="lg"
-          @click="() => resume.value ? showChapter(resume.value) : null"
-        />
       </q-page>
     </q-page-container>
   </q-layout>
