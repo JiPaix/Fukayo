@@ -967,6 +967,26 @@ const routeLang = computed<OptionLanguage>({
             class="w-100 q-mt-lg q-mb-lg"
             :pagination="{sortBy: 'chap', rowsPerPage:0, descending: settings.mangaPage.chapters.sort === 'DESC'}"
           >
+            <template #top-left>
+              <div class="flex reading-progress">
+                <q-linear-progress
+                  size="36px"
+                  :value="manga.chapters.filter(c => c.read).length / manga.chapters.length"
+                  color="orange"
+                  class="q-mt-sm"
+                  rounded
+                >
+                  <div class="absolute-full flex flex-center">
+                    <q-badge
+                      color="white"
+                      text-color="dark"
+                    >
+                      {{ manga.chapters.filter(c => c.read).length }} / {{ manga.chapters.length }}
+                    </q-badge>
+                  </div>
+                </q-linear-progress>
+              </div>
+            </template>
             <template #top-right>
               <q-btn
                 color="orange"
@@ -1283,6 +1303,12 @@ const routeLang = computed<OptionLanguage>({
 
 .sticky-table thead tr:first-child th {
   top: 0;
+}
+
+.reading-progress {
+  min-width: 100px;
+  width: 20vw;
+  max-width: 1000px;
 }
 </style>
 <style lang="css">
