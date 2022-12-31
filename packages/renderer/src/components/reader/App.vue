@@ -39,7 +39,14 @@ const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
 /** sidebar */
-const rightDrawerOpen = ref(false);
+const rightDrawerOpen = computed({
+  get() {
+    return settings.readerGlobal.pinRightDrawer;
+  },
+  set(nval:boolean) {
+    settings.readerGlobal.pinRightDrawer = nval;
+  },
+});
 /** loading progress */
 const progress = ref(0);
 /** loading progress has error? */
@@ -411,7 +418,7 @@ async function getChapter(chapterId = props.chapterId, opts: { scrollup?: boolea
     if(chapter.lastpage) {
       socket.off('showChapter');
       if(!nextChapter.value) return;
-      if(!settings.reader.preloadNext) return;
+      if(!settings.readerGlobal.preloadNext) return;
       if(opts.prefetch) return;
       return getChapter(nextChapter.value.id, { prefetch: true});
     }
@@ -781,7 +788,6 @@ watch(() => localReaderSettings.value, (nval, oval) => {
       :dark="$q.dark.isActive"
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-4'"
       :bordered="$q.dark.isActive"
-      show-if-above
       no-swipe-open
       no-swipe-close
       side="right"
