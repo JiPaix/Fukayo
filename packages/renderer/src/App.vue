@@ -7,7 +7,7 @@ import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';
 import Setup from '@renderer/components/setup/App.vue';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useFavicon } from '@vueuse/core';
 import { useQuasar, Loading, QSpinnerRadio } from 'quasar';
 import { onBeforeMount, ref } from 'vue';

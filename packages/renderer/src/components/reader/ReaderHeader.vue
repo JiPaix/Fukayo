@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { useRouter } from 'vue-router';
 

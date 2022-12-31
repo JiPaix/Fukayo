@@ -2,7 +2,7 @@
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { QSelect } from 'quasar';

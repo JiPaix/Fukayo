@@ -4,7 +4,7 @@ import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterImage } from '@renderer/components/helpers/typechecker';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { colors, scroll, useQuasar } from 'quasar';
 import type { CSSProperties } from 'vue';
 import { computed, ref } from 'vue';

@@ -9,7 +9,7 @@ import type { appLangsType } from '@i18n';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type dayjs from 'dayjs';
 import { format, useQuasar } from 'quasar';
 import { computed, inject, onBeforeMount, ref } from 'vue';

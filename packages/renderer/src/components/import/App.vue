@@ -8,7 +8,7 @@ import type { appLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isImportErrorMessage, isManga, isMangaInDB, isTaskDone } from '@renderer/components/helpers/typechecker';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type { QTableProps } from 'quasar';
 import { QTable, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';

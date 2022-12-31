@@ -3,7 +3,7 @@ import type { mirrorInfo } from '@api/models/types/shared';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 

@@ -3,7 +3,7 @@ import type { LoginAuth } from '@api/client/types';
 import icon from '@assets/icon.svg';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';

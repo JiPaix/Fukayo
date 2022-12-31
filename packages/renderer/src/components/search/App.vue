@@ -10,7 +10,7 @@ import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, to
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';

@@ -11,7 +11,7 @@ import MigrateManga from '@renderer/components/library/migrate/App.vue';
 import { chapterLabel } from '@renderer/components/reader/helpers';
 import langOptions from '@renderer/components/settings/languageList.vue';
 import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useRouter } from 'vue-router';

@@ -12,8 +12,8 @@ isManga,
 // eslint-disable-next-line comma-dangle
 isMangaInDB
 } from '@renderer/components/helpers/typechecker';
-import { useHistoryStore } from '@renderer/store/history';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useHistoryStore } from '@renderer/stores/history';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type dayjs from 'dayjs';
 import type { QSelectOption } from 'quasar';
 import { useQuasar } from 'quasar';

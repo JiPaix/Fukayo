@@ -1,5 +1,5 @@
 import { mirrorsLang } from '@i18n';
-import type { Settings } from '@renderer/store/settings/types';
+import type { Settings } from '@renderer/stores/settings/types';
 import { defineStore } from 'pinia';
 
 const mostCommonLanguages = ['en', 'fr', 'de', 'pt', 'pt-br', 'es', 'es-la', 'ru', 'tr', 'ja', 'id', 'zh', 'zh-hk'];
@@ -35,12 +35,12 @@ const defaultSettings:Settings = {
     longStripDirection: 'vertical',
     book: false,
     bookOffset: false,
-    preloadNext: true,
     overlay: true,
     rtl: false,
   },
   readerGlobal: {
     preloadNext: true,
+    pinRightDrawer: true,
   },
   library: {
     showUnread: true,

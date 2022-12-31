@@ -1,4 +1,4 @@
-import type { useStore as useSettingsStore } from '@renderer/store/settings';
+import type { useStore as useSettingsStore } from '@renderer/stores/settings';
 
 /** make sure we get the right url */
 export function transformIMGurl(url: string, settings:ReturnType<typeof useSettingsStore>) {

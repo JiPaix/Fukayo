@@ -88,6 +88,7 @@ export type Settings = {
   /** Reader's global settings */
   readerGlobal: {
     preloadNext: boolean,
+    pinRightDrawer: boolean,
   }
   /** Library settings */
   library: LibrarySettings,

@@ -3,7 +3,7 @@ import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 // LocalStorage
-import { piniaLocalStorage } from '@renderer/store/localStorage';
+import { piniaLocalStorage } from '@renderer/stores/localStorage';
 import { createPinia } from 'pinia';
 const pinia = createPinia();
 pinia.use(piniaLocalStorage);

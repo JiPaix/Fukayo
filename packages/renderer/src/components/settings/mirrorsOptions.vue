@@ -5,7 +5,7 @@ import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
