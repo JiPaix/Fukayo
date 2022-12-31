@@ -39,6 +39,9 @@ const defaultSettings:Settings = {
     overlay: true,
     rtl: false,
   },
+  readerGlobal: {
+    preloadNext: true,
+  },
   library: {
     showUnread: true,
     sort: 'AZ',

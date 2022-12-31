@@ -137,7 +137,7 @@ const webtoonIcon = computed(() => {
 });
 
 const preloadIcon = computed(() => {
-  return settings.reader.preloadNext ? 'signal_cellular_alt' : 'signal_cellular_alt_2_bar';
+  return settings.readerGlobal.preloadNext ? 'signal_cellular_alt' : 'signal_cellular_alt_2_bar';
 });
 
 const showPageNumberIcon = computed(() => {
@@ -674,7 +674,7 @@ async function kill(password:string) {
               :dark="$q.dark.isActive"
               clickable
               :dense="$q.screen.gt.md"
-              @click="settings.reader.preloadNext = !settings.reader.preloadNext"
+              @click="settings.readerGlobal.preloadNext = !settings.readerGlobal.preloadNext"
             >
               <q-item-section>
                 <q-item-label>
@@ -685,7 +685,7 @@ async function kill(password:string) {
                 side
               >
                 <q-toggle
-                  v-model="settings.reader.preloadNext"
+                  v-model="settings.readerGlobal.preloadNext"
                   :icon="preloadIcon"
                   :size="$q.screen.gt.md ? 'md' : 'xl'"
                   :dense="$q.screen.gt.md"

@@ -49,7 +49,7 @@ type MangaPageSettings = {
   }
 }
 
-type ReaderSettings = MangaInDB['meta']['options'] & { /** preload next chapter */preloadNext: boolean }
+type ReaderSettings = MangaInDB['meta']['options']
 
 type LibrarySettings = {
   /** Only display entries with unread chapters */
@@ -85,6 +85,10 @@ export type Settings = {
   mangaPage: MangaPageSettings
   /** Reader's settings */
   reader: ReaderSettings,
+  /** Reader's global settings */
+  readerGlobal: {
+    preloadNext: boolean,
+  }
   /** Library settings */
   library: LibrarySettings,
   /** i18n settings */
