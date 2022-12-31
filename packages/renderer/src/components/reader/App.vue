@@ -83,10 +83,8 @@ const loadingAchapter = ref(false);
 const doubleTapLeft = ref(0);
 /** count double-taps right when last page is onscreen */
 const doubleTapRight = ref(0);
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const { preloadNext, ...settingsOmitPreload } = settings.reader;
 /** reader settings so they don't overwrite global options */
-const localReaderSettings = ref(settingsOmitPreload);
+const localReaderSettings = ref(settings.reader);
 /** formatted chapters (before sort) */
 const RAWchapters = ref<{
   /** chapter id */
