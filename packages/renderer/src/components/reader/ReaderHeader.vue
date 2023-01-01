@@ -3,6 +3,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 defineProps<{
@@ -32,6 +33,13 @@ function toggleDarkMode() {
     $q.dark.set(true);
   }
 }
+
+/** header + sub-header size */
+const headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
 </script>
 
 <template>
@@ -98,7 +106,7 @@ function toggleDarkMode() {
     :value="progress"
     size="xs"
     class="fixed-top"
-    :style="{ marginTop: '82px', width: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
+    :style="{ marginTop: `${headerSize}px`, width: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
     animation-speed="500"
   />
 </template>

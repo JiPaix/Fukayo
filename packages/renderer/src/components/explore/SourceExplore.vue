@@ -8,7 +8,7 @@ import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { useQuasar } from 'quasar';
+import { QHeader, QLinearProgress, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { mirrorsLang } from '@i18n/availableLangs';
@@ -21,6 +21,26 @@ const $q = useQuasar();
 const settings = useSettingsStore();
 /** socket */
 let socket:socketClientInstance|undefined;
+
+const progressBarSize = '4px';
+const progressSize = computed(() => loading.value ? parseInt(progressBarSize.replace('px', '')) : 0);
+
+const subheader = ref(0);
+const topheader = ref(0);
+
+function qheaderResize() {
+  const top = document.querySelector<HTMLDivElement>('#top-header');
+  const sub = document.querySelector<HTMLDivElement>('#sub-header');
+  if(top && sub) {
+    subheader.value = sub.offsetHeight;
+    topheader.value = top.offsetHeight;
+  }
+}
+
+/** main header size */
+const headerSize = computed(() => {
+  return topheader.value + subheader.value + progressSize.value;
+});
 
 const mirror = ref<mirrorInfo>();
 /** recommendation */
@@ -99,14 +119,15 @@ onBeforeUnmount(async () => {
   <q-layout
     view="lHh lpr lFf"
     container
-    :style="'height: '+($q.screen.height-50)+'px'"
-    class="shadow-2"
+    :style="'height: '+($q.screen.height-topheader)+'px'"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-header
+      id="sub-header"
       bordered
       :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     >
+      <q-resize-observer @resize="qheaderResize" />
       <q-bar
         v-if="mirror"
       >
@@ -114,13 +135,19 @@ onBeforeUnmount(async () => {
           :name="'img:'+mirror.icon"
           left
         />
-        <span class="text-caption">{{ mirror.displayName }}</span>
+        <span
+          class="text-caption"
+          :class="$q.dark.isActive ? 'text-white' : 'text-dark'"
+        >
+          {{ mirror.displayName }}
+        </span>
       </q-bar>
     </q-header>
     <q-footer class="bg-dark">
       <q-linear-progress
         v-if="loading"
-        size="4px"
+        ref="progress"
+        :size="progressBarSize"
         color="orange"
         animation-speed="500"
         indeterminate
@@ -151,23 +178,28 @@ onBeforeUnmount(async () => {
       </q-page>
       <q-page
         v-else
-        class="q-pa-md"
+        style="overflow:hidden;"
       >
-        <div
+        <q-scroll-area
           v-if="mirror"
-          class="q-pa-md flex flex-center"
+          :style="{ height: `${$q.screen.height-headerSize}px`, minHeight: '100px' }"
+          :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
+          :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+          class="q-pa-lg"
         >
-          <group-card
-            v-for="(group, i) in mangaGroups"
-            :key="i"
-            :group="group.manga"
-            :group-name="group.name"
-            :mirror="mirror"
-            :covers="group.covers.map(c => transformIMGurl(c, settings))"
-            class="q-my-lg"
-            :hide-langs="settings.i18n.ignored"
-          />
-        </div>
+          <div class="flex flex-center">
+            <group-card
+              v-for="(group, i) in mangaGroups"
+              :key="i"
+              :group="group.manga"
+              :group-name="group.name"
+              :mirror="mirror"
+              :covers="group.covers.map(c => transformIMGurl(c, settings))"
+              class="q-my-lg"
+              :hide-langs="settings.i18n.ignored"
+            />
+          </div>
+        </q-scroll-area>
       </q-page>
     </q-page-container>
   </q-layout>
@@ -178,5 +210,7 @@ onBeforeUnmount(async () => {
   background-size:cover;
   background-position: 50% 10%;
 }
-
+body {
+  overflow:hidden!important;
+}
 </style>

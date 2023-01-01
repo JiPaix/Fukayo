@@ -208,6 +208,7 @@ onBeforeMount(async() => {
   >
     <q-layout view="lHh lpR lFf">
       <q-header
+        id="sub-header"
         bordered
         class="bg-dark"
       >

@@ -18,15 +18,22 @@ const startTab:typeof tabList[number] = typeof route.params.tab === 'string' && 
 const tab = ref<'general' | 'sources' | 'languages' | 'files'>(startTab);
 const $q = useQuasar();
 
+const subheaderSize = ref(0);
+
+function onResize() {
+  const div = document.querySelector<HTMLDivElement>('#sub-header');
+  if(div) subheaderSize.value = div.offsetHeight;
+}
 
 </script>
 
 <template>
   <div
-    class="q-gutter-y-md w-100"
+    class="w-100"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-dark'"
   >
     <q-tabs
+      id="sub-header"
       v-model="tab"
       inline-label
       :class="$q.dark.isActive ? 'bg-grey-7 text-white' : 'bg-grey-4 text-dark'"
@@ -51,10 +58,20 @@ const $q = useQuasar();
         icon="storage"
         :label="$t('settings.files.tab')"
       />
+      <q-resize-observer @resize="onResize" />
     </q-tabs>
-    <main-options v-if="tab === 'general'" />
-    <mirrors-options v-else-if="tab === 'sources'" />
-    <language-list v-else-if="tab === 'languages'" />
+    <main-options
+      v-if="tab === 'general'"
+      :sub-header-size="subheaderSize"
+    />
+    <mirrors-options
+      v-else-if="tab === 'sources'"
+      :sub-header-size="subheaderSize"
+    />
+    <language-list
+      v-else-if="tab === 'languages'"
+      :sub-header-size="subheaderSize"
+    />
     <file-system v-else />
   </div>
 </template>

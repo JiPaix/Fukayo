@@ -10,6 +10,13 @@ const props = defineProps<{
 
 const $q = useQuasar();
 
+/** header + sub-header size */
+const headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
+
 const style = computed(() => {
   const width = (($q.screen.width - (props.drawerOpen ? 300: 0)) / 3),
         background = props.hintColor ? getCssVar(props.hintColor) : 'none',
@@ -18,8 +25,8 @@ const style = computed(() => {
         marginRight = props.position === 'right' ? props.drawerOpen ? 300+12 : 12 : 0;
 
   return {
-    height: $q.screen.height - 82,
-    marginTop: '82px',
+    height: $q.screen.height - headerSize.value,
+    marginTop: `${headerSize.value}px`,
     background:  background ? background : 'none',
     width: width+'px',
     marginBottom,

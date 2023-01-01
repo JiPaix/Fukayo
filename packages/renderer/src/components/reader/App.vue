@@ -38,6 +38,20 @@ const $q = useQuasar();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
+
+const topheader = ref(0);
+
+function qheaderResize() {
+  const top = document.querySelector<HTMLDivElement>('#top-header');
+  if(top) topheader.value = top.offsetHeight;
+}
+
+/** main header size */
+const headerSize = computed(() => {
+  return topheader.value;
+
+});
+
 /** sidebar */
 const rightDrawerOpen = computed({
   get() {
@@ -765,6 +779,7 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     view="lHh lpR lFf"
   >
     <q-header
+      id="top-header"
       bordered
       class="bg-dark"
     >
@@ -780,6 +795,7 @@ watch(() => localReaderSettings.value, (nval, oval) => {
         :page="currentPage"
         @toggle-drawer="rightDrawerOpen = !rightDrawerOpen"
       />
+      <q-resize-observer @resize="qheaderResize" />
     </q-header>
     <q-drawer
       v-model="rightDrawerOpen"
@@ -792,13 +808,14 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     >
       <right-drawer
         v-if="manga"
-        style="background:rgba(255, 255, 255, 0.15);"
+        :style="{ background:'rgba(255, 255, 255, 0.15)', height: `${$q.screen.height - headerSize}px` }"
         :open="rightDrawerOpen"
         :dark="$q.dark.isActive"
         :chapters="manga.chapters.filter(c => c.lang === lang)"
         :current-chapter-id="currentChapterId"
         :in-library="manga.inLibrary"
         :reader-settings="isMangaInDB(manga) ? manga.meta.options : settings.reader"
+        :header-size="headerSize"
         @load-index="loadIndex"
         @toggle-in-library="toggleInLibrary"
         @toggle-read="toggleRead"
@@ -1012,7 +1029,7 @@ watch(() => localReaderSettings.value, (nval, oval) => {
       <div
         v-else-if="!currentChapterFormatted || loadingAchapter"
         class="flex flex-center"
-        :style="`height:${$q.screen.height-82}px;width:100%;`"
+        :style="`height:${$q.screen.height-headerSize}px;width:100%;`"
       >
         <q-spinner size="10vw" />
       </div>

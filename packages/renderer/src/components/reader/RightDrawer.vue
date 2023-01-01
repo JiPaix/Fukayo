@@ -9,6 +9,7 @@ const props = defineProps<{
   currentChapterId: string
   inLibrary: boolean
   readerSettings: MangaInDB['meta']['options']
+  headerSize: number
 }>();
 
 /** emits */
@@ -170,7 +171,6 @@ watch(() => localSettings.value, (nval, oval) => {
 <template>
   <div
     class="q-pa-lg"
-    :style="`height: ${$q.screen.height - 82 }px;`"
   >
     <q-select
       v-model="selectedChap"

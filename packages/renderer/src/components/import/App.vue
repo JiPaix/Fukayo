@@ -180,14 +180,17 @@ async function startImport() {
     }
   });
 }
-
+const headerSize = computed(() => {
+  const div = document.querySelector<HTMLDivElement>('#top-header');
+  if(div) return div.offsetHeight;
+  else return 0;
+});
 </script>
 <template>
   <q-layout
     view="lHh lpr lFf"
     container
-    :style="'height: '+($q.screen.height-50)+'px'"
-    class="shadow-2"
+    :style="'height: '+($q.screen.height-headerSize)+'px'"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-page-container>
@@ -270,8 +273,7 @@ async function startImport() {
               ref="table"
               v-model:selected="selection"
               v-model:pagination="pagination"
-              card-class="shadow-3"
-              class="q-mt-md"
+              class="q-mt-md table"
               :rows="mangas"
               :columns="columns"
               selection="multiple"
@@ -279,7 +281,6 @@ async function startImport() {
               row-key="name"
               dense
               :loading="loading"
-              virtual-scroll
               :rows-per-page-options="[0]"
               column-sort-order="ad"
             >
@@ -426,4 +427,5 @@ async function startImport() {
   thead tr:first-child th {
     top: 0;
   }
+
 </style>

@@ -28,13 +28,20 @@ const emit = defineEmits<{
   (eventName: 'loadNext'):void
 }>();
 
+/** header + sub-header size */
+const headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
+
 const cssVars = computed(() => {
   return {
     '--bg-color': $q.dark.isActive ? colors.getPaletteColor('dark') : colors.getPaletteColor('white'),
     '--bg-color-hover': $q.dark.isActive ? colors.getPaletteColor('grey-9') : colors.getPaletteColor('grey-3'),
     '--bg-color-active': $q.dark.isActive ? colors.getPaletteColor('grey-7') : colors.getPaletteColor('grey-5'),
     '--orange': colors.getPaletteColor('orange'),
-    height: ($q.screen.height-82)+'px',
+    height: ($q.screen.height-headerSize.value)+'px',
     direction: props.dir,
   };
 });
@@ -109,7 +116,7 @@ const verticalNoBook = computed<CSSProperties>(() => {
   let width:CSSProperties['width'] = undefined;
   let marginBottom:CSSProperties['marginBottom'] = undefined;
   if(!props.settings.webtoon && props.settings.longStrip) marginBottom = '20px';
-  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height-82) + 'px';
+  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height-headerSize.value) + 'px';
   if(props.settings.zoomMode === 'stretch-width') width = ($q.screen.width - (props.drawerOpen ? 300 : 0)) + 'px';
   return {
     height,
@@ -119,10 +126,10 @@ const verticalNoBook = computed<CSSProperties>(() => {
 });
 
 const horizontal = computed<CSSProperties>(() => {
-  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - 82)+'px';
+  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - headerSize.value)+'px';
   let marginBottom:CSSProperties['marginBottom'] = '-6px';
   let height:CSSProperties['height'] = undefined;
-  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height - 82) + 'px';
+  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height - headerSize.value) + 'px';
   return {
     maxHeight,
     marginBottom,
@@ -212,7 +219,7 @@ defineExpose({
           class="flex center justify-center items-center group"
           :data-group="i"
           :data-indexes="image.indexes"
-          :style="{ marginTop: props.settings.webtoon ? '-6px' : undefined, direction : props.settings.rtl ? 'rtl' : 'ltr', minHeight: !settings.longStrip && settings.book ? $q.screen.height-82+'px' : undefined }"
+          :style="{ marginTop: props.settings.webtoon ? '-6px' : undefined, direction : props.settings.rtl ? 'rtl' : 'ltr', minHeight: !settings.longStrip && settings.book ? $q.screen.height-headerSize+'px' : undefined }"
         >
           <div
             v-for="(img, ig) of image.group"
@@ -323,7 +330,7 @@ defineExpose({
         v-for="(group, i) of packed[currentIndex].group"
         :key="i"
         class="flex flex-center justify-center items-center group"
-        :style="{minHeight: ($q.screen.height - 82)+'px'}"
+        :style="{minHeight: ($q.screen.height - headerSize)+'px'}"
       >
         <img
           v-if="isChapterImage(group)"

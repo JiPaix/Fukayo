@@ -60,7 +60,7 @@ function toggleDarkMode() {
   <q-layout view="hHh LpR fFf">
     <q-header
       v-if="route.name !== 'reader'"
-      elevated
+      id="top-header"
       class="bg-grey-10 text-white"
       bordered
       height-hint="98"

@@ -10,6 +10,7 @@ import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { transformIMGurl } from '../helpers/transformIMGurl';
 
+const props = defineProps<{subHeaderSize?: number}>();
 /** quasar */
 const $q = useQuasar();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
@@ -283,705 +284,713 @@ async function kill(password:string) {
     });
 }
 
+
+const headerSize = computed(() => {
+  return (props.subHeaderSize || 0) + (document.querySelector<HTMLDivElement>('#top-header')?.offsetHeight || 0);
+});
+
 </script>
 <template>
-  <q-card
-    flat
-    class="w-100 text"
-    :dark="$q.dark.isActive"
-    :class="$q.dark.isActive ? 'text-white bg-dark' : 'text-black bg-grey-2'"
+  <q-layout
+    view="lHh lpr lFf"
+    container
+    :style="'height: '+($q.screen.height-headerSize)+'px'"
+    :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
-    <q-card-section>
-      <q-list
-        :dark="$q.dark.isActive"
-        separator
-      >
-        <q-expansion-item
-          :label="$t('settings.server').toLocaleUpperCase()"
-          class="shadow-2"
-          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
-          group="global"
-          :dark="$q.dark.isActive"
-          :dense="$q.screen.gt.md"
+    <q-page-container>
+      <q-page>
+        <q-scroll-area
+          :style="{height: `${$q.screen.height-headerSize}px`, minHeight: '100px'}"
+          :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
+          :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+          class="q-pa-lg"
         >
           <q-list
-            separator
             :dark="$q.dark.isActive"
-            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
-          >
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.app_version') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <span>{{ env.VITE_APP_VERSION }}</span>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.app_client') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <span>{{ isElectron ? 'Electron':'Browser' }}</span>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.app_env') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <span>{{ env.MODE }}</span>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.app_shutdown') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-btn
-                  color="negative"
-                  size="sm"
-                  :label="$t('electron.systemtray.quit')"
-                  @click="() => prompt(false)"
-                />
-              </q-item-section>
-            </q-item>
-            <q-slide-transition>
-              <div
-                v-show="globalSettingsChanged && typeof warning === 'undefined'"
-                class="w-100"
-              >
-                <q-btn
-                  class="bg-primary text-white cursor-pointer w-100"
-                  flat
-                  :rounded="false"
-                  @click="saveSettings"
-                >
-                  {{ $t('settings.globalSettings.save') }}
-                </q-btn>
-              </div>
-            </q-slide-transition>
-            <q-slide-transition>
-              <div v-show="typeof warning !== 'undefined'">
-                <q-banner
-                  class="bg-red text-white cursor-pointer"
-                  :dark="$q.dark.isActive"
-                >
-                  {{ warning }}
-                </q-banner>
-              </div>
-            </q-slide-transition>
-          </q-list>
-        </q-expansion-item>
-        <q-expansion-item
-          :dense="$q.screen.gt.md"
-          :label="$t('settings.global.title').toLocaleUpperCase()"
-          class="shadow-2"
-          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
-          group="global"
-          :dark="$q.dark.isActive"
-        >
-          <q-list
             separator
-            :dark="$q.dark.isActive"
-            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+            bordered
           >
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
+            <q-expansion-item
+              :label="$t('settings.server').toLocaleUpperCase()"
+              :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+              group="global"
               :dark="$q.dark.isActive"
-              clickable
               :dense="$q.screen.gt.md"
-              @click="toggleDarkMode"
             >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.darkmode') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
+              <q-list
+                separator
+                :dark="$q.dark.isActive"
+                :class="$q.dark.isActive ? '' : 'bg-grey-2'"
               >
-                <q-toggle
-                  :model-value="settings.theme === 'dark'"
-                  :icon="darkIcon"
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
                   :dark="$q.dark.isActive"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  @update:model-value="toggleDarkMode"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.update.wait') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section>
-                <div
-                  v-if="typeof waitDay !== 'undefined' && typeof waitHour !== 'undefined' && typeof waitMinutes !== 'undefined'"
-                  class="flex column q-ml-auto"
-                  style="max-width:150px;"
                 >
-                  <q-input
-                    v-model="waitDay"
-                    type="number"
-                    :min="0"
-                    :label="$t('settings.update.day', waitDay)"
-                    :dark="$q.dark.isActive"
-                    :dense="$q.screen.gt.md"
-                    outlined
-                    class="q-my-xs"
-                  />
-                  <q-input
-                    v-model="waitHour"
-                    outlined
-                    :dense="$q.screen.gt.md"
-                    type="number"
-                    :min="0"
-                    :label="$t('settings.update.hour', waitHour)"
-                    :dark="$q.dark.isActive"
-                    xlass="q-my-xs"
-                  />
-                  <q-input
-                    v-model="waitMinutes"
-                    outlined
-                    :dense="$q.screen.gt.md"
-                    :min="0"
-                    type="number"
-                    :label="$t('settings.update.minute', waitMinutes)"
-                    :dark="$q.dark.isActive"
-                    class="q-my-xs"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="cacheSizeEnabled = !cacheSizeEnabled"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.scheduler.cache_enable') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="cacheSizeEnabled"
-                  :icon="cacheIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.app_version') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <span>{{ env.VITE_APP_VERSION }}</span>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
                   :dark="$q.dark.isActive"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-if="cacheSizeEnabled"
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.app_client') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <span>{{ isElectron ? 'Electron':'Browser' }}</span>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.app_env') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <span>{{ env.MODE }}</span>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.app_shutdown') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-btn
+                      color="negative"
+                      size="sm"
+                      :label="$t('electron.systemtray.quit')"
+                      @click="() => prompt(false)"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-slide-transition>
+                  <div
+                    v-show="globalSettingsChanged && typeof warning === 'undefined'"
+                    class="w-100"
+                  >
+                    <q-btn
+                      class="bg-primary text-white cursor-pointer w-100"
+                      flat
+                      :rounded="false"
+                      @click="saveSettings"
+                    >
+                      {{ $t('settings.globalSettings.save') }}
+                    </q-btn>
+                  </div>
+                </q-slide-transition>
+                <q-slide-transition>
+                  <div v-show="typeof warning !== 'undefined'">
+                    <q-banner
+                      class="bg-red text-white cursor-pointer"
+                      :dark="$q.dark.isActive"
+                    >
+                      {{ warning }}
+                    </q-banner>
+                  </div>
+                </q-slide-transition>
+              </q-list>
+            </q-expansion-item>
+            <q-expansion-item
+              :dense="$q.screen.gt.md"
+              :label="$t('settings.global.title').toLocaleUpperCase()"
+              :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+              group="global"
               :dark="$q.dark.isActive"
-              clickable
+            >
+              <q-list
+                separator
+                :dark="$q.dark.isActive"
+                :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+              >
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="toggleDarkMode"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.darkmode') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      :model-value="settings.theme === 'dark'"
+                      :icon="darkIcon"
+                      :dark="$q.dark.isActive"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      @update:model-value="toggleDarkMode"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.update.wait') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section>
+                    <div
+                      v-if="typeof waitDay !== 'undefined' && typeof waitHour !== 'undefined' && typeof waitMinutes !== 'undefined'"
+                      class="flex column q-ml-auto"
+                      style="max-width:150px;"
+                    >
+                      <q-input
+                        v-model="waitDay"
+                        type="number"
+                        :min="0"
+                        :label="$t('settings.update.day', waitDay)"
+                        :dark="$q.dark.isActive"
+                        :dense="$q.screen.gt.md"
+                        outlined
+                        class="q-my-xs"
+                      />
+                      <q-input
+                        v-model="waitHour"
+                        outlined
+                        :dense="$q.screen.gt.md"
+                        type="number"
+                        :min="0"
+                        :label="$t('settings.update.hour', waitHour)"
+                        :dark="$q.dark.isActive"
+                        xlass="q-my-xs"
+                      />
+                      <q-input
+                        v-model="waitMinutes"
+                        outlined
+                        :dense="$q.screen.gt.md"
+                        :min="0"
+                        type="number"
+                        :label="$t('settings.update.minute', waitMinutes)"
+                        :dark="$q.dark.isActive"
+                        class="q-my-xs"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="cacheSizeEnabled = !cacheSizeEnabled"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.scheduler.cache_enable') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="cacheSizeEnabled"
+                      :icon="cacheIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  v-if="cacheSizeEnabled"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
 
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.scheduler.cache_size') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <div
-                  v-if="typeof cacheGB !== 'undefined'"
-                  class="row items-start w-100 flex justify-around"
-                  style="max-width:150px;"
-                >
-                  <q-input
-                    v-model="cacheGB"
-                    min="1"
-                    :dense="$q.screen.gt.md"
-                    outlined
-                    type="number"
-                    :label="$t('settings.scheduler.cache.GB', cacheGB)"
-                    :dark="$q.dark.isActive"
-                    class="q-my-xs"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="cacheAgeEnabled = !cacheAgeEnabled"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.scheduler.cache_age_enable') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="cacheAgeEnabled"
-                  :icon="cacheAgeIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
                   :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.scheduler.cache_size') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <div
+                      v-if="typeof cacheGB !== 'undefined'"
+                      class="row items-start w-100 flex justify-around"
+                      style="max-width:150px;"
+                    >
+                      <q-input
+                        v-model="cacheGB"
+                        min="1"
+                        :dense="$q.screen.gt.md"
+                        outlined
+                        type="number"
+                        :label="$t('settings.scheduler.cache.GB', cacheGB)"
+                        :dark="$q.dark.isActive"
+                        class="q-my-xs"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
                   :dark="$q.dark.isActive"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              v-if="cacheAgeEnabled"
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="cacheAgeEnabled = !cacheAgeEnabled"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.scheduler.cache_age_enable') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="cacheAgeEnabled"
+                      :icon="cacheAgeIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  v-if="cacheAgeEnabled"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.scheduler.cache_age') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section>
+                    <div
+                      v-if="typeof cacheDay !== 'undefined' && typeof cacheHour !== 'undefined' && typeof cacheMinutes !== 'undefined'"
+                      class="flex column q-ml-auto"
+                      style="max-width:150px;"
+                    >
+                      <q-input
+                        v-model="cacheDay"
+                        :dense="$q.screen.gt.md"
+                        outlined
+                        class="q-my-xs"
+                        type="number"
+                        :min="0"
+                        :label="$t('settings.update.day', cacheDay)"
+                        :dark="$q.dark.isActive"
+                      />
+                      <q-input
+                        v-model="cacheHour"
+                        class="q-my-xs"
+                        outlined
+                        :dense="$q.screen.gt.md"
+                        type="number"
+                        :min="0"
+                        :label="$t('settings.update.hour', cacheHour)"
+                        :dark="$q.dark.isActive"
+                      />
+                      <q-input
+                        v-model="cacheMinutes"
+                        class="q-my-xs"
+                        outlined
+                        :dense="$q.screen.gt.md"
+                        type="number"
+                        :min="0"
+                        :label="$t('settings.update.minute', cacheMinutes)"
+                        :dark="$q.dark.isActive"
+                      />
+                    </div>
+                  </q-item-section>
+                </q-item>
+                <q-slide-transition>
+                  <div
+                    v-show="globalSettingsChanged && typeof warning === 'undefined'"
+                    class="w-100"
+                  >
+                    <q-btn
+                      class="bg-primary text-white cursor-pointer w-100"
+                      flat
+                      :rounded="false"
+                      @click="saveSettings"
+                    >
+                      {{ $t('settings.globalSettings.save') }}
+                    </q-btn>
+                  </div>
+                </q-slide-transition>
+                <q-slide-transition>
+                  <div v-show="typeof warning !== 'undefined'">
+                    <q-banner
+                      class="bg-red text-white cursor-pointer"
+                      :dark="$q.dark.isActive"
+                    >
+                      {{ warning }}
+                    </q-banner>
+                  </div>
+                </q-slide-transition>
+              </q-list>
+            </q-expansion-item>
+            <q-expansion-item
+              :label="$t('settings.reader.title').toLocaleUpperCase()"
+              :class="$q.dark.isActive ? '' : 'bg-grey-4'"
+              group="global"
+              :dense="$q.screen.gt.md"
             >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.scheduler.cache_age') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section>
-                <div
-                  v-if="typeof cacheDay !== 'undefined' && typeof cacheHour !== 'undefined' && typeof cacheMinutes !== 'undefined'"
-                  class="flex column q-ml-auto"
-                  style="max-width:150px;"
-                >
-                  <q-input
-                    v-model="cacheDay"
-                    :dense="$q.screen.gt.md"
-                    outlined
-                    class="q-my-xs"
-                    type="number"
-                    :min="0"
-                    :label="$t('settings.update.day', cacheDay)"
-                    :dark="$q.dark.isActive"
-                  />
-                  <q-input
-                    v-model="cacheHour"
-                    class="q-my-xs"
-                    outlined
-                    :dense="$q.screen.gt.md"
-                    type="number"
-                    :min="0"
-                    :label="$t('settings.update.hour', cacheHour)"
-                    :dark="$q.dark.isActive"
-                  />
-                  <q-input
-                    v-model="cacheMinutes"
-                    class="q-my-xs"
-                    outlined
-                    :dense="$q.screen.gt.md"
-                    type="number"
-                    :min="0"
-                    :label="$t('settings.update.minute', cacheMinutes)"
-                    :dark="$q.dark.isActive"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
-            <q-slide-transition>
-              <div
-                v-show="globalSettingsChanged && typeof warning === 'undefined'"
-                class="w-100"
+              <q-list
+                separator
+                :class="$q.dark.isActive ? '' : 'bg-grey-2'"
+                :dark="$q.dark.isActive"
               >
-                <q-btn
-                  class="bg-primary text-white cursor-pointer w-100"
-                  flat
-                  :rounded="false"
-                  @click="saveSettings"
-                >
-                  {{ $t('settings.globalSettings.save') }}
-                </q-btn>
-              </div>
-            </q-slide-transition>
-            <q-slide-transition>
-              <div v-show="typeof warning !== 'undefined'">
-                <q-banner
-                  class="bg-red text-white cursor-pointer"
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
                   :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="settings.readerGlobal.preloadNext = !settings.readerGlobal.preloadNext"
                 >
-                  {{ warning }}
-                </q-banner>
-              </div>
-            </q-slide-transition>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.reader.preload') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.readerGlobal.preloadNext"
+                      :icon="preloadIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item class="bg-primary text-white">
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.reader.info') }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="settings.reader.longStrip = !settings.reader.longStrip;checkSettingsCompatibilty('longStrip')"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('reader.longstrip') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.reader.longStrip"
+                      :icon="longStripIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                      @update:model-value="checkSettingsCompatibilty('longStrip')"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.longstripDirection') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
+                      <q-btn
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        icon="swap_vert"
+                        :color="settings.reader.longStripDirection === 'vertical' && settings.reader.longStrip ? 'orange' : undefined"
+                        @click="settings.reader.longStripDirection = 'vertical';checkSettingsCompatibilty('longStripDirection')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.vertical') }}
+                        </q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        icon="swap_horiz"
+                        :color="settings.reader.longStripDirection === 'horizontal' && settings.reader.longStrip ? 'orange' : undefined"
+                        @click="settings.reader.longStripDirection = 'horizontal';checkSettingsCompatibilty('longStripDirection')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.horizontal') }}
+                        </q-tooltip>
+                      </q-btn>
+                    </q-btn-group>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.bookmode') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
+                      <q-btn
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        icon="menu_book"
+                        :color="settings.reader.book && !settings.reader.bookOffset ? 'orange' : undefined"
+                        @click="settings.reader.book = true;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.book_mode') }}
+                        </q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        icon="auto_stories"
+                        :color="settings.reader.book && settings.reader.bookOffset ? 'orange':''"
+                        @click="settings.reader.book = true;settings.reader.bookOffset = true;checkSettingsCompatibilty('book')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.book_mode_offset') }}
+                        </q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        :color="!settings.reader.book && !settings.reader.bookOffset && settings.reader.longStrip ? 'orange':''"
+                        icon="not_interested"
+                        @click="settings.reader.book = false;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
+                      >
+                        <q-tooltip>{{ $t('reader.book_mode_off') }}</q-tooltip>
+                      </q-btn>
+                    </q-btn-group>
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="settings.reader.rtl = !settings.reader.rtl"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('reader.rtl') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.reader.rtl"
+                      color="orange"
+                      :icon="rtlIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('reader.webtoon') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.reader.webtoon"
+                      :disable="settings.reader.book || !settings.reader.longStrip"
+                      :color="settings.reader.book || !settings.reader.longStrip ? 'negative' : ''"
+                      :keep-color="settings.reader.book || !settings.reader.longStrip"
+                      :icon="webtoonIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                      @update:model-value="checkSettingsCompatibilty('webtoon')"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="settings.reader.showPageNumber = !settings.reader.showPageNumber"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('reader.showpagenumber') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.reader.showPageNumber"
+                      :icon="showPageNumberIcon"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                      :dark="$q.dark.isActive"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  clickable
+                  :dense="$q.screen.gt.md"
+                  @click="settings.reader.overlay = !settings.reader.overlay"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.reader.overlay') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.reader.overlay"
+                      :icon="showOverlayIcon"
+                      :dark="$q.dark.isActive"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                  :dense="$q.screen.gt.md"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('settings.displaymodes') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
+                      <q-btn
+                        icon="width_wide"
+                        :color="settings.reader.zoomMode === 'auto' ? 'orange' : undefined"
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        @click="settings.reader.zoomMode = 'auto';checkSettingsCompatibilty('zoomMode')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.displaymode.auto') }}
+                        </q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        icon="fit_screen"
+                        :disable="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal'"
+                        :text-color="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal' ? 'negative' : ''"
+                        :color="settings.reader.zoomMode === 'stretch-width' ? 'orange' : undefined"
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        @click="settings.reader.zoomMode = 'stretch-width';checkSettingsCompatibilty('zoomMode')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.displaymode.stretch-width') }}
+                        </q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        icon="height"
+                        :text-color="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal') ? 'negative' : undefined"
+                        :color="settings.reader.zoomMode === 'stretch-height' ? 'orange' : undefined"
+                        :disable="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal')"
+                        :size="$q.screen.gt.md ? 'md' : 'xl'"
+                        :dense="$q.screen.gt.md"
+                        @click="settings.reader.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode')"
+                      >
+                        <q-tooltip>
+                          {{ $t('reader.displaymode.stretch-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
+                        </q-tooltip>
+                      </q-btn>
+                    </q-btn-group>
+                    {{ settings.reader.zoomMode }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
           </q-list>
-        </q-expansion-item>
-        <q-expansion-item
-          :label="$t('settings.reader.title').toLocaleUpperCase()"
-          class="shadow-2"
-          :class="$q.dark.isActive ? '' : 'bg-grey-4'"
-          group="reader"
-          :dense="$q.screen.gt.md"
-        >
-          <q-list
-            separator
-            :class="$q.dark.isActive ? '' : 'bg-grey-2'"
-            :dark="$q.dark.isActive"
-          >
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="settings.readerGlobal.preloadNext = !settings.readerGlobal.preloadNext"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.reader.preload') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.readerGlobal.preloadNext"
-                  :icon="preloadIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  :dark="$q.dark.isActive"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item class="bg-primary text-white">
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.reader.info') }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="settings.reader.longStrip = !settings.reader.longStrip;checkSettingsCompatibilty('longStrip')"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('reader.longstrip') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.reader.longStrip"
-                  :icon="longStripIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  :dark="$q.dark.isActive"
-                  @update:model-value="checkSettingsCompatibilty('longStrip')"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.longstripDirection') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
-                  <q-btn
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    icon="swap_vert"
-                    :color="settings.reader.longStripDirection === 'vertical' && settings.reader.longStrip ? 'orange' : undefined"
-                    @click="settings.reader.longStripDirection = 'vertical';checkSettingsCompatibilty('longStripDirection')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.vertical') }}
-                    </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    icon="swap_horiz"
-                    :color="settings.reader.longStripDirection === 'horizontal' && settings.reader.longStrip ? 'orange' : undefined"
-                    @click="settings.reader.longStripDirection = 'horizontal';checkSettingsCompatibilty('longStripDirection')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.horizontal') }}
-                    </q-tooltip>
-                  </q-btn>
-                </q-btn-group>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.bookmode') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
-                  <q-btn
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    icon="menu_book"
-                    :color="settings.reader.book && !settings.reader.bookOffset ? 'orange' : undefined"
-                    @click="settings.reader.book = true;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.book_mode') }}
-                    </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    icon="auto_stories"
-                    :color="settings.reader.book && settings.reader.bookOffset ? 'orange':''"
-                    @click="settings.reader.book = true;settings.reader.bookOffset = true;checkSettingsCompatibilty('book')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.book_mode_offset') }}
-                    </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    :color="!settings.reader.book && !settings.reader.bookOffset && settings.reader.longStrip ? 'orange':''"
-                    icon="not_interested"
-                    @click="settings.reader.book = false;settings.reader.bookOffset = false;checkSettingsCompatibilty('book')"
-                  >
-                    <q-tooltip>{{ $t('reader.book_mode_off') }}</q-tooltip>
-                  </q-btn>
-                </q-btn-group>
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="settings.reader.rtl = !settings.reader.rtl"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('reader.rtl') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.reader.rtl"
-                  color="orange"
-                  :icon="rtlIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  :dark="$q.dark.isActive"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('reader.webtoon') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.reader.webtoon"
-                  :disable="settings.reader.book || !settings.reader.longStrip"
-                  :color="settings.reader.book || !settings.reader.longStrip ? 'negative' : ''"
-                  :keep-color="settings.reader.book || !settings.reader.longStrip"
-                  :icon="webtoonIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  :dark="$q.dark.isActive"
-                  @update:model-value="checkSettingsCompatibilty('webtoon')"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="settings.reader.showPageNumber = !settings.reader.showPageNumber"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('reader.showpagenumber') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.reader.showPageNumber"
-                  :icon="showPageNumberIcon"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                  :dark="$q.dark.isActive"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              clickable
-              :dense="$q.screen.gt.md"
-              @click="settings.reader.overlay = !settings.reader.overlay"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.reader.overlay') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-toggle
-                  v-model="settings.reader.overlay"
-                  :icon="showOverlayIcon"
-                  :dark="$q.dark.isActive"
-                  :size="$q.screen.gt.md ? 'md' : 'xl'"
-                  :dense="$q.screen.gt.md"
-                />
-              </q-item-section>
-            </q-item>
-            <q-item
-              style="background:rgba(255, 255, 255, 0.3)"
-              class="flex items-center"
-              :dark="$q.dark.isActive"
-              :dense="$q.screen.gt.md"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ $t('settings.displaymodes') }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-              >
-                <q-btn-group class="q-ml-auto q-mr-auto justify-center q-my-xs">
-                  <q-btn
-                    icon="width_wide"
-                    :color="settings.reader.zoomMode === 'auto' ? 'orange' : undefined"
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    @click="settings.reader.zoomMode = 'auto';checkSettingsCompatibilty('zoomMode')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.displaymode.auto') }}
-                    </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    icon="fit_screen"
-                    :disable="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal'"
-                    :text-color="settings.reader.longStrip && settings.reader.longStripDirection === 'horizontal' ? 'negative' : ''"
-                    :color="settings.reader.zoomMode === 'stretch-width' ? 'orange' : undefined"
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    @click="settings.reader.zoomMode = 'stretch-width';checkSettingsCompatibilty('zoomMode')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.displaymode.stretch-width') }}
-                    </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    icon="height"
-                    :text-color="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal') ? 'negative' : undefined"
-                    :color="settings.reader.zoomMode === 'stretch-height' ? 'orange' : undefined"
-                    :disable="settings.reader.webtoon || (settings.reader.book && settings.reader.longStripDirection !== 'horizontal')"
-                    :size="$q.screen.gt.md ? 'md' : 'xl'"
-                    :dense="$q.screen.gt.md"
-                    @click="settings.reader.zoomMode = 'stretch-height';checkSettingsCompatibilty('zoomMode')"
-                  >
-                    <q-tooltip>
-                      {{ $t('reader.displaymode.stretch-height') }} ({{ settings.reader.webtoon ? $t('reader.displaymode.compatibility') : '' }})
-                    </q-tooltip>
-                  </q-btn>
-                </q-btn-group>
-                {{ settings.reader.zoomMode }}
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-expansion-item>
-      </q-list>
-    </q-card-section>
-  </q-card>
+        </q-scroll-area>
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>
-<style lang="css" scoped>
- .no-box-shadows > .q-btn:before {
-    box-shadow: none!important;
- }
-</style>
+
