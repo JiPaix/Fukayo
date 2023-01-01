@@ -17,7 +17,7 @@ import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/stores/history';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { debounce, QVirtualScroll, useQuasar } from 'quasar';
-import { computed, nextTick, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 /** props */
@@ -38,6 +38,8 @@ const $q = useQuasar();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
+/** show overlay hint */
+const showOverlayHint = ref($q.platform.has.touch);
 
 const topheader = ref(0);
 
@@ -624,6 +626,9 @@ function thumbnailScroll(evt:WheelEvent) {
 async function turnOn() {
   await getManga();
   await getChapter(props.chapterId, { });
+  if($q.platform.has.touch) {
+    showOverlayHint.value = true;
+  }
   window.addEventListener('keyup', listenKeyboardArrows, { passive: true });
 }
 
@@ -642,8 +647,18 @@ async function restart() {
   await turnOn();
 }
 
+function hideOverlay() {
+  if($q.platform.has.touch) {
+    setTimeout(() => {
+      showOverlayHint.value = false;
+    }, 3*1000);
+  }
+}
+
 onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
+onMounted(hideOverlay);
+
 
 async function scrollToPage(index: number, fastforward?:boolean) {
   if(!localReaderSettings.value.longStrip) {
@@ -742,7 +757,7 @@ function resetTouch() {
 
 function touch(ev:TouchEvent) {
   const current = ev.changedTouches[0];
-
+  showOverlayHint.value = false;
   if(current.screenX !== touchTrack.screenX) {
     if(localReaderSettings.value.longStripDirection === 'horizontal' || !localReaderSettings.value.longStrip) return;
     const add = touchTrack.screenX - current.screenX;
@@ -906,22 +921,24 @@ watch(() => localReaderSettings.value, (nval, oval) => {
             @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
           />
           <nav-overlay
-            v-if="!$q.platform.has.touch"
             :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
+            :mobile-hint="showOverlayHint"
             :drawer-open="rightDrawerOpen"
+            :rtl="localReaderSettings.rtl"
             position="left"
             @click="localReaderSettings.rtl ? scrollToNextPage() : scrollToPrevPage()"
           />
           <nav-overlay
-            v-if="!$q.platform.has.touch"
             :drawer-open="rightDrawerOpen"
             position="center"
+            :mobile-hint="showOverlayHint"
             @click="rightDrawerOpen = !rightDrawerOpen"
           />
           <nav-overlay
-            v-if="!$q.platform.has.touch"
             :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
             :drawer-open="rightDrawerOpen"
+            :mobile-hint="showOverlayHint"
+            :rtl="localReaderSettings.rtl"
             position="right"
             @click="localReaderSettings.rtl ? scrollToPrevPage() : scrollToNextPage()"
           />

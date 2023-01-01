@@ -6,6 +6,8 @@ const props = defineProps<{
   drawerOpen: boolean;
   position: 'left' | 'right'|'center';
   hintColor?: 'primary' | 'secondary' | 'accent' | 'dark' | 'positive' | 'negative' | 'info' | 'warning'
+  mobileHint?: boolean
+  rtl?: boolean
 }>();
 
 const $q = useQuasar();
@@ -36,23 +38,43 @@ const style = computed(() => {
 
 });
 
+const parentClass = computed(() => {
+  let css = '';
+  if(props.position === 'center') css += 'absolute-left ';
+  else css += `absolute-${props.position} `;
+  if(props.mobileHint) {
+    css +=  'mobileHint ';
+    if(props.position === 'left') {
+      if(props.rtl) css += 'bg-positive';
+      else css += 'bg-negative';
+    }
+    if(props.position === 'right') {
+      if(props.rtl) css += 'bg-negative';
+      else css += 'bg-positive';
+    }
+
+  }
+  else css+= 'hoverColor';
+  return css;
+});
+
 
 </script>
 
 <template>
   <div
-    :class="position === 'center' ? 'absolute-left' : `absolute-${position}`"
-    :style="{ ...style, background: 'none' }"
-    class="hoverColor"
+    :class="parentClass"
+    :style="{ ...style, background: mobileHint ? getCssVar('orange') || 'none' : 'none' }"
   >
-    <q-icon
-      v-if="position === 'left' || position === 'right'"
-      class="absolute-center"
-      :color="hintColor"
-      :name="position === 'left' ? 'navigate_before' : position === 'right' ? 'navigate_next' : ''"
-      size="300px"
-      :style="{ width: style.width }"
-    />
+    <div class="absolute-center">
+      <q-icon
+
+        :color="mobileHint ? 'black' : hintColor"
+        :name="position === 'left' ? 'navigate_before' : position === 'right' ? 'navigate_next' : mobileHint ? 'menu' : ''"
+        :size="position === 'center' ? '200px' : '300px'"
+        :style="{ width: style.width }"
+      />
+    </div>
   </div>
 </template>
 <style lang="css">
@@ -61,5 +83,8 @@ const style = computed(() => {
 }
 .hoverColor:hover {
   opacity: 0.3;
+}
+.mobileHint {
+  opacity: 0.7
 }
 </style>
