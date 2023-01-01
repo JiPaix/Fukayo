@@ -39,7 +39,7 @@ const selectedChap = ref({label: chapterLabel(props.chapters[currentChapterIndex
 
 /** update the label when currentChapterId changes */
 watch(() => props.currentChapterId, () => {
-    selectedChap.value = {label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value };
+    selectedChap.value = { label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value };
 });
 
 /** label of the first chapter */
@@ -166,6 +166,14 @@ watch(() => localSettings.value, (nval, oval) => {
   emit('updateSettings', nval, oval);
 }, { deep: true });
 
+const options = computed(() => {
+  return props.chapters.map((chapter, index) => ({
+        label: chapterLabel(chapter.number, chapter.name),
+        value: index,
+        read: chapter.read,
+      })).sort((a, b) => a.value - b.value);
+});
+
 </script>
 
 <template>
@@ -176,25 +184,35 @@ watch(() => localSettings.value, (nval, oval) => {
       v-model="selectedChap"
       hide-bottom-space
       item-aligned
-      popup-content-style="width: 300px"
-      :options="chapters.map((chapter, index) => ({
-        label: chapterLabel(chapter.number, chapter.name),
-        value: index,
-        read: chapter.read,
-      })).sort((a, b) => a.value - b.value)"
+      option-dense
+      :behavior="$q.screen.lt.md ? 'dialog' : 'menu'"
+      :options="options"
       color="orange"
       :dark="$q.dark.isActive"
       @update:model-value="goToChapter"
     >
-      <template #selected-item>
+      <template #selected-item="scope">
         <div class="ellipsis">
-          {{ selectedChap.label }}
+          <q-icon
+            v-if="!options[selectedChap.value].read"
+            left
+            name="new_releases"
+            color="positive"
+          />
+          <q-icon
+            v-else
+            left
+            name="done"
+          />
+          {{ scope.opt.label }}
         </div>
       </template>
       <template #option="scope">
         <q-item
+          dense
           v-bind="scope.itemProps"
           :dark="$q.dark.isActive"
+          class="w-100"
         >
           <q-item-section>
             <q-item-label>

@@ -797,7 +797,7 @@ startFetch();
                   <q-select
                     :label="manga.langs.length < 2 ? $t('languages.language', manga.langs) : $t('mangas.select_language')"
                     :readonly="manga.langs.length < 2"
-                    :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
+                    :behavior="$q.screen.lt.md ? 'dialog' : 'menu'"
                     :dark="$q.dark.isActive"
                     outlined
                     :input-debounce="0"
@@ -925,7 +925,7 @@ startFetch();
                     multiple
                     hide-dropdown-icon
                     new-value-mode="add-unique"
-                    :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
+                    :behavior="$q.screen.lt.md ? 'dialog' : 'menu'"
                     :dark="$q.dark.isActive"
                     color="orange"
                     dense
@@ -1050,7 +1050,7 @@ startFetch();
                             filled
                             dense
                             options-dense
-                            :behavior="$q.screen.lt.md ? 'dialog' : 'default'"
+                            :behavior="$q.screen.lt.md ? 'dialog' : 'menu'"
                           >
                             <template #prepend>
                               <q-icon :name="$q.screen.lt.md || $q.platform.has.touch ? 'touch_app' : 'ads_click'" />
