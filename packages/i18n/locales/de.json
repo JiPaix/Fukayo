@@ -11,8 +11,8 @@
     },
     "electron": {
         "systemtray": {
-            "quit": "verlassen",
-            "show": "anzeigen"
+            "quit": "Verlassen",
+            "show": "Anzeigen"
         }
     },
     "error": "Fehler",
@@ -33,7 +33,7 @@
         "not_in_library": "Nicht importiert",
         "sources_config_required": "Quellen, die konfiguriert werden müssen",
         "start_import": "importieren",
-        "subtitle": "Titel aus externen Quelle  importieren",
+        "subtitle": "Titel aus externen Quelle importieren",
         "tab": "Importieren",
         "title": "Titel importieren",
         "unauthorized": "Nicht autorisiert: falsche Anmeldeinformationen (?)"
