@@ -5,9 +5,10 @@ import type { MangaInDB } from '@api/models/types/manga';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterImage } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { colors, scroll, useQuasar } from 'quasar';
-import type { CSSProperties } from 'vue';
+import { colors, QScrollArea, useQuasar } from 'quasar';
+import type { CSSProperties} from 'vue';
 import { computed, ref } from 'vue';
+import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 
 const $q = useQuasar();
 const props = defineProps<{
@@ -19,6 +20,7 @@ const props = defineProps<{
     currentIndex: number
     showPrevBuffer:boolean
     showNextBuffer:boolean
+    showMobileOverlayHint:boolean
   }>();
 
 const emit = defineEmits<{
@@ -26,6 +28,9 @@ const emit = defineEmits<{
   (eventName: 'reload', index: number): void
   (eventName: 'loadPrev'):void
   (eventName: 'loadNext'):void
+  (eventName: 'toggleDrawer'):void
+  (eventName: 'scrollToNextPage'):void
+  (eventName: 'scrollToPrevPage'):void
 }>();
 
 /** header + sub-header size */
@@ -42,7 +47,7 @@ const cssVars = computed(() => {
     '--bg-color-active': $q.dark.isActive ? colors.getPaletteColor('grey-7') : colors.getPaletteColor('grey-5'),
     '--orange': colors.getPaletteColor('orange'),
     height: ($q.screen.height-headerSize.value)+'px',
-    direction: props.dir,
+    // direction: props.dir,
   };
 });
 
@@ -145,25 +150,19 @@ function nextHandler(entry: IntersectionObserverEntry) {
   if(entry.isIntersecting) emit('loadNext');
 }
 
-const scrollArea = ref<null|HTMLDivElement>(null);
+const scrollArea = ref<InstanceType<typeof QScrollArea>>();
 
 function getScrollPosition(): {top: number, left:number} {
   if(!scrollArea.value) throw Error('scroll area not init');
-  const left = scroll.getHorizontalScrollPosition(scrollArea.value);
-  const top = scroll.getVerticalScrollPosition(scrollArea.value);
+  const { top, left } = scrollArea.value.getScrollPosition();
   return {top, left};
 }
 
 function getScrollPercentage(): {top: number, left:number} {
   if(!scrollArea.value) throw Error('scroll area not init');
 
-  const height = Math.max(scrollArea.value.scrollHeight, scrollArea.value.offsetHeight);
-  const width = Math.max(scrollArea.value.scrollWidth, scrollArea.value.offsetWidth);
-  const posH = scrollArea.value.scrollTop;
-  const posW = scrollArea.value.scrollLeft;
-
-  const top = Number((posH / height).toFixed(2));
-  const left = Number((posW / width * (props.dir === 'rtl' ? -1 : 1)).toFixed(2));
+  let { top, left } = scrollArea.value.getScrollPercentage();
+  if(props.dir === 'rtl') left = left*-1;
   return {top, left};
 }
 
@@ -171,34 +170,86 @@ function setScrollPercentage(dir: 'horizontal'|'vertical', percentage:number) {
   if(!scrollArea.value) throw Error('scroll area not init');
   if(percentage > 1 || percentage < 0) return;
 
-  if(dir === 'vertical') {
-    const height = Math.max(scrollArea.value.scrollHeight, scrollArea.value.offsetHeight);
-    const pos = height * percentage;
-    scrollArea.value.scrollTop = pos;
-  } else {
-    const width = Math.max(scrollArea.value.scrollWidth, scrollArea.value.offsetWidth);
-    const pos = width * percentage;
-    scrollArea.value.scrollLeft = pos;
-  }
+  scrollArea.value.setScrollPercentage(dir, percentage);
 }
 
 function setScrollPosition(dir: 'horizontal'|'vertical', pos:number) {
   if(!scrollArea.value) throw Error('scroll area not init');
-  if(dir === 'horizontal') scrollArea.value.scrollLeft = pos;
-  else scrollArea.value.scrollTop = pos;
+  scrollArea.value.setScrollPosition(dir, pos);
+}
+
+function onLoaded(i: number[]) {
+  i.forEach(i => loaded.value[i] = true);
 }
 
 defineExpose({
   getScrollPosition, setScrollPercentage, getScrollPercentage, setScrollPosition, indexes: packed,
 });
+
+/** dirty trick so RTL+HORIZONTAL isn't messed-up */
+function groupIntersection() {
+  if(!scrollArea.value) return;
+  const newVal = ($q.screen.height-headerSize.value-50)+'px';
+  (scrollArea.value.$el as HTMLElement).style.height = newVal;
+  //=> force re-render & does not apply new height
+}
+
+
+let touchTrack = {screenY: 0, screenX: 0 };
+
+function setTouch(ev:TouchEvent) {
+  touchTrack.screenX = ev.touches[0].screenX;
+  touchTrack.screenY = ev.touches[0].screenY;
+}
+
+function resetTouch() {
+  touchTrack.screenX = 0;
+  touchTrack.screenY = 0;
+}
+
+function touch(ev:TouchEvent) {
+  if(!scrollArea.value) return;
+
+  const current = ev.changedTouches[0];
+
+
+
+  const {left, top} = scrollArea.value.getScrollPosition();
+
+  const addX = (touchTrack.screenX - current.screenX)*2;
+  scrollArea.value.setScrollPosition('horizontal', left+addX);
+
+  const addY = (touchTrack.screenY - current.screenY)*2;
+  scrollArea.value.setScrollPosition('vertical', top+addY);
+
+  touchTrack.screenX = current.screenX;
+  touchTrack.screenY = current.screenY;
+
+}
 </script>
 <template>
-  <div
+  <q-scroll-area
     ref="scrollArea"
-    style="overflow:overlay;"
     :style="cssVars"
-    class="scrollarea scroll"
+    :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
+    :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+    :dir="settings.rtl ? 'rtl' : 'ltr'"
+    :visible="false"
   >
+    <nav-overlay
+      v-if="settings.overlay"
+      :hint-color="settings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
+      :mobile-hint="showMobileOverlayHint"
+      :drawer-open="drawerOpen"
+      :rtl="settings.rtl"
+      position="left"
+      @next-page="emit('scrollToNextPage')"
+      @prev-page="emit('scrollToPrevPage')"
+      @show-menu="emit('toggleDrawer')"
+      @touchstart="setTouch"
+      @touchmove="touch"
+      @touchend="resetTouch"
+    />
     <!-- Vertical long strip -->
     <div v-if="(!settings.longStrip && settings.book) || (settings.longStrip && settings.longStripDirection === 'vertical')">
       <div
@@ -229,7 +280,8 @@ defineExpose({
               v-if="isChapterImage(img)"
               class="self-center"
               :src="transformIMGurl(img.src, storeSettings)"
-              :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
+              :style="{ ...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
+              loading="lazy"
               @load="image.indexes.forEach(i => loaded[i] = true)"
             >
             <div
@@ -264,6 +316,7 @@ defineExpose({
     <div
       v-else-if="props.settings.longStrip && props.settings.longStripDirection === 'horizontal'"
       class="row no-wrap"
+      :dir="settings.rtl ? 'rtl' : 'ltr'"
     >
       <div
         v-if="showPrevBuffer"
@@ -272,7 +325,6 @@ defineExpose({
         :style="{ minWidth: ($q.screen.width/1.5)+'px', marginLeft: '15px', marginRight: '0px' }"
       >
         <slot
-
           name="prevBuffer"
         />
       </div>
@@ -288,18 +340,22 @@ defineExpose({
         <div
           v-for="(img, ig) of image.group"
           :key="ig"
+          v-intersection="{ handler: groupIntersection, cfg: { threshold: 0.2 } }"
         >
           <img
             v-if="isChapterImage(img)"
+            :key="`${ig}-image`"
             :src="transformIMGurl(img.src, storeSettings)"
-            :style="horizontal"
-            @load="image.indexes.forEach(i => loaded[i] = true)"
+            :style="{ ...horizontal }"
+            loading="lazy"
+            @load="onLoaded(image.indexes)"
           >
           <div
             v-else
+            :key="`${ig}-error`"
             class="bg-negative flex"
             :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
-            @load="image.indexes.forEach(i => loaded[i] = true)"
+            @load="onLoaded(image.indexes)"
           >
             <span>
               {{ img.error }}
@@ -335,7 +391,8 @@ defineExpose({
         <img
           v-if="isChapterImage(group)"
           :src="transformIMGurl(group.src, storeSettings)"
-          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (drawerOpen ? 300 : 0))+'px'}"
+          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
+          loading="lazy"
           @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
         >
         <div
@@ -356,51 +413,6 @@ defineExpose({
         </div>
       </div>
     </div>
-  </div>
+  </q-scroll-area>
 </template>
-<style scoped lang="css">
-.scrollarea::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
 
-.scrollarea:hover::-webkit-scrollbar {
-  width: 10px!important;
-  height: 10px!important;
-}
-
-.scrollarea::-webkit-scrollbar-button {
-  width: 0px;
-  height: 0px;
-}
-::-webkit-scrollbar-thumb {
-  background: #e1e1e1;
-  border: 0px none #ffffff;
-  border-radius: 50px;
-  height: 50px;
-  width: 50px;
-}
-
-.scrollarea::-webkit-scrollbar-thumb {
-  background: var(--orange)
-}
-
-
-.scrollarea::-webkit-scrollbar-track {
-  background: var(--bg-color);
-  border: 0px none #ffffff;
-  border-radius: 50px;
-}
-
-.scrollarea:hover::-webkit-scrollbar-track {
-  background: var(--bg-color-hover);
-}
-
-.scrollarea::-webkit-scrollbar-track:active {
-  background: var(--bg-color-active)
-}
-
-.scrollarea::-webkit-scrollbar-corner {
-  background: transparent;
-}
-</style>

@@ -408,7 +408,6 @@ const options = computed(() => {
         :dark="$q.dark.isActive"
       />
       <q-toggle
-        v-if="!$q.platform.has.touch"
         v-model="localSettings.overlay"
         :label="$t('settings.reader.overlay')"
         color="orange"

@@ -11,12 +11,11 @@ import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isMa
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
 import type ImageStack from '@renderer/components/reader/ImageStack.vue';
-import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import { useHistoryStore } from '@renderer/stores/history';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { debounce, QVirtualScroll, useQuasar } from 'quasar';
+import { debounce, QDrawer, QVirtualScroll, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -38,8 +37,8 @@ const $q = useQuasar();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
-/** show overlay hint */
-const showOverlayHint = ref($q.platform.has.touch);
+/** show overlay hint on mobile */
+const showMobileOverlayHint = ref($q.platform.has.touch);
 
 const topheader = ref(0);
 
@@ -627,7 +626,7 @@ async function turnOn() {
   await getManga();
   await getChapter(props.chapterId, { });
   if($q.platform.has.touch) {
-    showOverlayHint.value = true;
+    showMobileOverlayHint.value = true;
   }
   window.addEventListener('keyup', listenKeyboardArrows, { passive: true });
 }
@@ -647,18 +646,8 @@ async function restart() {
   await turnOn();
 }
 
-function hideOverlay() {
-  if($q.platform.has.touch) {
-    setTimeout(() => {
-      showOverlayHint.value = false;
-    }, 3*1000);
-  }
-}
-
 onBeforeMount(turnOn);
 onBeforeUnmount(turnOff);
-onMounted(hideOverlay);
-
 
 async function scrollToPage(index: number, fastforward?:boolean) {
   if(!localReaderSettings.value.longStrip) {
@@ -697,7 +686,6 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
   if(ignoreScroll.value) return;
   if(!virtscroll.value) return;
   if(!currentPage.value || !currentChapterFormatted.value) return;
-
   const scrollArea = virtscroll.value.$refs['imagestack'] as InstanceType<typeof ImageStack>;
   const add=ev.deltaY;
   let pos = scrollArea.getScrollPosition();
@@ -743,36 +731,6 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
   }
 }
 
-let touchTrack = {screenY: 0, screenX: 0 };
-
-function setTouch(ev:TouchEvent) {
-  touchTrack.screenX = ev.touches[0].screenX;
-  touchTrack.screenY = ev.touches[0].screenY;
-}
-
-function resetTouch() {
-  touchTrack.screenX = 0;
-  touchTrack.screenY = 0;
-}
-
-function touch(ev:TouchEvent) {
-  const current = ev.changedTouches[0];
-  showOverlayHint.value = false;
-  if(current.screenX !== touchTrack.screenX) {
-    if(localReaderSettings.value.longStripDirection === 'horizontal' || !localReaderSettings.value.longStrip) return;
-    const add = touchTrack.screenX - current.screenX;
-    useWheelToScrollHorizontally({ deltaY: add }, true);
-  }
-
-  if(current.screenY !== touchTrack.screenY) {
-    if(localReaderSettings.value.longStripDirection === 'horizontal') return;
-    const add = touchTrack.screenY - current.screenY;
-    useWheelToScrollHorizontally({ deltaY: add }, true);
-  }
-  touchTrack.screenX = current.screenX;
-  touchTrack.screenY = current.screenY;
-}
-
 watch(() => localReaderSettings.value, (nval, oval) => {
   let worthReloading = false;
   if(nval.book !== oval.book) worthReloading = true;
@@ -788,6 +746,16 @@ watch(() => localReaderSettings.value, (nval, oval) => {
     });
   }
 }, {deep: true});
+
+function hideOverlay() {
+  if($q.platform.has.touch) {
+    setTimeout(() => {
+      showMobileOverlayHint.value = false;
+    }, 3*1000);
+  }
+}
+
+onMounted(hideOverlay);
 </script>
 <template>
   <q-layout
@@ -820,10 +788,11 @@ watch(() => localReaderSettings.value, (nval, oval) => {
       no-swipe-open
       no-swipe-close
       side="right"
+      :behavior="$q.screen.lt.md ? 'mobile' : 'desktop'"
     >
       <right-drawer
         v-if="manga"
-        :style="{ background:'rgba(255, 255, 255, 0.15)', height: `${$q.screen.height - headerSize}px` }"
+        :style="{ background:'rgba(255, 255, 255, 0.15)', height: `${$q.screen.height - ($q.screen.lt.md ? 0 : headerSize)}px` }"
         :open="rightDrawerOpen"
         :dark="$q.dark.isActive"
         :chapters="manga.chapters.filter(c => c.lang === lang)"
@@ -894,13 +863,11 @@ watch(() => localReaderSettings.value, (nval, oval) => {
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
         ref="chaptersRef"
         class="fit chapters zoom"
-        @touchstart="setTouch"
-        @touchend="resetTouch"
-        @touchmove="touch"
       >
         <div @wheel.stop="useWheelToScrollHorizontally">
           <images-container
             ref="virtscroll"
+            :show-mobile-overlay-hint="showMobileOverlayHint"
             :drawer-open="rightDrawerOpen"
             :show-next-buffer="showNextBuffer"
             :show-prev-buffer="showPrevBuffer"
@@ -913,34 +880,15 @@ watch(() => localReaderSettings.value, (nval, oval) => {
             :imgs="currentChapterFormatted.imgs"
             :current-page="currentPage"
             :reader-settings="localReaderSettings"
+            @toggle-drawer="rightDrawerOpen = !rightDrawerOpen"
+            @scroll-to-next-page="scrollToNextPage"
+            @scroll-to-prev-page="scrollToPrevPage"
             @progress="(n) => progress = n"
             @progress-error="() => progressError = true"
             @load-next="loadNext"
             @load-prev="loadPrev(true)"
             @change-page="onImageVisible"
             @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
-          />
-          <nav-overlay
-            :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
-            :mobile-hint="showOverlayHint"
-            :drawer-open="rightDrawerOpen"
-            :rtl="localReaderSettings.rtl"
-            position="left"
-            @click="localReaderSettings.rtl ? scrollToNextPage() : scrollToPrevPage()"
-          />
-          <nav-overlay
-            :drawer-open="rightDrawerOpen"
-            position="center"
-            :mobile-hint="showOverlayHint"
-            @click="rightDrawerOpen = !rightDrawerOpen"
-          />
-          <nav-overlay
-            :hint-color="localReaderSettings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
-            :drawer-open="rightDrawerOpen"
-            :mobile-hint="showOverlayHint"
-            :rtl="localReaderSettings.rtl"
-            position="right"
-            @click="localReaderSettings.rtl ? scrollToPrevPage() : scrollToNextPage()"
           />
         </div>
 
@@ -1056,5 +1004,10 @@ watch(() => localReaderSettings.value, (nval, oval) => {
 <style lang="css" scoped>
 body {
   overflow:hidden!important;
+}
+</style>
+<style lang="css">
+body {
+  overscroll-behavior: contain;
 }
 </style>

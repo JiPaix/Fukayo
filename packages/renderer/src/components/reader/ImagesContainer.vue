@@ -20,6 +20,7 @@ const props = defineProps<{
   showNextBuffer: boolean
   nextChapterString?: string,
   prevChapterString?: string
+  showMobileOverlayHint: boolean
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +30,9 @@ const emit = defineEmits<{
   (event: 'reload', pageIndex:number|undefined, chapterId: string, chapterURL:string, callback:() =>void): void
   (event: 'loadPrev'): void
   (event: 'loadNext'): void
+  (event: 'toggleDrawer'):void
+  (event: 'scrollToNextPage'):void
+  (event: 'scrollToPrevPage'):void
 }>();
 
 /** image-slot template ref */
@@ -61,7 +65,6 @@ watch(() => props.imgs, (nval) => {
     emit('progress', nval.length/props.expectedLength);
   if(nval.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img))) emit('progressError');
 }, { deep: true });
-
 </script>
 
 <template>
@@ -75,8 +78,12 @@ watch(() => props.imgs, (nval) => {
     :drawer-open="drawerOpen"
     :expected-length="expectedLength"
     :settings="readerSettings"
+    :show-mobile-overlay-hint="showMobileOverlayHint"
     @load-next="emit('loadNext')"
     @load-prev="emit('loadPrev')"
+    @toggle-drawer="emit('toggleDrawer')"
+    @scroll-to-next-page="emit('scrollToNextPage')"
+    @scroll-to-prev-page="emit('scrollToPrevPage')"
     @show-image="imageVisibility"
     @reload="reload"
   >
