@@ -404,7 +404,7 @@
         "mirror_is_dead": "Cette source a été signalée comme inactive",
         "reader": {
             "info": "Les paramètres ci-dessous sont les paramètres par défaut,\nIls sont automatiquement attribués aux nouveaux titres\n\nSi vous modifiez l'un de ces paramètres lors de la lecture d'un titre alors seul celui-ci sera affecté par les changements.",
-            "overlay": "Afficher la superposition de navigation lors du survol des images",
+            "overlay": "Utiliser la superposition de navigation",
             "preload": "Précharger le chapitre suivant pendant la lecture",
             "title": "Lecteur"
         },
