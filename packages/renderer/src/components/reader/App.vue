@@ -682,6 +682,11 @@ async function scrollToPage(index: number, fastforward?:boolean) {
 const showPrevBuffer = ref(false);
 const showNextBuffer = ref(false);
 
+/**
+ * - redirect vertical scrolls into horizontal ones
+ * - show previous chapter div when user tries to scroll "before" first page
+ * - show next chapter div when user tries to scroll "after" last page
+ */
 async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }, fromTouch = false) {
   if(ignoreScroll.value) return;
   if(!virtscroll.value) return;
@@ -691,16 +696,28 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
   let pos = scrollArea.getScrollPosition();
 
   if(localReaderSettings.value.longStrip && localReaderSettings.value.longStripDirection === 'horizontal') {
-
     if(!fromTouch) {
       if(localReaderSettings.value.rtl) scrollArea.setScrollPosition('horizontal', (pos.left-add));
       else scrollArea.setScrollPosition('horizontal', (pos.left+add));
     }
+  } else {
+    scrollArea.setScrollPosition('vertical', pos.top+add);
+    if(!localReaderSettings.value.longStrip) return;
+  }
+  displayNextPrevDiv();
+}
 
-    pos = scrollArea.getScrollPosition();
-    const percentage = scrollArea.getScrollPercentage();
-
-    if(percentage.left === 0 && add < 0) {
+/** display next/prev chapter buffer div if required  */
+async function displayNextPrevDiv() {
+  if(ignoreScroll.value) return;
+  if(!virtscroll.value) return;
+  if(!currentPage.value || !currentChapterFormatted.value) return;
+  if(!localReaderSettings.value.longStrip) return;
+  const scrollArea = virtscroll.value.$refs['imagestack'] as InstanceType<typeof ImageStack>;
+  const { left, top } = scrollArea.getScrollPercentage();
+  if(localReaderSettings.value.longStripDirection === 'horizontal') {
+    if(left >= 0.9) showNextBuffer.value = true;
+    if(left <= 0.1) {
       if(!showPrevBuffer.value) {
         const multiplier = localReaderSettings.value.rtl ? -1 : 1;
         showPrevBuffer.value = true;
@@ -708,26 +725,16 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
         scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*multiplier);
       }
     }
-
-    const imagesAreAllLoaded = currentChapterFormatted.value.imgs.length === currentChapterFormatted.value.imgsExpectedLength;
-    const currentPageIsLastPage = currentPage.value === currentChapterFormatted.value.imgsExpectedLength;
-
-    if(imagesAreAllLoaded || currentPageIsLastPage) {
-      if(percentage.left >= 0.8) showNextBuffer.value = true;
-    }
-
   } else {
-    scrollArea.setScrollPosition('vertical', pos.top+add);
-    if(!localReaderSettings.value.longStrip) return;
-
-    if(pos.top+add < 0) {
+    if(top >= 0.9) showNextBuffer.value = true;
+    if(top <= 0.1) {
       if(!showPrevBuffer.value) {
+        const multiplier = localReaderSettings.value.rtl ? -1 : 1;
         showPrevBuffer.value = true;
         await nextTick();
-        scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5));
+        scrollArea.setScrollPosition('vertical', ($q.screen.width/1.5)*multiplier);
       }
     }
-    if(scrollArea.getScrollPercentage().top >= 0.9 && currentPage.value === currentChapterFormatted.value.imgsExpectedLength) showNextBuffer.value = true;
   }
 }
 
@@ -864,7 +871,10 @@ onMounted(hideOverlay);
         ref="chaptersRef"
         class="fit chapters zoom"
       >
-        <div @wheel.stop="useWheelToScrollHorizontally">
+        <div
+          @touchmove="displayNextPrevDiv"
+          @wheel.stop="useWheelToScrollHorizontally"
+        >
           <images-container
             ref="virtscroll"
             :show-mobile-overlay-hint="showMobileOverlayHint"
