@@ -286,8 +286,8 @@ onBeforeUnmount(async () => {
             :color="$q.dark.isActive ? 'white': 'primary'"
             :loading="loading"
             :rules="[
-              val => (val !== null && val !== '') || 'Please type something',
-              val => (val && val.length > 3) || 'Not enought characters',
+              val => (typeof val === 'string' && val.trim().length > 0) || $t('search.no_input'),
+              val => (typeof val === 'string' && val.trim().length >= 3) || $t('search.min_value', { number: 3 }),
             ]"
             lazy-rules
           >
