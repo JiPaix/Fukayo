@@ -366,8 +366,8 @@
         "not_found": "Couldn't find source: {source}",
         "placeholder": "Search mangas",
         "tab": "Search",
-        "no_input": "Please type something",
-        "min_value": "Please type in at least <b>{number}</b> characters"
+        "no_input": "Please type in something",
+        "min_value": "Please type in at least {number} characters"
     },
     "settings": {
         "app_ask_password": "Please type in your password",
