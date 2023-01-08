@@ -366,7 +366,8 @@
         "not_found": "Impossible de trouver source : {source}",
         "placeholder": "Rechercher des mangas",
         "tab": "Rechercher",
-        "no_input": "Veuillez taper quelque chose"
+        "no_input": "Veuillez taper quelque chose",
+        "min_value": "Please type in at least <b>{number}</b> characters"
     },
     "settings": {
         "app_ask_password": "Veuillez saisir votre mot de passe",
