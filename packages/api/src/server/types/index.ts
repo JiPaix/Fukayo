@@ -21,7 +21,7 @@ export type ServerToClientEvents = {
   showRecommend: (id:number, mangas:SearchResult[]|SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB[]) => void;
   showImports: (id: number, /** number = nb of mangas to expect */ manga:number|importErrorMessage|ImportResults[]|ImportResults|TaskDone) => void;
-  finishedMangasUpdate: () => void;
+  finishedMangasUpdate: (nbOfUpdates:number) => void;
   startMangasUpdate: () => void;
 }
 

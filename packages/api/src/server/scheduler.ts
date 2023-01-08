@@ -261,6 +261,10 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(!this.connectivity) return this.restartUpdate();
 
     if(this.io) this.io.emit('startMangasUpdate');
+
+    // keep track of updates
+    let updated = 0;
+
     // get the list of mangas
     const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
@@ -269,7 +273,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     // fixes mangas
     for(const mirrorName of Object.keys(fixes)) {
       const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
-      if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
+      if(mirror) updated += await this.#fixMangas(mirror, fixes[mirrorName]);
     }
 
     // selfhosted offline && broken entries are skipped
@@ -282,15 +286,13 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       // update mangas
       for(const mirrorName of Object.keys(updates)) {
         const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
-        if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
+        if(mirror) updated += await this.#updateMangas(mirror, updates[mirrorName]);
       }
     }
     // emit to all the clients that we are done updating
     this.#ongoing.updates = false;
-    if(this.io) this.io.emit('finishedMangasUpdate');
+    if(this.io) this.io.emit('finishedMangasUpdate', updated);
     if(nbMangas > 0) this.logger('update finished');
-    // restart update intervals/timeouts
-    this.restartUpdate();
   }
 
   /**
@@ -383,10 +385,13 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   /**
    * Fetch the data, check if there's any difference and update accordingly
    */
-  async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
+  async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]):Promise<number> {
     const db = await MangasDB.getInstance();
     const indexes = await db.getIndexes();
     const broken:{manga: MangaInDB, mirror: Mirror & MirrorInterface}[] = [];
+
+    // keep track of nb updated mangas
+    let updated = 0;
 
     for(const manga of mangas) {
       const index = indexes.find(i => i.id === manga.id);
@@ -394,12 +399,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       // This case only happens if end-user messes with config files
       if(!index) {
         await db.add({ manga });
+        updated++;
         continue;
       }
       this.logger('updating', manga.name, '@', manga.mirror.name, new Date(manga.meta.lastUpdate).toString());
       try {
         const fetched = await this.#fetch(mirror, manga);
         await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);
+        updated++;
       } catch(e) {
         // we will handle failed updates later..
         broken.push({ manga, mirror });
@@ -413,8 +420,9 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     }, {} as { [key: string]: typeof broken });
 
     for(const broke in group) {
-      await this.#fixMangas(group[broke][0].mirror, group[broke].map(x => x.manga));
+      updated += await this.#fixMangas(group[broke][0].mirror, group[broke].map(x => x.manga));
     }
+    return updated;
   }
 
   /**
@@ -425,14 +433,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @important Broken mangas require user to migrate to manually migrate to another mirror
    * @important migrated mangas may have new ids
    */
-  async #fixMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
+  async #fixMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]):Promise<number> {
+    let fixed = 0;
     // if mirror is dead
     if(mirror.isDead) {
       for(const manga of mangas) {
         await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: mirror dead');
+        fixed++;
       }
-      return;
+      return fixed;
     }
     // if mirror version != mangas version
     for(const manga of mangas) {
@@ -443,6 +453,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         if(!remoteManga) {
           await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
           this.logger('marked entry', manga.name, 'as broken: could not migrate');
+          fixed++;
         }
         // else copy as much data as possible
         else {
@@ -461,13 +472,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
           // add new version
           await (await MangasDB.getInstance()).add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
           this.logger('migrated:', manga.name, 'version:', remoteManga.mirror.version);
+          fixed++;
         }
       } catch(e) {
         await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: could not migrate');
         this.logger(e);
+        fixed++;
       }
     }
+    return fixed;
   }
 
   /**
