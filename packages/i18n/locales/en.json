@@ -365,7 +365,8 @@
         "no_result_for": "No result for:",
         "not_found": "Couldn't find source: {source}",
         "placeholder": "Search mangas",
-        "tab": "Search"
+        "tab": "Search",
+        "no_input": "Please type something"
     },
     "settings": {
         "app_ask_password": "Please type in your password",
