@@ -342,27 +342,9 @@ export default class IOWrapper {
       cb(SettingsDB.getInstance().data);
     });
 
-    socket.on('changeSettings', (settings, cb) => {
-      // watch if we need to restart cache/update timers
-      let restartCache = false;
-      let restartUpdates = false;
-      // if waitBetweenUpdates is changed, we need to restart the update timer
-      if(settings.library.waitBetweenUpdates !== SettingsDB.getInstance().data.library.waitBetweenUpdates) {
-        restartUpdates = true;
-      }
-      // if any of this cache settings is changed, we need to restart the cache timer
-      if(settings.cache.age.enabled !== SettingsDB.getInstance().data.cache.age.enabled
-        || settings.cache.size.enabled == SettingsDB.getInstance().data.cache.size.enabled
-        || settings.cache.age.max !== SettingsDB.getInstance().data.cache.age.max
-        || settings.cache.size.max !== SettingsDB.getInstance().data.cache.size.max)
-      {
-        restartCache = true;
-      }
-      // we need to write the new settings to the database before restarting the cache/update timers
+    socket.on('changeSettings', async (settings, cb) => {
       SettingsDB.getInstance().data = settings;
-      SettingsDB.getInstance().write();
-      if(restartUpdates) Scheduler.getInstance().restartUpdate();
-      if(restartCache) Scheduler.getInstance().restartCache();
+      await SettingsDB.getInstance().write();
       cb(SettingsDB.getInstance().data);
     });
 
