@@ -518,48 +518,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     return 'https://api.mangadex.dev'+path;
   }
 
-  #season():{ current : { season: string, year: number }, previous: { season: string, year: number} } {
-    // It's plus one because January is index 0
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-    const previousYear = now.getFullYear()-1;
-
-    if (month > 3 && month < 6) {
-      return { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
-    }
-
-    if (month > 6 && month < 9) {
-      return { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
-    }
-
-    if (month > 9 && month < 12) {
-      return { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
-    }
-
-    if (month >= 1 && month < 3) {
-      return { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
-    }
-
-    const day = now.getDate();
-    if (month === 3) {
-      return day < 22 ? { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } } : { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
-    }
-
-    if (month === 6) {
-      return day < 22 ? { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } } : { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
-    }
-
-    if (month === 9) {
-      return day < 22 ? { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } } : { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
-    }
-
-    if (month === 12) {
-      return day < 22 ? { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } }: { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
-    }
-    throw new Error('what season are we in?!!');
-  }
-
   // until SEASONAL lists are made public we show last released chapters
   async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
     // TODO: handle empty chapters
@@ -578,27 +536,19 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
     if(cancel) return;
     try {
+      const threeMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 3));
 
-      const list = await this.fetch<Routes['/user/{id}/list']['ok']|Routes['/user/{id}/list']['err']>({
-        url: this.#path('/user/d2ae45e0-b5e2-4e7f-a688-17925c2d7d6b/list?limit=100'),
+      const date = `${threeMonthAgo.getFullYear()}-${threeMonthAgo.getDay().toString().padStart(2, '0')}-${threeMonthAgo.getDay().toString().padStart(2, '0')}`;
+      const time = 'T00:00:00';
+      const datetime = date+time;
+
+      const list = await this.fetch<Routes['/manga']['ok']|Routes['/manga']['err']>({
+        url: this.#path(`manga?limit=16&includes[]=cover_art&includes[]=author&includes[]=artist&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&hasAvailableChapters=true&createdAtSince=${datetime}`),
         headers: this.#headers,
       }, 'json');
 
       if(list.result !== 'ok') throw new Error(`${list.errors[0].title}: ${list.errors[0].detail}`);
-      const filteredList = list.data.filter(l => l.type === 'custom_list');
-      const seasoned = filteredList.find(f =>
-        (
-        f.attributes.name.toLocaleLowerCase().includes(this.#season().current.season)
-        && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().current.year))
-        )
-        ||
-        (
-          f.attributes.name.toLocaleLowerCase().includes(this.#season().previous.season)
-          && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().previous.year))
-        ));
-      if(!seasoned) throw new Error('couldnt find seasonal!');
-      const unfilteredIds = seasoned.relationships;
-      const ids = unfilteredIds.filter(i => i.type === 'manga').map(r=>r.id);
+      const ids = list.data.filter(i => i.type === 'manga').map(r=>r.id);
       const idsChunk = ids.reduce((resultArray:string[][], item, index) => {
         const chunkIndex = Math.floor(index / 10);
         if (!resultArray[chunkIndex]) {
