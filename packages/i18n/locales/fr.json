@@ -367,7 +367,7 @@
         "placeholder": "Rechercher des mangas",
         "tab": "Rechercher",
         "no_input": "Veuillez taper quelque chose",
-        "min_value": "Please type in at least <b>{number}</b> characters"
+        "min_value": "Veuillez saisir au moins {nombre} caractères."
     },
     "settings": {
         "app_ask_password": "Veuillez saisir votre mot de passe",
