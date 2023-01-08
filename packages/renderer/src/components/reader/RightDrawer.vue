@@ -111,10 +111,12 @@ function goLastChapter() {
   emit('loadIndex', lastChapterLabel.value.value);
 }
 
+/** toggle entry in/out of library */
 async function toggleInLibrary() {
   emit('toggleInLibrary');
 }
 
+/** toggle chapter's read status */
 async function toggleRead() {
   emit('toggleRead', currentChapterIndex.value);
 }
@@ -166,6 +168,7 @@ watch(() => localSettings.value, (nval, oval) => {
   emit('updateSettings', nval, oval);
 }, { deep: true });
 
+/** chapters computed for QSelect */
 const options = computed(() => {
   return props.chapters.map((chapter, index) => ({
         label: chapterLabel(chapter.number, chapter.name),

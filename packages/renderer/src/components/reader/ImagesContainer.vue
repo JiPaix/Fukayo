@@ -37,9 +37,10 @@ const emit = defineEmits<{
 
 /** image-slot template ref */
 const imageslot = ref<InstanceType<typeof FImg>[]|null>(null);
-
+/** image-stack template ref */
 const imagestack = ref<InstanceType<typeof ImageStack>|null>(null);
 
+/** exported members */
 defineExpose({
   imageslot,
   imagestack,
@@ -61,9 +62,10 @@ function imageVisibility(indexes:number[]) {
   if(props.readerSettings.longStrip) emit('changePage', Math.max(...indexes), props.chapterId);
 }
 
+/** emit progress while props.imgs is filled */
 watch(() => props.imgs, (nval) => {
     emit('progress', nval.length/props.expectedLength);
-  if(nval.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img))) emit('progressError');
+    if(nval.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img))) emit('progressError');
 }, { deep: true });
 </script>
 

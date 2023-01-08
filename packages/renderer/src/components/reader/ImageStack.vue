@@ -10,7 +10,7 @@ import type { CSSProperties} from 'vue';
 import { computed, ref } from 'vue';
 import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 
-const $q = useQuasar();
+/** props */
 const props = defineProps<{
     dir: 'rtl' | 'ltr'
     sources: (ChapterImage|ChapterImageErrorMessage)[]
@@ -22,7 +22,7 @@ const props = defineProps<{
     showNextBuffer:boolean
     showMobileOverlayHint:boolean
   }>();
-
+/** emits */
 const emit = defineEmits<{
   (eventName: 'showImage', indexes:number[]): void
   (eventName: 'reload', index: number): void
@@ -31,7 +31,16 @@ const emit = defineEmits<{
   (eventName: 'toggleDrawer'):void
   (eventName: 'scrollToNextPage'):void
   (eventName: 'scrollToPrevPage'):void
+  (eventName: 'showPrevBuffer'):void
+  (eventName: 'showNextBuffer'):void
 }>();
+/** quasar */
+const $q = useQuasar();
+/** user's settings */
+const storeSettings = useSettingsStore();
+
+/** QScrollArea template ref */
+const scrollArea = ref<InstanceType<typeof QScrollArea>>();
 
 /** header + sub-header size */
 const headerSize = computed(() => {
@@ -40,6 +49,7 @@ const headerSize = computed(() => {
   return topHeader.offsetHeight + subHeader.offsetHeight;
 });
 
+/** QScrollArea CSS */
 const cssVars = computed(() => {
   return {
     '--bg-color': $q.dark.isActive ? colors.getPaletteColor('dark') : colors.getPaletteColor('white'),
@@ -47,12 +57,10 @@ const cssVars = computed(() => {
     '--bg-color-active': $q.dark.isActive ? colors.getPaletteColor('grey-7') : colors.getPaletteColor('grey-5'),
     '--orange': colors.getPaletteColor('orange'),
     height: ($q.screen.height-headerSize.value)+'px',
-    // direction: props.dir,
   };
 });
 
-const storeSettings = useSettingsStore();
-
+/** Images grouped in set of 2's, or 1's if their width > height */
 const packed = computed(() => {
   const groupOfgroups = [];
   let group = [];
@@ -108,6 +116,7 @@ const falseArray:false[] = Array(props.expectedLength).fill(false);
 /** keep track of images that are loaded */
 const loaded = ref<boolean[]>(falseArray);
 
+/** emit which image is on screen */
 function intersectionHandler(entry: IntersectionObserverEntry,indexes:number[]) {
   // do not emit if images aren't loaded
   const areLoaded = indexes.every(i => loaded.value[i]);
@@ -116,6 +125,7 @@ function intersectionHandler(entry: IntersectionObserverEntry,indexes:number[]) 
   }
 }
 
+/** img CSS for vertical display (book mode disabled) */
 const verticalNoBook = computed<CSSProperties>(() => {
   let height:CSSProperties['height'] = undefined;
   let width:CSSProperties['width'] = undefined;
@@ -130,6 +140,7 @@ const verticalNoBook = computed<CSSProperties>(() => {
   };
 });
 
+/** img CSS for horizontal display */
 const horizontal = computed<CSSProperties>(() => {
   let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - headerSize.value)+'px';
   let marginBottom:CSSProperties['marginBottom'] = '-6px';
@@ -142,22 +153,23 @@ const horizontal = computed<CSSProperties>(() => {
   };
 });
 
+/** emit "load previous chapter" event */
 function prevHandler(entry: IntersectionObserverEntry) {
-  if(entry.isIntersecting) emit('loadPrev'); console.log('loadprev');
+  if(entry.isIntersecting) emit('loadPrev');
 }
 
+/** emit "load next chapter" event */
 function nextHandler(entry: IntersectionObserverEntry) {
   if(entry.isIntersecting) emit('loadNext');
 }
 
-const scrollArea = ref<InstanceType<typeof QScrollArea>>();
-
+/** refactor of QScrollArea.getScrollPosition */
 function getScrollPosition(): {top: number, left:number} {
   if(!scrollArea.value) throw Error('scroll area not init');
   const { top, left } = scrollArea.value.getScrollPosition();
   return {top, left};
 }
-
+/** refactor of QScrollArea.getScrollPercentage */
 function getScrollPercentage(): {top: number, left:number} {
   if(!scrollArea.value) throw Error('scroll area not init');
 
@@ -165,28 +177,30 @@ function getScrollPercentage(): {top: number, left:number} {
   if(props.dir === 'rtl') left = left*-1;
   return {top, left};
 }
-
+/** refactor of QScrollArea.setScrollPercentage */
 function setScrollPercentage(dir: 'horizontal'|'vertical', percentage:number) {
   if(!scrollArea.value) throw Error('scroll area not init');
   if(percentage > 1 || percentage < 0) return;
 
   scrollArea.value.setScrollPercentage(dir, percentage);
 }
-
+/** refactor of QScrollArea.setScrollPosition */
 function setScrollPosition(dir: 'horizontal'|'vertical', pos:number) {
   if(!scrollArea.value) throw Error('scroll area not init');
   scrollArea.value.setScrollPosition(dir, pos);
 }
 
+/** mark group's images as loaded */
 function onLoaded(i: number[]) {
   i.forEach(i => loaded.value[i] = true);
 }
 
+/** exported members */
 defineExpose({
   getScrollPosition, setScrollPercentage, getScrollPercentage, setScrollPosition, indexes: packed,
 });
 
-/** dirty trick so RTL+HORIZONTAL isn't messed-up */
+/** dirty trick so RTL+HORIZONTAL isn't messed-up (blank images) */
 function groupIntersection() {
   if(!scrollArea.value) return;
   const newVal = ($q.screen.height-headerSize.value-50)+'px';
@@ -194,26 +208,23 @@ function groupIntersection() {
   //=> force re-render & does not apply new height
 }
 
-
+/** touch tracking */
 let touchTrack = {screenY: 0, screenX: 0 };
-
+/** update touch tracking */
 function setTouch(ev:TouchEvent) {
   touchTrack.screenX = ev.touches[0].screenX;
   touchTrack.screenY = ev.touches[0].screenY;
 }
-
+/** reset touch tracking */
 function resetTouch() {
   touchTrack.screenX = 0;
   touchTrack.screenY = 0;
 }
-
+/** update touch tracking and scroll accordingly (this doesn't simulate natural swiping but is good enough) */
 function touch(ev:TouchEvent) {
   if(!scrollArea.value) return;
 
   const current = ev.changedTouches[0];
-
-
-
   const {left, top} = scrollArea.value.getScrollPosition();
 
   const addX = (touchTrack.screenX - current.screenX)*2;
@@ -224,7 +235,6 @@ function touch(ev:TouchEvent) {
 
   touchTrack.screenX = current.screenX;
   touchTrack.screenY = current.screenY;
-
 }
 </script>
 <template>

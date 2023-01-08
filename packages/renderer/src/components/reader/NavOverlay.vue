@@ -2,6 +2,7 @@
 import { QIcon, useQuasar, getCssVar, colors } from 'quasar';
 import { computed } from 'vue';
 
+/** props */
 const props = defineProps<{
   drawerOpen: boolean;
   position: 'left' | 'right'|'center';
@@ -10,11 +11,13 @@ const props = defineProps<{
   rtl?: boolean
 }>();
 
+/** emits */
 const emit = defineEmits<{
   (eventName: 'showMenu'):void
   (eventName: 'nextPage'):void
   (eventName: 'prevPage'):void
 }>();
+/** quasar */
 const $q = useQuasar();
 
 /** header + sub-header size */
@@ -24,6 +27,7 @@ const headerSize = computed(() => {
   return topHeader.offsetHeight + subHeader.offsetHeight;
 });
 
+/** CSS */
 const style = computed(() => {
   const width = ($q.screen.width - (props.drawerOpen ? 300: 0));
   const positiveCSS = getCssVar('positive');
@@ -40,8 +44,9 @@ const style = computed(() => {
 
 });
 
+/** QIcons class names */
 const hoverColorClass = computed(() => $q.platform.has.touch ? undefined : 'hoverColor');
-
+/** QIcons class names */
 const hintColorClass = computed(() => $q.platform.has.touch ? 'transparent' : props.hintColor);
 </script>
 
