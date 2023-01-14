@@ -38,7 +38,7 @@ function waitForConnectivity() {
     backgroundColor: 'dark',
     customClass: 'loader',
     group: 'connectivity',
-    message: `${$t('app.loading.connection_lost')}<br/><span class="text-amber text-italic">${$t('app.loading.check_internet')}</span>`,
+    message: `${$t('app.loading.checking_internet')}<br/><span class="text-amber text-italic">${$t('app.loading.checking_internet_takes_a_while')}</span>`,
     messageColor: 'orange-2',
     html: true,
   });
