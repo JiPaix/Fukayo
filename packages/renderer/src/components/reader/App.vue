@@ -37,6 +37,8 @@ const $q = useQuasar();
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** current url */
 const currentURL = ref(document.location.href);
+/** the source's url */
+const sourceURL = ref<string|undefined>();
 /** show overlay hint on mobile */
 const showMobileOverlayHint = ref($q.platform.has.touch);
 /** keep track of the main header's height */
@@ -269,6 +271,10 @@ async function getManga():Promise<void> {
     socket.once('showManga', (id, mg) => {
       if(id === reqId) {
         if(isManga(mg)) {
+          socket.emit('getMirrors', true, (mirrors) => {
+            sourceURL.value = mirrors.find(m => m.name === mg.mirror.name)?.host;
+          });
+
           if(mg.chapters.some(x => x.lang === props.lang )) {
             mg.chapters = mg.chapters.sort((a, b) => a.number - b.number);
             manga.value = mg;
@@ -806,6 +812,7 @@ onMounted(hideOverlay);
       <reader-header
         v-if="manga && currentChapter"
         :drawer-open="rightDrawerOpen"
+        :source-u-r-l="sourceURL"
         :progress="progress"
         :progress-error="progressError"
         :current-chapter-string="formatChapterInfoToString(isKomgaTryingItsBest, $t, currentChapter)"
@@ -832,6 +839,7 @@ onMounted(hideOverlay);
         :style="{ background:'rgba(255, 255, 255, 0.15)', height: `${$q.screen.height - ($q.screen.lt.md ? 0 : headerSize)}px` }"
         :open="rightDrawerOpen"
         :dark="$q.dark.isActive"
+        :source-u-r-l="sourceURL"
         :chapters="manga.chapters.filter(c => c.lang === lang)"
         :current-chapter-id="currentChapterId"
         :in-library="manga.inLibrary"

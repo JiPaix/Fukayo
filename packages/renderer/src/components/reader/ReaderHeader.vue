@@ -6,7 +6,8 @@ import { useQuasar } from 'quasar';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
-defineProps<{
+const props = defineProps<{
+  sourceURL?: string
   manga: MangaPage|MangaInDB
   chapter: MangaPage['chapters'][0]|MangaInDB['chapters'][0]
   nbOfPages: number
@@ -40,6 +41,12 @@ const headerSize = computed(() => {
   const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
   return topHeader.offsetHeight + subHeader.offsetHeight;
 });
+
+function open() {
+  if(!props.sourceURL) return;
+  const url = `${props.sourceURL}${props.chapter.url}`;
+  window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -59,7 +66,9 @@ const headerSize = computed(() => {
       v-else
       type="QAvatar"
     />
-    <q-toolbar-title v-if="manga">
+    <q-toolbar-title
+      v-if="manga"
+    >
       <span
         v-if="nbOfPages > 0"
         class="text-subtitle1"
@@ -98,7 +107,16 @@ const headerSize = computed(() => {
     :class="$q.dark.isActive ? '' : 'bg-grey-4 text-dark'"
     class="text-caption"
   >
-    <span>{{ currentChapterString }}</span>
+    <span
+      class="flex cursor-pointer"
+      @click="open"
+    >
+      {{ currentChapterString }}
+      <q-icon
+        class="q-ml-sm"
+        name="open_in_new"
+      />
+    </span>
   </q-bar>
   <q-linear-progress
     v-if="progress < 1"
