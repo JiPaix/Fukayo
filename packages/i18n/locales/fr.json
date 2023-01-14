@@ -5,7 +5,7 @@
         "loading": {
             "please_wait": "Veuillez patienter…",
             "initializing": "Initialisation des <b>sources et bases de données</b>",
-            "checking_internet": "Checking your internet connection status"
+            "checking_internet": "Vérification de l'état de votre connexion internet"
         }
     },
     "electron": {
