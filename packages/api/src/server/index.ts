@@ -14,6 +14,7 @@ import type { Server as HttpsServer } from 'https';
 import { env } from 'process';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
+import { Crawler } from '@api/utils/crawler';
 
 /**
  * Initialize a socket.io server
@@ -37,6 +38,8 @@ export default class IOWrapper {
   async #init() {
     await this.db.init();
     this.logger('token database loaded');
+    await Crawler.getInstance();
+    this.logger('puppeteer initialized');
     await Promise.allSettled(mirrors.map(m => m.init()));
     this.#importer = (await import('../models/imports')).default;
     this.logger('mirrors databases loaded');
