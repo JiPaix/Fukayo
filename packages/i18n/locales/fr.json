@@ -5,8 +5,8 @@
         "loading": {
             "please_wait": "Veuillez patienter…",
             "initializing": "Initialisation des <b>sources et bases de données</b>",
-            "connection_lost": "Connexion perdue",
-            "check_internet": "Veuillez vérifier votre connexion Internet"
+            "checking_internet": "Vérification de l'état de votre connexion internet",
+            "checking_internet_takes_a_while": "This might takes a while..."
         }
     },
     "electron": {
