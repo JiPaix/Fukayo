@@ -196,9 +196,9 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
   // const instance = await useCluster();
   if(type) data.type = type;
   if(isFile) {
-    return instance.execute(data, crawler.task) as Promise<Buffer | Error | undefined>;
+    return instance.execute(data, crawler.task.bind(crawler)) as Promise<Buffer | Error | undefined>;
   }
-  return instance.execute(data, crawler.taskFile) as Promise<string | Error | undefined>;
+  return instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<string | Error | undefined>;
 }
 
 export async function puppeteerExec<T = void>(callback: ({ page }: { page: Page }) => Promise<T>) {
