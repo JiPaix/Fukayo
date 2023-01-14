@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 defineProps<{
@@ -10,6 +11,10 @@ defineProps<{
   chapter: MangaPage['chapters'][0]|MangaInDB['chapters'][0]
   nbOfPages: number
   page: number
+  currentChapterString: string
+  progress:number
+  progressError: boolean
+  drawerOpen: boolean
 }>();
 
 const emit = defineEmits<{
@@ -28,6 +33,13 @@ function toggleDarkMode() {
     $q.dark.set(true);
   }
 }
+
+/** header + sub-header size */
+const headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
 </script>
 
 <template>
@@ -84,30 +96,17 @@ function toggleDarkMode() {
     v-if="chapter && manga"
     :dark="$q.dark.isActive"
     :class="$q.dark.isActive ? '' : 'bg-grey-4 text-dark'"
+    class="text-caption"
   >
-    <span
-      v-if="chapter.volume !== undefined"
-      class="text-caption"
-    >
-      {{ $t('mangas.volume') }} {{ chapter.volume }}
-    </span>
-    <span
-      v-if="chapter.volume !== undefined && chapter.number !== undefined"
-      class="text-caption"
-    >
-      -
-    </span>
-    <span
-      v-if="chapter.number !== undefined"
-      class="text-caption"
-    >
-      {{ $t('mangas.chapter') }} {{ chapter.number }}
-    </span>
-    <span
-      v-if="chapter.volume === undefined && chapter.number === undefined"
-      class="text-caption"
-    >
-      {{ chapter.name }}
-    </span>
+    <span>{{ currentChapterString }}</span>
   </q-bar>
+  <q-linear-progress
+    v-if="progress < 1"
+    :color="progressError ? 'negative' : 'positive'"
+    :value="progress"
+    size="xs"
+    class="fixed-top"
+    :style="{ marginTop: `${headerSize}px`, width: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
+    animation-speed="500"
+  />
 </template>

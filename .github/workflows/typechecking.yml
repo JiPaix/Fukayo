@@ -21,10 +21,6 @@ on:
       - 'package-lock.json'
       - '.github/workflows/typechecking.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: 'bash'

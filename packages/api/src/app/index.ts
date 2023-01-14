@@ -11,6 +11,7 @@ import { createServer as createHttp } from 'http';
 import type { Server as httpsServer } from 'https';
 import { createServer as createHttps } from 'https';
 import { env } from 'process';
+import type internal from 'stream';
 import type TypedEmitter from 'typed-emitter';
 
 const isMessage = (message: unknown): message is Message => {
@@ -34,7 +35,8 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private pingTimeout?: NodeJS.Timeout | undefined;
   private app: Express;
   private credentials: { login: string, password: string };
-
+  #wrapper?: IOWrapper;
+  #sockets: Set<internal.Duplex> = new Set();
   constructor(app: Express) {
     super();
     this.app = app;
@@ -61,12 +63,15 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
     }, 10000);
   }
 
-  private killRunner(expectReturn = false, message?: string) {
-    if(!this.runner) return;
-    if(expectReturn) this.send('shutdown', true, message);
-    if(this.runner.listening) {
-      this.runner.close();
+  private async killRunner(expectReturn = false, message?: string) {
+    if(this.runner && this.runner.listening) {
+      this.#closeRunner();
+      await new Promise(resolve => this.runner?.close(resolve));
+      console.log('[api]', '(\x1b[33mweb-server\x1b[0m)', 'closed');
     }
+    if(this.#wrapper) await this.#wrapper.shutdown();
+
+    if(expectReturn) this.send('shutdown', true, message);
     process.exit(0);
   }
 
@@ -86,25 +91,34 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
     }
   }
 
+  #closeRunner() {
+    if(!this.runner) return;
+    this.#sockets.forEach(s => s.destroy());
+  }
+
   private startRunner(port:number) {
-    if(!this.runner /** should not happen */) return;
+    if(!this.runner) return; // shouldn't happen
     this.runner
-      .once('listening', this.event_start_listening.bind(this))
+      .once('listening', this.#event_start_listening.bind(this))
       .once('error', this.event_start_error.bind(this))
+      .on('connection', socket => {
+        this.#sockets.add(socket);
+        socket.once('close', () => this.#sockets.delete(socket));
+      })
       .listen(port);
   }
 
-  private event_start_listening() {
+  async #event_start_listening() {
     const accessToken = crypto.randomBytes(32).toString('hex');
     const refreshToken = crypto.randomBytes(32).toString('hex');
     if(!this.runner) throw new Error('runner_not_created, unexpected');
-    IOWrapper.getInstance(this.runner, this.credentials, { accessToken, refreshToken });
+    this.#wrapper = await IOWrapper.getInstance(this.runner, this.credentials, { accessToken, refreshToken });
     this.send('start', true, accessToken+'[split]'+refreshToken);
     this.runner.off('error', this.event_start_error.bind(this));
   }
 
   private event_start_error(e:Error) {
-    if(this.runner /** should not happen */) this.runner.off('listening', this.event_start_listening.bind(this));
+    if(this.runner /** should not happen */) this.runner.off('listening', this.#event_start_listening.bind(this));
     this.send('start', false, e.message);
     this.killRunner(true, e.message);
   }
@@ -140,7 +154,7 @@ export class Fork extends (EventEmitter as new () => TypedEmitter<ForkEvents>) {
   private redirect(message: Message | unknown) {
     if(!isMessage(message)) return;
     else if(message.type === 'start') return this.start(message.payload);
-    else if(message.type === 'shutdown') return this.killRunner(true);
+    else if(message.type === 'shutdown') return this.killRunner(true, message.type === 'shutdown' ? (message as ForkResponse).message : undefined);
     else if(message.type === 'ping') return this.restartPingTimeout();
     else this.send('start', false, 'ssl_type_not_provided');
   }

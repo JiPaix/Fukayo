@@ -41,6 +41,7 @@ export default class socket {
     this.removeListeners();
     this.socket.on('token', t => this.settings.accessToken = t);
     this.socket.on('refreshToken', t => this.settings.refreshToken = t);
+    this.socket.emit('getConnectivityStatus');
     return this.socket;
   }
 
@@ -91,7 +92,6 @@ export default class socket {
         auth: authentification,
         reconnection: true,
       });
-
       socket.once('authorized', () => {
         this.socket = socket;
         resolve(this.initSocket());
@@ -105,6 +105,8 @@ export default class socket {
       socket.once('connect_error', (e) => {
         if(e.message === 'xhr poll error') {
           reject(this.unplugSocket(socket, e.message));
+        } else {
+          reject(e.message);
         }
       });
     });

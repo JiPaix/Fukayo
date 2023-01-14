@@ -61,6 +61,7 @@ type Chapter = {
 
 export class Tachidesk extends SelfHosted implements MirrorInterface {
   #sourcelist: null | Source[];
+  #logged = false;
   constructor() {
     super({
       version: 1,
@@ -130,24 +131,55 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     return this.#sourcelist;
   }
 
+  public get loggedIn():boolean {
+    return this.#logged;
+  }
+
+  get enabled():boolean {
+    return this.#logged && super.enabled;
+  }
+
+  async login(socket?: socketInstance) {
+    try {
+      const { login, password } = this.options;
+      const auth = login && password ? { username: login, password: password } : undefined;
+      const data = await this.fetch({ url: this.#path('/settings/about'), auth }, 'json');
+      if(data) {
+        if(socket) socket.emit('loggedIn', this.name, true);
+        this.logger('is logged-in');
+        this.#logged = true;
+        return true;
+      } else {
+        this.logger('not logged in');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = true;
+        return false;
+      }
+    } catch(e) {
+      this.logger('not logged in', e);
+      if(socket) socket.emit('loggedIn', this.name, false);
+      this.#logged = false;
+      return false;
+    }
+  }
+
   async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
+        cancel = true;
+        socket.removeListener('searchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('searchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
+    }
+
     try {
       if (!this.options.host || !this.options.port) throw 'no credentials';
       if (!this.options.host.length) throw 'no credentials';
-      // we will check if user don't need results anymore at different intervals
-      let cancel = false;
-      if (!(socket instanceof Scheduler)) {
-        socket.once('stopSearchInMirrors', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-        socket.once('disconnect', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
       const SourceList = await this.#getSourceList();
 
       const catUrl = this.#path('/category');
@@ -179,7 +211,9 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
           const lang = currentSource.lang;
 
           const covers: string[] = [];
-          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true }); if (img) covers.push(img);
+          const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
+
+          if (img) covers.push(img.src);
 
 
           const chapters = await this.fetch<Chapter[]>({
@@ -214,29 +248,28 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       else socket.emit('searchInMirrors', id, { mirror: this.name, error: 'search_error' });
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async manga(url: string, langs: mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if (!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     const isMangaPage = this.isMangaPage(url);
     if (!isMangaPage) {
       socket.emit('showManga', id, { error: 'manga_error_invalid_link' });
-      return this.stopListening(socket);
+      if(stopListening) return stopListening();
+      return;
     }
 
     try {
@@ -257,7 +290,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       const lang = currentSource.lang;
       const covers: string[] = [];
       const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
-      if (img) covers.push(img);
+      if (img) covers.push(img.src);
       let status:MangaPage['status'];
       switch(manga.status) {
         case 'CANCELLED':
@@ -329,30 +362,29 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       else if (typeof e === 'string') socket.emit('showManga', id, { error: 'manga_error', trace: e });
       else socket.emit('showManga', id, { error: 'manga_error_unknown' });
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(url: string, lang: mirrorsLangsType, socket: socketInstance | Scheduler, id: number, callback?: (nbOfPagesToExpect: number) => void, retryIndex?: number) {
-    // // we will check if user don't need results anymore at different intervals
+    // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if (!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(url);
     if (!isLinkaChapter) {
-      this.stopListening(socket);
-      return socket.emit('showChapter', id, { error: 'chapter_error_invalid_link' });
+      socket.emit('showChapter', id, { error: 'chapter_error_invalid_link' });
+      if(stopListening) return stopListening();
+      return;
     }
 
     if (cancel) return;
@@ -374,7 +406,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
 
         const img = await this.downloadImage(this.#path(url + '/page/' + i), undefined, false, { withCredentials: true });
         if (img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img.src, height:img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         } else {
           socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
         }
@@ -387,13 +419,12 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       else if (typeof e === 'string') return socket.emit('showChapter', id, { error: 'chapter_error', trace: e });
       else socket.emit('showChapter', id, { error: 'chapter_error_unknown' });
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
     socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: 'selfhosted mirror'});
     // self hosted don't need recommendations
-    return this.stopListening(socket);
   }
 
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
@@ -433,23 +464,23 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     }
   }
   async getMangasToImport(id:number, socket:socketInstance, langs: mirrorsLangsType[], inputArray:CategoryManga[]) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
+        cancel = true;
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
+    }
+
     try {
       if (!this.options.host || !this.options.port) throw 'unauthorized';
       if (!this.options.host.length) throw 'unauthorized';
-      // we will check if user don't need results anymore at different intervals
-      let cancel = false;
-      if (!(socket instanceof Scheduler)) {
-        socket.once('stopShowImports', () => {
-          this.logger('fetching imports canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-        socket.once('disconnect', () => {
-          this.logger('fetching imports canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
+
       const SourceList = await this.#getSourceList();
       socket.emit('showImports', id, inputArray.length);
       //splitting the array in to 100 item chunks
@@ -476,7 +507,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
 
           const img = await this.downloadImage(this.#path(manga.thumbnailUrl.replace('/api/v1', '')), undefined, false, { withCredentials: true });
 
-          if (img) covers.push(img);
+          if (img) covers.push(img.src);
 
           if (cancel) return;
           const searchResult = await this.searchResultsBuilder({
@@ -500,13 +531,13 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         if (!cancel) socket.emit('showImports', id,  mangaList);
       }));
     } catch (e) {
-      this.logger('error while recommending mangas', e);
+      this.logger('error while importing mangas', e);
       if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
       else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
       else socket.emit('showImports', id, {error: 'import_error' });
     }
     socket.emit('showImports', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 }
 

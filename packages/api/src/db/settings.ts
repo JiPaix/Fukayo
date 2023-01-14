@@ -26,13 +26,13 @@ const defaultSettings = {
   },
 };
 
-export default class SettingsDB extends Database<typeof defaultSettings> {
-  static #instance:SettingsDB;
+export default class SettingsDatabase extends Database<typeof defaultSettings> {
+  static #instance:SettingsDatabase;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super(resolve(env.USER_DATA, 'settings_db.json'), defaultSettings);
   }
-  static getInstance(): SettingsDB {
+  static getInstance(): SettingsDatabase {
     if (!this.#instance) {
       this.#instance = new this();
     }

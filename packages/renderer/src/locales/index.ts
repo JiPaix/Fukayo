@@ -21,18 +21,16 @@ export function setupI18n(options:I18nOptions<{ message: MessageSchema }, appLan
   return i18n;
 }
 
-export function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, true>, locale:appLangsType) {
+export async function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, string, true>, locale:appLangsType) {
 
-  loadLocale(locale).then(messages => {
-    /** vue-i18n */
-    i18n.global.locale = locale;
-    i18n.global.setLocaleMessage(locale, messages);
+  const messages = await loadLocale(locale);
+  i18n.global.locale = locale;
+  i18n.global.setLocaleMessage(locale, messages);
 
-    importLocale(locale).then(imp => {
-      Quasar.lang.set(imp.quasar);
-      dayjs.locale(imp.dayjs);
-      dayjs.extend(dayjsrelative);
-      dayjs.extend(dayjslocalizedformat);
-    });
-  });
+  const imported = await importLocale(locale);
+  Quasar.lang.set(imported.quasar);
+  dayjs.locale(imported.dayjs);
+  dayjs.extend(dayjsrelative);
+  dayjs.extend(dayjslocalizedformat);
+
 }

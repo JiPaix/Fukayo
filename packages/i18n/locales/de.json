@@ -1,6 +1,6 @@
 {
     "app": {
-        "description": "A simple electron app to read mangas",
+        "description": "Eine einfache electron-App zum Lesen von Mangas",
         "name": "Fukayo",
         "loading": {
             "please_wait": "Please wait…",
@@ -11,32 +11,32 @@
     },
     "electron": {
         "systemtray": {
-            "quit": "Quit",
-            "show": "Show"
+            "quit": "Verlassen",
+            "show": "Anzeigen"
         }
     },
-    "error": "Error",
+    "error": "Fehler",
     "explore": {
         "meta": {
-            "popularity": "Popularity",
-            "quality": "Quality",
-            "speed": "Speed"
+            "popularity": "Beliebtheit",
+            "quality": "Qualität",
+            "speed": "Geschwindigkeit"
         },
-        "placeholder": "Filter sources by name",
-        "tab": "Explore"
+        "placeholder": "Quellen nach Namen filtern",
+        "tab": "Erkunden"
     },
     "import": {
-        "active_sources": "Available sources",
-        "close": "Close",
-        "failed": "Error",
-        "in_library": "Imported",
-        "not_in_library": "Not imported",
-        "sources_config_required": "Sources requiring configuration",
-        "start_import": "Import",
-        "subtitle": "Import titles you've saved to an external source",
-        "tab": "Import",
-        "title": "Import titles",
-        "unauthorized": "Unauthorized: wrong credentials (?)"
+        "active_sources": "Verfügbare Quellen",
+        "close": "schließen",
+        "failed": "Fehler",
+        "in_library": "Importiert",
+        "not_in_library": "Nicht importiert",
+        "sources_config_required": "Quellen, die konfiguriert werden müssen",
+        "start_import": "importieren",
+        "subtitle": "Titel aus externen Quelle importieren",
+        "tab": "Importieren",
+        "title": "Titel importieren",
+        "unauthorized": "Nicht autorisiert: falsche Anmeldeinformationen (?)"
     },
     "languages": {
         "aa": "Afar",
@@ -249,14 +249,14 @@
         "cache_error": "Failed to empty cache",
         "error_chapter": "Update failed",
         "found_chapter": "New chapter",
-        "new_metadata": "Updated metadatas",
+        "new_metadata": "Updated metdatas",
         "read_chapter": "Read markers imported"
     },
     "mangas": {
-        "authors_and_artists": "Authors and artists",
+        "authors_and_artists": "Authors and Artists",
         "categories": "Categories",
         "chapter": "Chapter | Chapters",
-        "chapter_order": "Chapters order",
+        "chapter_order": "Chapter order",
         "close_filter": "Close",
         "date": "Date",
         "displayname": {
@@ -265,7 +265,7 @@
         "edit_categories": "…",
         "errors": {
             "bad_request": "Bad request: {code}",
-            "invalid_auth": "Authentication error",
+            "invalid_auth": "Authentification error",
             "invalid_json": "Couldn't get expected data (timeout or broken source)",
             "invalid_link": "Couldn't validate manga's url: {url}",
             "nodata": "Couldn't load the manga",
@@ -326,7 +326,7 @@
         "copytoclipboard": "Copy image to clipboard",
         "displaymode": {
             "auto": "Auto",
-            "compatibility": "not compatible with webtoon mode",
+            "compatibility": "not compatibile with webtoon mode",
             "stretch-height": "Stretch to screen's height",
             "stretch-width": "Stretch to screen's width"
         },
@@ -406,7 +406,7 @@
         "mirror_is_dead": "This source has been reported as inactive",
         "reader": {
             "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
-            "overlay": "Use navigation overlay",
+            "overlay": "Display navigation overlay when hovering images",
             "preload": "Preload next chapter while reading",
             "title": "Reader"
         },
@@ -462,7 +462,7 @@
             "space": "URL cannot contain spaces"
         },
         "address_hint": "Example: <b>https://mywebsite.com</b>",
-        "badpassword": "Wrong password",
+        "badpassword": "Wrong Password",
         "error": "Error",
         "login": "Login",
         "message": "Before we start a little setup is needed:",

@@ -20,21 +20,22 @@ type Mangas = {
     langs: mirrorsLangsType[],
     lastUpdate: number
     update:boolean
+    broken?: boolean
   }[]
 }
 
-export default class MangasDB extends DatabaseIO<Mangas> {
-  static #instance: MangasDB;
+export default class MangasDatabase extends DatabaseIO<Mangas> {
+  static #instance: MangasDatabase;
   #path: string;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   #filenamify?: typeof import('filenamify').default;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
-    super(resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
+    super('Mangas',resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
     this.#path = resolve(env.USER_DATA, '.mangasdb');
   }
 
-  static async getInstance(): Promise<MangasDB> {
+  static async getInstance(): Promise<MangasDatabase> {
     if (!this.#instance) {
       this.#instance = new this();
       await this.#instance.loadExternalLibraries();
@@ -63,7 +64,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
 
       // If manga exists but lang isn't registered we get the reader's settings from the database
       let alreadyInDB_DATA = undefined;
-      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(resolve(this.#path, `${filename}.json`), {} as MangaInDB).read();
+      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(payload.manga.id, resolve(this.#path, `${filename}.json`), {} as MangaInDB).read();
 
       // We define "meta" for this new entry:
       // and past "meta.options" from either the payload, the database (if any), or use default settings
@@ -76,7 +77,6 @@ export default class MangasDB extends DatabaseIO<Mangas> {
           webtoon: false,
           showPageNumber: true,
           zoomMode: 'auto',
-          zoomValue: 100,
           longStrip: false,
           longStripDirection: 'vertical',
           book: false,
@@ -120,7 +120,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
         await this.write(db);
 
         // update the manga database
-        const mangadb = new DatabaseIO(resolve(this.#path, `${index.file}.json`), manga);
+        const mangadb = new DatabaseIO(index.id, resolve(this.#path, `${index.file}.json`), manga);
         const data = await mangadb.read();
         data.langs = data.langs.filter(l => l !== lang);
         data.chapters = data.chapters.filter(c => c.lang !== lang);
@@ -151,7 +151,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     const mg = db.mangas.find(m => m.id === mangaId && m.langs.includes(lang));
     if(!mg) return;
 
-    const mangadb = new DatabaseIO(resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(mg.id, resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
     data.chapters = data.chapters.map(c => {
       if(chaptersUrls.includes(c.url) && c.lang === lang) {
@@ -178,7 +178,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     if(!mg) return;
 
     // return the manga
-    const mangadb = new DatabaseIO(resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(mg.id, resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
     const covers = this.#getCovers(data.covers);
     return {
@@ -194,7 +194,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
 
   /** @important do not use if you aren't 100% sure the filename points to an existing database */
   async getByFilename(filename:string) {
-    const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(filename, resolve(this.#path, `${filename}.json`), {} as MangaInDB);
     return mangadb.read();
   }
 
@@ -208,14 +208,15 @@ export default class MangasDB extends DatabaseIO<Mangas> {
         cancel = true;
       });
     }
-    const results = [];
+    const results:MangaInDB[] = [];
+    //TODO: Envoyer tout les mangas d'un coup
     for(const manga of db.mangas) {
       if(cancel) break;
       const mg = await this.get({id: manga.id, langs: manga.langs});
-      if(mg && !id && !socket) results.push(mg);
-      if(mg && id && socket) socket.emit('showLibrary', id, mg);
+      if(mg) results.push(mg);
     }
-    if(!id && !socket) return results;
+    if(socket && id) socket.emit('showLibrary', id, results);
+    else return results;
   }
 
   /**
@@ -232,7 +233,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       if(!mirror) throw new Error(`Mirror ${manga.mirror} doesn't exist`);
 
       // create or get file
-      const mangadb = new DatabaseIO(resolve(this.#path, `${filename}.json`), manga);
+      const mangadb = new DatabaseIO(filename, resolve(this.#path, `${filename}.json`), manga);
       const db = await this.read();
       let data = await mangadb.read();
       // get the scheduler instance
@@ -244,8 +245,8 @@ export default class MangasDB extends DatabaseIO<Mangas> {
       // sorting stuff before comparison
       manga.langs = manga.langs.sort();
       data.langs = data.langs.sort();
-      manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '')).sort(); // can include prefix: "http://xx.xx.xx:xx/files/"
-      data.covers = [...data.covers].map(c => c.replace(/^(.*cover_)?/g, '')).sort(); // have prefix: "{number}_cover_"
+      manga.covers = [...manga.covers].map(c => c.replace(/^(.*files\/)?/g, '').replaceAll(/^(.*cover_)?/g, '')).sort(); // can include prefix: "http://xx.xx.xx:xx/files/"
+      data.covers = [...data.covers].map(c => c.replace(/^(.*files\/)?/g, '').replaceAll(/^(.*cover_)?/g, '')).sort(); // have prefix: "{number}_cover_"
       manga.userCategories = manga.userCategories.sort();
       data.userCategories = data.userCategories.sort();
 
@@ -260,6 +261,7 @@ export default class MangasDB extends DatabaseIO<Mangas> {
         if(!isEqual(manga.covers, data.covers)) {
           hasNewStuff = true;
           manga.covers = this.#saveCovers(Array.from(new Set([...manga.covers, ...data.covers])));
+          scheduler.addMangaLog({date: Date.now(), id: manga.id, message: 'log_manga_metadata', data: { tag: 'covers' } });
         } else {
           // repopulating because we stripped covers from their prefix
           manga.covers = manga.covers.map((c, i) => `${i}_cover_${c}`);
@@ -307,18 +309,15 @@ export default class MangasDB extends DatabaseIO<Mangas> {
         const find = db.mangas.find(m => m.id === data.id);
         if(!find) return data; // should not happen
 
-        if(find.lastUpdate !== data.meta.lastUpdate || find.update !== data.meta.update || !isEqual(find.langs, data.langs)) {
+        if(find.lastUpdate !== data.meta.lastUpdate || find.update !== data.meta.update || find.broken !== data.meta.broken || !isEqual(find.langs, data.langs)) {
           find.lastUpdate = data.meta.lastUpdate;
           find.update = data.meta.update;
           find.langs = data.langs;
+          find.broken = data.meta.broken;
           await this.write(db);
-          const indexDB = await MangasDB.getInstance();
+          const indexDB = await MangasDatabase.getInstance();
           const indexes = await indexDB.getIndexes();
-          const index = indexes.find(i => i.id === data.id);
-          if(index) {
-            index.lastUpdate = data.meta.lastUpdate;
-            indexDB.write({ mangas: indexes });
-          }
+          indexDB.write({ mangas: indexes });
         }
       }
       return data;
@@ -357,7 +356,6 @@ export default class MangasDB extends DatabaseIO<Mangas> {
     filenames.forEach(f => {
       const path = resolve(this.#path, f);
       if(existsSync(path)) {
-        this.logger('should serv:', path);
         const serv = FileServer.getInstance('fileserver').serv(readFileSync(path),f);
         res.push(serv);
       }

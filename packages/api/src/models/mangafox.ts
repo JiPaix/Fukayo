@@ -59,18 +59,17 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
   async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopSearchInMirrors', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     const url = `${this.host}/search?page=1&title=${query}`;
     if(cancel) return; //=> 1st cancel check before request
     try {
@@ -95,7 +94,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const coverLink =  $('img.manga-list-4-cover', el).attr('src');
         if(coverLink) {
           const img = await this.downloadImage(coverLink);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
         }
 
 
@@ -139,29 +138,29 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error' });
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async manga(link:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     // safeguard, we return an error if the link is not a manga page
     const isLinkaPage = this.isMangaPage(link);
     if(!isLinkaPage) {
-      this.stopListening(socket);
-      return socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+      socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
+      if(stopListening) return stopListening();
+      return;
     }
 
     if(cancel) return;
@@ -187,7 +186,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       if(coverLink) {
         // mangafox images needs to be downloaded (you can't just link the external url due to cors).
         const img = await this.downloadImage(coverLink);
-        if(img) covers.push(img);
+        if(img) covers.push(img.src);
       }
 
       // authors and tags
@@ -263,24 +262,22 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   // credit mac @ AMR: https://gitlab.com/all-mangas-reader/all-mangas-reader-2/-/commit/316cf5e01c2182f13ea7a374cb05382030644bdf
   async chapter(link:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
 
@@ -288,7 +285,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     const isLinkaChapter = this.isChapterPage(link);
     if(!isLinkaChapter) {
       socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
-      return this.stopListening(socket);
+      if(stopListening) return stopListening();
+      return;
     }
 
     if(cancel) return;
@@ -301,6 +299,8 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
 
       // we gather every parameters needed to build the request to the actual image
       const imagecount = retryIndex || this.getVariableFromScript<number>('imagecount', $.html());
+      if(!imagecount) throw 'cannot find imagecount';
+
       let chapterurl = `${this.host}${link}`;
       if(!chapterurl.endsWith('/')) chapterurl += '/';
       const chapfunurl = chapterurl.substring(0, chapterurl.lastIndexOf('/') + 1) + 'chapterfun.ashx';
@@ -345,14 +345,16 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
           const key = this.getVariableFromScript<string|undefined>('key', sc) || '',
                 pix = this.getVariableFromScript<string>('pix', sc),
                 pvalues = this.getVariableFromScript<string[]>('pvalue', sc), // array of scan urls (contains current one and next one)
-                pvalue = pvalues.map(img => pix + img + '?cid=' + cid + '&key=' + key);
+                pvalue = pvalues?.map(img => pix + img + '?cid=' + cid + '&key=' + key);
 
           // download and pass to client
-          const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
-          const bs64 = await this.downloadImage(imageLink);
-          if(bs64) {
-            socket.emit('showChapter', id, { index: i, src: bs64, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
-            continue;
+          if(pvalue && pvalue.length) {
+            const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
+            const img = await this.downloadImage(imageLink);
+            if(img) {
+              socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
+              continue;
+            }
           }
         }
         if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
@@ -365,24 +367,23 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowRecommend', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowRecommend', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     const url = `${this.host}/ranking/`;
     if(cancel) return; //=> 1st cancel check before request
     try {
@@ -409,7 +410,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         const coverLink =  $('img.manga-list-1-cover', el).attr('src');
         if(coverLink) {
           const img = await this.downloadImage(coverLink);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
         }
 
         const searchResult = await this.searchResultsBuilder({
@@ -431,7 +432,7 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
         else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
     }
     socket.emit('showRecommend', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment

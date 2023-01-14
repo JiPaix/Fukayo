@@ -7,6 +7,8 @@ import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
+import type { BaseClient } from 'openid-client';
+import { generators, Issuer } from 'openid-client';
 
 type MangaAttributes = {
   title: {
@@ -298,11 +300,18 @@ type Routes = {
 }
 
 class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean, excludedGroups:string[], excludedUploaders:string[]}> implements MirrorInterface {
-  sessionToken: string|null = null;
-  authToken: string|null = null;
-  sessionInterval: NodeJS.Timer|null = null;
-  authInterval: NodeJS.Timer|null = null;
   #scanlatorCache:Set<{id:string, name:string}> = new Set();
+  #openID = {
+    auth: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/auth?client_id=thirdparty-oauth-client&redirect_uri=http://localhost&response_type=code',
+    token: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/token',
+    redirect_uri: 'http://localhost',
+    client_id: 'thirdparty-oauth-client',
+  };
+  #tokens = {
+    session: null as string | null | undefined,
+    refresh_token: null as string | null | undefined,
+  };
+
   constructor() {
     super({
       version: 1,
@@ -335,7 +344,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         excludedUploaders: [],
       },
     });
-    this.login();
   }
 
   get #headers() {
@@ -345,8 +353,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36 Edg/104.0.1293.63',
     };
 
-    if(!this.sessionToken) return headers;
-    else return { ...headers, Authorization: `Bearer ${this.sessionToken}` };
+    if(!this.#tokens.session) return headers;
+    else return { ...headers, Authorization: `Bearer ${this.#tokens.session}` };
 
   }
 
@@ -358,110 +366,135 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   public get loggedIn():boolean {
     const { login, password } = this.options;
-    const { authToken, sessionToken } = this;
-    return ![login, password, authToken, sessionToken].some(x => x == null);
+    const { session, refresh_token } = this.#tokens;
+    return ![login, password, session, refresh_token].some(x => x == null);
   }
 
-  async login() {
-    this.#clearIntervals();
+  async #fillLoginForm(url: string, login:string, password: string):Promise<undefined|string> {
+    return await this.puppeteer((async ({ page }):Promise<undefined|string> => {
+      await page.goto(url);
+      await page.waitForSelector('#username');
+      await page.type('#username', login);
+      await page.type('#password', password);
+      page.click('#kc-login');
+
+      const request:undefined|string = await new Promise((resolve) => {
+        const tm = setTimeout(() => resolve(undefined), 15000);
+        let alreadyDone = false;
+
+        const done = (value:undefined|string) => {
+          clearTimeout(tm);
+          if(alreadyDone) return;
+          alreadyDone = true;
+          resolve(value);
+        };
+
+        page.on('request', request => {
+          if (request.isNavigationRequest() && request.redirectChain().length > 0) {
+            const match = /code=(.*)/.exec(request.url());
+            if(match) {
+              done(request.url());
+            }
+            else {
+              done(undefined);
+            }
+            request.continue();
+          }
+        });
+      });
+
+      await page.waitForNetworkIdle({ idleTime: 500 });
+      return request;
+    }));
+  }
+
+  async login(socket?: socketInstance) {
+    const {login, password} = this.options;
+    if(!this.enabled) return this.logger('mirror is disabled');
+
+    if(!login || !password || login.length === 0 || password.length === 0) {
+      if(socket) socket.emit('loggedIn', this.name, false);
+      return this.logger('no credentials');
+    }
+
+    // clear previous instances?
     this.#nullTokens();
-    if(!this.options.login || !this.options.password) return this.logger('no credentials');
-    if(!this.options.enabled) return this.logger('mirror is disabled');
 
-    const username = this.options.login,
-          password = this.options.password;
-
+    const now = Date.now();
     try {
-      const resp = await this.post<
-        Routes['/auth/login']['payload'], Routes['/auth/login']['ok'] | Routes['/auth/login']['err']
-      >(this.#path('/auth/login'), { username, password }, 'post', { headers: this.#headers });
 
-      if(!resp) {
-        this.logger('no response', '/auth/login');
+      const mangaDexIssuer = await Issuer.discover('https://auth.mangadex.dev/realms/mangadex/.well-known/openid-configuration');
+
+      const client = new mangaDexIssuer.Client({
+        client_id: this.#openID.client_id,
+        redirect_uris: [this.#openID.redirect_uri],
+        response_types: ['code'],
+        token_endpoint_auth_method: 'none',
+      });
+      const code_verifier = generators.codeVerifier();
+      const code_challenge = generators.codeChallenge(code_verifier);
+
+      const url = client.authorizationUrl({
+        scope: 'openid email profile',
+        resource: this.#openID.redirect_uri,
+        code_challenge,
+        code_challenge_method: 'S256',
+      });
+
+      const token = await this.#fillLoginForm(url, login, password);
+
+      if(!token) {
+        if(socket) socket.emit('loggedIn', this.name, false);
         return false;
       }
 
-      if(resp.result === 'ok') {
-        this.authToken = resp.token.refresh;
-        this.sessionToken = resp.token.session;
-        this.#loginLoop();
-        this.#refreshLoop();
-        this.logger('logged in!');
-        return true;
-      } else {
-        this.#nullTokens();
-        this.logger(resp.errors);
-        return false;
-      }
+      const params = client.callbackParams(token);
+      const { access_token, expires_at, refresh_token, expires_in } = await client.callback(this.#openID.redirect_uri, params, { code_verifier });
+      if(!access_token || !expires_at || !refresh_token || !expires_in) return false;
+      this.#tokens = {
+        session: access_token,
+        refresh_token: refresh_token,
+      };
+      setTimeout(() => this.#tokenLoop(client), (expires_at*1000) - now);
+      if(socket) socket.emit('loggedIn', this.name, true);
+      this.logger('is logged-in');
+      return true;
     } catch(e) {
       if(e instanceof Error) this.logger('not logged in:', e.message);
       else this.logger('not logged in:', e);
       this.#nullTokens();
+      if(socket) socket.emit('loggedIn', this.name, false);
       return false;
     }
   }
 
-  async #refresh():Promise<boolean> {
-    if(this.authToken) {
-      const resp = await this.post<
-        Routes['/auth/refresh']['payload'], Routes['/auth/refresh']['ok']|Routes['/auth/refresh']['err']
-      >(this.#path('/auth/refresh'), { token: this.authToken }, 'post', { headers: this.#headers } );
 
-      if(!resp) {
-        this.logger('no response', '/auth/refresh');
-        return false;
-      }
-      if(resp.result === 'ok') {
-        this.authToken = resp.token.refresh;
-        this.sessionToken = resp.token.session;
-        return true;
-      } else {
-        this.logger(resp.errors);
-        return false;
-      }
+  async #tokenLoop(client:BaseClient) {
+    if(!this.#tokens.refresh_token) return;
+    const now = Date.now();
+    try {
+      const { access_token, expires_at, refresh_token, expires_in } = await client.refresh(this.#tokens.refresh_token);
+      if(!access_token || !expires_at || !refresh_token || !expires_in) return this.login();
+      this.#tokens = {
+        session: access_token,
+        refresh_token: refresh_token,
+      };
+      setTimeout(() => this.#tokenLoop(client), (expires_at*1000) - now);
+    } catch(e) {
+      this.login();
     }
-    return false;
-  }
-
-  #clearIntervals() {
-    if(this.authInterval) clearInterval(this.authInterval);
-    if(this.authInterval) clearInterval(this.authInterval);
   }
 
   #nullTokens() {
-    this.authToken = null;
-    this.sessionToken = null;
-  }
-
-  #loginLoop() {
-    // 86400 seconds in a day
-    const msInDay = 86400*1000;
-    let dayCount = 0;
-    if(this.authInterval) clearInterval(this.authInterval);
-
-    this.authInterval = setInterval(() => {
-        dayCount++;  // a day has passed
-
-        if (dayCount === 29) {
-          if(this.authInterval) clearInterval(this.authInterval);
-          this.login();
-        }
-    }, msInDay);
-  }
-
-  #refreshLoop() {
-    this.sessionInterval = setInterval(async () => {
-      const res = await this.#refresh();
-      if(!res) {
-        // login will clear all intervals and null tokens
-        this.login();
-      }
-    }, 14 * 60 * 1000); // 14 minutes
+    this.#tokens = {
+      session: null,
+      refresh_token: null,
+    };
   }
 
   async #getReadMarker(mangaId: string):Promise<string[]> {
     if(!this.options.login || !this.options.password) return [];
-    if(!this.authToken || !this.sessionToken) return [];
+    if(!this.#tokens.session) return [];
 
     try {
       const res = await this.fetch<Routes['/manga/{id}/read']['ok']|Routes['/manga/{id}/read']['err']>({
@@ -482,91 +515,40 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
   #path(path:string) {
     if(!path.startsWith('/')) path = '/'+path;
-    return 'https://api.mangadex.org'+path;
-  }
-
-  #season():{ current : { season: string, year: number }, previous: { season: string, year: number} } {
-    // It's plus one because January is index 0
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-    const previousYear = now.getFullYear()-1;
-
-    if (month > 3 && month < 6) {
-      return { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
-    }
-
-    if (month > 6 && month < 9) {
-      return { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
-    }
-
-    if (month > 9 && month < 12) {
-      return { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
-    }
-
-    if (month >= 1 && month < 3) {
-      return { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
-    }
-
-    const day = now.getDate();
-    if (month === 3) {
-      return day < 22 ? { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } } : { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } };
-    }
-
-    if (month === 6) {
-      return day < 22 ? { current: { season: 'spring', year: currentYear }, previous: { season: 'winter', year: previousYear } } : { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } };
-    }
-
-    if (month === 9) {
-      return day < 22 ? { current: { season: 'summer', year: currentYear }, previous: {season: 'spring', year: currentYear } } : { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } };
-    }
-
-    if (month === 12) {
-      return day < 22 ? { current: { season: 'fall', year: currentYear }, previous: {season:'summer', year: currentYear } }: { current: { season: 'winter', year: currentYear }, previous: {season: 'fall', year: currentYear } };
-    }
-    throw new Error('what season are we in?!!');
+    return 'https://api.mangadex.dev'+path;
   }
 
   // until SEASONAL lists are made public we show last released chapters
   async recommend(requestLangs: mirrorsLangsType[], socket: socketInstance, id: number) {
     // TODO: handle empty chapters
+    // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowRecommend', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowRecommend', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     if(cancel) return;
     try {
+      const threeMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 3));
 
-      const list = await this.fetch<Routes['/user/{id}/list']['ok']|Routes['/user/{id}/list']['err']>({
-        url: this.#path('/user/d2ae45e0-b5e2-4e7f-a688-17925c2d7d6b/list?limit=100'),
+      const date = `${threeMonthAgo.getFullYear()}-${threeMonthAgo.getDay().toString().padStart(2, '0')}-${threeMonthAgo.getDay().toString().padStart(2, '0')}`;
+      const time = 'T00:00:00';
+      const datetime = date+time;
+
+      const list = await this.fetch<Routes['/manga']['ok']|Routes['/manga']['err']>({
+        url: this.#path(`manga?limit=16&includes[]=cover_art&includes[]=author&includes[]=artist&order[followedCount]=desc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&hasAvailableChapters=true&createdAtSince=${datetime}`),
         headers: this.#headers,
       }, 'json');
 
       if(list.result !== 'ok') throw new Error(`${list.errors[0].title}: ${list.errors[0].detail}`);
-      const filteredList = list.data.filter(l => l.type === 'custom_list');
-      const seasoned = filteredList.find(f =>
-        (
-        f.attributes.name.toLocaleLowerCase().includes(this.#season().current.season)
-        && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().current.year))
-        )
-        ||
-        (
-          f.attributes.name.toLocaleLowerCase().includes(this.#season().previous.season)
-          && f.attributes.name.toLocaleLowerCase().includes(String(this.#season().previous.year))
-        ));
-      if(!seasoned) throw new Error('couldnt find seasonal!');
-      const unfilteredIds = seasoned.relationships;
-      const ids = unfilteredIds.filter(i => i.type === 'manga').map(r=>r.id);
+      const ids = list.data.filter(i => i.type === 'manga').map(r=>r.id);
       const idsChunk = ids.reduce((resultArray:string[][], item, index) => {
         const chunkIndex = Math.floor(index / 10);
         if (!resultArray[chunkIndex]) {
@@ -594,7 +576,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
           const coverData = d.relationships.find(x => x.type === 'cover_art');
           if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
           if(!coverURL) return this.logger('no coverURL');
-          const cover = await this.downloadImage(`${this.host}/covers/${d.id}/${coverURL}.512.jpg`);
+          const cover = (await this.downloadImage(`${this.host}/covers/${d.id}/${coverURL}.512.jpg`))?.src;
           const langs = d.attributes.availableTranslatedLanguages.filter(Boolean); // sometimes language = null
           const name = d.attributes.title[Object.keys(d.attributes.title)[0]];
 
@@ -616,26 +598,24 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown' });
     }
     if(!cancel) socket.emit('showRecommend', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+    // we will check if user don't need results anymore at different intervals
+    let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
+        cancel = true;
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
+    }
     try {
       // TODO: handle empty chapters
-      let cancel = false;
-      if(!(socket instanceof Scheduler)) {
-        socket.once('stopSearchInMirrors', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-        socket.once('disconnect', () => {
-          this.logger('search canceled');
-          this.stopListening(socket);
-          cancel = true;
-        });
-      }
-
       const url =
         this.#path(`/manga?title=${query}&limit=16&${this.#includeLangs(requestedLangs, 'available')}&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&includes[]=cover_art&order[relevance]=desc`);
       const res = await this.fetch<Routes['/manga/{search}']['ok']|Routes['/manga/{search}']['err']>({url}, 'json');
@@ -649,7 +629,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const coverData = result.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
-        const cover = await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`);
+        const cover = (await this.downloadImage(`${this.host}/covers/${result.id}/${coverURL}.512.jpg`))?.src;
 
         // search for synopsis that matches requestedLangs
         const descriptions = requestedLangs.map(m => result.attributes.description[m]).filter(Boolean);
@@ -686,7 +666,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async #findGroup(ids: string[]):Promise<{
@@ -743,21 +723,19 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     // TODO: handle empty chapters
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     try {
-
+      this.logger('checking', url);
       const manga = await this.fetch<
       Routes['/manga/{id}']['ok']|Routes['/manga/{id}']['err']
       >({
@@ -794,10 +772,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       const coverData = manga.data.relationships.find(x => x.type === 'cover_art');
       if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
       if(!coverURL) return;
-      const cover = await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`);
+      const cover = (await this.downloadImage(`${this.host}/covers/${manga.data.id}/${coverURL}.512.jpg`))?.src;
       const requestLangs = this.#includeLangs(requestedLangs);
-
-      const scanlationGroups:Set<{id:string, name: string}> = new Set();
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for (const [page, _] of Array(20).entries()) {
@@ -810,7 +786,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         // filter Boolean in just in case
         if(this.options.excludedGroups.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
-        if(this.options.excludedUploaders.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedGroups[]=${g}`).join('');
+        if(this.options.excludedUploaders.length) reqURL += this.options.excludedUploaders.filter(Boolean).map(g=> `&excludedUploaders[]=${g}`).join('');
 
         const res = await this.fetch<
           Routes['/manga/{id}/feed']['ok']|Routes['/manga/{id}/feed']['err']
@@ -821,22 +797,18 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
         if(res.result !== 'ok') throw new Error(`${res.errors[0].title}: ${res.errors[0].detail}`);
 
-        // retrieving scanlators names
-        const groups = res.data
-          .map(
-            x=> x.relationships.filter(y=>y.type==='scanlation_group'),
-          )
-          .flat()
-          .map(g => g.id);
-
-        const scanlators = await this.#findGroup(groups);
-        scanlators.forEach(s => scanlationGroups.add(s));
         // retrieving read markers
         const readMarkers = await this.#getReadMarker(url.replace('/manga/', ''));
 
         const chapters:MangaPage['chapters'] = [];
 
         for(const x of res.data.filter(x => (!x.attributes.externalUrl || !x.attributes.chapter) && requestedLangs.includes(x.attributes.translatedLanguage))) {
+          // retrieving scanlators names
+          const groups = x.relationships.filter(y=>y.type==='scanlation_group').map(g => g.id);
+          const scanlators = await this.#findGroup(groups);
+          const scanlationGroups = new Set<string>();
+          scanlators.forEach(s => scanlationGroups.add(s.name));
+
           const built = await this.chaptersBuilder({
             id: x.id,
             url: '/chapter/'+x.id,
@@ -846,7 +818,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
             volume: x.attributes.volume ? parseFloat(x.attributes.volume) : undefined,
             name: x.attributes.title ? x.attributes.title : undefined,
             read: readMarkers.includes(x.id),
-            group: scanlationGroups.size > 0 ? Array.from(scanlationGroups).map(g => g.name).join(', ') : undefined,
+            group: scanlationGroups.size > 0 ? Array.from(scanlationGroups).join(', ') : undefined,
           });
           chapters.push(built);
         }
@@ -880,24 +852,21 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(link: string, lang: mirrorsLangsType, socket: socketInstance, id: number, callback?: ((nbOfPagesToExpect: number) => void) | undefined, retryIndex?: number | undefined) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     if(cancel) return;
@@ -919,7 +888,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(`${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`);
-        if(img) socket.emit('showChapter', id, {index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
+        if(img) socket.emit('showChapter', id, {index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
         else socket.emit('showChapter', id, { error: 'chapter_error_no_image', trace: `cannot open: ${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`, index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
       }
       if(cancel) return;
@@ -930,7 +899,7 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   isChapterPage(url: string): boolean {
@@ -942,8 +911,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async markAsRead(mangaURL: string, lang: mirrorsLangsType, chapterURLs: string[], read: boolean) {
-    if(!this.options.login || !this.options.password || !this.options.markAsRead || chapterURLs.length) return;
-
+    if(!!this.options.markAsRead || chapterURLs.length) return;
+    if(!this.loggedIn && this.options.login && this.options.password) {
+      return setTimeout(async () => {
+        try {
+          await this.login();
+          await this.markAsRead(mangaURL, lang, chapterURLs, read);
+        } catch(e) {
+          return;
+        }
+      }, 60*1000);
+    }
     const mangaIdMatchArray = mangaURL.match(/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/gm);
     if(!mangaIdMatchArray) return this.logger('markAsRead: incorrect manga id');
     const mangaId = mangaIdMatchArray[0];
@@ -1002,20 +980,17 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
   }
 
   async getMangasFromList(id:number, socket:socketInstance, requestedLangs: mirrorsLangsType[],ids:string[]) {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if(socket) {
-      socket.once('stopShowImports', () => {
-        this.logger('fetching imports canceled');
-        this.stopListening(socket);
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching imports canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowImports', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowImports', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     const idChunks = ids.reduce((res: string[][], item: string, index) => {
@@ -1053,18 +1028,18 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         const coverData = manga.relationships.find(x => x.type === 'cover_art');
         if(coverData && coverData.type === 'cover_art') coverURL = coverData.attributes.fileName;
         if(!coverURL) return;
-        const cover = await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`);
+        const cover = (await this.downloadImage(`${this.host}/covers/${manga.id}/${coverURL}.512.jpg`))?.src;
         socket.emit('showImports', id, {name, langs, covers: cover ? [cover]: [], inLibrary: false, url: `/manga/${manga.id}`, mirror: { name: this.name, langs: this.mirrorInfo.langs } });
       }
       if(!cancel) socket.emit('showImports', id, { done: true });
-      if(cancel) return this.stopListening(socket);
     } catch(e) {
-      this.logger('error while fetching manga', e);
+      this.logger('error while importing manga', e);
       // we catch any errors because the client needs to be able to handle them
       if(e instanceof Error) socket.emit('showImports', id, {error: 'import_error', trace: e.message});
       else if(typeof e === 'string') socket.emit('showImports', id, {error: 'import_error', trace: e});
       else socket.emit('showImports', id, {error: 'import_error'});
     }
+    if(stopListening) stopListening();
   }
 }
 

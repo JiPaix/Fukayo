@@ -19,10 +19,6 @@ on:
       - 'package-lock.json'
       - '.github/workflows/tests.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
-
 jobs:
   e2e:
     strategy:
@@ -40,4 +36,4 @@ jobs:
       - name: Run tests
         uses: hankolsen/xvfb-action@dcb076c1c3802845f73bb6fe14a009d8d3377255
         with:
-          run: npm run test:e2e
+          run: npm run test

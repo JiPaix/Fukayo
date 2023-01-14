@@ -3,7 +3,7 @@ import icon from '@assets/icon.svg';
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
 import { certifColor, hostNameHint, isHostNameValid, isLoginValid, isPasswordValid, isPortValid, isProvidedCertificateValid, isProvidedKeyValid, keyColor, passwordHint } from '@renderer/components/helpers/login';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -14,7 +14,10 @@ const $q = useQuasar();
 /** stored settings */
 const settings = useSettingsStore();
 /** emit */
-const emit = defineEmits<{ (event: 'done'): void }>();
+const emit = defineEmits<{
+  (eventName: 'done'): void
+  (eventName: 'loading', value: boolean): void
+}>();
 
 /** toggler to show the password */
 const showPassword = ref(false);
@@ -69,6 +72,7 @@ function readyToStart() {
 async function startServer () {
   // checks
   if(!readyToStart()) return;
+  emit('loading', true);
   starting.value = true;
   // define the payload
   const payload = {
@@ -83,6 +87,7 @@ async function startServer () {
   // start the server
   const response = await window.apiServer.startServer(payload);
   starting.value = false;
+  emit('loading', false);
   // check the response
   if(response.message) {
     if(response.success) {

@@ -18,6 +18,8 @@ export class Database<T extends object> {
   data: databaseGeneric<T>;
   #file:string;
   #writer: Writer;
+  #shutdownPending = false;
+
   constructor(filePath: string, defaultData: T) {
     // Get the directory and filename
     const path = dirname(resolve(filePath));
@@ -37,9 +39,23 @@ export class Database<T extends object> {
     this.#writer = new Writer(this.#file);
   }
 
+  async shutdown():Promise<void> {
+    this.#shutdownPending = true;
+    if(this.#writer.isFree) return this.logger('closed');
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        if(this.#writer.isFree) {
+          clearInterval(interval);
+          this.logger('closed');
+          resolve();
+        }
+      }, 500);
+    });
+  }
+
   async init() {
     await this.write();
-    this.logger('Database loaded', this.#file);
+    this.logger('Database loaded');
     return this;
   }
 
@@ -88,12 +104,14 @@ export class Database<T extends object> {
    * Write the database to disk
    */
   async write() {
+    if(this.#shutdownPending) return;
     return this.#writer.write(JSON.stringify(this.data));
   }
   /**
    * Write (sync) the database to disk
    */
   writeSync() {
+    if(this.#shutdownPending) return;
     return writeFileSync(this.#file, JSON.stringify(this.data));
   }
 }
@@ -104,8 +122,10 @@ export class Database<T extends object> {
 export class DatabaseIO<T extends object> {
   #file:string;
   #writer: Writer;
-  constructor(filePath: string, defaultData: T) {
-
+  #shutdownPending = false;
+  #name: string;
+  constructor(name: string, filePath: string, defaultData: T) {
+    this.#name = name;
     // check if path exists
     const path = dirname(resolve(filePath));
     if (!existsSync(path)) {
@@ -122,11 +142,25 @@ export class DatabaseIO<T extends object> {
     }
     // patch (if needed)
     this.#autopatch(defaultData);
-    this.logger('Database loaded', this.#file);
+    this.logger('Database loaded:', this.#name);
   }
 
   protected logger(...args: unknown[]) {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[31m${this.constructor.name}\x1b[0m)` ,...args);
+  }
+
+  async shutdown():Promise<void> {
+    this.#shutdownPending = true;
+    if(this.#writer.isFree) return this.logger('closed');
+    return new Promise(resolve => {
+      const interval = setInterval(() => {
+        if(this.#writer.isFree) {
+          this.logger('closed');
+          clearInterval(interval);
+          resolve();
+        }
+      }, 500);
+    });
   }
 
   async read():Promise<databaseGeneric<T>> {
@@ -150,11 +184,13 @@ export class DatabaseIO<T extends object> {
   }
 
   async write(data: T) {
+    if(this.#shutdownPending) return;
     if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
     return this.#writer.write(JSON.stringify(data));
   }
 
   #writeSync(data: T) {
+    if(this.#shutdownPending) return;
     if((data as databaseGeneric<T>)._v == undefined) (data as databaseGeneric<T> )._v = packageJson.version;
     return writeFileSync(this.#file, JSON.stringify({ ...data }));
   }

@@ -19,6 +19,10 @@ export class FileServer {
     this.empty();
   }
 
+  protected logger(...args: unknown[]) {
+    if(env.MODE === 'development') console.log('[api]', `(\x1b[34m${this.constructor.name}\x1b[0m)` ,...args);
+  }
+
   static getInstance(folder:string) {
     if (this.#instance) {
         return this.#instance;
@@ -50,6 +54,7 @@ export class FileServer {
         }
       }
     }
+    this.logger(files.length, 'files removed');
   }
 
   #resolveFile(filename: string) {
@@ -100,7 +105,6 @@ export class FileServer {
    * @param filename its filename
    */
   serv (data: Buffer, filename:string, lifetime?: number) {
-
     const exist = this.#resetFile(filename, lifetime||this.#defaultLifeTime);
     if(exist) return `/files/${filename}`;
 
@@ -116,6 +120,7 @@ export class FileServer {
       const find = this.#timeouts.find(({filename: f}) => f === filename);
       if(find) clearTimeout(find.timeout);
       this.#timeouts = this.#timeouts.filter(({filename: f}) => f !== filename);
+      this.logger('file\'s lifetime reached, removing:', filename);
       unlinkSync(this.#resolveFile(filename));
       return true;
     } catch(e) {

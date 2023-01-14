@@ -10,8 +10,8 @@ import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, to
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { useQuasar } from 'quasar';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
+import { QForm, QLinearProgress, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -27,6 +27,24 @@ const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** socket */
 let socket:socketClientInstance|undefined;
 
+
+const progressBarSize = '4px';
+const progressSize = computed(() => loading.value ? parseInt(progressBarSize.replace('px', '')) : 0);
+/** header + sub-header size */
+const headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
+
+const form = ref<InstanceType<typeof QForm>>();
+
+const formSize = ref(0);
+
+function qformResize() {
+  if(!form.value) return;
+  formSize.value = form.value.$el.offsetHeight;
+}
 
 /** template ref for the search input */
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -235,25 +253,24 @@ onBeforeUnmount(async () => {
   <q-layout
     view="lHh lpr lFf"
     container
-    :style="'height: '+($q.screen.height-50)+'px'"
-    class="shadow-2"
+    :style="'height: '+($q.screen.height-headerSize)+'px'"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-footer class="bg-dark">
       <q-linear-progress
         v-if="loading"
-        size="4px"
+        ref="progress"
+        :size="progressBarSize"
         color="orange"
         animation-speed="500"
         indeterminate
       />
     </q-footer>
     <q-page-container>
-      <q-page
-        class="q-pa-md"
-      >
+      <q-page style="overflow:hidden;">
         <q-form
-          class="text-center"
+          ref="form"
+          class="text-center q-pa-lg"
           @submit="research"
         >
           <q-input
@@ -269,8 +286,8 @@ onBeforeUnmount(async () => {
             :color="$q.dark.isActive ? 'white': 'primary'"
             :loading="loading"
             :rules="[
-              val => (val !== null && val !== '') || 'Please type something',
-              val => (val && val.length > 3) || 'Not enought characters',
+              val => (typeof val === 'string' && val.trim().length > 0) || $t('search.no_input'),
+              val => (typeof val === 'string' && val.trim().length >= 3) || $t('search.min_value', { number: 3 }),
             ]"
             lazy-rules
           >
@@ -436,66 +453,74 @@ onBeforeUnmount(async () => {
               </q-list>
             </q-btn-dropdown>
           </q-btn-group>
+          <q-resize-observer @resize="qformResize" />
         </q-form>
-        <div
-          v-if="rawResults.length"
-          class="flex flex-center"
+        <q-scroll-area
+          :style="{height: `${$q.screen.height-headerSize-formSize-progressSize}px`, minHeight: '100px'}"
+          :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
+          :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+          class="q-pa-lg"
         >
-          <group-card
-            v-for="(group, i) in mangaGroups"
-            :key="i"
-            :group="group.manga"
-            :group-name="group.name"
-            :mirror="group.manga.mirrorinfo"
-            :hide-langs="settings.i18n.ignored"
-            :covers="group.covers"
+          <div
+            v-if="rawResults.length"
+            class="flex flex-center"
+          >
+            <group-card
+              v-for="(group, i) in mangaGroups"
+              :key="i"
+              :group="group.manga"
+              :group-name="group.name"
+              :mirror="group.manga.mirrorinfo"
+              :hide-langs="settings.i18n.ignored"
+              :covers="group.covers"
+              class="q-my-lg"
+            />
+          </div>
+          <div
+            v-else-if="error"
             class="q-my-lg"
-          />
-        </div>
-        <div
-          v-else-if="error"
-          class="q-my-lg"
-        >
-          <q-banner
-            inline-actions
-            class="text-dark bg-grey-5"
           >
-            <template #avatar>
-              <q-icon
-                name="signal_wifi_off"
-                color="negative"
-              />
-            </template>
-            <div class="flex">
-              <span class="text-bold">{{ $t('error') }}:</span>
-            </div>
-            <div class="flex">
-              <span class="text-caption">{{ error.trace || error.error }}</span>
-            </div>
-          </q-banner>
-        </div>
-        <div
-          v-else-if="done"
-          class="q-my-lg"
-        >
-          <q-banner
-            inline-actions
-            class="text-dark bg-grey-5"
+            <q-banner
+              inline-actions
+              class="text-dark bg-grey-5"
+            >
+              <template #avatar>
+                <q-icon
+                  name="signal_wifi_off"
+                  color="negative"
+                />
+              </template>
+              <div class="flex">
+                <span class="text-bold">{{ $t('error') }}:</span>
+              </div>
+              <div class="flex">
+                <span class="text-caption">{{ error.trace || error.error }}</span>
+              </div>
+            </q-banner>
+          </div>
+          <div
+            v-else-if="done"
+            class="q-my-lg"
           >
-            <template #avatar>
-              <q-icon
-                name="error"
-                color="primary"
-              />
-            </template>
-            <div class="flex">
-              <span class="text-bold">{{ $t('search.no_result_for') }}</span>
-            </div>
-            <div class="flex">
-              <span class="text-caption">{{ currentQuery }}</span>
-            </div>
-          </q-banner>
-        </div>
+            <q-banner
+              inline-actions
+              class="text-dark bg-grey-5"
+            >
+              <template #avatar>
+                <q-icon
+                  name="error"
+                  color="primary"
+                />
+              </template>
+              <div class="flex">
+                <span class="text-bold">{{ $t('search.no_result_for') }}</span>
+              </div>
+              <div class="flex">
+                <span class="text-caption">{{ currentQuery }}</span>
+              </div>
+            </q-banner>
+          </div>
+        </q-scroll-area>
       </q-page>
     </q-page-container>
   </q-layout>

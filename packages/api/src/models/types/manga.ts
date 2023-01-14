@@ -1,4 +1,5 @@
 import type { mirrorsLangsType } from '@i18n';
+
 export interface MangaPage {
   /**
    * ID of the manga
@@ -105,8 +106,7 @@ export interface MangaInDB extends MangaPage {
     options: {
       webtoon: boolean,
       showPageNumber: boolean,
-      zoomMode: 'auto' | 'fit-width' | 'fit-height',
-      zoomValue: number,
+      zoomMode: 'auto' | 'stretch-width' | 'stretch-height',
       longStrip:boolean,
       overlay: boolean,
       longStripDirection: 'horizontal'|'vertical'

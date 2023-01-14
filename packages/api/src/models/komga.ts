@@ -59,6 +59,7 @@ type book = {
 }
 
 class Komga extends SelfHosted implements MirrorInterface {
+  #logged = false;
   constructor() {
     super({
       version: 1,
@@ -91,11 +92,8 @@ class Komga extends SelfHosted implements MirrorInterface {
     }, true);
   }
 
-  /** needs at least these three options to be enabled */
-  get enabled(): boolean {
-    const { enabled, host, port, password, login} = this.options;
-    if(enabled && host && port && password && login) return true;
-    return false;
+  get enabled():boolean {
+    return this.#logged && super.enabled;
   }
 
   set enabled(val: boolean) {
@@ -120,20 +118,53 @@ class Komga extends SelfHosted implements MirrorInterface {
     return res;
   }
 
+  public get loggedIn():boolean {
+    const { login, password } = this.options;
+    if(!login || !password) return false;
+    return this.#logged;
+  }
+
+  async login(socket?: socketInstance) {
+    try {
+      const { login, password } = this.options;
+      if(!login || !password) {
+        this.logger('no credentials');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = false;
+        return false;
+      }
+      const data = await this.fetch({ url: this.#path('/'), auth: { username: login, password } }, 'json');
+      if(data) {
+        if(socket) socket.emit('loggedIn', this.name, true);
+        this.#logged = true;
+        this.logger('is logged-in');
+        return true;
+      } else {
+        this.logger('not logged in');
+        if(socket) socket.emit('loggedIn', this.name, false);
+        this.#logged = true;
+        return false;
+      }
+    } catch(e) {
+      this.logger('not logged in', e);
+      if(socket) socket.emit('loggedIn', this.name, false);
+      this.#logged = true;
+      return false;
+    }
+  }
+
   async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopSearchInMirrors', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     try {
@@ -164,7 +195,7 @@ class Komga extends SelfHosted implements MirrorInterface {
           const covers: string[] = [];
 
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-          if (img) covers.push(img);
+          if (img) covers.push(img.src);
 
           if (cancel) return;
           const mg = await this.searchResultsBuilder({
@@ -187,29 +218,28 @@ class Komga extends SelfHosted implements MirrorInterface {
       else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error'});
     }
     socket.emit('searchInMirrors', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number)  {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowManga', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     const isMangaPage = this.isMangaPage(url);
     if(!isMangaPage) {
       socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
-      return this.stopListening(socket);
+      if(stopListening) return stopListening();
+      return;
     }
 
     try {
@@ -228,7 +258,7 @@ class Komga extends SelfHosted implements MirrorInterface {
       if(cancel) return;
       const covers:string[] = [];
       const img = await this.downloadImage(this.#path(`/series/${result.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
-      if(img) covers.push(img);
+      if(img) covers.push(img.src);
 
       let status:MangaPage['status'] = 'unknown';
       if(result.metadata.status === 'ABANDONED') status = 'cancelled';
@@ -287,28 +317,29 @@ class Komga extends SelfHosted implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        cancel = true;
-      });
+        socket.removeListener('stopShowChapter', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowChapter', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     // safeguard, we return an error if the link is not a chapter page
     const isLinkaChapter = this.isChapterPage(url);
     if(!isLinkaChapter) {
-      this.stopListening(socket);
-      return socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
+      if(stopListening) return stopListening();
+      return;
     }
 
     if(cancel) return;
@@ -328,7 +359,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
         const img = await this.downloadImage(this.#path(`/books/${res.id}/pages/${i+1}`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
-          if(!cancel) socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         } else {
           if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
         }
@@ -341,13 +372,12 @@ class Komga extends SelfHosted implements MirrorInterface {
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance|Scheduler, id: number) {
     socket.emit('showRecommend', id, { mirror: this.name, error: 'recommend_error', trace: 'selfhosted mirror'});
     // self hosted don't need recommendations
-    return this.stopListening(socket);
   }
 
   async markAsRead(mangaURL:string, lang:mirrorsLangsType, chapterURLs:string[], read:boolean) {
@@ -387,24 +417,21 @@ class Komga extends SelfHosted implements MirrorInterface {
     }
 
     async getMangasToImport(id:number, socket:socketInstance, langs: mirrorsLangsType[], inputArray:searchContent['content']) {
+      // we will check if user don't need results anymore at different intervals
+      let cancel = false;
+      let stopListening: (() => void) | undefined = undefined;
+      if(!(socket instanceof Scheduler)) {
+        stopListening = () => {
+          cancel = true;
+          socket.removeListener('stopShowImports', stopListening as () => void);
+          socket.removeListener('disconnect', stopListening as () => void);
+        };
+        socket.once('stopShowImports', stopListening);
+        socket.once('disconnect', stopListening);
+      }
       try {
         if(!this.options.login || !this.options.password || !this.options.host || !this.options.port) throw 'unauthorized';
         if(!this.options.login.length || !this.options.password.length || !this.options.host.length) throw 'unauthorized';
-
-        // we will check if user don't need results anymore at different intervals
-        let cancel = false;
-        if (!(socket instanceof Scheduler)) {
-          socket.once('stopShowImports', () => {
-            this.logger('fetching imports canceled');
-            this.stopListening(socket);
-            cancel = true;
-          });
-          socket.once('disconnect', () => {
-            this.logger('fetching imports canceled');
-            this.stopListening(socket);
-            cancel = true;
-          });
-        }
 
         for(const manga of inputArray) {
           if(cancel) break;
@@ -412,7 +439,7 @@ class Komga extends SelfHosted implements MirrorInterface {
           const img = await this.downloadImage(this.#path(`/series/${manga.id}/thumbnail`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
           let lang = 'xx' as mirrorsLangsType;
           if(manga.metadata.language && manga.metadata.language.length) lang = BC47_TO_ISO639_1(manga.metadata.language);
-          if(img) covers.push(img);
+          if(img) covers.push(img.src);
           const res:ImportResults = {
             mirror: { name: this.name, langs: this.langs },
             name: manga.metadata.title,
@@ -426,12 +453,12 @@ class Komga extends SelfHosted implements MirrorInterface {
         if(cancel) return;
         socket.emit('showImports', id, { done: true });
       } catch(e) {
-        this.logger('error while recommending mangas', e);
+        this.logger('error while importing mangas', e);
         if (e instanceof Error) socket.emit('showImports', id, { error: 'import_error', trace: e.message });
         else if (typeof e === 'string') socket.emit('showImports', id, { error: 'import_error', trace: e });
         else socket.emit('showImports', id, {error: 'import_error' });
       }
-      return this.stopListening(socket);
+      if(stopListening) stopListening();
     }
   }
 

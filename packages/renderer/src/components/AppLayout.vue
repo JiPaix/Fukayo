@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -60,8 +60,9 @@ function toggleDarkMode() {
   <q-layout view="hHh LpR fFf">
     <q-header
       v-if="route.name !== 'reader'"
-      elevated
+      id="top-header"
       class="bg-grey-10 text-white"
+      bordered
       height-hint="98"
     >
       <q-toolbar>

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { socketClientInstance } from '@api/client/types';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { format, useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
 

@@ -7,9 +7,9 @@ import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';
 import Setup from '@renderer/components/setup/App.vue';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useFavicon } from '@vueuse/core';
-import { useQuasar } from 'quasar';
+import { useQuasar, Loading, QSpinnerRadio } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -31,22 +31,52 @@ const badPassword = ref(false);
 /** are we logged in? */
 const connected = ref(false);
 
+function waitForConnectivity() {
+  Loading.show({
+    spinner: QSpinnerRadio,
+    boxClass: 'fullscreen bg-dark',
+    backgroundColor: 'dark',
+    customClass: 'loader',
+    group: 'connectivity',
+    message: `${$t('app.loading.checking_internet')}<br/><span class="text-amber text-italic">${$t('app.loading.checking_internet_takes_a_while')}</span>`,
+    messageColor: 'orange-2',
+    html: true,
+  });
+}
+
+function waitForStart() {
+  waitForConnectivity();
+  Loading.show({
+    boxClass: 'fullscreen bg-dark',
+    backgroundColor: 'dark',
+    customClass: 'loader',
+    group: 'start',
+    message: `${$t('app.loading.initializing')}<br/><span class="text-amber text-italic">${$t('app.loading.please_wait')}</span>`,
+    messageColor: 'orange-2',
+    html: true,
+  });
+}
+
 /**
  * Connect to the websocket server
  * @param {authByLogin} auth user login and password
  * @param beforeMount weither or not the function was called by vue itself
  */
 async function connect(auth?: LoginAuth, beforeMount?: boolean) {
-  $q.loading.show();
+  Loading.hide('start');
+  waitForConnectivity();
   loading.value = true;
   try {
-    await useSocket(settings.server, auth);
+    const socket = await useSocket(settings.server, auth);
     connected.value = true;
     badPassword.value = false;
     loading.value = false;
-    $q.loading.hide();
+    socket.on('connectivity', (value) => {
+      if(value) Loading.hide();
+      else waitForConnectivity();
+    });
   } catch(e) {
-    $q.loading.hide();
+    Loading.hide();
     loading.value = false;
     if(e === 'badpassword') badPassword.value = true;
     else {
@@ -72,6 +102,7 @@ onBeforeMount(()=> {
     settings.server.hostname = settings.server.ssl === 'false' ? 'http://' : 'https://' + host;
     settings.server.port = parseInt(port);
   }
+  waitForStart();
   connect(undefined, true);
 });
 </script>
@@ -85,6 +116,7 @@ onBeforeMount(()=> {
             <setup
               v-if="isElectron"
               @done="connect"
+              @loading="waitForStart"
             />
             <!-- Login page if client is not electron -->
             <login
@@ -115,6 +147,9 @@ onBeforeMount(()=> {
   }
   .cursor-pointer {
     cursor: pointer;
+  }
+  .loader > .q-loading__box {
+    justify-content: center;
   }
 </style>
 

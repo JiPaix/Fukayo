@@ -14,7 +14,7 @@ export function isMouseEvent(event:KeyboardEvent|MouseEvent):event is MouseEvent
 
 
 export function formatChapterInfoToString(isKomgaTryingItsBest:boolean, $t: Translate['t'], chap?:MangaPage['chapters'][number]|null) {
-  if(!chap) return;
+  if(!chap) return '';
   let str = '';
   if(chap.volume) str += `${$t('mangas.volume')} ${chap.volume}`;
   if((!isKomgaTryingItsBest && chap.volume !== undefined ) || (isKomgaTryingItsBest && chap.number > -1 && typeof chap.volume !== 'undefined')) {

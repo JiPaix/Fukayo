@@ -14,6 +14,7 @@ import type { Server as HttpsServer } from 'https';
 import { env } from 'process';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
+import { Crawler } from '@api/utils/crawler';
 
 /**
  * Initialize a socket.io server
@@ -32,31 +33,27 @@ export default class IOWrapper {
     this.password = CREDENTIALS.password;
     this.io = new ioServer(runner, {cors: { origin: '*'}, maxHttpBufferSize: 1e+9});
     this.db = TokenDatabase.getInstance({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
-    this.use();
-    this.io.on('connection', this.routes.bind(this));
-    // async hell
-    // in memory database need to perform async operation
-    this.db.init().then(() => {
-      this.logger('token database loaded');
-      this.#initMirrors().then(() => {
-        this.logger('mirrors databases loaded');
-        // the Scheduler needs io to broadcast events
-        Scheduler.getInstance().registerIO(this.io).then(() => {
-          this.#isReady = true; // this makes the server available only after the Scheduler is done
-          this.logger('scheduler is ready');
-          // loading mirror import modules
-          import('../models/imports').then(l => {
-            this.#importer = l.default;
-          });
-        });
-      });
-    });
-
   }
 
-  static getInstance(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}): IOWrapper {
+  async #init() {
+    await this.db.init();
+    this.logger('token database loaded');
+    await Crawler.getInstance();
+    this.logger('puppeteer initialized');
+    await Promise.allSettled(mirrors.map(m => m.init()));
+    this.#importer = (await import('../models/imports')).default;
+    this.logger('mirrors databases loaded');
+    await Scheduler.getInstance().registerIO(this.io);
+    this.logger('scheduler is ready');
+    this.use();
+    this.io.on('connection', this.routes.bind(this));
+    this.#isReady = true;
+  }
+
+  static async getInstance(runner: HttpServer | HttpsServer, CREDENTIALS: {login: string, password: string}, tokens: {accessToken: string, refreshToken: string}): Promise<IOWrapper> {
     if (!this.#instance) {
       this.#instance = new this(runner, CREDENTIALS, tokens);
+      await this.#instance.#init();
     }
     return this.#instance;
   }
@@ -65,10 +62,14 @@ export default class IOWrapper {
     if(env.MODE === 'development') console.log('[api]', `(\x1b[33m${this.constructor.name}\x1b[0m)` ,...args);
   }
 
-  async #initMirrors() {
-    for(const mirror of mirrors) {
-        await mirror.init();
-    }
+  #initMirrors() {
+    return Promise.allSettled(mirrors.map(m => m.init()));
+  }
+
+  async shutdown() {
+    const dbs = [this.db, await MangasDB.getInstance(), SettingsDB.getInstance(), UUID.getInstance()];
+    await Promise.all(dbs.map(m => m.shutdown()));
+    await Promise.all(mirrors.map(m => m.shutdown()));
   }
 
   authorize(o: {socket: socketInstance, next: (err?:ExtendedError | undefined) => void, emit?: {event: 'token'|'refreshToken', payload:string}[]}) {
@@ -159,6 +160,12 @@ export default class IOWrapper {
   routes(socket:socketInstance) {
     /** Default Events */
     socket.on('disconnect', () => socket.removeAllListeners());
+
+    socket.emit('connectivity', Scheduler.getInstance().connectivity);
+
+    socket.on('getConnectivityStatus', () => {
+      socket.emit('connectivity', Scheduler.getInstance().connectivity);
+    });
 
     /** returns all mirror's mirrorInfo */
     socket.on('getMirrors', (showdisabled, callback) => {
@@ -293,7 +300,7 @@ export default class IOWrapper {
      * callback returns all mirrors' mirrorInfo
      */
     socket.on('changeMirrorSettings', (mirror, opts, callback) => {
-      mirrors.find(m=>m.name === mirror)?.changeSettings(opts);
+      mirrors.find(m=>m.name === mirror)?.changeSettings(opts, socket);
       callback(mirrors.map(m => m.mirrorInfo));
     });
 
@@ -338,27 +345,9 @@ export default class IOWrapper {
       cb(SettingsDB.getInstance().data);
     });
 
-    socket.on('changeSettings', (settings, cb) => {
-      // watch if we need to restart cache/update timers
-      let restartCache = false;
-      let restartUpdates = false;
-      // if waitBetweenUpdates is changed, we need to restart the update timer
-      if(settings.library.waitBetweenUpdates !== SettingsDB.getInstance().data.library.waitBetweenUpdates) {
-        restartUpdates = true;
-      }
-      // if any of this cache settings is changed, we need to restart the cache timer
-      if(settings.cache.age.enabled !== SettingsDB.getInstance().data.cache.age.enabled
-        || settings.cache.size.enabled == SettingsDB.getInstance().data.cache.size.enabled
-        || settings.cache.age.max !== SettingsDB.getInstance().data.cache.age.max
-        || settings.cache.size.max !== SettingsDB.getInstance().data.cache.size.max)
-      {
-        restartCache = true;
-      }
-      // we need to write the new settings to the database before restarting the cache/update timers
+    socket.on('changeSettings', async (settings, cb) => {
       SettingsDB.getInstance().data = settings;
-      SettingsDB.getInstance().write();
-      if(restartUpdates) Scheduler.getInstance().restartUpdate();
-      if(restartCache) Scheduler.getInstance().restartCache();
+      await SettingsDB.getInstance().write();
       cb(SettingsDB.getInstance().data);
     });
 

@@ -11,7 +11,7 @@ import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import type { MangaInDBwithLabel } from '@renderer/components/library/@types';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -208,7 +208,8 @@ onBeforeMount(async() => {
   >
     <q-layout view="lHh lpR lFf">
       <q-header
-        elevated
+        id="sub-header"
+        bordered
         class="bg-dark"
       >
         <q-toolbar>

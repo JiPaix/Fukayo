@@ -9,12 +9,16 @@ export type TaskDone = {
 export type mirrorInfo = {
   /** mirror's implementation version `Integer`*/
   version: number,
+  /** is online? */
+  isOnline: boolean,
   /** isdead */
   isDead: boolean,
   /** Mirror's slug */
   name:string,
   /** Mirror's full name */
   displayName: string,
+  /** is mirror logged in? */
+  loggedIn?: boolean,
   /**
    * hostname without ending slash
    * @example 'https://www.mirror.com'

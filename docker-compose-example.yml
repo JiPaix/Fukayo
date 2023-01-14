@@ -1,0 +1,17 @@
+---
+version: "3.8"
+services:
+  fukayo:
+    image: jipaix/fukayo:beta
+    container_name: fukayo
+    ports:
+      - <host_port>:4444
+    user: "1000:1000"
+    volumes:
+      - type: bind
+        source: <config_dir>
+        target: /home/fukayo/.config/fukayo
+    environment:
+      - FUKAYO_USERNAME=<username>
+      - FUKAYO_PASSWORD=<password>
+    restart: unless-stopped

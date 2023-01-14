@@ -14,6 +14,11 @@ export type readerRoute = {
   chapterId: string,
 }
 
+export type settingsRoute = {
+  tab: 'general' | 'sources' | 'languages' | 'files'
+}
+
+export function routeTypeHelper(routeName: 'settings', params: settingsRoute): {name: 'reader', params: settingsRoute }
 export function routeTypeHelper(routeName: 'reader', params: readerRoute): {name: 'reader', params: readerRoute }
 export function routeTypeHelper(routeName: 'manga', params: mangaRoute): {name: 'manga', params: mangaRoute }
 export function routeTypeHelper(routeName: string, params: RouteParamsRaw) {

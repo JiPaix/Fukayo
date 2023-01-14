@@ -2,9 +2,10 @@
 import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { computed } from 'vue';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { QSelect } from 'quasar';
 
 const props = defineProps<{
   stepper?: boolean;
@@ -19,15 +20,61 @@ const settings = useSettingsStore();
 /** i18n */
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-const models = computed(() => {
-  return mirrorsLang.filter(l => l !== 'xx').sort((a,b) => {
-    return $t('languages.'+a).localeCompare($t('languages.'+b));
-  });
+
+const model = computed(() => {
+  return mirrorsLang.filter(l => !settings.i18n.ignored.includes(l)).filter(l => l !== 'xx')
+    .map(l => {
+      return {
+        value: l,
+        label: $t('languages.'+l),
+      };
+    });
 });
 
-function updateval(lang:mirrorsLangsType, val:boolean) {
-  if(val) settings.i18n.ignored = settings.i18n.ignored.filter(l => l !== lang);
-  else settings.i18n.ignored.push(lang);
+
+const optionsRAW = mirrorsLang.filter(l => l !== 'xx')
+  .map(l => {
+    return {
+      value: l,
+      label: $t('languages.'+l),
+    };
+  })
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const options = ref(optionsRAW);
+function filterFn (val:string, update:(callbackFn:() => void)=>void) {
+  if (val === '') {
+    update(() => {
+      options.value = optionsRAW;
+    });
+    return;
+  }
+
+  update(() => {
+    const needle = val.toLowerCase();
+    options.value = optionsRAW.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  });
+}
+
+const qselect = ref<null|InstanceType<typeof QSelect>>(null);
+
+function resetFilter() {
+  if(!qselect.value) return;
+  qselect.value.updateInputValue('');
+}
+
+function updateval(val: { value: mirrorsLangsType, label: string }[]) {
+  if(!val || !val.length) return clear();
+  const values = val.map(x=>x.value);
+  settings.i18n.ignored = mirrorsLang.filter(l => !values.includes(l));
+}
+
+function remove(val:mirrorsLangsType) {
+  settings.i18n.ignored.push(val);
+}
+
+function clear() {
+  settings.i18n.ignored = mirrorsLang.filter(l => l !== 'xx');
 }
 
 function selectAll() {
@@ -51,7 +98,7 @@ function unselectAll() {
       class="row items-center"
     >
       <q-banner
-        class="q-mx-auto"
+        class="q-mx-auto w-100"
         :class="$q.dark.isActive ? 'bg-grey-9 text-white': 'bg-grey-3 text-black'"
       >
         <template #avatar>
@@ -80,9 +127,44 @@ function unselectAll() {
             @click="emits('continue')"
           />
         </template>
+        <q-select
+          ref="qselect"
+          v-model:model-value="model"
+          color="orange"
+          :options="options"
+          :options-dense="$q.screen.gt.md"
+          :label="$t('languages').toLocaleUpperCase()"
+          behavior="dialog"
+          use-input
+          use-chips
+          multiple
+          hide-bottom-space
+          item-aligned
+          clearable
+          autocomplete="label"
+          input-debounce="0"
+          @filter="filterFn"
+          @update:model-value="updateval"
+          @add="resetFilter"
+          @clear="clear"
+        >
+          <template #selected-item="scope">
+            <q-chip
+              :color="scope.index % 2 === 0 ? 'orange' : 'orange-3'"
+              text-color="black"
+              dense
+              square
+              removable
+              @remove="remove(scope.opt.value)"
+            >
+              <span class="text-weight-bold">{{ scope.opt.label }}</span>
+            </q-chip>
+          </template>
+        </q-select>
       </q-banner>
     </q-card-section>
-    <q-card-section class="row">
+    <q-card-section />
+    <!-- <q-card-section class="row">
       <div
         v-for="(lang ,i) in models"
         :key="i"
@@ -96,6 +178,6 @@ function unselectAll() {
           @update:model-value="(val:boolean) => updateval(lang, val)"
         />
       </div>
-    </q-card-section>
+    </q-card-section> -->
   </q-card>
 </template>

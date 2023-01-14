@@ -16,19 +16,25 @@ import { join, resolve } from 'path';
 import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
+import { Socket } from 'net';
 
 export default class Scheduler extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
   static #instance: Scheduler;
+
   #intervals: {
     updates: NodeJS.Timer;
     nextupdate: number;
     cache: NodeJS.Timer;
     nextcache: number;
+    connectivity: NodeJS.Timer
   };
+
   #ongoing = {
     updates: false,
     cache: false,
   };
+
+  connectivity = false;
 
   mangaLogs:(LogChapterError|LogChapterNew|LogChapterRead|LogMangaNewMetadata)[] = [];
   cacheLogs: { date: number, message: 'cache'|'cache_error', files:number, size:number }[] = [];
@@ -36,16 +42,15 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   constructor() {
     super();
 
-    this.setMaxListeners(0);
-
     // we are just asking this.#update() to check every 60s if updates are needed
     // then according to "this.settings.waitBetweenUpdates" the acutal update will be processed (or not)
 
     this.#intervals = {
       nextcache: Date.now() + 60000,
-      cache: setTimeout(this.#clearcache.bind(this), 60000),
+      cache: setInterval(this.#clearcache.bind(this), 60000),
       nextupdate: Date.now() + 60000,
-      updates: setTimeout(this.update.bind(this), 60000),
+      updates: setInterval(this.update.bind(this), 60000),
+      connectivity: setInterval(this.#checkOnline.bind(this), 60000),
     };
   }
 
@@ -76,11 +81,52 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     return this.#ongoing.updates;
   }
 
+  async #checkOnline(attempt = 1) {
+    const connected = await this.#connect();
+
+    if(connected) {
+      this.io?.emit('connectivity', true);
+      this.connectivity = true;
+      if(attempt > 1) {
+        clearInterval(this.#intervals.connectivity);
+        this.#intervals.connectivity = setInterval(this.#checkOnline.bind(this), 60000);
+      }
+      return;
+    }
+
+    attempt++;
+    this.io?.emit('connectivity', false);
+    this.connectivity = false;
+    clearInterval(this.#intervals.connectivity);
+    this.#intervals.connectivity = setInterval(this.#checkOnline.bind(this), attempt*5000);
+
+  }
+
+  #connect() {
+    const socket = new Socket();
+    socket.setTimeout(2500);
+    return new Promise(ok => {
+      const resolve = (bool:boolean) => {
+        socket.removeAllListeners();
+        socket.destroy();
+        this.logger('is', bool ? 'online' : 'offline');
+
+        ok(bool);
+      };
+      socket
+        .on('connect', () => resolve(true))
+        .on('error', ()=> resolve(false))
+        .on('timeout', () => resolve(false))
+        .connect(443, '1.1.1.1');
+    });
+  }
+
   async registerIO(io:ioServer) {
     this.logger('Scheduler loaded');
     this.io = io;
     try {
       this.#clearcache();
+      await this.#checkOnline();
       await this.update(false, true);
     } catch(e) {
       this.logger('catch!', e);
@@ -110,40 +156,38 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   }
 
   #clearcache() {
-    if(this.cacheEnabled) {
-      const { age, size } = this.cache;
-      let cacheFiles = Scheduler.getAllCacheFiles();
-      const total = { files: 0, size:0 };
-      if(age.enabled) {
-        // delete files older than max, and remove them from the array
-        cacheFiles = cacheFiles.filter(file => {
-          if(file.age > age.max) {
-            total.files++;
-            total.size += file.size;
-            Scheduler.unlinkSyncNoFail(file.filename);
-            return true;
-          }
-          return false;
+    if(!this.cacheEnabled) return;
+    const { age, size } = this.cache;
+    let cacheFiles = Scheduler.getAllCacheFiles();
+    const total = { files: 0, size:0 };
+    if(age.enabled) {
+      // delete files older than max, and remove them from the array
+      cacheFiles = cacheFiles.filter(file => {
+        if(file.age > age.max) {
+          total.files++;
+          total.size += file.size;
+          Scheduler.unlinkSyncNoFail(file.filename);
+          return true;
+        }
+        return false;
+      });
+    }
+    if(size.enabled) {
+      const totalsize = cacheFiles.reduce((acc, file) => acc + file.size, 0);
+      if (totalsize > size.max) {
+        // delete files until the size is under the max starting from the oldest
+        cacheFiles.sort((a, b) => a.age - b.age);
+        cacheFiles.forEach(file => {
+          total.files++;
+          total.size += file.size;
+          Scheduler.unlinkSyncNoFail(file.filename);
+          if(total.size < size.max) return false;
         });
       }
-      if(size.enabled) {
-        const totalsize = cacheFiles.reduce((acc, file) => acc + file.size, 0);
-        if (totalsize > size.max) {
-          // delete files until the size is under the max starting from the oldest
-          cacheFiles.sort((a, b) => a.age - b.age);
-          cacheFiles.forEach(file => {
-            total.files++;
-            total.size += file.size;
-            Scheduler.unlinkSyncNoFail(file.filename);
-            if(total.size < size.max) return false;
-          });
-        }
-      }
-      if(total.files > 0 && total.size > 0) {
-        this.addCacheLog('cache', total.files, total.size);
-        this.logger('done purging cache');
-      }
-      this.restartCache();
+    }
+    if(total.files > 0 && total.size > 0) {
+      this.addCacheLog('cache', total.files, total.size);
+      this.logger('done purging cache');
     }
   }
 
@@ -209,31 +253,42 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(this.#ongoing.updates) return;
     // emit to all the clients that we are updating
     this.#ongoing.updates = true;
-    if(this.io) this.io.emit('startMangasUpdate');
-    // get the list of mangas
-    const {updates, fixes} = await this.#getMangasToUpdate(force);
+    // try again later if we aren't connected
+    if(!this.connectivity) return;
 
+    if(this.io) this.io.emit('startMangasUpdate');
+
+    // keep track of updates
+    let updated = 0;
+
+    // get the list of mangas
+    const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
     if(nbMangas > 0) this.logger('updating...');
+
     // fixes mangas
     for(const mirrorName of Object.keys(fixes)) {
       const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
-      if(mirror) await this.#fixMangas(mirror, fixes[mirrorName]);
+      if(mirror) updated += await this.#fixMangas(mirror, fixes[mirrorName]);
+    }
+
+    // selfhosted offline && broken entries are skipped
+    const db = await MangasDB.getInstance();
+    for(const manga of offlines) {
+      await db.add({manga}, true);
     }
 
     if(!onlyfixes) {
       // update mangas
       for(const mirrorName of Object.keys(updates)) {
         const mirror = mirrors.find(m => m.name === mirrorName && m.enabled);
-        if(mirror) await this.#updateMangas(mirror, updates[mirrorName]);
+        if(mirror) updated += await this.#updateMangas(mirror, updates[mirrorName]);
       }
     }
     // emit to all the clients that we are done updating
     this.#ongoing.updates = false;
-    if(this.io) this.io.emit('finishedMangasUpdate');
+    if(this.io) this.io.emit('finishedMangasUpdate', updated);
     if(nbMangas > 0) this.logger('update finished');
-    // restart update intervals/timeouts
-    this.restartUpdate();
   }
 
   /**
@@ -241,7 +296,26 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @param force if true, will force the update of all the mangas
    */
   async #getMangasToUpdate(force?:boolean) {
-    const indexes = await (await MangasDB.getInstance()).getIndexes();
+    let indexes = await (await MangasDB.getInstance()).getIndexes();
+
+    // these will be skipped and their lastupdate renewed
+    const indexesOffline = indexes.filter(i => {
+      const find = mirrors.find(m => m.name === i.mirror.name);
+      if(!find) return false;
+      if( (find.selfhosted && !find.isOnline) || i.broken) {
+        indexes = indexes.filter(main => i.id !== main.id);
+        if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now() || force) return true;
+        else return false;
+      }
+      return false;
+    });
+
+    const mangaOfflines:MangaInDB[] = [];
+
+    for(const index of indexesOffline) {
+      const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
+      mangaOfflines.push(manga);
+    }
 
     const indexesToUpdate = indexes.filter(i => {
         // do not update manga's for disabled mirrors or entry version doesn't match mirror version
@@ -251,8 +325,14 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         // do not update manga's explicitly marked as "do not update";
         if(!i.update) return false;
         // update if force is true or enough time has passed
-        if(force) return true;
-        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) return true;
+        if(force && find && find.enabled) {
+          indexes = indexes.filter(main => main.id !== i.id);
+          return true;
+        }
+        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) {
+          indexes = indexes.filter(main => main.id !== i.id);
+          return true;
+        }
         else return false;
     });
 
@@ -260,7 +340,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const index of indexesToUpdate) {
       const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
-      if(manga.meta.broken) continue; // to not update broken entries.
       mangasToUpdate.push(manga);
     }
     // mangas to update by mirror
@@ -276,7 +355,10 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
      */
     const indexesToFix = indexes.filter(manga => {
       const find = mirrors.find(m => m.name === manga.mirror.name);
-      if(find && (find.version !== manga.mirror.version || find.isDead)) return true;
+      if(find && (find.version !== manga.mirror.version || find.isDead)) {
+        indexes = indexes.filter(main => main.id !== manga.id);
+        return true;
+      }
       else return false;
     });
 
@@ -285,7 +367,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     for(const fix of indexesToFix) {
       const manga = await (await MangasDB.getInstance()).getByFilename(fix.file);
-      if(manga.meta.broken) continue; // do not try to fix already-broken entries
       mangasToFix.push(manga);
     }
     // mangas to fix by mirror
@@ -294,41 +375,50 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(!mangasToFixByMirror[manga.mirror.name]) mangasToFixByMirror[manga.mirror.name] = [];
       mangasToFixByMirror[manga.mirror.name].push(manga);
     });
-
-    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror };
+    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflines };
   }
 
   /**
    * Fetch the data, check if there's any difference and update accordingly
    */
-  async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
+  async #updateMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]):Promise<number> {
     const db = await MangasDB.getInstance();
     const indexes = await db.getIndexes();
     const broken:{manga: MangaInDB, mirror: Mirror & MirrorInterface}[] = [];
 
+    // keep track of nb updated mangas
+    let updated = 0;
+
     for(const manga of mangas) {
       const index = indexes.find(i => i.id === manga.id);
+      // The manga should be always be part of the indexes since this is where we got it from
+      // This case only happens if end-user messes with config files
       if(!index) {
         await db.add({ manga });
+        updated++;
         continue;
       }
       this.logger('updating', manga.name, '@', manga.mirror.name, new Date(manga.meta.lastUpdate).toString());
       try {
         const fetched = await this.#fetch(mirror, manga);
         await db.add({ manga: {...fetched, meta: { ...manga.meta, broken: false } }, settings: manga.meta.options }, true);
+        updated++;
       } catch(e) {
+        // we will handle failed updates later..
         broken.push({ manga, mirror });
       }
     }
 
+    // grouping failed updates by mirrors
     const group = broken.reduce((acc, value) => {
       (acc[value.mirror.name] ||= []).push(value);
       return acc;
     }, {} as { [key: string]: typeof broken });
 
     for(const broke in group) {
-      await this.#fixMangas(group[broke][0].mirror, group[broke].map(x => x.manga));
+      updated += await this.#fixMangas(group[broke][0].mirror, group[broke].map(x => x.manga));
     }
+    return updated;
   }
 
   /**
@@ -339,14 +429,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @important Broken mangas require user to migrate to manually migrate to another mirror
    * @important migrated mangas may have new ids
    */
-  async #fixMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]) {
+  async #fixMangas(mirror:Mirror & MirrorInterface, mangas: MangaInDB[]):Promise<number> {
+    let fixed = 0;
     // if mirror is dead
     if(mirror.isDead) {
       for(const manga of mangas) {
         await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: mirror dead');
+        fixed++;
       }
-      return;
+      return fixed;
     }
     // if mirror version != mangas version
     for(const manga of mangas) {
@@ -357,6 +449,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
         if(!remoteManga) {
           await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
           this.logger('marked entry', manga.name, 'as broken: could not migrate');
+          fixed++;
         }
         // else copy as much data as possible
         else {
@@ -375,13 +468,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
           // add new version
           await (await MangasDB.getInstance()).add({ manga: { ...remoteManga, meta: {...meta, broken: false }, userCategories } });
           this.logger('migrated:', manga.name, 'version:', remoteManga.mirror.version);
+          fixed++;
         }
       } catch(e) {
         await (await MangasDB.getInstance()).add({ manga: { ...manga, meta: { ...manga.meta, broken: true } }, settings: { ...manga.meta.options } });
         this.logger('marked entry', manga.name, 'as broken: could not migrate');
         this.logger(e);
+        fixed++;
       }
     }
+    return fixed;
   }
 
   /**
@@ -428,7 +524,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   }
 
   /**
-   * Fetch data directly from the mirror
+   * This function basically calls `mirror.manga()`
    */
   async #fetch(mirror:Mirror & MirrorInterface, manga: MangaInDB|SearchResult):Promise<MangaPage> {
     return new Promise((resolve, reject) => {

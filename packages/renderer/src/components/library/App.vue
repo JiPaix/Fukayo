@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
+import type { MangaInDB } from '@api/models/types/manga';
 import { mirrorInfo } from '@api/models/types/shared';
 import type { mirrorsLangsType } from '@i18n/availableLangs';
 import { useSocket } from '@renderer/components/helpers/socket';
@@ -9,23 +9,23 @@ import GroupCard from '@renderer/components/library/GroupCard.vue';
 import GroupFilter from '@renderer/components/library/GroupFilter.vue';
 import MigrateManga from '@renderer/components/library/migrate/App.vue';
 import { chapterLabel } from '@renderer/components/reader/helpers';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
-import { useQuasar } from 'quasar';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import langOptions from '@renderer/components/settings/languageList.vue';
 import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
+import { useQuasar } from 'quasar';
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 /** quasar */
 const $q = useQuasar();
 /** router */
 const router = useRouter();
-/** web socket */
-let socket: socketClientInstance | undefined;
 /** settings */
 const settings = useSettingsStore();
 /** first start stepper */
 const step = ref(settings.library.firstTimer);
+/** are we fetching the api? */
+const fetching = ref(true);
 /** mangas in db */
 const mangasRAW = ref<MangaGroup[]>([]);
 /** mangas in db from dead mirrors */
@@ -44,6 +44,7 @@ const filters = ref<{
   langs: [],
   userCategories: [],
 });
+
 // sort groups with most unread first
 function sortByMostUnread(group: MangaGroup[]) {
   return group.sort((a, b) => {
@@ -150,76 +151,108 @@ const userCategories = computed(() => {
   return Array.from(set);
 });
 
-onMounted(async () => {
-  if (!socket) socket = await useSocket(settings.server);
+async function getMirrors() {
+  const socket = await useSocket(settings.server);
+  socket.emit('getMirrors', true, (m) => mirrors.value = m);
+}
+
+async function fetchLibrary() {
+  const socket = await useSocket(settings.server);
   const id = Date.now();
-  socket.emit('getMirrors', false, async (m) => {
-    mirrors.value = m;
-    if (!socket) socket = await useSocket(settings.server);
-
-    socket.on('showLibrary', (resid, manga) => {
-      if(resid === id) {
-        const mirrorInfo = m.find(mirror => mirror.name === manga.mirror.name);
-        if(mirrorInfo) {
-          manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
-          manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
-          const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);
-          let chapterIndex = manga.chapters.findIndex(chapter => chapter.number === maxChapter);
-          if(chapterIndex === -1) chapterIndex = manga.chapters.length-1;
-          const group = mangasRAW.value.find(group => group.name === manga.displayName || group.name === manga.name);
-          const mg:MangaInDBwithLabel = {
-            id: manga.id,
-            name: manga.name,
-            displayName: manga.displayName,
-            synopsis: manga.synopsis,
-            tags: manga.tags,
-            authors: manga.authors,
-            mirror: mirrorInfo.name,
-            dead: mirrorInfo.isDead,
-            broken: manga.meta.broken,
-            url: manga.url,
-            meta: manga.meta,
-            status: manga.status,
-            userCategories: manga.userCategories,
-            unread: manga.chapters.filter(c => !c.read).length,
-            chapters: manga.chapters.map((c, i) => {
-              return {
-                ...c,
-                label: chapterLabel(c.number, c.name),
-                value: i,
-              };
-            }),
-            langs: manga.langs,
-          };
-          if(mg.dead || mg.broken) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
-          else if(!group) {
-            mangasRAW.value.push({
-              name: manga.displayName || manga.name,
-              mangas: [mg as MangaInDBwithLabel],
-              covers: manga.covers,
-              unread: manga.chapters.filter(c => !c.read).length,
-            });
-          } else {
-            group.mangas.push(mg as MangaInDBwithLabel);
-            group.covers = [...new Set([...group.covers, ...manga.covers])];
-            group.unread += manga.chapters.filter(c => !c.read).length;
-          }
-        }
-      }
-    });
-    socket.emit('showLibrary', id);
+  socket.once('showLibrary', (resid, mangas) => {
+    if(resid !== id) return;
+    else {
+      socket.off('showLibrary');
+      parseLibrary(mangas);
+    }
   });
-});
+  socket.emit('showLibrary', id);
+}
 
-onBeforeUnmount(() => {
-  socket?.off('showLibrary');
-  socket?.emit('stopShowLibrary');
-});
+function parseLibrary(mangas:MangaInDB[]) {
+  fetching.value = false;
+  mangasRAW.value = [];
+  mangas.forEach(manga => {
+    const mirrorInfo = mirrors.value.find(mirror => mirror.name === manga.mirror.name);
+    if(!mirrorInfo) return;
+    manga.covers = manga.covers.map(c => transformIMGurl(c, settings));
+    manga.chapters = manga.chapters.sort((a, b) => b.number - a.number);
+    const maxChapter = manga.chapters.reduce((max, chapter) => chapter.read ? Math.max(max, chapter.number) : max, 0);
+    let chapterIndex = manga.chapters.findIndex(chapter => chapter.number === maxChapter);
+    if(chapterIndex === -1) chapterIndex = manga.chapters.length-1;
+    const group = mangasRAW.value.find(group => group.name === manga.displayName || group.name === manga.name);
+    const mg:MangaInDBwithLabel = {
+      id: manga.id,
+      name: manga.name,
+      displayName: manga.displayName,
+      synopsis: manga.synopsis,
+      tags: manga.tags,
+      authors: manga.authors,
+      mirror: mirrorInfo.name,
+      dead: mirrorInfo.isDead,
+      broken: manga.meta.broken,
+      url: manga.url,
+      meta: manga.meta,
+      status: manga.status,
+      userCategories: manga.userCategories,
+      unread: manga.chapters.filter(c => !c.read).length,
+      chapters: manga.chapters.map((c, i) => {
+        return {
+          ...c,
+          label: chapterLabel(c.number, c.name),
+          value: i,
+        };
+      }),
+      langs: manga.langs,
+    };
+    if(mg.dead || mg.broken) deadMangas.value.push({ ...mg, covers: manga.covers, mirrorDisplayName: mirrorInfo.displayName, mirrorIcon: mirrorInfo.icon });
+    else if(!group) {
+      mangasRAW.value.push({
+        name: manga.displayName || manga.name,
+        mangas: [mg as MangaInDBwithLabel],
+        covers: manga.covers,
+        unread: manga.chapters.filter(c => !c.read).length,
+      });
+    } else {
+      group.mangas.push(mg as MangaInDBwithLabel);
+      group.covers = [...new Set([...group.covers, ...manga.covers])];
+      group.unread += manga.chapters.filter(c => !c.read).length;
+    }
+  });
+}
+
+async function turnOn() {
+  await getMirrors();
+  await fetchLibrary();
+  const socket = await useSocket(settings.server);
+  socket.on('finishedMangasUpdate', (nbOfUpdates) => {
+    if(nbOfUpdates > 0) fetchLibrary();
+  });
+}
+
+async function turnOff() {
+  const socket = await useSocket(settings.server);
+  socket.off('showLibrary');
+  socket.off('finishedMangasUpdate');
+  socket.emit('stopShowLibrary');
+}
+
+onBeforeMount(turnOn);
+onBeforeUnmount(turnOff);
 </script>
 
 <template>
   <div
-    v-if="mirrorList.length && mangas.length"
+    v-if="fetching"
+    class="flex w-100 flex-center items-center justify-center"
+  >
+    <q-circular-progress
+      indeterminate
+      size="lg"
+    />
+  </div>
+  <div
+    v-else-if="(mirrorList.length && (deadMangas.length || mangas.length))"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     :dark="$q.dark.isActive"

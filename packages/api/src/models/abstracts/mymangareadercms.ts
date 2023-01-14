@@ -57,17 +57,15 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
   async search(query:string, langs: mirrorsLangsType[] , socket: socketInstance, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
-    if (!(socket instanceof Scheduler)) {
-      socket.once('stopSearchInMirrors', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
+    let stopListening: (() => void) | undefined = undefined;
+    if(!(socket instanceof Scheduler)) {
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('search canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopSearchInMirrors', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopSearchInMirrors', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     const url = `${this.host}/search?query=${query}`;
@@ -98,7 +96,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img.img-responsive').attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink);
+          const img = (await this.downloadImage(coverLink))?.src;
           if(img) covers.push(img);
         }
 
@@ -145,23 +143,23 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         else socket.emit('searchInMirrors', id, {mirror: this.name, error: 'search_error' });
     }
     socket.emit('searchInMirrors', id, { done: true });
+    if (stopListening) stopListening();
   }
 
   async recommend(requestLangs:mirrorsLangsType[], socket: socketInstance, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowRecommend', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching recommendations canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowRecommend', stopListening);
+      socket.once('disconnect', stopListening);
     }
+
     try {
       const $ = await this.fetch({
         url: this.host,
@@ -181,7 +179,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         let coverLink = $('img', el).attr('src');
         if(coverLink) {
           if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-          const img = await this.downloadImage(coverLink);
+          const img = (await this.downloadImage(coverLink))?.src;
           if(img) covers.push(img);
         }
 
@@ -202,31 +200,30 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       else socket.emit('showRecommend', id, {mirror: this.name, error: 'recommend_error_unknown'});
     }
     socket.emit('showRecommend', id, { done: true });
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async manga(url:string, langs:mirrorsLangsType[], socket:socketInstance|Scheduler, id:number)  {
-
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowManga', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching manga canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     const link = url.replace(this.host, '');
     const isMangaPage = this.isMangaPage(link);
     if(!isMangaPage) {
       socket.emit('showManga', id, {error: 'manga_error_invalid_link'});
-      return this.stopListening(socket);
+      if(stopListening) stopListening();
+      return;
     }
 
     try {
@@ -245,7 +242,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       let coverLink = $('.boxed img').attr('src');
       if(coverLink) {
         if(coverLink.startsWith('//')) coverLink = `${this.host.startsWith('https') ? 'https' : 'http'}:${coverLink}`;
-        const img = await this.downloadImage(coverLink);
+        const img = (await this.downloadImage(coverLink))?.src;
         if(img) covers.push(img);
       }
 
@@ -318,23 +315,22 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       else if(typeof e === 'string') socket.emit('showManga', id, {error: 'manga_error', trace: e});
       else socket.emit('showManga', id, {error: 'manga_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 
   async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
+    let stopListening: (() => void) | undefined = undefined;
+
     if(!(socket instanceof Scheduler)) {
-      socket.once('stopShowChapter', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
+      stopListening = () => {
         cancel = true;
-      });
-      socket.once('disconnect', () => {
-        this.logger('fetching chapter canceled');
-        this.stopListening(socket);
-        cancel = true;
-      });
+        socket.removeListener('stopShowRecommend', stopListening as () => void);
+        socket.removeListener('disconnect', stopListening as () => void);
+      };
+      socket.once('stopShowManga', stopListening);
+      socket.once('disconnect', stopListening);
     }
 
     const link = url.replace(this.host, '');
@@ -343,7 +339,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     const isLinkaChapter = this.isChapterPage(link);
     if(!isLinkaChapter) {
       socket.emit('showChapter', id, {error: 'chapter_error_invalid_link'});
-      return this.stopListening(socket);
+      if(stopListening) stopListening();
     }
     if(cancel) return;
     try {
@@ -371,7 +367,7 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(imgLink, `${this.host}${link}`);
         if(img) {
-          socket.emit('showChapter', id, { index: i, src: img, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img.src, width: img.width, height: img.height, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
           continue;
         }
         socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
@@ -385,6 +381,6 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       else if(typeof e === 'string') socket.emit('showChapter', id, {error: 'chapter_error', trace: e});
       else socket.emit('showChapter', id, {error: 'chapter_error_unknown'});
     }
-    return this.stopListening(socket);
+    if(stopListening) stopListening();
   }
 }

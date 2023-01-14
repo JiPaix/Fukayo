@@ -9,7 +9,7 @@ import type { appLangsType } from '@i18n';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { useStore as useSettingsStore } from '@renderer/store/settings';
+import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type dayjs from 'dayjs';
 import { format, useQuasar } from 'quasar';
 import { computed, inject, onBeforeMount, ref } from 'vue';
@@ -128,134 +128,147 @@ onBeforeMount(async () => {
   socket.emit('getMirrors', true, (m) => {
     mirrors.value = m;
   });
-  socket.on('showLibrary', (id, manga) => {
+  socket.on('showLibrary', (id, mgs) => {
     if(id === now) {
-      mangas.value.push(manga);
+      mangas.value = mgs;
     }
   });
   socket.emit('showLibrary', now);
   startTimer();
 });
 
+const headerSize = computed(() => {
+  const div = document.querySelector<HTMLDivElement>('#top-header');
+  if(div) return div.offsetHeight;
+  else return 0;
+});
 </script>
 <template>
   <q-layout
     view="lHh lpr lFf"
     container
-    :style="'height: '+($q.screen.height-50)+'px'"
+    :style="'height: '+($q.screen.height-headerSize)+'px'"
     class="shadow-2"
     :class="$q.dark.isActive ? 'bg-dark text-white' : 'bg-grey-2 text-black'"
   >
     <q-page-container>
-      <q-page
-        class="q-pa-md"
-      >
-        <q-list :dark="$q.dark.isActive">
-          <q-item
-            v-for="(log, index) in logs"
-            :key="index"
-            clickable
-            @click="itemClick(log)"
+      <q-page>
+        <q-scroll-area
+          :style="{height: `${$q.screen.height-headerSize}px`, minHeight: '100px'}"
+          :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
+          :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+          class="q-px-lg"
+        >
+          <q-list
+            :dark="$q.dark.isActive"
+            separator
           >
-            <q-item-section
-              avatar
+            <q-item
+              v-for="(log, index) in logs"
+              :key="index"
+              clickable
+              @click="itemClick(log)"
             >
-              <q-icon
-                :color="colorSelector(log)"
-                :name="iconSelector(log)"
-                size="xl"
-              />
-            </q-item-section>
-            <q-item-section
-              v-if="isMangaLog(log)"
-              avatar
-            >
-              <q-img
-                :color="colorSelector(log)"
-                :src="transformIMGurl(getMangaCover(log.id), settings)"
-                size="xl"
-              />
-            </q-item-section>
-            <q-item-section v-if="isMangaLog(log)">
-              <q-item-label class="text-weight-bold flex-center">
-                <q-avatar
-                  :icon="'img:'+getMirrorIcon(log.id)"
-                  size="md"
+              <q-item-section
+                avatar
+              >
+                <q-icon
+                  :color="colorSelector(log)"
+                  :name="iconSelector(log)"
+                  size="xl"
+                />
+              </q-item-section>
+              <q-item-section
+                v-if="isMangaLog(log)"
+                avatar
+              >
+                <q-img
+                  :color="colorSelector(log)"
+                  :src="transformIMGurl(getMangaCover(log.id), settings)"
+                  size="xl"
+                />
+              </q-item-section>
+              <q-item-section v-if="isMangaLog(log)">
+                <q-item-label class="text-weight-bold flex-center">
+                  <q-avatar
+                    :icon="'img:'+getMirrorIcon(log.id)"
+                    size="md"
+                  >
+                    <q-tooltip>
+                      {{ getMirrorName(log.id) }}
+                    </q-tooltip>
+                  </q-avatar>
+                  {{ getMangaName(log.id) }}
+                </q-item-label>
+                <q-item-label class="text-caption">
+                  <div v-if="isLogMangaNewMetadata(log)">
+                    {{ $t('logs.new_metadata') }}:
+                    <span class="text-weight-bold text-orange ">{{ $t(`logs.${log.data.tag}`) }}</span>
+                  </div>
+                  <div v-else-if="isLogChapterNew(log)">
+                    {{ $t('logs.found_chapter') }}
+                    <span
+                      v-if="log.data.volume"
+                      class="text-weight-bold text-orange"
+                    >
+                      {{ $t('mangas.volume') }}: {{ log.data.volume }} -
+                    </span>
+                    <span
+                      v-if="log.data.number"
+                      class="text-weight-bold text-orange"
+                    >
+                      {{ $t('mangas.chapter') }}: {{ log.data.number }}
+                    </span>
+                    <q-chip
+                      dense
+                      color="orange"
+                    >
+                      {{ $t('languages.'+log.data.lang) }}
+                    </q-chip>
+                  </div>
+                  <div
+                    v-else-if="isLogChapterRead(log)"
+                    class="text-orange text-weight-bold"
+                  >
+                    {{ $t('logs.read_chapter') }}
+                  </div>
+                  <div
+                    v-else
+                    class="text-orange text-weight-bold"
+                  >
+                    {{ $t('logs.error_chapter') }}
+                  </div>
+                </q-item-label>
+              </q-item-section>
+              <q-item-section v-else>
+                <q-item-label>
+                  {{ $t('logs.cache') }}
+                </q-item-label>
+                <q-item-label
+                  v-if="log.message === 'cache'"
+                  class="text-caption"
                 >
-                  <q-tooltip>
-                    {{ getMirrorName(log.id) }}
-                  </q-tooltip>
-                </q-avatar>
-                {{ getMangaName(log.id) }}
-              </q-item-label>
-              <q-item-label class="text-caption">
-                <div v-if="isLogMangaNewMetadata(log)">
-                  {{ $t('logs.new_metadata') }}:
-                  <span class="text-weight-bold text-orange ">{{ $t(`logs.${log.data.tag}`) }}</span>
-                </div>
-                <div v-else-if="isLogChapterNew(log)">
-                  {{ $t('logs.found_chapter') }}
-                  <span
-                    v-if="log.data.volume"
-                    class="text-weight-bold text-orange"
-                  >
-                    {{ $t('mangas.volume') }}: {{ log.data.volume }} -
-                  </span>
-                  <span
-                    v-if="log.data.number"
-                    class="text-weight-bold text-orange"
-                  >
-                    {{ $t('mangas.chapter') }}: {{ log.data.number }}
-                  </span>
-                  <q-chip
-                    dense
-                    color="orange"
-                  >
-                    {{ $t('languages.'+log.data.lang) }}
-                  </q-chip>
-                </div>
-                <div
-                  v-else-if="isLogChapterRead(log)"
-                  class="text-orange text-weight-bold"
-                >
-                  {{ $t('logs.read_chapter') }}
-                </div>
-                <div
+                  {{ $t('logs.cache_delete', {number: log.files }) }}:
+                  <span class="text-orange text-weight-bold">{{ humanStorageSize(log.size) }}</span>
+                </q-item-label>
+                <q-item-label
                   v-else
-                  class="text-orange text-weight-bold"
+                  class="text-caption"
                 >
-                  {{ $t('logs.error_chapter') }}
-                </div>
-              </q-item-label>
-            </q-item-section>
-            <q-item-section v-else>
-              <q-item-label>
-                {{ $t('logs.cache') }}
-              </q-item-label>
-              <q-item-label
-                v-if="log.message === 'cache'"
-                class="text-caption"
+                  <span class="text-orange text-weight-bold">
+                    {{ $t('logs.cache_error') }}
+                  </span>
+                </q-item-label>
+              </q-item-section>
+              <q-item-section
+                v-if="dayJS"
+                side
               >
-                {{ $t('logs.cache_delete', {number: log.files }) }}:
-                <span class="text-orange text-weight-bold">{{ humanStorageSize(log.size) }}</span>
-              </q-item-label>
-              <q-item-label
-                v-else
-                class="text-caption"
-              >
-                <span class="text-orange text-weight-bold">
-                  {{ $t('logs.cache_error') }}
-                </span>
-              </q-item-label>
-            </q-item-section>
-            <q-item-section
-              v-if="dayJS"
-              side
-            >
-              {{ dayJS(log.date).fromNow() }}
-            </q-item-section>
-          </q-item>
-        </q-list>
+                {{ dayJS(log.date).fromNow() }}
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
       </q-page>
     </q-page-container>
   </q-layout>

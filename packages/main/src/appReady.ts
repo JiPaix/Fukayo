@@ -18,18 +18,28 @@ export default class Ready {
     this.#api = undefined;
     this.#headless = app.commandLine.hasSwitch('server');
     /** close the API before quitting */
-    app.on('before-quit', async() => {
-      this.#isAppQuitting = true;
-      if(!this.#api) return;
-      const stop = await this.#api.stop();
-      if(import.meta.env.DEV) {
-        if(stop.success) console.log('[api]', 'SHUTDOWN SUCCESS');
-        else console.error('[api]', 'SHUTDOWN FAILED');
-      }
-    });
-
     const setup = import.meta.env.DEV ? this.devSetup : this.prodSetup;
     setup().then(() => this.#headless ? this.serverSetup() : this.desktopSetup());
+    app.on('before-quit', this.quit.bind(this));
+  }
+
+  #logger(err: boolean, ...args: unknown[]) {
+    if(import.meta.env.DEV) {
+      if(!err) return console.log(...args);
+      return console.error(...args);
+    }
+  }
+
+  async quit() {
+    this.#logger(false, '\x1b[1mSHUTTING DOWN...\x1b[0m');
+    this.#isAppQuitting = true;
+    if(this.#api) {
+      const stop = await this.#api.stop();
+      if(import.meta.env.DEV) {
+        if(stop.success) this.#logger(false, '\x1b[1mSHUTDOWN SUCCESS\x1b[0m');
+        else this.#logger(true, '\x1b[1mSHUTDOWN FORCED\x1b[0m');
+      }
+    }
   }
 
   async devSetup() {
@@ -76,9 +86,13 @@ export default class Ready {
     const password = app.commandLine.getSwitchValue('password');
     const portStr = app.commandLine.getSwitchValue('port');
 
-    if(!portStr || typeof portStr !== 'string') throw new Error('--port unexpected value');
+    // checking values
+    if(!login.length) throw new Error('--login cannot be an empty string');
+    if(!password.length) throw new Error('--password cannot be an empty string');
+    if(!portStr || typeof portStr !== 'string') throw new Error(`--port unexpected value: ${typeof portStr}`);
     const port = parseInt(portStr);
-    if(isNaN(port)) throw new Error('--port unexpected value');
+    if(isNaN(port)) throw new Error(`--port unexpected value: ${typeof portStr}, ${port}`);
+    if(port <= 1024 || port >= 65535) throw new Error(`--port must be between 1024 and 65535: got ${port}`);
 
     this.#api = new forkAPI({login,password, port, ssl: 'false' });
     const { fork } = await this.#api.start();
