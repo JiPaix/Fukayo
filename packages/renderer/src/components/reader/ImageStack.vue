@@ -132,7 +132,7 @@ const verticalNoBook = computed<CSSProperties>(() => {
   let marginBottom:CSSProperties['marginBottom'] = undefined;
   if(!props.settings.webtoon && props.settings.longStrip) marginBottom = '20px';
   if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height-headerSize.value) + 'px';
-  if(props.settings.zoomMode === 'stretch-width') width = ($q.screen.width - (props.drawerOpen ? 300 : 0)) + 'px';
+  if(props.settings.zoomMode === 'stretch-width') width = ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0)) + 'px';
   return {
     height,
     width,
@@ -290,14 +290,14 @@ function touch(ev:TouchEvent) {
               v-if="isChapterImage(img)"
               class="self-center"
               :src="transformIMGurl(img.src, storeSettings)"
-              :style="{ ...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
+              :style="{ ...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
               loading="lazy"
               @load="image.indexes.forEach(i => loaded[i] = true)"
             >
             <div
               v-else
               class="bg-negative flex"
-              :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
+              :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
               @load="image.indexes.forEach(i => loaded[i] = true)"
             >
               <span>
@@ -364,7 +364,7 @@ function touch(ev:TouchEvent) {
             v-else
             :key="`${ig}-error`"
             class="bg-negative flex"
-            :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen ? 300 : 0))/image.group.length)+'px' }"
+            :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
             @load="onLoaded(image.indexes)"
           >
             <span>
@@ -401,14 +401,14 @@ function touch(ev:TouchEvent) {
         <img
           v-if="isChapterImage(group)"
           :src="transformIMGurl(group.src, storeSettings)"
-          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (drawerOpen ? 300 : 0))+'px' }"
+          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
           loading="lazy"
           @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
         >
         <div
           v-else
           class="bg-negative flex"
-          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen ? 300 : 0))+'px' }"
+          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
           @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
         >
           <span>
