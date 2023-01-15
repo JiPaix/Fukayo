@@ -12,11 +12,11 @@ import type { ServerToClientEvents } from '@api/server/types/index';
 import type { LogChapterError, LogChapterNew, LogChapterRead, LogMangaNewMetadata } from '@api/server/types/scheduler';
 import EventEmitter from 'events';
 import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
+import { Socket } from 'net';
 import { join, resolve } from 'path';
 import { env } from 'process';
 import type { Server as ioServer } from 'socket.io';
 import type TypedEmitter from 'typed-emitter';
-import { Socket } from 'net';
 
 export default class Scheduler extends (EventEmitter as new () => TypedEmitter<ServerToClientEvents>) {
   static #instance: Scheduler;
@@ -249,17 +249,20 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
    * @param onlyfixes do run update, just fix mangas
    */
   async update(force?:boolean, onlyfixes?:boolean) {
+    // keep track of updates
+    let updated = 0;
     // if we are already updating, return
     if(this.#ongoing.updates) return;
+    // try again later if we aren't connected
+    if(!this.connectivity) {
+      if(this.io) this.io.emit('finishedMangasUpdate', updated);
+      return ;
+    }
     // emit to all the clients that we are updating
     this.#ongoing.updates = true;
-    // try again later if we aren't connected
-    if(!this.connectivity) return;
 
     if(this.io) this.io.emit('startMangasUpdate');
 
-    // keep track of updates
-    let updated = 0;
 
     // get the list of mangas
     const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
