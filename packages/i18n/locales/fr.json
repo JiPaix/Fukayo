@@ -301,7 +301,7 @@
         "title": "Titre",
         "volume": "Volume | Volumes",
         "open_in_new": {
-            "chapter": "Open this chapter directly from the source"
+            "chapter": "Ouvrir ce chapitre directement à partir de la source"
         }
     },
     "migrate": {
