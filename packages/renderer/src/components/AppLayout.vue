@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 defineProps<{
@@ -11,40 +10,49 @@ defineProps<{
   logo: string;
 }>();
 
-let socket:socketClientInstance|undefined;
-
-const drawer = ref(false),
-      miniState = ref(true),
-      $q = useQuasar(),
+// config
+const $q = useQuasar(),
       route = useRoute(),
       router = useRouter(),
       settings = useSettingsStore();
-// are mangas updating in the background?
-const updating = ref(true);
 
-onBeforeMount(async () => {
-  if(!route.name) router.push({ name: 'home' });
-  if(!socket) socket = await useSocket(settings.server);
-  socket.on('startMangasUpdate', () => {
-    updating.value = true;
-  });
-  socket.emit('isUpdating', (resp) => {
-    updating.value = resp;
-  });
-  socket.on('finishedMangasUpdate', () => {
-    setTimeout(() => {
-      updating.value = false;
-    }, 1000);
-  });
-});
+// states
+const drawer = ref(false), // drawer's v-model
+      miniState = ref(true), // drawer's mini state
+      updating = ref(true); // update icon state
 
 
-async function forceupdate() {
-  updating.value = true;
-  if(!socket) socket = await useSocket(settings.server);
-  socket?.emit('forceUpdates');
+// globals
+let interval: ReturnType<typeof setInterval> | undefined;
+
+
+/**
+ * check if API is currently updating mangas
+ */
+async function isUpdating() {
+  const socket = await useSocket(settings.server);
+  socket.emit('isUpdating', (resp) => updating.value = resp);
 }
 
+/**
+ * Listen to update events and call `isUpdating` every minutes
+ */
+async function listenUpdates() {
+  const socket = await useSocket(settings.server);
+  socket.on('startMangasUpdate', () => updating.value = true);
+  socket.on('finishedMangasUpdate', () => updating.value = false);
+  isUpdating();
+  interval = setInterval(isUpdating, 60000);
+}
+
+/** Force mangas update */
+async function forceupdate() {
+  updating.value = true;
+  const socket = await useSocket(settings.server);
+  socket.emit('forceUpdates');
+}
+
+/** toggle dark mode */
 function toggleDarkMode() {
   if (settings.theme === 'dark') {
     settings.theme = 'light';
@@ -54,6 +62,11 @@ function toggleDarkMode() {
     $q.dark.set(true);
   }
 }
+
+onBeforeMount(listenUpdates);
+onBeforeUnmount(() => {
+  if(interval) clearInterval(interval);
+});
 </script>
 
 <template>
