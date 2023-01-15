@@ -299,7 +299,10 @@
         "synopsis": "Synopsis",
         "tags": "Tags",
         "title": "Title",
-        "volume": "Volume | Volumes"
+        "volume": "Volume | Volumes",
+        "open_in_new": {
+            "chapter": "Open this chapter directly from the source"
+        }
     },
     "migrate": {
         "bug": "Issues",
