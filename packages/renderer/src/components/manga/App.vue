@@ -737,7 +737,6 @@ startFetch();
                 infinite
                 :height="thumbnailHeight"
                 style="max-width:300px;"
-                @click="toggleInLibrary()"
               >
                 <q-carousel-slide
                   v-for="(mangaCover, i) in manga.covers"
