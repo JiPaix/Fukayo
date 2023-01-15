@@ -1,62 +1,92 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { applyAllFilters, sortLangs, sortMirrorByNames } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { useStore as useSettingsStore } from '@renderer/stores/settings';
+import { useStore as useStoreSettings } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
-import { computed, onBeforeMount, ref } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+/** props */
 const props = defineProps<{
   stepper?: boolean;
   subHeaderSize?: number
 }>();
 
-const emits = defineEmits<{
+/** emits */
+const emit = defineEmits<{
   (event: 'continue'): void
 }>();
 
-/** stored settings */
-const settings = useSettingsStore();
-/** socket */
-let socket:socketClientInstance|undefined;
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+// config
+const
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** settings store */
+settings = useStoreSettings();
+
+// states
+const
 /** search filter */
-const query = ref<string|null>('');
+query = ref<string|null>(''),
 /** sort ascending/descending sorting */
-const sortAZ = ref(true);
+sortAZ = ref(true),
 /** list of languages available from mirrors */
-const allLangs = ref<string[]>([]);
+allLangs = ref<string[]>([]),
 /** language(s) to include in the  results */
-const includedLangsRAW = ref<string[]>([]);
+includedLangsRAW = ref<string[]>([]),
 /** Mirrors info as retrieved from the server */
-const mirrorsRAW = ref<Array<mirrorInfo>>([]);
+mirrorsRAW = ref<Array<mirrorInfo>>([]),
 /** is user changing credentials? */
-const modifying = ref<Record<string, boolean>>({ });
+modifying = ref<Record<string, boolean>>({ }),
+/** div#row height */
+rowSize = ref(0);
 
-const mirrors = computed(() => {
+// computed
+const
+/** sources sorted by name */
+mirrors = computed(() => {
   return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value) as Array<mirrorInfo>;
-});
-
-const includedAllLanguage = computed(() => {
+}),
+/** selected languages */
+includedLangs = computed(() => {
+  return sortLangs(includedLangsRAW.value, $t);
+}),
+/** are all languages selected? */
+includedAllLanguage = computed(() => {
   if(includedLangsRAW.value.length < allLangs.value.length) {
     if(includedLangsRAW.value.length === 0) return false;
     return null;
   }
   return true;
+}),
+/** parent's QHeader height */
+headerSize = computed(() => {
+  return (props.subHeaderSize || 0) + (document.querySelector<HTMLDivElement>('#top-header')?.offsetHeight || 0);
 });
 
-const includedLangs = computed(() => {
-  return sortLangs(includedLangsRAW.value, $t);
-});
+/** delete key from record */
+function omit<T extends Record<string, unknown>>(obj: T, keys: string[]) {
+  const result = { ...obj };
+  for (const key of keys) {
+    delete result[key];
+  }
+  return result;
+}
 
+/** return the value with type `T | undefined` */
+function asTypeOrUndefined<T>(value: T): T|undefined {
+  if(value) return value;
+  return undefined;
+}
 
-function changeOption(mirrorName:string, property:string, value:unknown) {
+/** change and save option */
+async function changeOption(mirrorName:string, property:string, value:unknown) {
+  const socket = await useSocket(settings.server);
   if(value === '') value = null;
   if(typeof value === 'string' && property === 'port') {
     const toNb = parseInt(value);
@@ -65,29 +95,32 @@ function changeOption(mirrorName:string, property:string, value:unknown) {
   if(property === 'login') {
     modifying.value[mirrorName] = true;
   }
-  socket?.emit('changeMirrorSettings', mirrorName, { [property]: value }, (sources) => {
+  socket.emit('changeMirrorSettings', mirrorName, { [property]: value }, (sources) => {
     mirrorsRAW.value = sources;
   });
 }
-
+/** return an icon name given the option's name when setting is true */
 function toggleButtonIconChecked(propertyName:string) {
   if(propertyName === 'enabled') return 'power';
   if(propertyName === 'adult') return 'favorite';
   return '';
 }
 
+/** return an icon name given the option's name when setting is false */
 function toggleButtonIconUnchecked(propertyName:string) {
   if(propertyName === 'enabled') return 'power_off';
   if(propertyName === 'adult') return 'child_friendly';
   return '';
 }
 
+/** return a color given the option's name */
 function toggleButtonColor(propertyName: string) {
   if(propertyName === 'enabled') return 'positive';
   if(propertyName === 'adult') return 'pink';
   return 'orange';
 }
 
+/** return the translated option's name */
 function optionLabel(propertyName:string) {
 
   switch (propertyName) {
@@ -120,18 +153,8 @@ function optionLabel(propertyName:string) {
   }
 }
 
-function omit<T extends Record<string, unknown>>(obj: T, keys: string[]) {
-  const result = { ...obj };
-  for (const key of keys) {
-    delete result[key];
-  }
-  return result;
-}
 
-function asTypeOrUndefined<T>(value: T): T|undefined {
-  if(value) return value;
-  return undefined;
-}
+
 
 function isValidUUI(ids:string[]) {
   let res = true;
@@ -163,6 +186,7 @@ function toggleLang(lang:string) {
   }
 }
 
+/** return an icon name depending on the mirror status (online/offline, dead, selfhosted) */
 function mirrorStatusIcon(mirror:mirrorInfo) {
   if(mirror.isDead) return { color: 'negative', icon: 'o_broken_image', tooltip: $t('settings.mirror_is_dead')};
   else if(!mirror.isOnline && mirror.selfhosted && mirror.options.host) return { color: 'red', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
@@ -172,9 +196,15 @@ function mirrorStatusIcon(mirror:mirrorInfo) {
   else return { color: 'positive', icon: 'done'};
 }
 
-// get available mirrors before rendering and start the search if params are present
-onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
+/** save size of div#row */
+function resizeRow() {
+  const div = document.querySelector<HTMLDivElement>('#row');
+  if(div) rowSize.value = div.offsetHeight;
+}
+
+/** get all sources and languages and listen if a mirror gets logged in */
+async function On() {
+  const socket = await useSocket(settings.server);
   socket.emit('getMirrors', true, (m) => {
     mirrorsRAW.value = m.sort((a, b) => a.name.localeCompare(b.name));
     includedLangsRAW.value = Array.from(new Set(m.map(m => m.langs).flat()));
@@ -183,21 +213,17 @@ onBeforeMount(async () => {
   socket.on('loggedIn', (name, val) => {
     const find = mirrorsRAW.value.find(m => m.name === name);
     if(find) find.loggedIn = val;
-    console.log(name, val);
     modifying.value[name] = false;
   });
-});
-
-const headerSize = computed(() => {
-  return (props.subHeaderSize || 0) + (document.querySelector<HTMLDivElement>('#top-header')?.offsetHeight || 0);
-});
-
-const rowSize = ref(0);
-function resizeRow() {
-  const div = document.querySelector<HTMLDivElement>('#row');
-  if(div) rowSize.value = div.offsetHeight;
 }
 
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.off('loggedIn');
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 </script>
 <template>
   <q-layout
@@ -235,7 +261,7 @@ function resizeRow() {
                   push
                   :label="$t('settings.confirm')"
                   class="q-ml-auto"
-                  @click="emits('continue')"
+                  @click="emit('continue')"
                 />
               </template>
             </q-banner>

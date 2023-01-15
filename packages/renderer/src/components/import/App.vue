@@ -1,11 +1,11 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type Importer from '@api/models/imports/interfaces';
 import type { ImportResults } from '@api/models/imports/types';
 import type { importErrorMessage } from '@api/models/types/errors';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
+import type en from '@i18n/../locales/en.json';
+import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { isImportErrorMessage, isManga, isMangaInDB, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
@@ -13,50 +13,26 @@ import type { QTableProps } from 'quasar';
 import { QTable, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { transformIMGurl } from '../helpers/transformIMGurl';
 import { useRouter } from 'vue-router';
-import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
+import { transformIMGurl } from '../helpers/transformIMGurl';
 
-/** settings */
-const settings = useSettingsStore();
+
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** vue-i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$q = useQuasar(),
 /** router */
-const router = useRouter();
-/** socket */
-let socket:socketClientInstance|undefined;
-/** list of importers */
-const importers = ref<Importer['showInfo'][]>([]);
-/** list of importers that need configuration */
-const disabledimporters = ref<Importer['showInfo'][]>([]);
-/** selected importer */
-const currentImporter = ref<Importer['showInfo']|null>(null);
-/** list of mangas */
-const mangas = ref<ImportResults[]>([]);
-/** errors */
-const error = ref<null|importErrorMessage>(null);
-/** loading mangas */
-const loading = ref(false);
-/** importing to db */
-const importing = ref(false);
-/** nb of expected results */
-const expected = ref(0);
-/** table pagination */
-const pagination = ref({rowsPerPage: 0});
-/** selected mangas in table */
-const selection = ref<ImportResults[]>([]);
-/** show/hide the dialog */
-const showDialog = ref(false);
-/** table elem */
-const table = ref<QTable>();
-/** fetch progress */
-const progress = computed(() => {
-  return Math.round((mangas.value.length*expected.value) / 100);
-});
+router = useRouter(),
+/** user settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+
+// globals
+const
 /** table column */
-const columns:QTableProps['columns'] = [
+columns:QTableProps['columns'] = [
   {
     name: 'covers',
     label: 'cover',
@@ -83,40 +59,46 @@ const columns:QTableProps['columns'] = [
   },
 ];
 
-onBeforeMount(async () => {
-  await On();
+// states
+const
+/** list of importers */
+importers = ref<Importer['showInfo'][]>([]),
+/** list of importers that need configuration */
+disabledimporters = ref<Importer['showInfo'][]>([]),
+/** selected importer */
+currentImporter = ref<Importer['showInfo']|null>(null),
+/** list of mangas */
+mangas = ref<ImportResults[]>([]),
+/** errors */
+error = ref<null|importErrorMessage>(null),
+/** loading mangas */
+loading = ref(false),
+/** importing to db */
+importing = ref(false),
+/** nb of expected results */
+expected = ref(0),
+/** table pagination */
+pagination = ref({rowsPerPage: 0}),
+/** selected mangas in table */
+selection = ref<ImportResults[]>([]),
+/** show/hide the dialog */
+showDialog = ref(false);
+// /** QTable */
+// table = ref<QTable>();
+
+// computed
+const
+/** fetch progress */
+progress = computed(() => {
+  return Math.round((mangas.value.length*expected.value) / 100);
+}),
+/** parent's QHeader height */
+headerSize = computed(() => {
+  const div = document.querySelector<HTMLDivElement>('#top-header');
+  if(div) return div.offsetHeight;
+  else return 0;
 });
 
-onBeforeUnmount(async () => {
-  await Off();
-});
-
-watch(showDialog, async (nval) => {
-  if(!nval) {
-    if(!socket) socket = await useSocket(settings.server);
-    socket.removeAllListeners('showImports');
-    socket.emit('stopShowImports');
-    selection.value = [];
-    mangas.value = [];
-  }
-});
-
-async function Off() {
-  if(!socket) socket = await useSocket(settings.server);
-  socket.removeAllListeners('showImports');
-  socket.removeAllListeners('showManga');
-  socket.emit('stopShowImports');
-}
-
-async function On() {
-  if(!socket) socket = await useSocket(settings.server);
-  socket.emit('getImports', true, (imps) => {
-    imps.forEach(im=> {
-      if(im.enabled) importers.value.push(im);
-      else disabledimporters.value.push(im);
-    });
-  });
-}
 
 async function getMangas(importer: Importer['showInfo']) {
   mangas.value = [];
@@ -126,7 +108,7 @@ async function getMangas(importer: Importer['showInfo']) {
   showDialog.value = true;
   importing.value = false;
   currentImporter.value = importer;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   const reqId = Date.now();
   socket.emit('showImports',reqId, importer.name, mirrorsLang.filter(l=> !settings.i18n.ignored.includes(l)));
   socket.on('showImports', (id, resp) => {
@@ -134,12 +116,12 @@ async function getMangas(importer: Importer['showInfo']) {
     if(typeof resp === 'number') expected.value = resp;
     else if(isImportErrorMessage(resp)) {
       error.value = resp;
-      socket?.removeAllListeners('showImports');
+      socket.removeAllListeners('showImports');
     }
     else if (isTaskDone(resp)) {
       expected.value = 100;
       loading.value = false;
-      socket?.removeAllListeners('showImports');
+      socket.removeAllListeners('showImports');
     } else {
       if(Array.isArray(resp)) resp.forEach(r => mangas.value.push(r));
       else mangas.value.push(resp);
@@ -151,9 +133,9 @@ async function startImport() {
   const reqId = Date.now();
   let counter = selection.value.length;
   importing.value = true;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   selection.value.filter(s=> !s.inLibrary).forEach((s) =>{
-    socket?.emit('showManga', reqId, { mirror: s.mirror.name, langs: mirrorsLang.filter(l=> !settings.i18n.ignored.includes(l)), url: s.url});
+    socket.emit('showManga', reqId, { mirror: s.mirror.name, langs: mirrorsLang.filter(l=> !settings.i18n.ignored.includes(l)), url: s.url});
   });
   socket.on('showManga', (id, manga) => {
     if(id!==reqId) return;
@@ -165,7 +147,7 @@ async function startImport() {
         const mg = mangas.value.find(v => v.url === manga.url);
         if(mg) mg.inLibrary = true;
       } else {
-        socket?.emit('addManga', { manga }, (res => {
+        socket.emit('addManga', { manga }, (res => {
           selection.value = selection.value.filter(v => v.url !== res.url);
           counter = counter-1;
           if(counter === 0) importing.value = false;
@@ -180,11 +162,37 @@ async function startImport() {
     }
   });
 }
-const headerSize = computed(() => {
-  const div = document.querySelector<HTMLDivElement>('#top-header');
-  if(div) return div.offsetHeight;
-  else return 0;
+
+/** get list of import sources */
+async function On() {
+  const socket = await useSocket(settings.server);
+  socket.emit('getImports', true, (imps) => {
+    imps.forEach(im=> {
+      if(im.enabled) importers.value.push(im);
+      else disabledimporters.value.push(im);
+    });
+  });
+}
+
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.removeAllListeners('showImports');
+  socket.removeAllListeners('showManga');
+  socket.emit('stopShowImports');
+  selection.value = [];
+  mangas.value = [];
+}
+
+
+
+// reset values if user closes dialog
+watch(showDialog, async (nval) => {
+  if(!nval) Off();
 });
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
+
 </script>
 <template>
   <q-layout

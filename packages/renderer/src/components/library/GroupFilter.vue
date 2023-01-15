@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -13,28 +13,41 @@ const props = defineProps<{
   langList: mirrorsLangsType[]
   userCategories?: string[]
 }>();
+
 /** emits */
 const emit = defineEmits<{
   (event: 'search', input: typeof search.value): void
   (event: 'filter', mirror: string[], langs:mirrorsLangsType[], userCategories:string[]): void
 }>();
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+// settings
+const
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
 /** settings */
-const settings = useSettingsStore();
+settings = useSettingsStore();
+
+// states
+const
 /** search filter */
-const search = ref<string|null>(null);
+search = ref<string|null>(null),
 /** mirror filter */
-const includedMirrors = ref<string[]>([]);
+includedMirrors = ref<string[]>([]),
 /** lang filter */
-const includedLangsRAW = ref<mirrorsLangsType[]>([]);
+includedLangsRAW = ref<mirrorsLangsType[]>([]),
 /** show the filter dialog */
-const showFilterDialog = ref(false);
+showFilterDialog = ref(false),
+/** selected categories */
+selectedCategories = ref<string[]>([]);
+
+// computed
+const
 /** return the ordered list of includedLangsRAW */
-const includedLangs = computed(() => {
+includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
-});
-/** all mirrors are included? */
-const includedAllMirrors = computed({
+}),
+/** all mirrors are included? (read-write) */
+includedAllMirrors = computed({
   get() {
     if(includedMirrors.value.length < props.mirrorList.length) {
       if(includedMirrors.value.length === 0) return false;
@@ -45,9 +58,9 @@ const includedAllMirrors = computed({
   set() {
     pickallMirrors();
   },
-});
-/** all langs are included? */
-const includedAllLanguage = computed({
+}),
+/** all langs are included? (read-write) */
+includedAllLanguage = computed({
   get() {
     if(includedLangsRAW.value.length < props.langList.length) return false;
     return true;
@@ -55,11 +68,9 @@ const includedAllLanguage = computed({
   set() {
     pickAllLangs();
   },
-});
-
-const selectedCategories = ref<string[]>([]);
-
-const includedAllCategories = computed({
+}),
+/** are all categories included? (read-write) */
+includedAllCategories = computed({
   get() {
     if(!props.userCategories) return false;
     if(selectedCategories.value.length !== props.userCategories.length) return false;
@@ -70,6 +81,7 @@ const includedAllCategories = computed({
   },
 });
 
+/** select all categories */
 function pickAllCategories() {
   if(!props.userCategories) return;
   if(selectedCategories.value.length === props.userCategories.length) selectedCategories.value = [];
@@ -77,6 +89,7 @@ function pickAllCategories() {
   emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
+/** toggle a category */
 function toggleCategory(cat:string) {
   if(selectedCategories.value.includes(cat)) selectedCategories.value = selectedCategories.value.filter(c => c !== cat);
   else selectedCategories.value.push(cat);
@@ -107,6 +120,7 @@ function pickAllLangs() {
   emit('filter', includedMirrors.value, includedLangsRAW.value.map(l => l), selectedCategories.value);
 }
 
+/** update props.mirrorList to includedMirrors  */
 watch(() => props.mirrorList, (mirrors) => {
   mirrors.forEach(m => {
     if(!includedMirrors.value.includes(m.name)) {
@@ -115,6 +129,7 @@ watch(() => props.mirrorList, (mirrors) => {
   });
 });
 
+/** update props.langList to includedLangsRAW */
 watch(() => props.langList, (langs) => {
   langs.forEach(l => {
     if(!includedLangsRAW.value.includes(l)) {

@@ -1,57 +1,74 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import { isLogChapterError, isLogChapterNew, isLogChapterRead, isLogMangaNewMetadata, isMangaLog } from '@api/db/helpers';
 import type { MangaInDB } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type Scheduler from '@api/server/scheduler';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type dayjs from 'dayjs';
 import { format, useQuasar } from 'quasar';
-import { computed, inject, onBeforeMount, ref } from 'vue';
+import { computed, inject, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** quasar format util */
-const { humanStorageSize } = format;
-/** settings */
-const settings = useSettingsStore();
+$q = useQuasar(),
 /** vue-router */
-const router = useRouter();
-/** socket */
-let socket:socketClientInstance|undefined;
+router = useRouter(),
+/** settings */
+settings = useSettingsStore(),
 /** dayJS lib */
-const dayJS = inject<typeof dayjs>('dayJS');
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-const mangaLogs = ref<Scheduler['logs']['manga']>([]);
+dayJS = inject<typeof dayjs>('dayJS'),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** quasar format util */
+{ humanStorageSize } = format;
 
-const cacheLogs = ref<Scheduler['logs']['cache']>([]);
+// state
+const
+/** mangas logs */
+mangaLogs = ref<Scheduler['logs']['manga']>([]),
+/** cache logs */
+cacheLogs = ref<Scheduler['logs']['cache']>([]),
+/** source list */
+mirrors = ref<mirrorInfo[]>([]),
+/** mangas */
+mangas = ref<MangaInDB[]>([]);
 
-const logs = computed(() => {
+// computed
+const
+/** parent's QHeader height */
+headerSize = computed(() => {
+  const div = document.querySelector<HTMLDivElement>('#top-header');
+  if(div) return div.offsetHeight;
+  else return 0;
+}),
+/** mangas and cache logs sorted by date */
+logs = computed(() => {
     return [...mangaLogs.value, ...cacheLogs.value].sort((a, b) => b.date - a.date);
 });
 
-const mirrors = ref<mirrorInfo[]>([]);
-const mangas = ref<MangaInDB[]>([]);
-
+/** Get manga's display name or name for a given manga id */
 function getMangaName (mangaId:string) {
   const manga = mangas.value.find(m => m.id === mangaId);
   if(manga) return manga.displayName || manga.name;
   else return '';
 }
 
+/** Get manga's cover for a given manga id */
 function getMangaCover(mangaId:string) {
   const manga = mangas.value.find(m=> m.id === mangaId);
   if(!manga) return '';
   return manga.covers[0];
 }
 
+/** Get the source icon for a given manga id */
 function getMirrorIcon(mangaId:string) {
   const manga = mangas.value.find(m=> m.id === mangaId);
   if(!manga) return '';
@@ -60,6 +77,7 @@ function getMirrorIcon(mangaId:string) {
   else return '';
 }
 
+/** Get the source name for a given manga id */
 function getMirrorName(mangaId: string) {
   const manga = mangas.value.find(m=> m.id === mangaId);
   if(!manga) return '';
@@ -67,6 +85,8 @@ function getMirrorName(mangaId: string) {
   if(mirror) return mirror.displayName;
   else return '';
 }
+
+/** redirect to meaningful page */
 function itemClick(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
   if(!isMangaLog(log)) return;
   const manga = mangas.value.find(m => m.id === log.id);
@@ -93,13 +113,14 @@ function itemClick(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache
   if(params) router.push(params);
 }
 
+/** returns a colors matching the log error status  */
 function colorSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
-
     if(isLogChapterNew(log)) return 'positive';
-    else if(isLogChapterError(log) || log.message === 'cache_error') return 'nagative';
+    else if(isLogChapterError(log) || log.message === 'cache_error') return 'negative';
     else return 'secondary';
 }
 
+/** return an icon name matching the type of log */
 function iconSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['cache'][0]) {
   if(isLogChapterNew(log)) return 'new_releases';
   if(isLogChapterError(log)) return 'personal_injury';
@@ -108,9 +129,10 @@ function iconSelector(log: Scheduler['logs']['manga'][0] | Scheduler['logs']['ca
   else return 'delete';
 }
 
+/** update logs every 5s */
 function startTimer() {
   setTimeout(async () => {
-    if(!socket) socket = await useSocket(settings.server);
+    const socket = await useSocket(settings.server);
     socket.emit('schedulerLogs', (l) => {
       if(l.manga.length > mangaLogs.value.length) mangaLogs.value = l.manga;
       if(l.cache.length > cacheLogs.value.length) cacheLogs.value = l.cache;
@@ -118,9 +140,10 @@ function startTimer() {
   }, 5000);
 }
 
-onBeforeMount(async () => {
-  const now = Date.now();
-  if(!socket) socket = await useSocket(settings.server);
+/** Gather data from the API */
+async function On() {
+  const socket = await useSocket(settings.server),
+        now = Date.now();
   socket.emit('schedulerLogs', (l)=> {
     mangaLogs.value = l.manga;
     cacheLogs.value = l.cache;
@@ -135,13 +158,15 @@ onBeforeMount(async () => {
   });
   socket.emit('showLibrary', now);
   startTimer();
-});
+}
 
-const headerSize = computed(() => {
-  const div = document.querySelector<HTMLDivElement>('#top-header');
-  if(div) return div.offsetHeight;
-  else return 0;
-});
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.off('showLibrary');
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 </script>
 <template>
   <q-layout

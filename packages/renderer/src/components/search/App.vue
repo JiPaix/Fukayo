@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type { SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
@@ -16,63 +15,64 @@ import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
-/** current route */
-const route = useRoute();
-/** stored settings */
-const settings = useSettingsStore();
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** vue-i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** socket */
-let socket:socketClientInstance|undefined;
+$q = useQuasar(),
+/** current route */
+route = useRoute(),
+/** settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
+// globals
+const
+/** progress bar's default height */
+progressBarSize = 4;
 
-const progressBarSize = '4px';
-const progressSize = computed(() => loading.value ? parseInt(progressBarSize.replace('px', '')) : 0);
-/** header + sub-header size */
-const headerSize = computed(() => {
+// states
+const
+/** QForm template ref */
+form = ref<InstanceType<typeof QForm>>(),
+formSize = ref(0),
+/** template ref for the search input */
+inputRef = ref<HTMLInputElement | null>(null),
+/** search input model */
+query = ref(''),
+/** last search we actually proceeded */
+currentQuery = ref(''),
+/** display a loading circle next the the input while processing the request */
+loading = ref(false),
+/** search errored */
+error = ref<null|SearchErrorMessage>(null),
+/** query results from the websocket */
+rawResults = ref([] as (SearchResult)[]), // the raw search results
+/** all the results been fetched  */
+done = ref(false),
+/** sort results A-Z or Z-A */
+sortAZ = ref<boolean>(true), // sort by name (A-Z|Z-A)
+/** list of languages available from mirrors */
+allLangs = ref<mirrorsLangsType[]>([]),
+/** language(s) to include in the query and/or results */
+includedLangsRAW = ref<mirrorsLangsType[]>([]),
+/** list of available mirrors */
+mirrorsList = ref<mirrorInfo[]>([]),
+/** mirror(s) to include in the query and/or results */
+includedMirrors = ref<string[]>([]);
+
+// computed
+const
+/** progress bar's current height */
+progressSize = computed(() => loading.value ? progressBarSize : 0),
+/** parent's QHeader + QHeader heights */
+headerSize = computed(() => {
   const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
   const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
   return topHeader.offsetHeight + subHeader.offsetHeight;
-});
-
-const form = ref<InstanceType<typeof QForm>>();
-
-const formSize = ref(0);
-
-function qformResize() {
-  if(!form.value) return;
-  formSize.value = form.value.$el.offsetHeight;
-}
-
-/** template ref for the search input */
-const inputRef = ref<HTMLInputElement | null>(null);
-/** search input model */
-const query = ref('');
-/** last search we actually proceeded */
-const currentQuery = ref('');
-/** display a loading circle next the the input while processing the request */
-const loading = ref(false);
-/** search errored */
-const error = ref<null|SearchErrorMessage>(null);
-/** query results from the websocket */
-const rawResults = ref([] as (SearchResult)[]); // the raw search results
-/** all the results been fetched  */
-const done = ref(false);
-/** sort results A-Z or Z-A */
-const sortAZ = ref<boolean>(true); // sort by name (A-Z|Z-A)
-/** list of languages available from mirrors */
-const allLangs = ref<mirrorsLangsType[]>([]);
-/** language(s) to include in the query and/or results */
-const includedLangsRAW = ref<mirrorsLangsType[]>([]);
-/** list of available mirrors */
-const mirrorsList = ref<mirrorInfo[]>([]);
-/** mirror(s) to include in the query and/or results */
-const includedMirrors = ref<string[]>([]);
-
+}),
 /** search results filtered and sorted */
-const results = computed(() => {
+results = computed(() => {
   return rawResults.value.map<SearchResult>(r => {
     const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirrorinfo.name);
     if(!mirrorinfo) throw Error($t('search.not_found', { source: r.mirrorinfo.name }));
@@ -87,9 +87,9 @@ const results = computed(() => {
     if(sortAZ.value) return a.name.localeCompare(b.name);
     return b.name.localeCompare(a.name);
   });
-});
-
-const mangaGroups = computed(() => {
+}),
+/** search results grouped */
+mangaGroups = computed(() => {
 return results.value.map(r => {
     return {
       name: r.name,
@@ -97,15 +97,13 @@ return results.value.map(r => {
       covers: r.covers,
     };
   });
-});
-
+}),
 /** return the ordered list of includedLangsRAW */
-const includedLangs = computed(() => {
+includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
-});
-
-/** returns true if all available mirror are included in the filter */
-const includedAllMirrors = computed({
+}),
+/** returns true if all available mirror are included in the filter (read-write) */
+includedAllMirrors = computed({
   get() {
     if(includedMirrors.value.length < mirrorsList.value.length) {
       if(includedMirrors.value.length === 0) return false;
@@ -116,10 +114,9 @@ const includedAllMirrors = computed({
   set() {
     pickallMirrors();
   },
-});
-
-/** returns true if all available languages are included in the filter */
-const includedAllLanguage = computed({
+}),
+/** returns true if all available languages are included in the filter (read-write) */
+includedAllLanguage = computed({
   get() {
     if(includedLangsRAW.value.length < allLangs.value.length) {
       if(includedLangsRAW.value.length === 0) return false;
@@ -131,6 +128,12 @@ const includedAllLanguage = computed({
     pickAllLangs();
   },
 });
+
+/** save QHeader's height */
+function qformResize() {
+  if(!form.value) return;
+  formSize.value = form.value.$el.offsetHeight;
+}
 
 /** include/exclude a mirror from the filter, also affects the language filter */
 function pickMirror(mirror:string) {
@@ -167,7 +170,7 @@ async function research() {
   // blur the input to hide the keyboard on touch devices
   if(inputRef.value && $q.platform.has.touch) inputRef.value.blur();
 
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   // stop any ongoing search requests
   socket.emit('stopSearchInMirrors');
 
@@ -192,7 +195,7 @@ async function research() {
       task.nbOfDonesToExpect = nbOfDonesToExpect;
       loading.value = true;
 
-      socket?.on('searchInMirrors', (id, res) => {
+      socket.on('searchInMirrors', (id, res) => {
         if(id === task.id) {
           if(Array.isArray(res)){
             res.forEach(ele => {
@@ -202,7 +205,7 @@ async function research() {
                 task.dones++;
                 if(task.dones === task.nbOfDonesToExpect) {
                   // if all mirrors have responded, we can stop listening and stop the loading animation
-                  socket?.off('searchInMirrors');
+                  socket.off('searchInMirrors');
                   loading.value = false;
                   done.value = true;
                 }
@@ -215,7 +218,7 @@ async function research() {
             task.dones++;
             if(task.dones === task.nbOfDonesToExpect) {
               // if all mirrors have responded, we can stop listening and stop the loading animation
-              socket?.off('searchInMirrors');
+              socket.off('searchInMirrors');
               loading.value = false;
               done.value = true;
             }
@@ -231,23 +234,26 @@ async function research() {
   );
 }
 
-// get available mirrors before rendering and start the search if params are present
-onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
+/** get available mirrors before rendering and start the search if params are present */
+async function On() {
+  const socket = await useSocket(settings.server);
   const queryParam = route.query.q as string;
-  socket?.emit('getMirrors', false, (mirrors) => {
+  socket.emit('getMirrors', false, (mirrors) => {
     setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, settings.i18n.ignored);
     if(queryParam) {
       query.value = queryParam;
       research();
     }
   });
-});
+}
 
-// prevent websocket server to keep searching after unmounting
-onBeforeUnmount(async () => {
-  if(socket) socket.emit('stopSearchInMirrors');
-});
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.emit('stopSearchInMirrors');
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 </script>
 <template>
   <q-layout
@@ -260,7 +266,7 @@ onBeforeUnmount(async () => {
       <q-linear-progress
         v-if="loading"
         ref="progress"
-        :size="progressBarSize"
+        :size="`${progressBarSize}px`"
         color="orange"
         animation-speed="500"
         indeterminate

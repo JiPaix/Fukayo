@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 /** props */
 const props = defineProps<{
@@ -11,23 +13,17 @@ const props = defineProps<{
   langs: mirrorsLangsType[]
 }>();
 
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** hover */
-const hover = ref(false);
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-const QChipSize = computed(() => {
-  switch ($q.screen.name) {
-    case 'xs':
-      return 'q-pa-sm';
-    case 'sm':
-      return 'q-pa-xs';
-    default:
-      return '';
-  }
-});
-
-const QChipColors = {
+// globals
+const
+/** QChip states colors */
+QChipColors = {
     none : {
       hover: 'bg-grey-6',
       normal: 'bg-grey-7',
@@ -38,19 +34,34 @@ const QChipColors = {
     },
 };
 
-const QChipColor = computed(() => {
+// states
+const
+/** hover */
+hover = ref(false);
+
+// computed
+const
+/** QChip padding class name */
+QChipPadding = computed(() => {
+  switch ($q.screen.name) {
+    case 'xs':
+      return 'q-pa-sm';
+    case 'sm':
+      return 'q-pa-xs';
+    default:
+      return '';
+  }
+}),
+/** QChip background color class name */
+QChipColor = computed(() => {
   if(props.nbOfUnread > 0) return hover.value ? QChipColors.some.hover : QChipColors.some.normal;
   else return hover.value ? QChipColors.none.hover : QChipColors.none.normal;
 });
-
-
-
 </script>
 <template>
   <div
-    :size="QChipSize"
     class="q-mb-xs flex flex-center justify-between text-white shadow-3 rounded-borders"
-    :class="QChipColor+' '+QChipSize"
+    :class="QChipColor+' '+QChipPadding"
     @mouseenter="hover=true"
     @mouseleave="hover=false"
   >

@@ -1,11 +1,15 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { appLangsType } from '@i18n';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import type en from '@i18n/../locales/en.json';
 
+/** props */
 const props = defineProps<{
   sourceURL?: string
   manga: MangaPage|MangaInDB
@@ -18,13 +22,32 @@ const props = defineProps<{
   drawerOpen: boolean
 }>();
 
+/** emits */
 const emit = defineEmits<{
   (event: 'toggleDrawer'): void
 }>();
 
-const $q = useQuasar();
-const router = useRouter();
-const settings = useSettingsStore();
+// settings
+const
+/** quasar */
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** stored settings */
+settings = useSettingsStore(),
+/** router */
+router = useRouter();
+
+// computed
+const
+/** parent's QHeader + QHeader heights */
+headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
+});
+
+/** toggle on/off dark mode */
 function toggleDarkMode() {
   if (settings.theme === 'dark') {
     settings.theme = 'light';
@@ -35,20 +58,13 @@ function toggleDarkMode() {
   }
 }
 
-/** header + sub-header size */
-const headerSize = computed(() => {
-  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
-  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
-  return topHeader.offsetHeight + subHeader.offsetHeight;
-});
-
+/** open chapter in new tab */
 function open() {
   if(!props.sourceURL) return;
   const url = `${props.sourceURL}${props.chapter.url}`;
   window.open(url, '_blank');
 }
 </script>
-
 <template>
   <q-toolbar>
     <q-btn

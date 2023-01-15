@@ -1,8 +1,11 @@
 <script lang="ts" setup>
+import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
 defineProps<{
@@ -11,20 +14,29 @@ defineProps<{
 }>();
 
 // config
-const $q = useQuasar(),
-      route = useRoute(),
-      router = useRouter(),
-      settings = useSettingsStore();
+const
+/** quasar */
+$q = useQuasar(),
+/** route */
+route = useRoute(),
+/** router */
+router = useRouter(),
+/** stored settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
 // states
-const drawer = ref(false), // drawer's v-model
-      miniState = ref(true), // drawer's mini state
-      updating = ref(true); // update icon state
-
+const
+/** drawer's v-model */
+drawer = ref(false),
+/** drawer's mini state */
+miniState = ref(true),
+/** the update icon state */
+updating = ref(true);
 
 // globals
 let interval: ReturnType<typeof setInterval> | undefined;
-
 
 /**
  * check if API is currently updating mangas

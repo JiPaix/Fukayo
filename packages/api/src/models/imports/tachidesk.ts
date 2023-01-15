@@ -6,7 +6,7 @@ import type ImporterInterface from '@api/models/imports/interfaces';
 import type Tachidesk from '@api/models/tachidesk';
 import { isErrorMessage } from '@api/models/types/errors';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { mirrorsLangsType } from '@i18n';
 import type { ImportResults } from './types';
 
 const tachidesk = mirrors.find(m=> m.name === 'tachidesk') as typeof Tachidesk;

@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
@@ -21,9 +20,13 @@ import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
+// types
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type OptionLanguage = QSelectOption<mirrorsLangsType>
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
+/** props */
 const props = defineProps<{
   id: string,
   url?: string,
@@ -31,58 +34,68 @@ const props = defineProps<{
   mirror: string,
 }>();
 
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$q = useQuasar(),
 /** vue-router */
-const router = useRouter();
+router = useRouter(),
+/** settings */
+settings = useSettingsStore(),
 /** dayJS lib */
-const dayJS = inject<typeof dayjs>('dayJS');
-/** stored settings */
-const settings = useSettingsStore();
+dayJS = inject<typeof dayjs>('dayJS'),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
 /** stored history */
-const historyStore = useHistoryStore();
-/** web socket */
-let socket: socketClientInstance | undefined;
-/** header */
-const top = document.querySelector<HTMLDivElement>('#top-header');
+historyStore = useHistoryStore();
 
-type Manga = MangaInDB | MangaPage;
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+// globals
+const
+/** header */
+top = document.querySelector<HTMLDivElement>('#top-header'),
+/** chapter table column */
+columns = [
+  {
+    name: 'chap',
+    label: 'chapter',
+    field: 'number',
+    sortable: true,
+    sort: (a:number, b:number, rowA:MangaPage['chapters'][number], rowB:MangaPage['chapters'][number]) => sortChapInTable(rowA, rowB),
+  },
+  {
+    name: 'fetch',
+    label: 'date',
+    field: 'date',
+    format: (val:number) => dayJS ? dayJS(val).fromNow() : val,
+  },
+];
+
+// states
+const
 /** manga infos as retrieved by the server */
-const mangaRaw = ref<PartialBy<Manga, 'chapters'>>();
+mangaRaw = ref<PartialBy<MangaInDB | MangaPage, 'chapters'>>(),
 /** manga failed to load*/
-const nodata = ref<string[]|null>(null);
+nodata = ref<string[]|null>(null),
 /** selected language */
-const selectedLanguage = ref(props.lang);
+selectedLanguage = ref(props.lang),
 /** mirror info */
-const mirrorinfo = ref<mirrorInfo|undefined>();
+ mirrorinfo = ref<mirrorInfo|undefined>(),
 /** carrousel slides */
-const slide = ref(0);
+slide = ref(0),
+/** filter dialog */
+filterDialog = ref(false);
+
+// computed
+const
 /** height of the carrousel */
-const thumbnailHeight = computed(() => {
+thumbnailHeight = computed(() => {
   if($q.screen.xs) return '400px';
   else if($q.screen.sm) return '400px';
   else if($q.screen.md) return '500px';
   return '400px';
-});
-/** hide caret in <select> language */
-function hideCaret() {
-  const style = document.querySelector('#hidecaret') as HTMLStyleElement || document.createElement('style');
-  style.id = '#hidecaret';
-  style.textContent = '.q-icon.notranslate.material-icons.q-select__dropdown-icon { display: none; }';
-  document.body.appendChild(style);
-}
-/** show caret in <select> language */
-function showCaret() {
-  const style = document.getElementById('#hidecaret') as HTMLStyleElement || null;
-  if(style) style.textContent = '';
-}
-
+}),
 /** manga infos */
-const manga = computed(() => {
+manga = computed(() => {
   if(!mangaRaw.value) return undefined;
   return {
     ...mangaRaw.value,
@@ -96,10 +109,9 @@ const manga = computed(() => {
       };
     }).filter(x => x.lang === selectedLanguage.value),
   };
-});
-
+}),
 /** the manga name OR display name */
-const displayName = computed<string>({
+displayName = computed<string>({
   get() {
     if(!manga.value) return '';
     return manga.value.displayName || manga.value.name;
@@ -112,10 +124,9 @@ const displayName = computed<string>({
     const updatedManga:MangaInDB|MangaPage = {...manga.value, displayName: trimmed };
     updateManga(updatedManga);
   },
-});
-
+}),
 /** url pointing to the manga */
-const mirrorInfoURL = computed(() => {
+mirrorInfoURL = computed(() => {
   if(!mirrorinfo.value || !manga.value) return '';
   let url = '';
   const { protocol, host, port} = mirrorinfo.value.options;
@@ -125,10 +136,9 @@ const mirrorInfoURL = computed(() => {
   else url += mirrorinfo.value.host;
   url += manga.value.url;
   return url;
-});
-
+}),
 /** user-defined categories */
-const userCategories = computed({
+userCategories = computed({
   get() {
     if(!mangaRaw.value) return [];
     return mangaRaw.value.userCategories;
@@ -139,64 +149,9 @@ const userCategories = computed({
     manga.value.userCategories = newValue;
     updateManga(manga.value);
   },
-});
-
-/** add manga to library */
-async function add() {
-  if(!manga.value) return;
-  if (!socket) socket = await useSocket(settings.server);
-  socket?.emit('addManga', { manga: manga.value }, (res) => {
-    mangaRaw.value = {
-      ...res,
-      covers: manga.value?.covers || [],
-    };
-    if(res.langs.length === 1) hideCaret();
-    else showCaret();
-  });
-}
-
-/** remove manga from library */
-async function remove() {
-  if(!manga.value) return;
-  if (!socket) socket = await useSocket(settings.server);
-  // get the language index
-  const langIndex = manga.value.langs.findIndex(i => i === selectedLanguage.value);
-
-  if(isMangaInDB(manga.value)) {
-    socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
-      mangaRaw.value = { ...res, covers: res.covers.map(c => transformIMGurl(c, settings)) };
-      // automatically select another language when current is deleted
-      const lang = langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex];
-      routeLang.value = { label: $t(`languages.${lang}`), value: lang};
-      if(res.langs.length === 1) hideCaret();
-    });
-  }
-}
-
-/** upserts manga in database, also updates `mangaRaw` */
-async function updateManga(updatedManga:MangaInDB|MangaPage) {
-  if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
-  if(isMangaInDB(manga.value)) {
-    socket.emit('addManga', { manga: updatedManga }, (res) => {
-      mangaRaw.value = {...res, covers: manga.value?.covers||[] };
-    });
-  } else {
-    mangaRaw.value = updatedManga;
-  }
-}
-
-/** toggle manga in and out of library */
-function toggleInLibrary() {
-  if(!manga.value) return;
-  if(!isMangaInDB(manga.value)) {
-    add();
-  } else {
-    remove();
-  }
-}
+}),
 /** return the color class for the manga's publication status */
-const statusClass = computed(() => {
+statusClass = computed(() => {
   if(!manga.value) return 'white';
   switch(manga.value.status) {
     case 'cancelled':
@@ -212,31 +167,9 @@ const statusClass = computed(() => {
     default:
       return 'white';
   }
-});
-
-
-/** function that sort chapters */
-function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
-  if(settings.mangaPage.chapters.sort === 'ASC') {
-    return chapters.sort((a, b) => {
-      if(a.volume && b.volume) {
-        const diff = a.volume - b.volume;
-        if (diff) return diff;
-      }
-      return a.number - b.number;
-    });
-  }
-  return chapters.sort((a, b) => {
-    if(a.volume && b.volume) {
-      const diff = b.volume - a.volume;
-      if (diff) return diff;
-    }
-    return b.number - a.number;
-  });
-}
-
+}),
 /** manga's chapters */
-const chapters = computed(() => {
+chapters = computed(() => {
   if (mangaRaw.value && mangaRaw.value.chapters) {
     let chap = sortChapter(mangaRaw.value.chapters).filter(c => !ignoredScanlators.value.includes(c.group || '')).filter(ch => {
       if(hideReadChapters.value && ch.read) return false;
@@ -264,54 +197,22 @@ const chapters = computed(() => {
     return chap;
   }
   return [];
-});
-
-/** resume or start reading */
-const resume = computed(() => {
+}),
+resume = computed(() => {
   if(!chapters.value || !chapters.value.length) return { label:  $t('mangas.start_reading') };
   const firstChap = settings.mangaPage.chapters.sort === 'ASC' ? chapters.value[0] : chapters.value[chapters.value.length-1];
   const readChaps = chapters.value.filter(c => c.read);
   if(readChaps.length) return { label: $t('mangas.resume_reading'), value: readChaps[settings.mangaPage.chapters.sort === 'ASC' ? 0 : readChaps.length-1] };
   return { label:  $t('mangas.start_reading'), value: firstChap };
-});
-
-/** function to sort chapter in the table */
-function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
-  const avol = a.volume || 999999,
-        bvol = b.volume || 999999,
-        voldif = avol - bvol;
-  if(voldif === 0) return a.number - b.number;
-  return voldif;
-}
-
-/** chapter table column */
-const columns = [
-  {
-    name: 'chap',
-    label: 'chapter',
-    field: 'number',
-    sortable: true,
-    sort: (a:number, b:number, rowA:MangaPage['chapters'][number], rowB:MangaPage['chapters'][number]) => sortChapInTable(rowA, rowB),
-  },
-  {
-    name: 'fetch',
-    label: 'date',
-    field: 'date',
-    format: (val:number) => dayJS ? dayJS(val).fromNow() : val,
-  },
-];
-
+}),
 /** the number of chapters */
-const nbOfChapters = computed(() => {
+nbOfChapters = computed(() => {
   if(!mangaRaw.value) return 0;
   if(!mangaRaw.value.chapters) return 0;
   return mangaRaw.value.chapters.filter(c => c.lang === props.lang).length;
-});
-
-/** filter dialog */
-const filterDialog = ref(false);
+}),
 /** list of ignored scanlator for this entry */
-const ignoredScanlators = computed({
+ignoredScanlators = computed({
   get() {
     if(!mangaRaw.value) return [];
     const id = mangaRaw.value.id;
@@ -325,10 +226,9 @@ const ignoredScanlators = computed({
     settings.mangaPage.chapters.scanlators.ignore = settings.mangaPage.chapters.scanlators.ignore.filter(s=>s.id !== s.id);
     scanlatorsMapped.forEach(m => settings.mangaPage.chapters.scanlators.ignore.push(m));
   },
-});
-
+}),
 /** is komga special regex enabled? */
-const isKomgaTryingItsBest = computed({
+isKomgaTryingItsBest = computed({
   get() {
     if(!mangaRaw.value) return false;
     if(mangaRaw.value.mirror.name !== 'komga') return false;
@@ -343,24 +243,131 @@ const isKomgaTryingItsBest = computed({
     if(newValue) settings.mangaPage.chapters.KomgaTryYourBest.push(id);
     else settings.mangaPage.chapters.KomgaTryYourBest = settings.mangaPage.chapters.KomgaTryYourBest.filter(x => x !== id);
   },
-});
-
+}),
 /** toggle hide read chapters */
-const hideReadChapters = computed({
+hideReadChapters = computed({
   get() {
     return settings.mangaPage.chapters.hideRead;
   },
   set(newValue:boolean) {
     settings.mangaPage.chapters.hideRead = newValue;
   },
-});
-
+}),
 /** list of unread chapters */
-const unreadChaps = computed(() => {
+unreadChaps = computed(() => {
   return chapters.value.filter((c) => !c.read);
+}),
+routeLang = computed<OptionLanguage>({
+  get() {
+    return { value: selectedLanguage.value, label: $t(`languages.${selectedLanguage.value}`) };
+  },
+  /** current language (read-write) */
+  set(lang:OptionLanguage) {
+    selectedLanguage.value = lang.value;
+    const newURL = window.location.href.replace(/\/\w+$/gi, `/${lang.value}`);
+    history.pushState({}, '', newURL);
+  },
 });
 
-/** move to the reader */
+/** hide caret in <select> language */
+function hideCaret() {
+  const style = document.querySelector('#hidecaret') as HTMLStyleElement || document.createElement('style');
+  style.id = '#hidecaret';
+  style.textContent = '.q-icon.notranslate.material-icons.q-select__dropdown-icon { display: none; }';
+  document.body.appendChild(style);
+}
+
+/** show caret in <select> language */
+function showCaret() {
+  const style = document.getElementById('#hidecaret') as HTMLStyleElement || null;
+  if(style) style.textContent = '';
+}
+
+/** add manga to library */
+async function add() {
+  if(!manga.value) return;
+  const socket = await useSocket(settings.server);
+  socket.emit('addManga', { manga: manga.value }, (res) => {
+    mangaRaw.value = {
+      ...res,
+      covers: manga.value?.covers || [],
+    };
+    if(res.langs.length === 1) hideCaret();
+    else showCaret();
+  });
+}
+
+/** remove manga from library */
+async function remove() {
+  if(!manga.value) return;
+  const socket = await useSocket(settings.server);
+  // get the language index
+  const langIndex = manga.value.langs.findIndex(i => i === selectedLanguage.value);
+
+  if(isMangaInDB(manga.value)) {
+    socket.emit('removeManga', manga.value, selectedLanguage.value, (res) => {
+      mangaRaw.value = { ...res, covers: res.covers.map(c => transformIMGurl(c, settings)) };
+      // automatically select another language when current is deleted
+      const lang = langIndex < 0 || res.langs.length-1 < langIndex ? res.langs[0] : res.langs[langIndex];
+      routeLang.value = { label: $t(`languages.${lang}`), value: lang};
+      if(res.langs.length === 1) hideCaret();
+    });
+  }
+}
+
+/** upserts manga in database, also updates `mangaRaw` */
+async function updateManga(updatedManga:MangaInDB|MangaPage) {
+  if(!manga.value) return;
+  const socket = await useSocket(settings.server);
+  if(isMangaInDB(manga.value)) {
+    socket.emit('addManga', { manga: updatedManga }, (res) => {
+      mangaRaw.value = {...res, covers: manga.value?.covers||[] };
+    });
+  } else {
+    mangaRaw.value = updatedManga;
+  }
+}
+
+/** toggle manga in and out of library */
+function toggleInLibrary() {
+  if(!manga.value) return;
+  if(!isMangaInDB(manga.value)) {
+    add();
+  } else {
+    remove();
+  }
+}
+
+/** sort chapters */
+function sortChapter(chapters:MangaInDB['chapters']|MangaPage['chapters']) {
+  if(settings.mangaPage.chapters.sort === 'ASC') {
+    return chapters.sort((a, b) => {
+      if(a.volume && b.volume) {
+        const diff = a.volume - b.volume;
+        if (diff) return diff;
+      }
+      return a.number - b.number;
+    });
+  }
+  return chapters.sort((a, b) => {
+    if(a.volume && b.volume) {
+      const diff = b.volume - a.volume;
+      if (diff) return diff;
+    }
+    return b.number - a.number;
+  });
+}
+
+/** sort chapter in the table */
+function sortChapInTable(a:MangaPage['chapters'][number], b:MangaPage['chapters'][number]) {
+  const avol = a.volume || 999999,
+        bvol = b.volume || 999999,
+        voldif = avol - bvol;
+  if(voldif === 0) return a.number - b.number;
+  return voldif;
+}
+
+/** redirect to the reader */
 function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]) {
   if(!mirrorinfo.value || !manga.value) return;
 
@@ -381,7 +388,7 @@ function showChapter(chapter:MangaInDB['chapters'][0] | MangaPage['chapters'][0]
 /** Mark a chapter as read */
 async function markAsRead(index:number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapterUrls:string[] = [];
@@ -402,7 +409,7 @@ async function markAsRead(index:number) {
 /** Mark a chapter as unread */
 async function markAsUnread(index:number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapterUrls:string[] = [];
@@ -423,7 +430,7 @@ async function markAsUnread(index:number) {
 /** Mark all previous chapters as read */
 async function markPreviousAsRead(index: number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
@@ -445,7 +452,7 @@ async function markPreviousAsRead(index: number) {
 /** Mark all previous chapters as unread */
 async function markPreviousAsUnread(index: number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
@@ -467,7 +474,7 @@ async function markPreviousAsUnread(index: number) {
 /** Mark all next chapters as read */
 async function markNextAsRead(index: number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
@@ -489,7 +496,7 @@ async function markNextAsRead(index: number) {
 /** Mark all next chapters as unread */
 async function markNextAsUnread(index: number) {
   if(!manga.value) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   const lang = selectedLanguage.value;
   const chapNum = chapters.value[index].number;
@@ -508,10 +515,11 @@ async function markNextAsUnread(index: number) {
   socket.emit('markAsRead', { mirror: manga.value.mirror.name, lang, url: manga.value.url, chapterUrls, read: true, mangaId: updatedManga.id });
 }
 
+/** fetch manga */
 async function startFetch() {
   nodata.value = null;
   const reqId = Date.now();
-  if (!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
 
   socket.once('showManga', (id, mg) => {
     if (id === reqId) {
@@ -525,7 +533,7 @@ async function startFetch() {
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
         mangaRaw.value = { ...mg, covers: mg.covers.map(c => transformIMGurl(c, settings)), userCategories: mg.userCategories.sort() };
 
-        socket?.emit('getMirrors', true, (mirrors) => {
+        socket.emit('getMirrors', true, (mirrors) => {
           const m = mirrors.find((m) => m.name === mg.mirror.name);
           if(m) mirrorinfo.value = m;
         });
@@ -562,30 +570,17 @@ async function startFetch() {
 
 }
 
-
-
-onMounted(() => {
+function On() {
   window.scrollTo(0, 0);
-});
+}
 
-onBeforeUnmount(async () => {
+async function Off() {
   const socket = await useSocket(settings.server);
   socket.off('showChapter');
-});
+}
 
-const routeLang = computed<OptionLanguage>({
-  get() {
-    return { value: selectedLanguage.value, label: $t(`languages.${selectedLanguage.value}`) };
-  },
-  set(lang:OptionLanguage) {
-    console.log(lang);
-    selectedLanguage.value = lang.value;
-    const newURL = window.location.href.replace(/\/\w+$/gi, `/${lang.value}`);
-    history.pushState({}, '', newURL);
-  },
-});
-
-
+onMounted(On);
+onBeforeUnmount(Off);
 
 startFetch();
 

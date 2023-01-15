@@ -8,15 +8,6 @@ import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-/** quasar */
-const $q = useQuasar();
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** stored settings */
-const settings = useSettingsStore();
-/** emit */
-const emit = defineEmits<{ (event: 'done', auth: LoginAuth): void }>();
-
-
 /** props */
 defineProps({
   /** display a bad password error */
@@ -26,13 +17,27 @@ defineProps({
   },
 });
 
+/** emits */
+const emit = defineEmits<{ (event: 'done', auth: LoginAuth): void }>();
 
+// settings
+const
+/** quasar */
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** stored settings */
+settings = useSettingsStore();
+
+
+// states
+const
 /** user password */
-const password = ref<string|null>(null);
+password = ref<string|null>(null),
 /** show a loading while connecting to the server */
-const loading = ref(false);
+loading = ref(false),
 /** toggler to display the password */
-const showPassword = ref(false);
+showPassword = ref(false);
 
 /** check the user inputed a login and password */
 function readyToStart() {

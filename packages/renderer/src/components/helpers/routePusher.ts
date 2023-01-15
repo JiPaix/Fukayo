@@ -1,4 +1,4 @@
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { mirrorsLangsType } from '@i18n';
 import type { RouteParamsRaw } from 'vue-router';
 
 export type mangaRoute = {

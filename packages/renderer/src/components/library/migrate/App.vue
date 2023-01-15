@@ -1,22 +1,21 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import { isMangaPage } from '@api/db/helpers';
 import type { MangaErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo, TaskDone } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typechecker';
 import type { MangaInDBwithLabel } from '@renderer/components/library/@types';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 
 /** props */
 const props = defineProps<{
@@ -24,37 +23,43 @@ const props = defineProps<{
   /** is this migration tool used because of broken mirror/entries? */
   bug: boolean
 }>();
-/** web socket */
-let socket: socketClientInstance | undefined;
-/** quasar */
-const $q = useQuasar();
-/** i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** router */
-const router = useRouter();
-/** settings */
-const settings = useSettingsStore();
-/** template ref (infinite scroll) */
-const scrollTargetRef = ref<null|Element>(null);
-/** show-hide main dialog */
-const dialog = ref(false);
-/** carrousel slides */
-const slide = ref(0);
-/** list of mangas yet to be fixed */
-const mangasToFix = ref(props.mangas);
-/** available mirrors */
-const mirrors = ref<mirrorInfo[]>([]);
-/** selected migration mirror */
-const migrationMirror = ref<string[]|null>(null);
-/** possible candidate for selected manga */
-const candidates = ref<MangaPage[]>([]);
-/** origin of candidate */
-const compareSource = ref(props.mangas[0]);
-/** loading candidates? */
-const loadingCandidates = ref(false);
-/** show candidates dialog */
-const showCandidates = ref(false);
 
+
+// config
+const
+/** quasar */
+$q = useQuasar(),
+/** router */
+router = useRouter(),
+/** user settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+// state
+const
+/** template ref (infinite scroll) */
+scrollTargetRef = ref<null|Element>(null),
+/** show-hide main dialog */
+dialog = ref(false),
+/** carrousel slides */
+slide = ref(0),
+/** list of mangas yet to be fixed */
+mangasToFix = ref(props.mangas),
+/** available mirrors */
+mirrors = ref<mirrorInfo[]>([]),
+/** selected migration mirror */
+migrationMirror = ref<string[]|null>(null),
+/** possible candidate for selected manga */
+candidates = ref<MangaPage[]>([]),
+/** origin of candidate */
+compareSource = ref(props.mangas[0]),
+/** loading candidates? */
+loadingCandidates = ref(false),
+/** show candidates dialog */
+showCandidates = ref(false);
+
+/** search manga in mirrors */
 async function search(origin: typeof props.mangas[0], selectedMirrors: string[]) {
   selectedMirrors = mirrors.value.filter(m=> selectedMirrors.includes(m.displayName)).map(m=>m.name);
   const search = await internalSearch(origin, selectedMirrors);
@@ -70,6 +75,7 @@ async function search(origin: typeof props.mangas[0], selectedMirrors: string[])
   if(candidates.value.length) showCandidates.value = true;
 }
 
+/** interact with the API to find searchResults */
 async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: string[]):Promise<SearchResult[]> {
   compareSource.value = origin;
   const search:SearchResult[] = [];
@@ -77,7 +83,7 @@ async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: s
   showCandidates.value = false;
   const reqId = Date.now();
   let mirrorToWait = selectedMirrors.length;
-  if (!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   return new Promise(resolve => {
     const searchListener = (id:number, manga:SearchResult | SearchResult[] | SearchErrorMessage | TaskDone) => {
       if(id !== reqId) return;
@@ -102,8 +108,9 @@ async function internalSearch(origin: typeof props.mangas[0], selectedMirrors: s
   });
 }
 
+/** Fetch a manga */
 async function fetch(mirror: string, langs: mirrorsLangsType[], url: string, id:string):Promise<MangaPage> {
-  if (!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   const reqId = Date.now();
   return new Promise((resolve, reject) => {
       const mangaListener = (id: number, manga: MangaPage | MangaInDB | MangaErrorMessage) => {
@@ -118,6 +125,7 @@ async function fetch(mirror: string, langs: mirrorsLangsType[], url: string, id:
   });
 }
 
+/** migrate manga */
 async function migrate(source:typeof props.mangas[0], candidate:MangaPage) {
   const mirrorVersion = mirrors.value.find(m => m.name === source.mirror);
   if(!mirrorVersion) return;
@@ -153,23 +161,28 @@ async function migrate(source:typeof props.mangas[0], candidate:MangaPage) {
     }),
   };
 
-  if (!socket) socket = await useSocket(settings.server);
-
-
+  const socket = await useSocket(settings.server);
   socket.emit('addManga', {manga: mangaTarget, settings: { ...mangaSource.meta.options }}, (mg) => {
-    mangaSource.langs.forEach(l => socket?.emit('removeManga', mangaSource, l, () => null));
+    mangaSource.langs.forEach(l => socket.emit('removeManga', mangaSource, l, () => null));
     const params = routeTypeHelper('manga', { id: mg.id, lang: mg.langs[0], mirror: mg.mirror.name });
     router.push(params);
   });
 }
 
-onBeforeMount(async() => {
-  if (!socket) socket = await useSocket(settings.server);
-  socket.emit('getMirrors', false, (m => {
-    mirrors.value = m;
-  }));
-});
+/** get list of mirrors */
+async function On() {
+  const socket = await useSocket(settings.server);
+  socket.emit('getMirrors', false, (m => mirrors.value = m));
+}
 
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.off('showManga');
+  socket.off('searchInMirrors');
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 </script>
 <template>
   <div class="flex flex-center q-pa-lg">

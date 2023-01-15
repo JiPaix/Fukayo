@@ -10,23 +10,35 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-const route = useRoute();
 
-const tabList:['general', 'sources', 'languages', 'files'] = ['general', 'sources', 'languages', 'files'];
-const startTab:typeof tabList[number] = typeof route.params.tab === 'string' && tabList.includes(route.params.tab as typeof tabList[number]) ? route.params.tab as typeof tabList[number]: 'general';
-const tab = ref<'general' | 'sources' | 'languages' | 'files'>(startTab);
-const $q = useQuasar();
+// settings
+const
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** route */
+route = useRoute(),
+/** quasar */
+$q = useQuasar();
 
-const subheaderSize = ref(0);
+// globals
+const
+/** list of tabs */
+tabList:['general', 'sources', 'languages', 'files'] = ['general', 'sources', 'languages', 'files'],
+/** default tab */
+startTab:typeof tabList[number] = typeof route.params.tab === 'string' && tabList.includes(route.params.tab as typeof tabList[number]) ? route.params.tab as typeof tabList[number]: 'general';
 
+// states
+const
+/** current tab */
+tab = ref<'general' | 'sources' | 'languages' | 'files'>(startTab),
+subheaderSize = ref(0);
+
+/** save QHeader's height */
 function onResize() {
   const div = document.querySelector<HTMLDivElement>('#sub-header');
   if(div) subheaderSize.value = div.offsetHeight;
 }
-
 </script>
-
 <template>
   <div
     class="w-100"

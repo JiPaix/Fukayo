@@ -27,76 +27,55 @@ const props = defineProps<{
   chapterId: string,
 }>();
 
+// settings
+const
 /** settings store */
-const settings = useSettingsStore();
+settings = useSettingsStore(),
 /** history store */
-const historyStore = useHistoryStore();
+historyStore = useHistoryStore(),
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
 /** i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** current url */
-const currentURL = ref(document.location.href);
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+// states
+const
 /** the source's url */
-const sourceURL = ref<string|undefined>();
-/** show overlay hint on mobile */
-const showMobileOverlayHint = ref($q.platform.has.touch);
-/** keep track of the main header's height */
-const headerSize = ref(0);
-/** update the header's height */
-function onHeaderResize() {
-  const top = document.querySelector<HTMLDivElement>('#top-header');
-  if(top) headerSize.value = top.offsetHeight;
-}
-/** sidebar status */
-const rightDrawerOpen = computed({
-  get() {
-    return settings.readerGlobal.pinRightDrawer;
-  },
-  set(nval:boolean) {
-    settings.readerGlobal.pinRightDrawer = nval;
-  },
-});
+sourceURL = ref<string|undefined>(),
+/** parent QHeader's height */
+headerSize = ref(0),
 /** loading progress */
-const progress = ref(0);
+progress = ref(0),
 /** loading progress has error? */
-const progressError = ref(false);
+progressError = ref(false),
 /** chapters ref */
-const chaptersRef = ref<null|HTMLDivElement>(null);
-/** chapter id user is currently reading */
-const currentChapterId = ref(props.chapterId);
+chaptersRef = ref<null|HTMLDivElement>(null),
 /** display page selector */
-const showPageSelector = ref(false);
+showPageSelector = ref(false),
+/** show overlay hint on mobile */
+showMobileOverlayHint = ref($q.platform.has.touch),
 /** current page */
-const currentPage = ref(0);
-/** current pages length */
-const currentPagesLength = computed(() => {
-  if(!currentChapterFormatted.value) return 0;
-  return currentChapterFormatted.value.imgsExpectedLength;
-});
-
+currentPage = ref(0),
 /** thumbnail scrollbar */
-const thumbscroll = ref<null|QVirtualScroll>();
+thumbscroll = ref<null|QVirtualScroll>(),
 /** image container div */
-const virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null);
+virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null),
 /** if this is put to true mousewheel scrolls are ignored */
-const ignoreScroll = ref(false);
-
+ignoreScroll = ref(false),
 /** manga data */
-const manga = ref<MangaPage|MangaInDB|null>(null);
+manga = ref<MangaPage|MangaInDB|null>(null),
 /** couldn't load manga data */
-const error = ref<MangaErrorMessage|ChapterErrorMessage|null>(null);
-
+error = ref<MangaErrorMessage|ChapterErrorMessage|null>(null),
 /** make sure we don't load chapter twice */
-const loadingAchapter = ref(false);
+loadingAchapter = ref(false),
 /** count double-taps left when first page is onscreen */
-const doubleTapLeft = ref(0);
+doubleTapLeft = ref(0),
 /** count double-taps right when last page is onscreen */
-const doubleTapRight = ref(0);
+doubleTapRight = ref(0),
 /** reader settings so they don't overwrite global options */
-const localReaderSettings = ref(settings.reader);
+localReaderSettings = ref(settings.reader),
 /** formatted chapters (before sort) */
-const RAWchapters = ref<{
+RAWchapters = ref<{
   /** chapter id */
   id: string,
   /** chapter index */
@@ -106,16 +85,30 @@ const RAWchapters = ref<{
   /** chapter images/errors */
   imgs: (ChapterImage | ChapterImageErrorMessage)[]
   }[]
->([]);
+>([]),
+/** chapter id user is currently reading */
+currentChapterId = ref(props.chapterId);
 
-/** function to sort RAWchapters by index */
-function sortChapters(chapters: typeof RAWchapters.value, reverse = false) {
-  if(reverse) return chapters.sort((a, b) => b.index - a.index);
-  return chapters.sort((a, b) => a.index - b.index);
-}
-
-/** is komga special regex enabled? */
-const isKomgaTryingItsBest = computed({
+// computed
+const
+/** current url */
+currentURL = computed(() => document.location.href),
+/** sidebar status (read-write) */
+rightDrawerOpen = computed({
+  get() {
+    return settings.readerGlobal.pinRightDrawer;
+  },
+  set(nval:boolean) {
+    settings.readerGlobal.pinRightDrawer = nval;
+  },
+}),
+/** current pages length */
+currentPagesLength = computed(() => {
+  if(!currentChapterFormatted.value) return 0;
+  return currentChapterFormatted.value.imgsExpectedLength;
+}),
+/** is komga special regex enabled? (read-write) */
+isKomgaTryingItsBest = computed({
   get() {
     if(!manga.value) return false;
     if(manga.value.mirror.name !== 'komga') return false;
@@ -130,48 +123,75 @@ const isKomgaTryingItsBest = computed({
     if(newValue) settings.mangaPage.chapters.KomgaTryYourBest.push(id);
     else settings.mangaPage.chapters.KomgaTryYourBest = settings.mangaPage.chapters.KomgaTryYourBest.filter(x => x !== id);
   },
-});
-
+}),
 /** formated chapters sorted by index (DESC) */
-const chaptersFormatted = computed(() => {
+chaptersFormatted = computed(() => {
   return sortChapters(RAWchapters.value);
-});
-
+}),
 /** current formatted chapter */
-const currentChapterFormatted = computed(() => {
+currentChapterFormatted = computed(() => {
   return chaptersFormatted.value.find(c => c.id === currentChapterId.value);
-});
-
+}),
 /** current chapter */
-const currentChapter = computed(() => {
+currentChapter = computed(() => {
   if(!manga.value) return;
   return manga.value.chapters.find(c => c.id === currentChapterId.value);
-});
-
+}),
 /** next chapter */
-const nextChapter = computed(() => {
+nextChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
   if(!chapter) return null;
   const index = manga.value.chapters.indexOf(chapter);
   if(index === manga.value.chapters.length - 1)  return null;
   return manga.value.chapters[index + 1];
-});
-
+}),
 /** previous chapter */
-const prevChapter = computed(() => {
+prevChapter = computed(() => {
   if(!manga.value) return null;
   const chapter = manga.value.chapters.find(c => c.id === currentChapterId.value);
   if(!chapter) return null;
   const index = manga.value.chapters.indexOf(chapter);
   if(index === 0) return null;
   return manga.value.chapters[index - 1];
+}),
+/** shorthand for `localReaderSettings.value.rtl` */
+rtl = computed(() => {
+  return localReaderSettings.value.rtl;
+}),
+/** disable the "previous page" navigation button at the bottom of the reader */
+prevNavDisabled = computed(() => {
+  if(!currentPage.value || !virtscroll.value?.imagestack) return true;
+  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === 1;
+
+  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
+  if(current?.group.some(c => c.index === 0)) return true;
+  return false;
+}),
+/** disable the "next page" navigation button at the bottom of the reader */
+nextNavDisabled = computed(() => {
+  const expectedLength = currentChapterFormatted.value?.imgsExpectedLength;
+
+  if(!currentChapterFormatted.value || !virtscroll.value?.imagestack || !expectedLength || !currentPage.value) return true;
+  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === expectedLength;
+
+  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
+
+  if(current?.group.some(c => c.lastpage)) return true;
+  return false;
 });
 
-/** shorthand for `localReaderSettings.value.rtl` */
-const rtl = computed(() => {
-  return localReaderSettings.value.rtl;
-});
+/** update the header's height */
+function onHeaderResize() {
+  const top = document.querySelector<HTMLDivElement>('#top-header');
+  if(top) headerSize.value = top.offsetHeight;
+}
+
+/** function to sort RAWchapters by index */
+function sortChapters(chapters: typeof RAWchapters.value, reverse = false) {
+  if(reverse) return chapters.sort((a, b) => b.index - a.index);
+  return chapters.sort((a, b) => a.index - b.index);
+}
 
 /** for a given chapter index calls: `getChapter(chapter.id)` */
 async function loadIndex(index: number) {
@@ -615,29 +635,6 @@ function scrollToNextPage() {
   if(div) div.scrollIntoView({ behavior: 'smooth' });
   currentPage.value = target+1;
 }
-
-/** disable the "previous page" navigation button at the bottom of the reader */
-const prevNavDisabled = computed(() => {
-  if(!currentPage.value || !virtscroll.value?.imagestack) return true;
-  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === 1;
-
-  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
-  if(current?.group.some(c => c.index === 0)) return true;
-  return false;
-});
-
-/** disable the "next page" navigation button at the bottom of the reader */
-const nextNavDisabled = computed(() => {
-  const expectedLength = currentChapterFormatted.value?.imgsExpectedLength;
-
-  if(!currentChapterFormatted.value || !virtscroll.value?.imagestack || !expectedLength || !currentPage.value) return true;
-  if(!localReaderSettings.value.book && !localReaderSettings.value.longStrip) return currentPage.value === expectedLength;
-
-  const current = virtscroll.value.imagestack.indexes.find(i => i.indexes.includes(currentPage.value-1));
-
-  if(current?.group.some(c => c.lastpage)) return true;
-  return false;
-});
 
 /** Redirect vertical scrolls into horizontal */
 function thumbnailScroll(evt:WheelEvent) {

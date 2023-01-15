@@ -1,36 +1,43 @@
 <script lang="ts" setup>
 import type { LoginAuth } from '@api/client/types';
 import favicon from '@assets/icon.svg';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import Login from '@renderer/components/login/App.vue';
 import Setup from '@renderer/components/setup/App.vue';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useFavicon } from '@vueuse/core';
-import { useQuasar, Loading, QSpinnerRadio } from 'quasar';
+import { Loading, QSpinnerRadio, useQuasar } from 'quasar';
 import { onBeforeMount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** load favicon */
-useFavicon(favicon); // change favicon
-/** stored settings */
-const settings = useSettingsStore();
+// settings
+const
 /** quasar */
-const $q = useQuasar();
-$q.dark.set(settings.theme === 'dark');
-$q.loading.hide();
-const loading = ref(false);
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** stored settings */
+settings = useSettingsStore();
 
+// globals
+const
 /** is client using electron? */
-const isElectron = typeof window.apiServer !== 'undefined' ? true : false;
-/** display a 'bad password' message in child component */
-const badPassword = ref(false);
-/** are we logged in? */
-const connected = ref(false);
+isElectron = typeof window.apiServer !== 'undefined' ? true : false;
 
+// states
+const
+/** show connection circulare progress */
+loading = ref(false),
+/** display a 'bad password' message in child component */
+badPassword = ref(false),
+/** are we logged in? */
+connected = ref(false);
+
+
+/** Display a full screen spinner waiting for internet connection */
 function waitForConnectivity() {
   Loading.show({
     spinner: QSpinnerRadio,
@@ -44,6 +51,7 @@ function waitForConnectivity() {
   });
 }
 
+/** call `waitForConnectivity` and display another full screen spinner waiting for the API to start */
 function waitForStart() {
   waitForConnectivity();
   Loading.show({
@@ -95,7 +103,7 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean) {
 /**
  * try to connect non-electron browser to the websocket server using stored credentials
  */
-onBeforeMount(()=> {
+function On() {
   if(!isElectron) {
     const [host, port] = new URL(window.location.href).host.split(':');
     settings.server.ssl = new URL(window.location.href).protocol === 'https:' ? 'app' : 'false';
@@ -104,7 +112,17 @@ onBeforeMount(()=> {
   }
   waitForStart();
   connect(undefined, true);
-});
+}
+
+
+/** load favicon */
+useFavicon(favicon); // change favicon
+/** define dark/light mode */
+$q.dark.set(settings.theme === 'dark');
+/** hide initial spinner */
+$q.loading.hide();
+
+onBeforeMount(On);
 </script>
 <template>
   <q-layout>

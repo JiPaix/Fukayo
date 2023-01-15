@@ -2,11 +2,15 @@
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
+import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { isChapterErrorMessage, isChapterImageErrorMessage } from '@renderer/components/helpers/typechecker';
 import type FImg from '@renderer/components/reader/FImg.vue';
 import ImageStack from '@renderer/components/reader/ImageStack.vue';
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+/** props */
 const props = defineProps<{
   drawerOpen: boolean,
   chapterId: string,
@@ -23,6 +27,7 @@ const props = defineProps<{
   showMobileOverlayHint: boolean
 }>();
 
+/** emits */
 const emit = defineEmits<{
   (event: 'progress', percentage:number):void,
   (event: 'progressError'):void,
@@ -35,19 +40,19 @@ const emit = defineEmits<{
   (event: 'scrollToPrevPage'):void
 }>();
 
+// settings
+const
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+// states
+const
 /** image-slot template ref */
-const imageslot = ref<InstanceType<typeof FImg>[]|null>(null);
+imageslot = ref<InstanceType<typeof FImg>[]|null>(null),
 /** image-stack template ref */
-const imagestack = ref<InstanceType<typeof ImageStack>|null>(null);
-
-/** exported members */
-defineExpose({
-  imageslot,
-  imagestack,
-});
-
+imagestack = ref<InstanceType<typeof ImageStack>|null>(null),
 /** is the image reloading? */
-const reloading = ref(false);
+reloading = ref(false);
 
 /** reload a page */
 async function reload(pageIndex: number|undefined) {
@@ -67,6 +72,12 @@ watch(() => props.imgs, (nval) => {
     emit('progress', nval.length/props.expectedLength);
     if(nval.some(img => isChapterErrorMessage(img) || isChapterImageErrorMessage(img))) emit('progressError');
 }, { deep: true });
+
+/** exported members */
+defineExpose({
+  imageslot,
+  imagestack,
+});
 </script>
 
 <template>

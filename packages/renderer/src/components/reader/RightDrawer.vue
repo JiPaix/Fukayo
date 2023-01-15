@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
-import type { appLangsType } from '@i18n/availableLangs';
+import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type en from '@i18n/../locales/en.json';
 
 /** props */
 const props = defineProps<{
@@ -24,41 +24,29 @@ const emit = defineEmits<{
   (event: 'updateSettings', newSettings:MangaInDB['meta']['options'], oldSettings:MangaInDB['meta']['options']): void
 }>();
 
+// settings
+const
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
 /** i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
+// computed
+const
 /** returns the current chapter index */
-const currentChapterIndex = computed(() => {
+currentChapterIndex = computed(() => {
   return props.chapters.findIndex(chapter => chapter.id === props.currentChapterId);
-});
-
-/** format labels for QSelect */
-function chapterLabel(number:number, name?:string) {
-  if(name) return `${number} - ${name}`;
-  return number;
-}
-
-/** label of the selected chapter in QSelect */
-const selectedChap = ref({label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value });
-
-/** update the label when currentChapterId changes */
-watch(() => props.currentChapterId, () => {
-    selectedChap.value = { label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value };
-});
-
+}),
 /** label of the first chapter */
-const firstChapterLabel = computed(() => {
+firstChapterLabel = computed(() => {
   if(currentChapterIndex.value === 0) return null;
   return {
     label: chapterLabel(props.chapters[0].number, props.chapters[0].name),
     value: props.chapters.length - 1,
   };
-});
-
+}),
 /** label of the previous chapter */
-const nextChapterLabel = computed(() => {
+nextChapterLabel = computed(() => {
   if(currentChapterIndex.value + 1 < props.chapters.length) {
     return {
       label: chapterLabel(props.chapters[currentChapterIndex.value + 1].number, props.chapters[currentChapterIndex.value + 1].name),
@@ -66,10 +54,9 @@ const nextChapterLabel = computed(() => {
     };
   }
   return null;
-});
-
+}),
 /** label of the next chapter */
-const previousChapterLabel = computed(() => {
+previousChapterLabel = computed(() => {
   if(currentChapterIndex.value - 1 >= 0) {
     return {
       label: chapterLabel(props.chapters[currentChapterIndex.value - 1].number, props.chapters[currentChapterIndex.value - 1].name),
@@ -77,39 +64,75 @@ const previousChapterLabel = computed(() => {
     };
   }
   return null;
-});
-
+}),
 /** label of the last chapter */
-const lastChapterLabel = computed(() => {
+lastChapterLabel = computed(() => {
   if(currentChapterIndex.value === props.chapters.length - 1) return null;
   return {
     label: chapterLabel(props.chapters[props.chapters.length - 1].number, props.chapters[props.chapters.length - 1].name),
     value: 0,
   };
+}),
+/** chapters computed for QSelect */
+options = computed(() => {
+  return props.chapters.map((chapter, index) => ({
+    label: chapterLabel(chapter.number, chapter.name),
+    value: index,
+    read: chapter.read,
+  })).sort((a, b) => a.value - b.value);
 });
+
+// states
+const
+/** label of the selected chapter in QSelect */
+selectedChap = ref({label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value }),
+/** ref-ing the readerSettings props */
+localSettings = ref<MangaInDB['meta']['options']>({
+  webtoon: props.readerSettings.webtoon,
+  showPageNumber: props.readerSettings.showPageNumber,
+  zoomMode: props.readerSettings.zoomMode,
+  longStrip: props.readerSettings.longStrip,
+  longStripDirection: props.readerSettings.longStripDirection,
+  book: props.readerSettings.book,
+  bookOffset: props.readerSettings.bookOffset,
+  rtl: props.readerSettings.rtl,
+  overlay: props.readerSettings.overlay,
+});
+
+
+
+/** format labels for QSelect */
+function chapterLabel(number:number, name?:string) {
+  if(name) return `${number} - ${name}`;
+  return number;
+}
 
 /** shorthand for `emit('loadIndex', chapter_index)` */
 function goToChapter(label: { label: string | number, value: number } ) {
   emit('loadIndex', label.value);
 }
+
 /** shorthand for `emit('loadIndex', first_chapter_index)` */
 function goFirstChapter() {
   if(!firstChapterLabel.value) return;
   selectedChap.value = firstChapterLabel.value;
   emit('loadIndex', firstChapterLabel.value.value);
 }
+
 /** shorthand for `emit('loadIndex', previous_chapter_index)` */
 function goPrevChapter() {
   if(!previousChapterLabel.value) return;
   selectedChap.value = previousChapterLabel.value;
   emit('loadIndex', previousChapterLabel.value.value);
 }
+
 /** shorthand for `emit('loadIndex', next_chapter_index)` */
 function goNextChapter() {
   if(!nextChapterLabel.value) return;
   selectedChap.value = nextChapterLabel.value;
   emit('loadIndex', nextChapterLabel.value.value);
 }
+
 /** shorthand for `emit('loadIndex', last_chapter_index)` */
 function goLastChapter() {
   if(!lastChapterLabel.value) return;
@@ -126,20 +149,6 @@ async function toggleInLibrary() {
 async function toggleRead() {
   emit('toggleRead', currentChapterIndex.value);
 }
-
-/** ref-ing the readerSettings props */
-const localSettings = ref<MangaInDB['meta']['options']>({
-  webtoon: props.readerSettings.webtoon,
-  showPageNumber: props.readerSettings.showPageNumber,
-  zoomMode: props.readerSettings.zoomMode,
-  longStrip: props.readerSettings.longStrip,
-  longStripDirection: props.readerSettings.longStripDirection,
-  book: props.readerSettings.book,
-  bookOffset: props.readerSettings.bookOffset,
-  rtl: props.readerSettings.rtl,
-  overlay: props.readerSettings.overlay,
-});
-
 
 /** make sure options are compatible with each others */
 async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) {
@@ -170,6 +179,7 @@ async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) 
 
 }
 
+/** open chapter in new tab */
 function open() {
   if(!props.sourceURL) return;
   const chapter = props.chapters[currentChapterIndex.value];
@@ -177,21 +187,16 @@ function open() {
   window.open(url, '_blank');
 }
 
+/** update the label when currentChapterId changes */
+watch(() => props.currentChapterId, () => {
+    selectedChap.value = { label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value };
+});
+
+/** emit to parent */
 watch(() => localSettings.value, (nval, oval) => {
   emit('updateSettings', nval, oval);
 }, { deep: true });
-
-/** chapters computed for QSelect */
-const options = computed(() => {
-  return props.chapters.map((chapter, index) => ({
-        label: chapterLabel(chapter.number, chapter.name),
-        value: index,
-        read: chapter.read,
-      })).sort((a, b) => a.value - b.value);
-});
-
 </script>
-
 <template>
   <div
     class="q-pa-lg"

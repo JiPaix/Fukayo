@@ -1,5 +1,5 @@
 import type { MangaInDB } from '@api/models/types/manga';
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { mirrorsLangsType } from '@i18n';
 
 export type MangaInDBwithLabel = {
   id: string,

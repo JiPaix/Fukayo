@@ -1,54 +1,71 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type en from '@i18n/../locales/en.json';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { applyAllFilters, setupMirrorFilters, sortLangs, sortMirrorByNames, toggleAllLanguages, toggleLang } from '@renderer/components/helpers/mirrorFilters';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import type { QCardSection} from 'quasar';
+import type { QCardSection } from 'quasar';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
-const router = useRouter();
-/** stored settings */
-const settings = useSettingsStore();
-/** socket */
-let socket:socketClientInstance|undefined;
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+// config
+const
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
+/** router */
+router = useRouter(),
+/** user settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+// states
+const
 /** search filter */
-const query = ref<string|null>('');
-/** sort ascending/descending sorting */
-const sortAZ = ref(true);
-/** list of languages available from mirrors */
-const allLangs = ref<mirrorsLangsType[]>([]);
-/** language(s) to include in the  results */
-const includedLangsRAW = ref<mirrorsLangsType[]>([]);
-/** Mirrors info as retrieved from the server */
-const mirrorsRAW = ref<mirrorInfo[]>([]);
+query = ref<string|null>(''),
+/** AZ/ZA sorting */
+sortAZ = ref(true),
+/** list of available languages */
+allLangs = ref<mirrorsLangsType[]>([]),
+/** languages to includes in the results */
+includedLangsRAW = ref<mirrorsLangsType[]>([]),
+/** mirrors */
+mirrorsRAW = ref<mirrorInfo[]>([]),
+/** QForm template ref */
+form = ref<InstanceType<typeof QCardSection>>(),
+/** QForm size */
+formSize = ref(0);
 
-const mirrors = computed(() => {
+// computed
+const
+/** mirrors (sorted) */
+mirrors = computed(() => {
   return sortMirrorByNames(applyAllFilters(mirrorsRAW.value, query.value, includedLangs.value), sortAZ.value);
-});
-
+}),
 /** return the ordered list of includedLangsRAW */
-const includedLangs = computed(() => {
+includedLangs = computed(() => {
   return sortLangs(includedLangsRAW.value, $t);
-});
-
+}),
 /** returns true if all available languages are included in the filter */
-const includedAllLanguage = computed(() => {
+includedAllLanguage = computed(() => {
   if(includedLangsRAW.value.length < allLangs.value.length) {
     if(includedLangsRAW.value.length === 0) return false;
     return null;
   }
   return true;
+}),
+/** QHeader + QBar size */
+headerSize = computed(() => {
+  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
+  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
+  return topHeader.offsetHeight + subHeader.offsetHeight;
 });
 
+
+/** include/exclude all available languages from the filter, also affects the mirror filter */
 function pickall() {
   return toggleAllLanguages(includedAllLanguage.value, allLangs.value, includedLangsRAW);
 }
@@ -58,37 +75,29 @@ function pick(lang:mirrorsLangsType) {
   return toggleLang(lang, includedLangsRAW, undefined, undefined, settings.i18n.ignored);
 }
 
-
-// get available mirrors before rendering and start the search if params are present
-onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
-  socket.emit('getMirrors', false, (m) => {
-    m = m.filter(m => !m.selfhosted);
-    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, settings.i18n.ignored);
-  });
-});
-
-onBeforeUnmount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
-  socket.emit('stopShowRecommend');
-  socket.off('showRecommend');
-});
-
-/** header + sub-header size */
-const headerSize = computed(() => {
-  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
-  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
-  return topHeader.offsetHeight + subHeader.offsetHeight;
-});
-
-const form = ref<InstanceType<typeof QCardSection>>();
-
-const formSize = ref(0);
-
+/** save the QForm size in `formSize` */
 function qSectionResize() {
   if(!form.value) return;
   formSize.value = form.value.$el.offsetHeight;
 }
+
+/** get available sources and start the search if routes params are present */
+async function On() {
+  const socket = await useSocket(settings.server);
+  socket.emit('getMirrors', false, (m) => {
+    m = m.filter(m => !m.selfhosted);
+    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, settings.i18n.ignored);
+  });
+}
+
+async function Off() {
+  const socket = await useSocket(settings.server);
+  socket.emit('stopShowRecommend');
+  socket.off('showRecommend');
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 
 </script>
 <template>

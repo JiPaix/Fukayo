@@ -1,8 +1,10 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type { RecommendErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
+import type { appLangsType } from '@i18n';
+import { mirrorsLang } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
@@ -10,47 +12,48 @@ import { isSearchResult, isTaskDone } from '@renderer/components/helpers/typeche
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { QHeader, QLinearProgress, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { mirrorsLang } from '@i18n/availableLangs';
 
-/** current route */
-const route = useRoute();
+// config
+const
 /** quasar */
-const $q = useQuasar();
-/** stored settings */
-const settings = useSettingsStore();
-/** socket */
-let socket:socketClientInstance|undefined;
+$q = useQuasar(),
+/** route */
+route = useRoute(),
+/** user settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-const progressBarSize = '4px';
-const progressSize = computed(() => loading.value ? parseInt(progressBarSize.replace('px', '')) : 0);
+// globals
+const progressBarSize = 4;
 
-const subheader = ref(0);
-const topheader = ref(0);
-
-function qheaderResize() {
-  const top = document.querySelector<HTMLDivElement>('#top-header');
-  const sub = document.querySelector<HTMLDivElement>('#sub-header');
-  if(top && sub) {
-    subheader.value = sub.offsetHeight;
-    topheader.value = top.offsetHeight;
-  }
-}
-
-/** main header size */
-const headerSize = computed(() => {
-  return topheader.value + subheader.value + progressSize.value;
-});
-
-const mirror = ref<mirrorInfo>();
-/** recommendation */
-const recommendation = ref<SearchResult[]>([]);
+// states
+const
+/** current mirror */
+mirror = ref<mirrorInfo>(),
+/** parent's QHeader height */
+topheader = ref(0),
+/** QHeader height */
+subheader = ref(0),
+/** recommendation results */
+recommendation = ref<SearchResult[]>([]),
 /** loading state */
-const loading = ref(true);
-/** error? */
-const error = ref<null|RecommendErrorMessage>(null);
+loading = ref(true),
+/** error message */
+error = ref<null|RecommendErrorMessage>(null);
 
-const mangaGroups = computed(() => {
+// computed
+const
+/** current height of progress bar */
+progressSize = computed(() => loading.value ? progressBarSize : 0),
+/** parent's QHeader + QBar height */
+headerSize = computed(() => {
+  return topheader.value + subheader.value + progressSize.value;
+}),
+/** recommendation's results grouped by entry name */
+mangaGroups = computed(() => {
   const names = recommendation.value.map(r => r.name);
   return names.map(name => {
     return {
@@ -61,8 +64,18 @@ const mangaGroups = computed(() => {
   }).filter(f => typeof f.manga !== 'undefined');
 });
 
-onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
+/** save size of QHeaders (parent and child) */
+function qheaderResize() {
+  const top = document.querySelector<HTMLDivElement>('#top-header');
+  const sub = document.querySelector<HTMLDivElement>('#sub-header');
+  if(top && sub) {
+    subheader.value = sub.offsetHeight;
+    topheader.value = top.offsetHeight;
+  }
+}
+
+async function On() {
+  const socket = await useSocket(settings.server);
   socket.emit('getMirrors', false, (m) => {
     const found = m.find((mirror) => mirror.name === route.params.mirror);
     if(found) mirror.value = found;
@@ -87,7 +100,7 @@ onBeforeMount(async () => {
           }
           if(isTaskDone(ele)) {
             loading.value = false;
-            socket?.off('showRecommend');
+            socket.off('showRecommend');
           }
         });
       }else {
@@ -97,7 +110,7 @@ onBeforeMount(async () => {
         }
         else if(isTaskDone(result)) {
           loading.value = false;
-          socket?.off('showRecommend');
+          socket.off('showRecommend');
         }
         else {
           loading.value = false;
@@ -106,13 +119,16 @@ onBeforeMount(async () => {
       }
     }
   });
-});
+}
 
-onBeforeUnmount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
+async function Off() {
+  const socket = await useSocket(settings.server);
   socket.emit('stopShowRecommend');
   socket.off('showRecommend');
-});
+}
+
+onBeforeMount(On);
+onBeforeUnmount(Off);
 
 </script>
 <template>
@@ -147,7 +163,7 @@ onBeforeUnmount(async () => {
       <q-linear-progress
         v-if="loading"
         ref="progress"
-        :size="progressBarSize"
+        :size="`${progressBarSize}px`"
         color="orange"
         animation-speed="500"
         indeterminate

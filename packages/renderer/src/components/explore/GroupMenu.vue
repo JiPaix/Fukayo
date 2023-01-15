@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { QItem, useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+/** props */
 const props = defineProps<{
   width: number,
   height: number,
@@ -14,30 +17,45 @@ const props = defineProps<{
   hideLangs?: mirrorsLangsType[]
 }>();
 
+/** emits */
 const emit = defineEmits<{
   (event: 'show-manga', payload: { mirror: string, url: string, lang: SearchResult['langs'][number], id: string }): void
   (event: 'update-dialog'): void
 }>();
 
-const $q = useQuasar();
+// config
+const
+/** quasar */
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-function sortLangs(langs: SearchResult['langs']) {
-  if(props.hideLangs) langs = langs.filter(x => !props.hideLangs?.some(y => x === y));
-  return langs.sort((a, b) => a.localeCompare(b));
-}
+// globals
+const
+/** item min height */
+itemMinHeight = 32,
+/** number of items */
+nbOfItems = 5;
 
-// List config
-const titleitem = ref<HTMLSpanElement|null>();
+// states
+const
+/** item's title template ref */
+titleitem = ref<HTMLSpanElement|null>();
 
-const itemMinHeight = 32;
-const nbOfItems = 5;
-
-const QListMaxHeight = computed(() => {
+// computed
+const
+/** QList's max height */
+QListMaxHeight = computed(() => {
   if(!titleitem.value) return itemMinHeight * nbOfItems;
   if(!titleitem.value.parentElement) return itemMinHeight * nbOfItems;
   return (itemMinHeight * nbOfItems) + titleitem.value.parentElement.offsetHeight;
 });
 
+/** sort languages */
+function sortLangs(langs: mirrorsLangsType[]) {
+  if(props.hideLangs) langs = langs.filter(x => !props.hideLangs?.some(y => x === y));
+  return langs.sort((a, b) => $t('languages.'+a).localeCompare($t('languages.'+b)));
+}
 </script>
 
 <template>

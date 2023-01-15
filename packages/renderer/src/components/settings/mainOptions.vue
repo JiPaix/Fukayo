@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
 import type SettingsDB from '@api/db/settings';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
@@ -10,41 +9,49 @@ import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { transformIMGurl } from '../helpers/transformIMGurl';
 
+/** props */
 const props = defineProps<{subHeaderSize?: number}>();
+
+// config
+const
 /** quasar */
-const $q = useQuasar();
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
 /** settings store */
-const settings = useStoreSettings();
-/** socket */
-let socket: socketClientInstance|undefined;
-/** global settings */
-const globalSettings = ref<SettingsDB['data'] | undefined>();
+settings = useStoreSettings();
 
-/** global settings models */
-const waitDay = ref<number|undefined>();
-const waitHour = ref<number|undefined>();
-const waitMinutes = ref<number|undefined>();
-const cacheSizeEnabled = ref<boolean|undefined>();
-const cacheGB = ref<number|undefined>();
-const cacheAgeEnabled = ref<boolean|undefined>();
-const cacheAge = ref<number|undefined>();
-const cacheDay = ref<number|undefined>();
-const cacheHour = ref<number|undefined>();
-const cacheMinutes = ref<number|undefined>();
-const globalSettingsChanged = ref(false);
-
-
-/** is client electron */
-const isElectron = computed(() => {
-  return typeof window.apiServer;
-});
-
+// globals
+const
 /** env variables */
-const env = import.meta.env;
+env = import.meta.env;
 
+// states
+const
+/** global settings */
+globalSettings = ref<SettingsDB['data'] | undefined>(),
+// global settings v-model
+waitDay = ref<number|undefined>(),
+waitHour = ref<number|undefined>(),
+waitMinutes = ref<number|undefined>(),
+cacheSizeEnabled = ref<boolean|undefined>(),
+cacheGB = ref<number|undefined>(),
+cacheAgeEnabled = ref<boolean|undefined>(),
+cacheAge = ref<number|undefined>(),
+cacheDay = ref<number|undefined>(),
+cacheHour = ref<number|undefined>(),
+cacheMinutes = ref<number|undefined>(),
+globalSettingsChanged = ref(false);
+
+
+// computed
+const
+/** is client electron */
+isElectron = computed(() => {
+  return typeof window.apiServer;
+}),
 /** waitDay + waitHour + waitMinutes in ms */
-const waitupdate = computed(() => {
+ waitupdate = computed(() => {
   if (waitDay.value === undefined || waitHour.value === undefined || waitMinutes.value === undefined) {
     return undefined;
   }
@@ -53,10 +60,9 @@ const waitupdate = computed(() => {
     waitHour.value * 60 * 60 * 1000 +
     waitMinutes.value * 60 * 1000
   );
-});
-
+}),
 /** cacheDay + cacheHour + cacheMinutes in ms */
-const cacheupdate = computed(() => {
+cacheupdate = computed(() => {
   if (cacheAgeEnabled.value === false || cacheDay.value === undefined || cacheHour.value === undefined || cacheMinutes.value === undefined) {
     return undefined;
   }
@@ -65,9 +71,9 @@ const cacheupdate = computed(() => {
     cacheHour.value * 60 * 60 * 1000 +
     cacheMinutes.value * 60 * 1000
   );
-});
-
-const warning = computed(() => {
+}),
+/** warning message */
+warning = computed(() => {
   if (cacheSizeEnabled.value) {
     if (typeof cacheGB.value !== 'undefined') {
       if(cacheGB.value < 1) {
@@ -88,66 +94,51 @@ const warning = computed(() => {
       if(waitupdate.value < 10 * 60 * 1000) return $t('settings.scheduler.update.error.lessthan10min');
     }
     return undefined;
-});
-
-watch([waitupdate, cacheSizeEnabled, cacheGB, cacheupdate, cacheAgeEnabled], ([newupdate, newcache, newcachegb, newcacheupdate, newcacheage], [oldupdate, oldcache, oldcachegb, oldcacheupdate, oldcacheage]) => {
-  if(newupdate !== oldupdate && typeof oldupdate !== 'undefined') {
-    globalSettingsChanged.value = true;
-    return;
-  }
-  if(newcache !== oldcache && typeof oldcache !== 'undefined') {
-    globalSettingsChanged.value = true;
-    return;
-  }
-  if(newcachegb !== oldcachegb && typeof oldcachegb !== 'undefined') {
-    globalSettingsChanged.value = true;
-    return;
-  }
-  if(newcacheupdate !== oldcacheupdate && typeof oldcacheupdate !== 'undefined') {
-    globalSettingsChanged.value = true;
-    return;
-  }
-  if(newcacheage !== oldcacheage && typeof oldcacheage !== 'undefined') {
-    globalSettingsChanged.value = true;
-    return;
-  }
-});
-
-const darkIcon = computed(() => {
+}),
+/** dark/light mode icon */
+darkIcon = computed(() => {
   return settings.theme === 'dark' ? 'dark_mode' : 'light_mode';
-});
-
-const cacheIcon = computed(() => {
+}),
+/** cache icon */
+cacheIcon = computed(() => {
   return cacheSizeEnabled.value ? 'lock' : 'lock_open';
-});
-
-const cacheAgeIcon = computed(() => {
+}),
+/** cache age icon */
+cacheAgeIcon = computed(() => {
   return cacheAgeEnabled.value ? 'sanitizer' : 'elderly';
-});
-
-const longStripIcon = computed(() => {
+}),
+/** longstrip icon */
+longStripIcon = computed(() => {
   return settings.reader.longStrip ? 'swipe_vertical' : 'queue_play_next';
-});
-
-const rtlIcon = computed(() => {
+}),
+/** rtl/ltr icon */
+rtlIcon = computed(() => {
   return settings.reader.rtl ? 'format_textdirection_r_to_l' : 'format_textdirection_l_to_r';
-});
-
-const webtoonIcon = computed(() => {
+}),
+/** webtoon icon */
+webtoonIcon = computed(() => {
   return settings.reader.webtoon ? 'smartphone' : 'aod';
-});
-
-const preloadIcon = computed(() => {
+}),
+/** preload icon */
+preloadIcon = computed(() => {
   return settings.readerGlobal.preloadNext ? 'signal_cellular_alt' : 'signal_cellular_alt_2_bar';
-});
-
-const showPageNumberIcon = computed(() => {
+}),
+/** display/hide page number icon */
+showPageNumberIcon = computed(() => {
   return settings.reader.showPageNumber ? 'visibility' : 'visibility_off';
+}),
+/** display/hide navigation overlay icon */
+showOverlayIcon = computed(() => {
+  return settings.reader.overlay ? 'layers' : 'layers_clear';
+}),
+/** parent's QHeader size */
+headerSize = computed(() => {
+  return (props.subHeaderSize || 0) + (document.querySelector<HTMLDivElement>('#top-header')?.offsetHeight || 0);
 });
 
-const showOverlayIcon = computed(() => {
-  return settings.reader.overlay ? 'layers' : 'layers_clear';
-});
+
+
+
 
 function toggleDarkMode() {
   if (settings.theme === 'dark') {
@@ -178,14 +169,16 @@ function parseSettings(s: SettingsDB['data']) {
     cacheMinutes.value = Math.floor((s.cache.age.max % (1000 * 60 * 60)) / (1000 * 60));
 }
 
+/** get settings from API */
 async function getSettings() {
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   socket.emit('getSettings', (s) => {
     globalSettings.value = s;
     parseSettings(s);
   });
 }
 
+/** save settings to the API */
 async function saveSettings() {
   if(
     !globalSettings.value
@@ -193,7 +186,7 @@ async function saveSettings() {
     || typeof cacheAgeEnabled.value === 'undefined'
     || typeof cacheGB.value === 'undefined'
   ) return;
-  if(!socket) socket = await useSocket(settings.server);
+  const socket = await useSocket(settings.server);
   const newGlobalSettings: SettingsDB['data'] = {
     ...globalSettings.value,
     library: {
@@ -250,10 +243,7 @@ async function checkSettingsCompatibilty(key: keyof typeof settings.reader) {
 
 }
 
-onBeforeMount(async () => {
-  await getSettings();
-});
-
+/** show prompt dialog */
 function prompt (retry = false) {
       $q.dialog({
         html: true,
@@ -270,7 +260,7 @@ function prompt (retry = false) {
       });
     }
 
-
+/** send request to kill server */
 async function kill(password:string) {
   fetch(transformIMGurl('kill', settings), {
       method: 'post',
@@ -285,10 +275,31 @@ async function kill(password:string) {
 }
 
 
-const headerSize = computed(() => {
-  return (props.subHeaderSize || 0) + (document.querySelector<HTMLDivElement>('#top-header')?.offsetHeight || 0);
+/** set globalSettingsChanged if any of the settings have been changed */
+watch([waitupdate, cacheSizeEnabled, cacheGB, cacheupdate, cacheAgeEnabled], ([newupdate, newcache, newcachegb, newcacheupdate, newcacheage], [oldupdate, oldcache, oldcachegb, oldcacheupdate, oldcacheage]) => {
+  if(newupdate !== oldupdate && typeof oldupdate !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcache !== oldcache && typeof oldcache !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcachegb !== oldcachegb && typeof oldcachegb !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcacheupdate !== oldcacheupdate && typeof oldcacheupdate !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
+  if(newcacheage !== oldcacheage && typeof oldcacheage !== 'undefined') {
+    globalSettingsChanged.value = true;
+    return;
+  }
 });
 
+onBeforeMount(getSettings);
 </script>
 <template>
   <q-layout

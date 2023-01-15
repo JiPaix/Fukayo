@@ -1,34 +1,52 @@
 <script lang="ts" setup>
-import type { socketClientInstance } from '@api/client/types';
+import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { format, useQuasar } from 'quasar';
 import { computed, onBeforeMount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const $q = useQuasar();
-const settings = useSettingsStore();
-let socket:socketClientInstance|undefined;
-const size = ref(0);
-const files = ref(0);
+// config
+const
+/** quasar */
+$q = useQuasar(),
+/** settings */
+settings = useSettingsStore(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-const humanreadable = computed(() => {
+// states
+const
+/** cache size in bytes */
+size = ref(0),
+/** number of files present in cache */
+files = ref(0);
+
+// computed
+const
+/** cache size in a human readable string */
+humanreadable = computed(() => {
   return format.humanStorageSize(size.value);
 });
 
-function emptyCache() {
-  socket?.emit('emptyCache');
+async function emptyCache() {
+  const socket = await useSocket(settings.server);
+  socket.emit('emptyCache');
   files.value = 0;
   size.value = 0;
 }
 
-// get available mirrors before rendering and start the search if params are present
-onBeforeMount(async () => {
-  if(!socket) socket = await useSocket(settings.server);
+/** get the cache size and nb of files */
+async function On() {
+  const socket = await useSocket(settings.server);
   socket.emit('getCacheSize', (length, f) => {
     size.value = length;
     files.value = f;
   });
-});
+}
+
+onBeforeMount(On);
 </script>
 
 <template>

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import type { MangaInDB } from '@api/models/types/manga';
 import { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import type { MangaGroup, MangaInDBwithLabel } from '@renderer/components/library/@types';
@@ -14,28 +15,36 @@ import mirrorsOptions from '@renderer/components/settings/mirrorsOptions.vue';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
+// config
+const
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
 /** router */
-const router = useRouter();
+router = useRouter(),
 /** settings */
-const settings = useSettingsStore();
+settings = useSettingsStore();
+
+// states
+const
 /** first start stepper */
-const step = ref(settings.library.firstTimer);
+step = ref(settings.library.firstTimer),
 /** are we fetching the api? */
-const fetching = ref(true);
+fetching = ref(true),
 /** mangas in db */
-const mangasRAW = ref<MangaGroup[]>([]);
+mangasRAW = ref<MangaGroup[]>([]),
 /** mangas in db from dead mirrors */
-const deadMangas = ref<(MangaInDBwithLabel & { covers: string[], mirrorDisplayName: string, mirrorIcon: string })[]>([]);
+deadMangas = ref<(MangaInDBwithLabel & { covers: string[], mirrorDisplayName: string, mirrorIcon: string })[]>([]),
 /** mirrors */
-const mirrors = ref<mirrorInfo[]>([]);
+mirrors = ref<mirrorInfo[]>([]),
 /** search */
-const search = ref<string|null>(null);
+search = ref<string|null>(null),
 /** filters */
-const filters = ref<{
+filters = ref<{
   mirrors: string[],
   langs: mirrorsLangsType[],
   userCategories: string[]
@@ -43,6 +52,38 @@ const filters = ref<{
   mirrors: [],
   langs: [],
   userCategories: [],
+});
+
+// computed
+const
+/** list of mangas sources */
+mirrorList = computed(() => {
+  return Array.from(
+    new Set(
+      mangasRAW.value.map(m => m.mangas.map(mm => mm.mirror)).flat(),
+    ),
+  )
+  .map(m => mirrors.value.find(mir => mir.name === m));
+}),
+/** list of mangas langs */
+langs = computed(() => {
+  const set:Set<mirrorsLangsType> = new Set();
+  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.langs.forEach(l => set.add(l))));
+  return Array.from(set);
+}),
+/** user categories */
+userCategories = computed(() => {
+  const set:Set<string> = new Set();
+  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.userCategories.forEach(l => set.add(l))));
+  return Array.from(set);
+}),
+/** sorted list of mangas grouped by title */
+mangas = computed(() => {
+  if(settings.library.sort === 'AZ') return sortByAlphabetical(stackedFilters(mangasRAW.value));
+  else if(settings.library.sort === 'ZA') return sortByUnalphabetical(stackedFilters(mangasRAW.value));
+  else if(settings.library.sort === 'read') return sortByLeastUnread(stackedFilters(mangasRAW.value));
+  else if(settings.library.sort === 'unread') return sortByMostUnread(stackedFilters(mangasRAW.value));
+  else return filterBySearch(hideUnread(mangasRAW.value));
 });
 
 // sort groups with most unread first
@@ -118,44 +159,18 @@ function filterByMirrorAndLang(group: MangaGroup[]) {
   });
 }
 
+/** add `filterByMirrorAndLang` filter to `MangaGroup[]` */
 function stackedFilters(group: MangaGroup[]) {
   return filterByMirrorAndLang(filterBySearch(hideUnread(group)));
 }
 
-const mangas = computed(() => {
-  if(settings.library.sort === 'AZ') return sortByAlphabetical(stackedFilters(mangasRAW.value));
-  else if(settings.library.sort === 'ZA') return sortByUnalphabetical(stackedFilters(mangasRAW.value));
-  else if(settings.library.sort === 'read') return sortByLeastUnread(stackedFilters(mangasRAW.value));
-  else if(settings.library.sort === 'unread') return sortByMostUnread(stackedFilters(mangasRAW.value));
-  else return filterBySearch(hideUnread(mangasRAW.value));
-});
-
-const mirrorList = computed(() => {
-  return Array.from(
-    new Set(
-      mangasRAW.value.map(m => m.mangas.map(mm => mm.mirror)).flat(),
-    ),
-  )
-  .map(m => mirrors.value.find(mir => mir.name === m));
-});
-
-const langs = computed(() => {
-  const set:Set<mirrorsLangsType> = new Set();
-  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.langs.forEach(l => set.add(l))));
-  return Array.from(set);
-});
-
-const userCategories = computed(() => {
-  const set:Set<string> = new Set();
-  mangasRAW.value.forEach(g => g.mangas.forEach(m => m.userCategories.forEach(l => set.add(l))));
-  return Array.from(set);
-});
-
+/** get list of mirrors */
 async function getMirrors() {
   const socket = await useSocket(settings.server);
   socket.emit('getMirrors', true, (m) => mirrors.value = m);
 }
 
+/** get the library */
 async function fetchLibrary() {
   const socket = await useSocket(settings.server);
   const id = Date.now();
@@ -169,6 +184,7 @@ async function fetchLibrary() {
   socket.emit('showLibrary', id);
 }
 
+/** sort and parse library */
 function parseLibrary(mangas:MangaInDB[]) {
   fetching.value = false;
   mangasRAW.value = [];
@@ -221,7 +237,8 @@ function parseLibrary(mangas:MangaInDB[]) {
   });
 }
 
-async function turnOn() {
+/** get mirrors and fetch library */
+async function On() {
   await getMirrors();
   await fetchLibrary();
   const socket = await useSocket(settings.server);
@@ -230,17 +247,16 @@ async function turnOn() {
   });
 }
 
-async function turnOff() {
+async function Off() {
   const socket = await useSocket(settings.server);
   socket.off('showLibrary');
   socket.off('finishedMangasUpdate');
   socket.emit('stopShowLibrary');
 }
 
-onBeforeMount(turnOn);
-onBeforeUnmount(turnOff);
+onBeforeMount(On);
+onBeforeUnmount(Off);
 </script>
-
 <template>
   <div
     v-if="fetching"

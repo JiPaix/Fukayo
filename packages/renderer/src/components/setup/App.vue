@@ -8,21 +8,27 @@ import { useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
-/** quasar */
-const $q = useQuasar();
-/** stored settings */
-const settings = useSettingsStore();
 /** emit */
 const emit = defineEmits<{
   (eventName: 'done'): void
   (eventName: 'loading', value: boolean): void
 }>();
 
+// settings
+const
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+/** quasar */
+$q = useQuasar(),
+/** stored settings */
+settings = useSettingsStore();
+
+// states
+const
 /** toggler to show the password */
-const showPassword = ref(false);
+showPassword = ref(false),
 /** show a loading screen while the server starts */
-const starting = ref(false);
+starting = ref(false);
 
 /** display a prompt and ask user for a key+cert */
 function prompt (title:string, kind:'cert'|'key', model?:string|null) {

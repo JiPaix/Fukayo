@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { mirrorsLangsType } from '@i18n';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import type { MangaGroup } from '@renderer/components/library/@types';
 import GroupMenu from '@renderer/components/library/GroupMenu.vue';

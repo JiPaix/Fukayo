@@ -1,5 +1,6 @@
-import type { mirrorsLangsType } from '@i18n/availableLangs';
-import type { MangaInDB } from './../../models/types/manga';
+import type { MangaInDB } from '@api/models/types/manga';
+import type { mirrorsLangsType } from '@i18n';
+
 type MangaLogs = {
   /** date of log */
   date: number,

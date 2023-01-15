@@ -2,13 +2,16 @@
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
+import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterImage } from '@renderer/components/helpers/typechecker';
+import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { colors, QScrollArea, useQuasar } from 'quasar';
-import type { CSSProperties} from 'vue';
+import type { CSSProperties } from 'vue';
 import { computed, ref } from 'vue';
-import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
+import { useI18n } from 'vue-i18n';
 
 /** props */
 const props = defineProps<{
@@ -22,6 +25,7 @@ const props = defineProps<{
     showNextBuffer:boolean
     showMobileOverlayHint:boolean
   }>();
+
 /** emits */
 const emit = defineEmits<{
   (eventName: 'showImage', indexes:number[]): void
@@ -34,23 +38,41 @@ const emit = defineEmits<{
   (eventName: 'showPrevBuffer'):void
   (eventName: 'showNextBuffer'):void
 }>();
+
+// settings
+const
+/** i18n */
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
 /** quasar */
-const $q = useQuasar();
+$q = useQuasar(),
 /** user's settings */
-const storeSettings = useSettingsStore();
+storeSettings = useSettingsStore();
 
+// globals
+const
+/** array filled with values false */
+falseArray:false[] = Array(props.expectedLength).fill(false);
+let
+/** touch tracking */
+touchTrack = {screenY: 0, screenX: 0 };
+
+// states
+const
 /** QScrollArea template ref */
-const scrollArea = ref<InstanceType<typeof QScrollArea>>();
+scrollArea = ref<InstanceType<typeof QScrollArea>>(),
+/** keep track of images that are loaded */
+loaded = ref<boolean[]>(falseArray);
 
-/** header + sub-header size */
-const headerSize = computed(() => {
+// computed
+const
+/** parent's QHeader + QHeader heights */
+headerSize = computed(() => {
   const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
   const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
   return topHeader.offsetHeight + subHeader.offsetHeight;
-});
-
+}),
 /** QScrollArea CSS */
-const cssVars = computed(() => {
+cssVars = computed(() => {
   return {
     '--bg-color': $q.dark.isActive ? colors.getPaletteColor('dark') : colors.getPaletteColor('white'),
     '--bg-color-hover': $q.dark.isActive ? colors.getPaletteColor('grey-9') : colors.getPaletteColor('grey-3'),
@@ -58,10 +80,9 @@ const cssVars = computed(() => {
     '--orange': colors.getPaletteColor('orange'),
     height: ($q.screen.height-headerSize.value)+'px',
   };
-});
-
+}),
 /** Images grouped in set of 2's, or 1's if their width > height */
-const packed = computed(() => {
+packed = computed(() => {
   const groupOfgroups = [];
   let group = [];
   let count = 0;
@@ -110,23 +131,9 @@ const packed = computed(() => {
     }
   }
   return groupOfgroups;
-});
-
-const falseArray:false[] = Array(props.expectedLength).fill(false);
-/** keep track of images that are loaded */
-const loaded = ref<boolean[]>(falseArray);
-
-/** emit which image is on screen */
-function intersectionHandler(entry: IntersectionObserverEntry,indexes:number[]) {
-  // do not emit if images aren't loaded
-  const areLoaded = indexes.every(i => loaded.value[i]);
-  if(entry.isIntersecting && areLoaded) {
-    emit('showImage', indexes);
-  }
-}
-
+}),
 /** img CSS for vertical display (book mode disabled) */
-const verticalNoBook = computed<CSSProperties>(() => {
+verticalNoBook = computed<CSSProperties>(() => {
   let height:CSSProperties['height'] = undefined;
   let width:CSSProperties['width'] = undefined;
   let marginBottom:CSSProperties['marginBottom'] = undefined;
@@ -138,10 +145,9 @@ const verticalNoBook = computed<CSSProperties>(() => {
     width,
     marginBottom,
   };
-});
-
+}),
 /** img CSS for horizontal display */
-const horizontal = computed<CSSProperties>(() => {
+horizontal = computed<CSSProperties>(() => {
   let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - headerSize.value)+'px';
   let marginBottom:CSSProperties['marginBottom'] = '-6px';
   let height:CSSProperties['height'] = undefined;
@@ -152,6 +158,16 @@ const horizontal = computed<CSSProperties>(() => {
     height,
   };
 });
+
+
+/** emit which image is on screen */
+function intersectionHandler(entry: IntersectionObserverEntry,indexes:number[]) {
+  // do not emit if images aren't loaded
+  const areLoaded = indexes.every(i => loaded.value[i]);
+  if(entry.isIntersecting && areLoaded) {
+    emit('showImage', indexes);
+  }
+}
 
 /** emit "load previous chapter" event */
 function prevHandler(entry: IntersectionObserverEntry) {
@@ -195,11 +211,6 @@ function onLoaded(i: number[]) {
   i.forEach(i => loaded.value[i] = true);
 }
 
-/** exported members */
-defineExpose({
-  getScrollPosition, setScrollPercentage, getScrollPercentage, setScrollPosition, indexes: packed,
-});
-
 /** dirty trick so RTL+HORIZONTAL isn't messed-up (blank images) */
 function groupIntersection() {
   if(!scrollArea.value) return;
@@ -208,8 +219,6 @@ function groupIntersection() {
   //=> force re-render & does not apply new height
 }
 
-/** touch tracking */
-let touchTrack = {screenY: 0, screenX: 0 };
 /** update touch tracking */
 function setTouch(ev:TouchEvent) {
   touchTrack.screenX = ev.touches[0].screenX;
@@ -236,6 +245,11 @@ function touch(ev:TouchEvent) {
   touchTrack.screenX = current.screenX;
   touchTrack.screenY = current.screenY;
 }
+
+/** exported members */
+defineExpose({
+  getScrollPosition, setScrollPercentage, getScrollPercentage, setScrollPosition, indexes: packed,
+});
 </script>
 <template>
   <q-scroll-area

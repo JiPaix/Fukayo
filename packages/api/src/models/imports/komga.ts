@@ -7,7 +7,7 @@ import type { ImportResults } from '@api/models/imports/types';
 import type Komga from '@api/models/komga';
 import { isErrorMessage } from '@api/models/types/errors';
 import type { socketInstance } from '@api/server/types';
-import type { mirrorsLangsType } from '@i18n/availableLangs';
+import type { mirrorsLangsType } from '@i18n';
 
 const komga = mirrors.find(m=> m.name === 'komga') as typeof Komga;
 

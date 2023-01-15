@@ -7,21 +7,27 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { QSelect } from 'quasar';
 
+/** props */
 const props = defineProps<{
   stepper?: boolean;
 }>();
 
-const emits = defineEmits<{
+
+/** emits */
+const emit = defineEmits<{
   (event: 'continue'): void
 }>();
 
+// settings
+const
 /** stored settings */
-const settings = useSettingsStore();
+settings = useSettingsStore(),
 /** i18n */
-const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
-
-const model = computed(() => {
+// computed
+const
+model = computed(() => {
   return mirrorsLang.filter(l => !settings.i18n.ignored.includes(l)).filter(l => l !== 'xx')
     .map(l => {
       return {
@@ -29,10 +35,8 @@ const model = computed(() => {
         label: $t('languages.'+l),
       };
     });
-});
-
-
-const optionsRAW = mirrorsLang.filter(l => l !== 'xx')
+}),
+optionsRAW = mirrorsLang.filter(l => l !== 'xx')
   .map(l => {
     return {
       value: l,
@@ -41,7 +45,14 @@ const optionsRAW = mirrorsLang.filter(l => l !== 'xx')
   })
   .sort((a, b) => a.label.localeCompare(b.label));
 
-const options = ref(optionsRAW);
+// states
+const
+/** QSelect options */
+options = ref(optionsRAW),
+/** QSelect template ref */
+qselect = ref<null|InstanceType<typeof QSelect>>(null);
+
+
 function filterFn (val:string, update:(callbackFn:() => void)=>void) {
   if (val === '') {
     update(() => {
@@ -49,14 +60,11 @@ function filterFn (val:string, update:(callbackFn:() => void)=>void) {
     });
     return;
   }
-
   update(() => {
     const needle = val.toLowerCase();
     options.value = optionsRAW.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
   });
 }
-
-const qselect = ref<null|InstanceType<typeof QSelect>>(null);
 
 function resetFilter() {
   if(!qselect.value) return;
@@ -84,9 +92,7 @@ function selectAll() {
 function unselectAll() {
   settings.i18n.ignored = mirrorsLang.filter(l => l !== 'xx');
 }
-
 </script>
-
 <template>
   <q-card
     class="w-100"
@@ -124,7 +130,7 @@ function unselectAll() {
             push
             :label="$t('settings.confirm')"
             class="q-ml-auto"
-            @click="emits('continue')"
+            @click="emit('continue')"
           />
         </template>
         <q-select
