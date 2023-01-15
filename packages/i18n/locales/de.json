@@ -301,7 +301,8 @@
         "title": "Title",
         "volume": "Volume | Volumes",
         "open_in_new": {
-            "chapter": "Open this chapter directly from the source"
+            "chapter": "Open this chapter directly from the source",
+            "manga": "Open this manga directly from the source"
         }
     },
     "migrate": {
