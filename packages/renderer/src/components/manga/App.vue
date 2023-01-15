@@ -650,6 +650,11 @@ startFetch();
             >
               <span class="text-h3 text-center">
                 {{ manga.displayName || manga.name }}
+                <q-icon
+                  size="xs"
+                  class="q-mb-lg"
+                  name="edit"
+                />
               </span>
               <q-popup-edit
                 v-slot="scope"
