@@ -715,6 +715,7 @@ startFetch();
             >
               {{ mirrorinfo.displayName }}
               <q-icon name="open_in_new" />
+              <q-tooltip>{{ $t('mangas.open_in_new.manga') }}</q-tooltip>
             </a>
             <q-skeleton
               v-else
