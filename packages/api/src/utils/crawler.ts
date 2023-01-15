@@ -172,7 +172,9 @@ export class Crawler {
       // remove task from task list then close cluster if needed
       this.runningTask--;
       this.closeClusterIfAllDone();
-      if(res) return res.buffer();
+
+      if(res) return await res.buffer();
+      else return undefined;
     } catch(e) {
       // in most cases happens because waitForSelector timeout is reached (cloudflare?)
       this.runningTask--;
@@ -196,9 +198,9 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
   // const instance = await useCluster();
   if(type) data.type = type;
   if(isFile) {
-    return instance.execute(data, crawler.task.bind(crawler)) as Promise<Buffer | Error | undefined>;
+    return instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
   }
-  return instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<string | Error | undefined>;
+  return instance.execute(data, crawler.task.bind(crawler)) as Promise<string | Error | undefined>;
 }
 
 export async function puppeteerExec<T = void>(callback: ({ page }: { page: Page }) => Promise<T>) {
