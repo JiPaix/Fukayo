@@ -33,6 +33,7 @@ const props = defineProps<{
 
 /** quasar */
 const $q = useQuasar();
+/** i18n */
 const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 /** vue-router */
 const router = useRouter();

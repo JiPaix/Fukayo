@@ -1,10 +1,14 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
+import type { appLangsType } from '@i18n/availableLangs';
 import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import type en from '@i18n/../locales/en.json';
 
 /** props */
 const props = defineProps<{
+  sourceURL?: string
   chapters: (MangaPage['chapters'][0]|MangaInDB['chapters'][0])[]
   currentChapterId: string
   inLibrary: boolean
@@ -22,6 +26,8 @@ const emit = defineEmits<{
 
 /** quasar */
 const $q = useQuasar();
+/** i18n */
+const $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
 /** returns the current chapter index */
 const currentChapterIndex = computed(() => {
@@ -162,6 +168,13 @@ async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) 
     if(localSettings.value.zoomMode === 'stretch-width') localSettings.value.zoomMode = 'auto';
   }
 
+}
+
+function open() {
+  if(!props.sourceURL) return;
+  const chapter = props.chapters[currentChapterIndex.value];
+  const url = `${props.sourceURL}${chapter.url}`;
+  window.open(url, '_blank');
 }
 
 watch(() => localSettings.value, (nval, oval) => {
@@ -308,6 +321,14 @@ const options = computed(() => {
           <q-icon :name="chapters[currentChapterIndex].read ? 'o_visibility_off' : 'o_visibility'" />
           <q-tooltip>
             <span>{{ chapters[currentChapterIndex].read ? $t('mangas.markasread.current_unread') : $t('mangas.markasread.current') }}</span>
+          </q-tooltip>
+        </q-btn>
+        <q-btn
+          @click="open"
+        >
+          <q-icon name="open_in_new" />
+          <q-tooltip>
+            <span>{{ $t('mangas.open_in_new.chapter') }}</span>
           </q-tooltip>
         </q-btn>
       </q-btn-group>
