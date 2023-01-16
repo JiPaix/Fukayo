@@ -94,7 +94,7 @@ test('Server setup', async () => {
 
 test('Server is running', async () => {
   const page = await electronApp.firstWindow();
-  await page.waitForSelector('.w-100');
-  const library = await page.$('.w-100');
+  await page.waitForSelector('main');
+  const library = await page.$('main');
   expect(library).to.not.be.null;
 });
