@@ -3,7 +3,6 @@ import type { mirrorInfo } from '@api/models/types/shared';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import type { MangaInDBwithLabel } from '@renderer/components/library/@types';
-import { dialog } from 'electron';
 import { debounce, QCard, QCardSection, QDialog, QIcon, QImg, QItem, QItemLabel, QItemSection, QList, QMenu, useQuasar } from 'quasar';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
