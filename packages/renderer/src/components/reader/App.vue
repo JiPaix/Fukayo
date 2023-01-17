@@ -353,10 +353,8 @@ async function getChapter(
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
 
-  // cancel previous requests
-  if(loadingAchapter.value) {
-    turnOff(false);
-  }
+  // cancel previous requests, except if user tried to reload a page
+  if(loadingAchapter.value && typeof opts.reloadIndex !== 'number') turnOff(false);
 
   if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
     // remove errors
