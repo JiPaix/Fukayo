@@ -63,7 +63,7 @@ const hintColorClass = computed(() => $q.platform.has.touch ? 'transparent' : pr
           :color="mobileHint ? 'dark' : hintColorClass"
           :name="props.rtl ? 'navigate_next' : 'navigate_before'"
           size="20vw"
-          @click="props.rtl ? emit('nextPage') : emit('prevPage')"
+          @click="emit('prevPage')"
         />
         <q-icon
           :class="mobileHint ? 'mobileHint' : hoverColorClass"
@@ -77,7 +77,7 @@ const hintColorClass = computed(() => $q.platform.has.touch ? 'transparent' : pr
           :color="mobileHint ? 'dark' : hintColorClass"
           :name="props.rtl ? 'navigate_before' : 'navigate_next'"
           size="20vw"
-          @click="props.rtl ? emit('prevPage') : emit('nextPage')"
+          @click="emit('nextPage')"
         />
       </div>
     </div>
