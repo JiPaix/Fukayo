@@ -373,10 +373,12 @@ async function getChapter(
   const alreadyFetched = RAWchapters.value.find(c => c.id === chapterId);
   if(alreadyFetched && !opts.prefetch && typeof opts.reloadIndex === 'undefined') {
     const needToFetch = alreadyFetched.imgsExpectedLength < alreadyFetched.imgs.length;
-    chapterTransition({
-      chapterId,
-      PageToShow: opts.scrollup ? alreadyFetched.imgs.length-1 : 0,
-    });
+    setTimeout(() => {
+      chapterTransition({
+        chapterId,
+        PageToShow: opts.scrollup ? alreadyFetched.imgs.length-1 : 0,
+      });
+    }, 500);
     if(!needToFetch) {
       if(!nextChapter.value) return;
       return getChapter(nextChapter.value.id, {prefetch: true});
