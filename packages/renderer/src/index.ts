@@ -1,6 +1,6 @@
 import Root from '@renderer/App.vue';
 import { createApp } from 'vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router';
 
 // LocalStorage
 import { piniaLocalStorage } from '@renderer/stores/localStorage';
@@ -10,7 +10,7 @@ pinia.use(piniaLocalStorage);
 
 // Router
 const router = createRouter({
-  history: createWebHistory(),
+  history: typeof window.apiServer === 'undefined' ? createWebHistory() : createWebHashHistory(),
   routes: [
       {
         name: 'home',
