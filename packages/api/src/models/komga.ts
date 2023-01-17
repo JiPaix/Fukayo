@@ -320,7 +320,7 @@ class Komga extends SelfHosted implements MirrorInterface {
     if(stopListening) stopListening();
   }
 
-  async chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
+  async   chapter(url:string, lang:mirrorsLangsType, socket:socketInstance|Scheduler, id:number, callback?: (nbOfPagesToExpect:number)=>void, retryIndex?:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
@@ -359,9 +359,9 @@ class Komga extends SelfHosted implements MirrorInterface {
         // URL de la demande: https://demo.komga.org/api/v1/books/64/pages/35
         const img = await this.downloadImage(this.#path(`/books/${res.id}/pages/${i+1}`), undefined, false, {auth: { username: this.options.login, password: this.options.password}} ).catch(() => undefined);
         if(img) {
-          if(!cancel) socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage:i+1 === nbOfPages });
         } else {
-          if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === nbOfPages });
+          if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage:i+1 === nbOfPages });
         }
       }
       if(cancel) return;

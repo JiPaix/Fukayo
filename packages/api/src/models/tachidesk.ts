@@ -406,9 +406,9 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
 
         const img = await this.downloadImage(this.#path(url + '/page/' + i), undefined, false, { withCredentials: true });
         if (img) {
-          socket.emit('showChapter', id, { index: i, src: img.src, height:img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
+          socket.emit('showChapter', id, { index: i, src: img.src, height:img.height, width: img.width, lastpage:i + 1 === nbOfPages });
         } else {
-          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i + 1 === nbOfPages });
+          socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage:i + 1 === nbOfPages });
         }
       }
       if (cancel) return;

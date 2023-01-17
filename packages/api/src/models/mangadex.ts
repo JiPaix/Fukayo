@@ -888,8 +888,8 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;
         const img = await this.downloadImage(`${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`);
-        if(img) socket.emit('showChapter', id, {index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
-        else socket.emit('showChapter', id, { error: 'chapter_error_no_image', trace: `cannot open: ${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`, index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === resp.chapter.data.length });
+        if(img) socket.emit('showChapter', id, {index: i, src: img.src, height: img.height, width: img.width, lastpage: i+1 === resp.chapter.data.length });
+        else socket.emit('showChapter', id, { error: 'chapter_error_no_image', trace: `cannot open: ${resp.baseUrl}/${type}/${resp.chapter.hash}/${v}`, index: i, lastpage:i+1 === resp.chapter.data.length });
       }
       if(cancel) return;
     } catch(e) {

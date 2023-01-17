@@ -352,12 +352,12 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
             const imageLink = pvalue[0].replace(/^\/\//g, 'http://');
             const img = await this.downloadImage(imageLink);
             if(img) {
-              socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
+              socket.emit('showChapter', id, { index: i, src: img.src, height: img.height, width: img.width, lastpage:i+1 === imagecount });
               continue;
             }
           }
         }
-        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage: typeof retryIndex === 'number' ? true : i+1 === imagecount });
+        if(!cancel) socket.emit('showChapter', id, { error: 'chapter_error_fetch', index: i, lastpage:i+1 === imagecount });
       }
       if(cancel) return;
     } catch(e) {
