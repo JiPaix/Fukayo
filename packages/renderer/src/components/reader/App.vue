@@ -7,7 +7,7 @@ import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { isChapterErrorMessage, isChapterImage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
+import { isChapterErrorMessage, isChapterImage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
 import type ImageStack from '@renderer/components/reader/ImageStack.vue';
@@ -358,7 +358,7 @@ async function getChapter(
     turnOff(false);
   }
 
-  if(!opts.prefetch && !opts.reloadIndex) {
+  if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
     // remove errors
     error.value = null;
     // show spinner
@@ -425,7 +425,7 @@ async function getChapter(
       // if it's the first page (and it should be), trigger page transition
       if(firstPage) {
         firstPage = false;
-        if(!opts.prefetch && !opts.reloadIndex) {
+        if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
           chapterTransition({
               chapterId,
               PageToShow: 0,
@@ -433,29 +433,16 @@ async function getChapter(
         }
       }
     } else {
-      // API returns a ChapterImage when an image is found, or ChapterImageErrorMessage when an error occurs
-      if(isChapterImage(chapter) || isChapterImageErrorMessage(chapter)) {
-        // check if the image exist and is worth replacing
-        const toReplace =
-          exist.imgs.findIndex(img => (isChapterImage(img) || isChapterImageErrorMessage(img)) && img.index  === chapter.index);
-
-        if(toReplace > -1) {
-          // replace error with image
-          if(isChapterImageErrorMessage(exist.imgs[toReplace]) && isChapterImage(chapter)) exist.imgs[toReplace] = chapter;
-          // replace images with different sources
-          else if(isChapterImage(exist.imgs[toReplace]) && isChapterImage(chapter)) {
-            if((exist.imgs[toReplace] as ChapterImage).src !== chapter.src) exist.imgs[toReplace] = chapter;
-          }
-        }
-        // add new image
-        else {
-          exist.imgs.push(chapter);
-        }
-      }
+      // if image exists replace it
+      const toReplace =
+        exist.imgs.findIndex(img => img.index  === chapter.index);
+      if(toReplace > -1) exist.imgs[toReplace] = chapter;
+      // add new image
+      else exist.imgs.push(chapter);
       // if this is the first page, trigger the page transition
       if(firstPage) {
         firstPage = false;
-        if(!opts.prefetch && !opts.reloadIndex) {
+        if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
           chapterTransition({
             chapterId,
             PageToShow: opts.scrollup ? exist.imgs.length : 1,
@@ -468,7 +455,7 @@ async function getChapter(
       socket.off('showChapter');
       if(!nextChapter.value) return;
       if(!settings.readerGlobal.preloadNext) return;
-      if(opts.prefetch) return;
+      if(opts.prefetch || typeof opts.reloadIndex === 'number') return;
       return getChapter(nextChapter.value.id, { prefetch: true});
     }
   });
