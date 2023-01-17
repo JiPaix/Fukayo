@@ -32,7 +32,7 @@ const emit = defineEmits<{
   (event: 'progress', percentage:number):void,
   (event: 'progressError'):void,
   (event: 'changePage', page: number, chapterId: string): void,
-  (event: 'reload', pageIndex:number|undefined, chapterId: string, callback:() =>void): void
+  (event: 'reload', pageIndex:number, chapterId: string, callback:() =>void): void
   (event: 'loadPrev'): void
   (event: 'loadNext'): void
   (event: 'toggleDrawer'):void

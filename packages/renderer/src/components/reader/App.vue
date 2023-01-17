@@ -334,28 +334,24 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
   }, 500);
 }
 
-/** Load/prefetch a (whole/pages of) chapter from the API */
 async function getChapter(
   /** the chapter id */
   chapterId = props.chapterId,
-  opts: {
-    /** if set to true, the browser will automatically scroll to the last page of fetched the chapter */
-    scrollup?: boolean,
-    /** should the chapter be displayed or kept in memory until user needs it? */
-    prefetch?:boolean,
-    /** index of a page we need to reload */
-    reloadIndex?:number,
-    /** this callback is called once the API respond */
-    callback?:() => void
-  }):Promise<void> {
+  opts: Partial<{ prefetch: boolean, scrollup: boolean, reloadIndex:number, callback: () => void }>,
+):Promise<unknown> {
   if(!manga.value) return;
   // prepare the requests
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
+  // our listener will need to know if it's been called for the first time
+  let firstPage = true;
+  // we will receive the nb of images to expect from the API so we can keep track of the progress
+  let imgsExpectedLength = 0;
 
   // cancel previous requests, except if user tried to reload a page
   if(loadingAchapter.value && typeof opts.reloadIndex !== 'number') turnOff(false);
 
+  // on first load OR full reload
   if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
     // remove errors
     error.value = null;
@@ -385,54 +381,12 @@ async function getChapter(
     }
   }
 
-  // ask for the chapter images and get the number of expected images
-  let imgsExpectedLength = 0;
-  socket.emit('showChapter', reqId, {
-    chapterId: chapterId,
-    mangaId: manga.value.id,
-    mirror: manga.value.mirror.name,
-    url: manga.value.chapters.find(c=>c.id === chapterId)?.url,
-    lang: props.lang,
-    retryIndex: opts.reloadIndex,
-  }, (length) => {
-    imgsExpectedLength = length;
-  });
-
-  // we need this to know when we receive the first image.
-  let firstPage = true;
-  // a showChapter event is triggered for each page
-  socket.on('showChapter', (id, chapter) => {
+  function handleLoadAndPrefetch(id:number, chapter: ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage):unknown {
     if(id !== reqId) return;
     if(!manga.value) return;
-    if(opts.callback) opts.callback();
+    if(isChapterErrorMessage(chapter)) return socket.off('showChapter', handleLoadAndPrefetch);
     const exist = RAWchapters.value.find(c => c.id === chapterId);
-
-    // stop listening for events as the API won't return results anymore
-    // OR return and wait for the next event
-    if(isChapterErrorMessage(chapter)) {
-      error.value = chapter;
-      return socket.off('showChapter');
-    }
-    // if entry is new (first page usually), and we aren't reloading/prefetching a page/chapter: add it to cache
-    if(!exist) {
-      RAWchapters.value.push({
-        id: chapterId,
-        imgsExpectedLength,
-        imgs: [chapter],
-        index: manga.value.chapters.findIndex(m => m.id === chapterId ),
-      });
-
-      // if it's the first page (and it should be), trigger page transition
-      if(firstPage) {
-        firstPage = false;
-        if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
-          chapterTransition({
-              chapterId,
-              PageToShow: 0,
-          });
-        }
-      }
-    } else {
+    if(exist) {
       // if image exists replace it
       const toReplace =
         exist.imgs.findIndex(img => img.index  === chapter.index);
@@ -442,22 +396,63 @@ async function getChapter(
       // if this is the first page, trigger the page transition
       if(firstPage) {
         firstPage = false;
-        if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
+        if(!opts.prefetch) {
           chapterTransition({
             chapterId,
             PageToShow: opts.scrollup ? exist.imgs.length : 1,
           });
         }
       }
+    } else {
+      RAWchapters.value.push({
+        id: chapterId,
+        imgsExpectedLength,
+        imgs: [chapter],
+        index: manga.value.chapters.findIndex(m => m.id === chapterId ),
+      });
+      // if it's the first page (and it should be in this case), trigger page transition
+      if(firstPage) {
+        firstPage = false;
+        if(!opts.prefetch) {
+          chapterTransition({
+              chapterId,
+              PageToShow: 0,
+          });
+        }
+      }
     }
-    // if we have all the images, stop listening for events
     if(chapter.lastpage) {
-      socket.off('showChapter');
-      if(!nextChapter.value) return;
-      if(!settings.readerGlobal.preloadNext) return;
-      if(opts.prefetch || typeof opts.reloadIndex === 'number') return;
-      return getChapter(nextChapter.value.id, { prefetch: true});
+      if(opts.prefetch) return socket.off('showChapter', handleLoadAndPrefetch);
+      if(!settings.readerGlobal.preloadNext) return socket.off('showChapter', handleLoadAndPrefetch);
+      if(!nextChapter.value) return socket.off('showChapter', handleLoadAndPrefetch);
+      socket.off('showChapter', handleLoadAndPrefetch);
+      return getChapter(nextChapter.value.id, { prefetch: true });
     }
+  }
+
+  function handleReload(id:number, chapter: ChapterImage | ChapterImageErrorMessage | ChapterErrorMessage): unknown {
+    if(id !== reqId || !manga.value || isChapterErrorMessage(chapter)) return opts.callback ? opts.callback() : undefined;
+    const chapExist = RAWchapters.value.find(c => c.id === chapterId);
+    const imageExist = chapExist?.imgs.findIndex(i => i.index === chapter.index);
+    if(!chapExist || !imageExist || imageExist < 0) return opts.callback ? opts.callback() : undefined;
+
+    if(opts.callback) opts.callback();
+    chapExist.imgs[imageExist] = chapter;
+    socket.off('showChapter', handleReload);
+  }
+
+  if(typeof opts.reloadIndex === 'number') socket.once('showChapter', handleReload);
+  else socket.on('showChapter', handleLoadAndPrefetch);
+
+  socket.emit('showChapter', reqId, {
+    chapterId: chapterId,
+    mangaId: manga.value.id,
+    mirror: manga.value.mirror.name,
+    url: manga.value.chapters.find(c=>c.id === chapterId)?.url,
+    lang: props.lang,
+    retryIndex: opts.reloadIndex,
+  }, (length) => {
+    imgsExpectedLength = length;
   });
 }
 
