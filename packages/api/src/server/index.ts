@@ -242,20 +242,20 @@ export default class IOWrapper {
       if(!mirror) return socket.emit('showChapter', id, { error: 'chapter_error_mirror_not_found', index: 0, lastpage: true });
 
       // don't bother searching if we already have the url
-      if(opts.url) return mirror.chapter(opts.url, opts.lang, socket, id, callback);
+      if(opts.url) return mirror.chapter(opts.url, opts.lang, socket, id, callback, opts.retryIndex);
 
       // if manga is in db search the chapter url
       const mg = await (await MangasDB.getInstance()).get({id: opts.mangaId, langs: [opts.lang] });
       if(mg) {
         const chap = mg.chapters.find(c => c.id === opts.chapterId && c.lang === opts.lang);
         if(!chap) return socket.emit('showChapter', id, {error:'chapter_error', trace: 'cannot find chapter in db'});
-        return mirror.chapter(chap.url, chap.lang, socket, id, callback);
+        return mirror.chapter(chap.url, chap.lang, socket, id, callback, opts.retryIndex);
       }
       // last resort: search in the uuid database
       else {
         const search = UUID.getInstance().data.ids.find(u => u.id === opts.chapterId && u.langs.some(l => l === opts.lang));
         if(!search) return socket.emit('showChapter', id, { error: 'chapter_error_invalid_link' });
-        return mirror.chapter(search.url, opts.lang, socket, id, callback);
+        return mirror.chapter(search.url, opts.lang, socket, id, callback, opts.retryIndex);
       }
     });
 
