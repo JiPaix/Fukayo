@@ -32,7 +32,7 @@ const emit = defineEmits<{
   (event: 'progress', percentage:number):void,
   (event: 'progressError'):void,
   (event: 'changePage', page: number, chapterId: string): void,
-  (event: 'reload', pageIndex:number|undefined, chapterId: string, chapterURL:string, callback:() =>void): void
+  (event: 'reload', pageIndex:number|undefined, chapterId: string, callback:() =>void): void
   (event: 'loadPrev'): void
   (event: 'loadNext'): void
   (event: 'toggleDrawer'):void
@@ -50,16 +50,11 @@ const
 /** image-slot template ref */
 imageslot = ref<InstanceType<typeof FImg>[]|null>(null),
 /** image-stack template ref */
-imagestack = ref<InstanceType<typeof ImageStack>|null>(null),
-/** is the image reloading? */
-reloading = ref(false);
+imagestack = ref<InstanceType<typeof ImageStack>|null>(null);
 
 /** reload a page */
-async function reload(pageIndex: number|undefined) {
-  const callback = () => {
-    reloading.value = false;
-  };
-  emit('reload', pageIndex, props.chapterId, props.chapterURL, callback);
+function reload(pageIndex: number, callback:() => void) {
+  emit('reload', pageIndex, props.chapterId, callback);
 }
 
 /** emit to parent when page is on screen */

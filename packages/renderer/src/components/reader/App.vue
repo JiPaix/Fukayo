@@ -933,7 +933,7 @@ onMounted(hideOverlay);
             @load-next="loadNext"
             @load-prev="loadPrev(true)"
             @change-page="onImageVisible"
-            @reload="(reloadIndex, id, url, callback) => getChapter(id, { reloadIndex, callback})"
+            @reload="(reloadIndex, id, callback) => getChapter(id, { reloadIndex, callback})"
           />
         </div>
 

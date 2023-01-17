@@ -29,7 +29,7 @@ const props = defineProps<{
 /** emits */
 const emit = defineEmits<{
   (eventName: 'showImage', indexes:number[]): void
-  (eventName: 'reload', index: number): void
+  (eventName: 'reload', index: number, callback:() => void): void
   (eventName: 'loadPrev'):void
   (eventName: 'loadNext'):void
   (eventName: 'toggleDrawer'):void
@@ -51,7 +51,8 @@ storeSettings = useSettingsStore();
 // globals
 const
 /** array filled with values false */
-falseArray:false[] = Array(props.expectedLength).fill(false);
+loadingArray:false[] = Array(props.expectedLength).fill(false),
+reloadingArray:false[]= Array(props.expectedLength).fill(false);
 let
 /** touch tracking */
 touchTrack = {screenY: 0, screenX: 0 };
@@ -61,7 +62,9 @@ const
 /** QScrollArea template ref */
 scrollArea = ref<InstanceType<typeof QScrollArea>>(),
 /** keep track of images that are loaded */
-loaded = ref<boolean[]>(falseArray);
+loaded = ref<boolean[]>(loadingArray),
+/** keep track of images that are reloading */
+reloading = ref<boolean[]>(reloadingArray);
 
 // computed
 const
@@ -246,6 +249,12 @@ function touch(ev:TouchEvent) {
   touchTrack.screenY = current.screenY;
 }
 
+function reload(imageIndex: number) {
+  reloading.value[imageIndex] = true;
+  emit('reload', imageIndex, () => {
+    reloading.value[imageIndex] = false;
+  });
+}
 /** exported members */
 defineExpose({
   getScrollPosition, setScrollPercentage, getScrollPercentage, setScrollPosition, indexes: packed,
@@ -304,26 +313,32 @@ defineExpose({
               v-if="isChapterImage(img)"
               class="self-center"
               :src="transformIMGurl(img.src, storeSettings)"
-              :style="{ ...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
+              :style="{ ...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px', minHeight: ($q.screen.height/2)+'px!important' }"
               loading="lazy"
               @load="image.indexes.forEach(i => loaded[i] = true)"
             >
-            <div
+            <q-banner
               v-else
-              class="bg-negative flex"
+              class="bg-negative flex q-pa-lg text-white"
               :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
               @load="image.indexes.forEach(i => loaded[i] = true)"
             >
-              <span>
-                {{ img.error }}
-              </span>
+              <template #avatar>
+                <q-icon
+                  name="broken_image"
+                />
+              </template>
+              <span class="text-uppercase">{{ img.error }}</span>
+              <br>
               <span v-if="img.trace">{{ img.trace }}</span>
-              <q-btn
-                icon="broken_image"
-                :label="$t('reader.reloadImage')"
-                @click="emit('reload', img.index)"
-              />
-            </div>
+              <template #action>
+                <q-btn
+                  :label="$t('reader.reloadImage')"
+                  :loading="reloading[img.index]"
+                  @click="reload(img.index)"
+                />
+              </template>
+            </q-banner>
           </div>
         </div>
       </div>
@@ -376,20 +391,30 @@ defineExpose({
           >
           <div
             v-else
-            :key="`${ig}-error`"
-            class="bg-negative flex"
-            :style="{...verticalNoBook, maxWidth: (($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))/image.group.length)+'px' }"
-            @load="onLoaded(image.indexes)"
+            class="flex flex-center"
+            :style="{minHeight: ($q.screen.height - headerSize)+'px'}"
           >
-            <span>
-              {{ img.error }}
-            </span>
-            <span v-if="img.trace">{{ img.trace }}</span>
-            <q-btn
-              icon="broken_image"
-              :label="$t('reader.reloadImage')"
-              @click="emit('reload', img.index)"
-            />
+            <q-banner
+              class="bg-negative flex flex-center shadow-1 text-white"
+              :style="{ ...horizontal, minWidth: (($q.screen.width) - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0)) / image.group.length +'px' }"
+              @load="onLoaded(image.indexes)"
+            >
+              <template #avatar>
+                <q-icon
+                  name="broken_image"
+                />
+              </template>
+              <span class="text-uppercase">{{ img.error }}</span>
+              <br>
+              <span v-if="img.trace">{{ img.trace }}</span>
+              <template #action>
+                <q-btn
+                  :label="$t('reader.reloadImage')"
+                  :loading="reloading[img.index]"
+                  @click="reload(img.index)"
+                />
+              </template>
+            </q-banner>
           </div>
         </div>
       </div>
@@ -432,7 +457,7 @@ defineExpose({
           <q-btn
             icon="broken_image"
             :label="$t('reader.reloadImage')"
-            @click="emit('reload', group.index)"
+            @click="reload(group.index)"
           />
         </div>
       </div>
