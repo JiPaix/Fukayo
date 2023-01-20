@@ -886,7 +886,7 @@ onBeforeMount(getSettings);
                       :size="$q.screen.gt.md ? 'md' : 'xl'"
                       :dense="$q.screen.gt.md"
                       :dark="$q.dark.isActive"
-                      @update:model-value="checkSettingsCompatibilty('webtoon')"
+                      @update:model-value="settings.reader.webtoon = true;checkSettingsCompatibilty('webtoon')"
                     />
                   </q-item-section>
                 </q-item>
