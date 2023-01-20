@@ -318,14 +318,13 @@ async function getManga():Promise<void> {
 /** change current chapter variables and make sure scroll position doesn't mess with UI */
 async function chapterTransition(opts: { chapterId:string, PageToShow:number }) {
 
-  progress.value = 0;
   showNextBuffer.value = false;
   showPrevBuffer.value = false;
 
   showPageSelector.value = false;
   currentChapterId.value = opts.chapterId;
   currentPage.value = opts.PageToShow+1;
-  loadingAchapter.value = false;
+  setTimeout(() => loadingAchapter.value = false, 500);
   ignoreScroll.value = true;
   await scrollToPage(opts.PageToShow, true);
   await nextTick();
@@ -334,25 +333,29 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
   }, 500);
 }
 
+/** update progress value */
+function updateProgress(n:number) {
+  progress.value = n;
+}
+
 async function getChapter(
   /** the chapter id */
   chapterId = props.chapterId,
-  opts: Partial<{ prefetch: boolean, scrollup: boolean, reloadIndex:number, callback: () => void }>,
+  opts: Partial<{ prefetch: boolean, scrollup: boolean, reloadIndex:number, resume: boolean, callback: () => void }>,
 ):Promise<unknown> {
   if(!manga.value) return;
+  if(!settings.readerGlobal.preloadNext && opts.prefetch) return;
   // prepare the requests
   const socket = await useSocket(settings.server);
+  await turnOff(false); // turn off any previous requests
   const reqId = Date.now();
   // our listener will need to know if it's been called for the first time
   let firstPage = true;
   // we will receive the nb of images to expect from the API so we can keep track of the progress
   let imgsExpectedLength = 0;
 
-  // cancel previous requests, except if user tried to reload a page
-  if(loadingAchapter.value && typeof opts.reloadIndex !== 'number') turnOff(false);
-
   // on first load OR full reload
-  if(!opts.prefetch && typeof opts.reloadIndex !== 'number') {
+  if(!opts.prefetch && typeof opts.reloadIndex !== 'number' && !opts.resume) {
     // remove errors
     error.value = null;
     // show spinner
@@ -367,17 +370,22 @@ async function getChapter(
 
   // if chapter is already in cache and has all its images, just show it
   const alreadyFetched = RAWchapters.value.find(c => c.id === chapterId);
-  if(alreadyFetched && !opts.prefetch && typeof opts.reloadIndex === 'undefined') {
+  if(alreadyFetched) {
+    if(!opts.prefetch && !opts.resume && typeof opts.reloadIndex === 'undefined') {
+      loadingAchapter.value = true;
+      setTimeout(() => {
+        updateProgress(alreadyFetched.imgs.length / alreadyFetched.imgsExpectedLength);
+        chapterTransition({
+          chapterId,
+          PageToShow: opts.scrollup ? alreadyFetched.imgs.length-1 : 0,
+        });
+      }, 100);
+    }
     const needToFetch = alreadyFetched.imgsExpectedLength < alreadyFetched.imgs.length;
-    setTimeout(() => {
-      chapterTransition({
-        chapterId,
-        PageToShow: opts.scrollup ? alreadyFetched.imgs.length-1 : 0,
-      });
-    }, 500);
-    if(!needToFetch) {
-      if(!nextChapter.value) return;
-      return getChapter(nextChapter.value.id, {prefetch: true});
+    if(needToFetch) return getChapter(alreadyFetched.id, { resume: true });
+    else {
+      if(nextChapter.value.id === chapterId) return;
+      return getChapter(nextChapter.value.id, { prefetch: true });
     }
   }
 
@@ -393,16 +401,7 @@ async function getChapter(
       if(toReplace > -1) exist.imgs[toReplace] = chapter;
       // add new image
       else exist.imgs.push(chapter);
-      // if this is the first page, trigger the page transition
-      if(firstPage) {
-        firstPage = false;
-        if(!opts.prefetch) {
-          chapterTransition({
-            chapterId,
-            PageToShow: opts.scrollup ? exist.imgs.length : 1,
-          });
-        }
-      }
+
     } else {
       RAWchapters.value.push({
         id: chapterId,
@@ -410,20 +409,19 @@ async function getChapter(
         imgs: [chapter],
         index: manga.value.chapters.findIndex(m => m.id === chapterId ),
       });
-      // if it's the first page (and it should be in this case), trigger page transition
-      if(firstPage) {
-        firstPage = false;
-        if(!opts.prefetch) {
-          chapterTransition({
-              chapterId,
-              PageToShow: 0,
-          });
-        }
-      }
     }
+    if(!opts.prefetch) updateProgress((exist ? exist.imgs.length : 1) / imgsExpectedLength);
+
+    if(firstPage && !opts.prefetch && !opts.resume) {
+      chapterTransition({
+        chapterId,
+        PageToShow: opts.scrollup ? exist ? exist.imgs.length : 1 : 1,
+      });
+    }
+
+    if(firstPage) firstPage = false;
     if(chapter.lastpage) {
       if(opts.prefetch) return socket.off('showChapter', handleLoadAndPrefetch);
-      if(!settings.readerGlobal.preloadNext) return socket.off('showChapter', handleLoadAndPrefetch);
       if(!nextChapter.value) return socket.off('showChapter', handleLoadAndPrefetch);
       socket.off('showChapter', handleLoadAndPrefetch);
       return getChapter(nextChapter.value.id, { prefetch: true });
@@ -438,7 +436,14 @@ async function getChapter(
 
     if(opts.callback) opts.callback();
     chapExist.imgs[imageExist] = chapter;
+    const progress = chapExist.imgs.length / chapExist.imgsExpectedLength;
+    updateProgress(progress);
     socket.off('showChapter', handleReload);
+    if(progress < 1) getChapter(chapterId, { resume: true });
+    else {
+      if(!nextChapter.value || nextChapter.value.id === chapterId) return;
+      return getChapter(nextChapter.value.id, { prefetch: true });
+    }
   }
 
   if(typeof opts.reloadIndex === 'number') socket.once('showChapter', handleReload);
