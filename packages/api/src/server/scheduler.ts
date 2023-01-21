@@ -262,7 +262,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(this.io) this.io.emit('startMangasUpdate');
 
     // get the list of mangas
-    const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
+    const { updates, fixes, offlines, deads } = await this.#getMangasToUpdate(force);
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
     if(nbMangas > 0) this.logger('updating.', nbMangas, 'entries');
 
@@ -272,10 +272,16 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(mirror) updated += await this.#fixMangas(mirror, fixes[mirrorName]);
     }
 
-    // selfhosted offline && broken entries are skipped
+    // selfhosted offline are skipped
     const db = await MangasDB.getInstance();
     for(const manga of offlines) {
       await db.add({manga}, true);
+    }
+
+    // entries from dead sources should be marked as broken
+    for(const manga of deads) {
+      manga.meta.broken = true;
+      await db.add({ manga }, true);
     }
 
     if(!onlyfixes) {
@@ -291,12 +297,33 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     if(nbMangas > 0) this.logger('update finished');
   }
 
-  /**
-   * Get a list of manga that need to be updated, grouped by mirrors
-   * @param force if true, will force the update of all the mangas
-   */
-  async #getMangasToUpdate(force?:boolean) {
+  async #getMangasToUpdate(/** if true, will force the update of all the mangas */ force?:boolean)
+  :Promise<{
+    /** mangas to update */
+    updates: sortedMangas<MangaInDB>,
+    /** mangas to fix */
+    fixes: sortedMangas<MangaInDB>,
+    /** mangas to not update */
+    offlines: MangaInDB[],
+    /** mangas with dead mirrors to mark as broken */
+    deads: MangaInDB[]
+  }> {
     let indexes = await (await MangasDB.getInstance()).getIndexes();
+
+    // get mangas with dead mirror that aren't broken yet
+    const indexesDeads = indexes.filter(manga => {
+      const mirror = mirrors.find(m => m.name === manga.mirror.name);
+      if(!mirror) return false;
+      if(mirror.isDead && !manga.broken) return true;
+      return false;
+    });
+
+    const mangaDeadSources:MangaInDB[] = [];
+
+    for(const index of indexesDeads) {
+      const manga = await (await MangasDB.getInstance()).getByFilename(index.file);
+      mangaDeadSources.push(manga);
+    }
 
     // to skip
     const indexesOffline = indexes.filter(manga => {
@@ -317,6 +344,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     });
 
+    /** mangas that shouldn't be updated */
     const mangaOfflines:MangaInDB[] = [];
 
     for(const index of indexesOffline) {
@@ -389,7 +417,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       if(!mangasToFixByMirror[manga.mirror.name]) mangasToFixByMirror[manga.mirror.name] = [];
       mangasToFixByMirror[manga.mirror.name].push(manga);
     });
-    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflines };
+    return { updates: mangasToUpdateByMirror, fixes: mangasToFixByMirror, offlines: mangaOfflines, deads: mangaDeadSources };
   }
 
   /**
