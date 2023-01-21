@@ -251,23 +251,20 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   async update(force?:boolean, onlyfixes?:boolean) {
     // keep track of updates
     let updated = 0;
-    // if we are already updating, return
-    if(this.#ongoing.updates) return;
-    // try again later if we aren't connected
-    if(!this.connectivity) {
+    // try later if there's an ongoing update, or internet outage
+    if(this.#ongoing.updates || !this.connectivity) {
       if(this.io) this.io.emit('finishedMangasUpdate', updated);
-      return ;
+      return;
     }
+
     // emit to all the clients that we are updating
     this.#ongoing.updates = true;
-
     if(this.io) this.io.emit('startMangasUpdate');
-
 
     // get the list of mangas
     const {updates, fixes, offlines} = await this.#getMangasToUpdate(force);
     const nbMangas = Object.keys(updates).reduce((acc, key) => acc + updates[key].length, 0);
-    if(nbMangas > 0) this.logger('updating...');
+    if(nbMangas > 0) this.logger('updating.', nbMangas, 'entries');
 
     // fixes mangas
     for(const mirrorName of Object.keys(fixes)) {
@@ -301,16 +298,23 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
   async #getMangasToUpdate(force?:boolean) {
     let indexes = await (await MangasDB.getInstance()).getIndexes();
 
-    // these will be skipped and their lastupdate renewed
-    const indexesOffline = indexes.filter(i => {
-      const find = mirrors.find(m => m.name === i.mirror.name);
-      if(!find) return false;
-      if( (find.selfhosted && !find.isOnline) || i.broken) {
-        indexes = indexes.filter(main => i.id !== main.id);
-        if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now() || force) return true;
-        else return false;
-      }
-      return false;
+    // to skip
+    const indexesOffline = indexes.filter(manga => {
+      const mirror = mirrors.find(m => m.name === manga.mirror.name);
+
+      let skip = false;
+
+      if(!mirror) skip = true;
+      else if(!mirror.enabled) skip = true;
+      else if(mirror.isDead) skip = true;
+      else if((mirror.selfhosted && !mirror.isOnline)) skip = true;
+
+      if(!skip) return false;
+
+      indexes = indexes.filter(main => manga.id !== main.id);
+      return true;
+
+
     });
 
     const mangaOfflines:MangaInDB[] = [];
@@ -320,23 +324,25 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       mangaOfflines.push(manga);
     }
 
-    const indexesToUpdate = indexes.filter(i => {
-        // do not update manga's for disabled mirrors or entry version doesn't match mirror version
-        const find = mirrors.find(m => m.name === i.mirror.name);
-        if(find && !find.enabled) return false;
-        if(find && (find.version !== i.mirror.version || find.isDead)) return false;
-        // do not update manga's explicitly marked as "do not update";
-        if(!i.update) return false;
-        // update if force is true or enough time has passed
-        if(force && find && find.enabled) {
-          indexes = indexes.filter(main => main.id !== i.id);
-          return true;
-        }
-        else if((i.lastUpdate + this.settings.library.waitBetweenUpdates) < Date.now()) {
-          indexes = indexes.filter(main => main.id !== i.id);
-          return true;
-        }
-        else return false;
+    // to update
+    const indexesToUpdate = indexes.filter(manga => {
+      const mirror = mirrors.find(m => m.name === manga.mirror.name);
+
+      if(manga.broken || !manga.update || !mirror) return false;
+      if(!mirror.enabled || mirror.isDead) return false;
+      if(mirror.version !== manga.mirror.version) return false;
+
+      let update = false;
+      const nextUpdate = manga.lastUpdate + this.settings.library.waitBetweenUpdates;
+
+      if(nextUpdate < Date.now()) update = true;
+      else if(force) update = true;
+
+      if(!update) return false;
+
+      indexes = indexes.filter(main => main.id !== manga.id);
+      return true;
+
     });
 
     const mangasToUpdate:MangaInDB[] = [];
@@ -354,15 +360,20 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     /**
      * - mangas where version doesn't match mirror's version
-     * - mangas from dead mirrors
+     * - mangas marked as broken but mirror isn't dead
      */
     const indexesToFix = indexes.filter(manga => {
-      const find = mirrors.find(m => m.name === manga.mirror.name);
-      if(find && (find.version !== manga.mirror.version || find.isDead)) {
-        indexes = indexes.filter(main => main.id !== manga.id);
-        return true;
-      }
-      else return false;
+      const mirror = mirrors.find(m => m.name === manga.mirror.name);
+      if(!mirror) return false;
+
+      let fix = false;
+      if(mirror.version !== manga.mirror.version) fix = true;
+      if(!mirror.isDead && manga.broken) fix = true;
+
+      if(!fix) return false;
+      indexes = indexes.filter(main => main.id !== manga.id);
+      return true;
+
     });
 
 
