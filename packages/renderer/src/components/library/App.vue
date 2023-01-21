@@ -58,10 +58,11 @@ filters = ref<{
 const
 /** list of mangas sources */
 mirrorList = computed(() => {
+  const mangasMirrors = mangasRAW.value.map(m => m.mangas.map(mm => mm.mirror)).flat();
+  const deadMangasMirrors = deadMangas.value.map(m => m.mirror);
+
   return Array.from(
-    new Set(
-      mangasRAW.value.map(m => m.mangas.map(mm => mm.mirror)).flat(),
-    ),
+    new Set([...mangasMirrors, ...deadMangasMirrors]),
   )
   .map(m => mirrors.value.find(mir => mir.name === m));
 }),
@@ -268,7 +269,124 @@ onBeforeUnmount(Off);
     />
   </div>
   <div
-    v-else-if="(mirrorList.length && (deadMangas.length || mangas.length))"
+    v-else
+    class="w-100 q-pa-lg"
+  >
+    <migrate-manga
+      v-if="deadMangas.length"
+      :mangas="deadMangas"
+      bug
+    />
+    <group-filter
+      v-if="mirrorList.length && mangas.length"
+      :mirror-list="(mirrorList as mirrorInfo[])"
+      :lang-list="langs"
+      :user-categories="userCategories"
+      @search="(input) => search = input"
+      @filter="(mirrors, langs, userCategories) => filters = {mirrors, langs, userCategories}"
+    />
+    <q-stepper
+      v-if="!mangas.length && !deadMangas.length"
+      ref="stepper"
+      v-model="step"
+      active-color="orange"
+      inactive-color="grey-7"
+      animated
+      header-nav
+    >
+      <q-step
+        :name="1"
+        :title="$t('languages.language', 20).toLocaleUpperCase()"
+        icon="translate"
+        :done="settings.library.firstTimer > 1"
+      >
+        <lang-options
+          :stepper="true"
+          @continue="() => { settings.library.firstTimer = 2; step = 2 }"
+        />
+      </q-step>
+      <q-step
+        :name="2"
+        :title="$t('mangas.source', 20).toLocaleUpperCase()"
+        icon="travel_explore"
+        :done="settings.library.firstTimer > 2"
+      >
+        <mirrors-options
+          :stepper="true"
+          @continue="() => { settings.library.firstTimer = 3; step = 3 }"
+        />
+      </q-step>
+      <q-step
+        :name="3"
+        :title="$t('library.letsgo', 20).toLocaleUpperCase()"
+        icon="explore"
+        :done="mirrorList.length > 0 && mangas.length > 0"
+      >
+        <div class="flex column">
+          <span class="text-h5">{{ $t('library.ready') }}</span>
+          <div class="flex items-center">
+            <span>{{ $t('library.change_settings_anytime') }}</span>
+            <q-btn
+              class="q-mx-sm"
+              push
+              :color="$q.dark.isActive ? 'grey-7': ''"
+              :text-color="$q.dark.isActive ? 'white': 'dark'"
+              icon="settings"
+              size="sm"
+              @click="router.push({name: 'settings'})"
+            >
+              {{ $t('settings.tab') }}
+            </q-btn>
+          </div>
+          <div class="flex items-center q-mt-lg">
+            <q-btn
+              class="q-mx-sm"
+              push
+              color="orange"
+              :text-color="$q.dark.isActive ? 'white': 'black'"
+              icon="explore"
+              :label="$t('explore.tab')"
+              @click="router.push({name: 'explore'})"
+            />
+            <q-btn
+              class="q-mx-sm"
+              push
+              color="orange"
+              :text-color="$q.dark.isActive ? 'white': 'black'"
+              icon="o_screen_search_desktop"
+              :label="$t('search.tab')"
+              @click="router.push({name: 'search'})"
+            />
+          </div>
+        </div>
+      </q-step>
+    </q-stepper>
+    <q-infinite-scroll
+      v-if="mangas.length"
+      class="w-100 q-pa-lg"
+    >
+      <div
+        class="flex flex-center"
+      >
+        <group-card
+          v-for="(group, i) in mangas"
+          :key="i"
+          :group="group.mangas"
+          :covers="group.covers"
+          :group-name="group.name"
+          :mirrors="mirrors"
+          :group-unread="group.unread"
+        />
+      </div>
+    </q-infinite-scroll>
+  </div>
+
+
+
+
+
+  <!-- <div
+    v-if="(mirrorList.length && (deadMangas.length || mangas.length))"
     class="w-100 q-pa-lg"
     :class="$q.dark.isActive ? 'bg-dark' : 'bg-grey-2'"
     :dark="$q.dark.isActive"
@@ -385,7 +503,7 @@ onBeforeUnmount(Off);
         </div>
       </q-step>
     </q-stepper>
-  </div>
+  </div> -->
 </template>
 <style lang="css">
 .q-panel.scroll {

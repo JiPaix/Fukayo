@@ -150,7 +150,7 @@ onMounted(() => {
 });
 </script>
 <template>
-  <div class="row">
+  <div class="row q-pa-lg">
     <q-input
       v-model="search"
       clearable

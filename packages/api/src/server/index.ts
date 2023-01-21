@@ -213,7 +213,7 @@ export default class IOWrapper {
       if(opts.id && opts.langs) indb = await (await MangasDB.getInstance()).get({id: opts.id, langs: opts.langs});
       else if(opts.mirror && opts.langs && opts.url) indb = await (await MangasDB.getInstance()).get({mirror: opts.mirror, langs: opts.langs, url: opts.url});
 
-      if(indb) return socket.emit('showManga', id, indb);
+      if(indb && !opts.force) return socket.emit('showManga', id, indb);
 
       if(opts.mirror && opts.langs && opts.url) {
         const mirror = mirrors.find(m => m.name === opts.mirror);
