@@ -384,7 +384,7 @@ async function getChapter(
     const needToFetch = alreadyFetched.imgsExpectedLength < alreadyFetched.imgs.length;
     if(needToFetch) return getChapter(alreadyFetched.id, { resume: true });
     else {
-      if(nextChapter.value.id === chapterId) return;
+      if(!nextChapter.value || nextChapter.value.id === chapterId) return;
       return getChapter(nextChapter.value.id, { prefetch: true });
     }
   }
