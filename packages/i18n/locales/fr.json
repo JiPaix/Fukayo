@@ -319,7 +319,7 @@
         "select_mirror": "Sélectionnez une ou plusieurs sources",
         "solutions": "Options de migration disponibles",
         "warning": "Certaines entrées sont marquées comme cassées et nécessitent votre attention.",
-        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry"
+        "source_do_not_have_lang": "Cette source ne contient aucune des langues utilisées dans cette entrée."
     },
     "migration": {
         "results": "Candidats à la migration"
