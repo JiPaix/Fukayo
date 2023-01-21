@@ -1,8 +1,10 @@
 import { Database } from '@api/db';
 import { resolve } from 'path';
 import { env } from 'process';
+import type { mirrorsLangsType } from '@i18n';
 
 const defaultSettings = {
+  langs: ['en', 'fr', 'de', 'pt', 'pt-br', 'es', 'es-la', 'ru', 'tr', 'ja', 'id', 'zh', 'zh-hk'] as mirrorsLangsType[],
   cache: {
     age : {
       max: 1000 * 60 * 60 * 24 * 7, // 1 week

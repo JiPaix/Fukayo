@@ -1,8 +1,5 @@
-import { mirrorsLang } from '@i18n';
 import type { Settings } from '@renderer/stores/settings/types';
 import { defineStore } from 'pinia';
-
-const mostCommonLanguages = ['en', 'fr', 'de', 'pt', 'pt-br', 'es', 'es-la', 'ru', 'tr', 'ja', 'id', 'zh', 'zh-hk'];
 
 const defaultSettings:Settings = {
   theme: 'dark',
@@ -46,9 +43,6 @@ const defaultSettings:Settings = {
     showUnread: true,
     sort: 'AZ',
     firstTimer: 1,
-  },
-  i18n: {
-    ignored: mirrorsLang.filter(l => !mostCommonLanguages.includes(l)),
   },
 };
 

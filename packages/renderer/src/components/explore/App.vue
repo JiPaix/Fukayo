@@ -10,6 +10,7 @@ import { useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { mirrorsLang } from '@i18n';
 
 // config
 const
@@ -37,7 +38,9 @@ mirrorsRAW = ref<mirrorInfo[]>([]),
 /** QForm template ref */
 form = ref<InstanceType<typeof QCardSection>>(),
 /** QForm size */
-formSize = ref(0);
+formSize = ref(0),
+/** list of ignored languages */
+ignoredLangs = ref(mirrorsLang as unknown as mirrorsLangsType[]);
 
 // computed
 const
@@ -72,7 +75,7 @@ function pickall() {
 
 /** include/exclude a language from the filter, also affects the mirror filter */
 function pick(lang:mirrorsLangsType) {
-  return toggleLang(lang, includedLangsRAW, undefined, undefined, settings.i18n.ignored);
+  return toggleLang(lang, includedLangsRAW, undefined, undefined, ignoredLangs.value);
 }
 
 /** save the QForm size in `formSize` */
@@ -84,10 +87,29 @@ function qSectionResize() {
 /** get available sources and start the search if routes params are present */
 async function On() {
   const socket = await useSocket(settings.server);
-  socket.emit('getMirrors', false, (m) => {
-    m = m.filter(m => !m.selfhosted);
-    setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, settings.i18n.ignored);
-  });
+
+  function getSettings():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getSettings', (globalSettings) => {
+        ignoredLangs.value = mirrorsLang.map(x=>x).filter(l => !globalSettings.langs.includes(l));
+        resolve();
+      });
+    });
+  }
+
+  function getMirrors():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getMirrors', false, (m) => {
+        m = m.filter(m => !m.selfhosted);
+        setupMirrorFilters(m, mirrorsRAW, includedLangsRAW, allLangs, undefined, ignoredLangs.value);
+        resolve();
+      });
+    });
+  }
+
+  await getSettings();
+  await getMirrors();
+
 }
 
 async function Off() {
@@ -256,7 +278,7 @@ onBeforeUnmount(Off);
                   </div>
                   <div class="flex q-mt-xs">
                     <q-chip
-                      v-for="lang in mirror.langs.filter(l => !settings.i18n.ignored.includes(l))"
+                      v-for="lang in mirror.langs.filter(l => !ignoredLangs.includes(l))"
                       :key="lang"
                       dense
                       size="sm"

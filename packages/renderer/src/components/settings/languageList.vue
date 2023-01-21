@@ -1,11 +1,13 @@
 <script lang="ts" setup>
-import type en from '@i18n/../locales/en.json';
+import type SettingsDB from '@api/db/settings';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
+import type en from '@i18n/../locales/en.json';
+import { useSocket } from '@renderer/components/helpers/socket';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { QSelect } from 'quasar';
+import { computed, onBeforeMount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 /** props */
 const props = defineProps<{
@@ -23,12 +25,13 @@ const
 /** stored settings */
 settings = useSettingsStore(),
 /** i18n */
-$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n()),
+currentSettings = ref<SettingsDB['data']>();
 
 // computed
 const
 model = computed(() => {
-  return mirrorsLang.filter(l => !settings.i18n.ignored.includes(l)).filter(l => l !== 'xx')
+  return (currentSettings.value?.langs || [])
     .map(l => {
       return {
         value: l,
@@ -36,7 +39,7 @@ model = computed(() => {
       };
     });
 }),
-optionsRAW = mirrorsLang.filter(l => l !== 'xx')
+optionsRAW = mirrorsLang
   .map(l => {
     return {
       value: l,
@@ -71,27 +74,55 @@ function resetFilter() {
   qselect.value.updateInputValue('');
 }
 
-function updateval(val: { value: mirrorsLangsType, label: string }[]) {
+async function updateval(val: { value: mirrorsLangsType, label: string }[]) {
   if(!val || !val.length) return clear();
+  if(!currentSettings.value) return;
   const values = val.map(x=>x.value);
-  settings.i18n.ignored = mirrorsLang.filter(l => !values.includes(l));
+  const socket = await useSocket(settings.server);
+  socket.emit('changeSettings', { ...currentSettings.value, langs: values }, (newSettings) => {
+    currentSettings.value = newSettings;
+  });
 }
 
-function remove(val:mirrorsLangsType) {
-  settings.i18n.ignored.push(val);
+async function remove(val:mirrorsLangsType) {
+  if(!currentSettings.value) return;
+  const socket = await useSocket(settings.server);
+  const values = currentSettings.value.langs.filter(l => l !== val);
+  socket.emit('changeSettings', { ...currentSettings.value, langs: values }, (newSettings) => {
+    currentSettings.value = newSettings;
+  });
 }
 
-function clear() {
-  settings.i18n.ignored = mirrorsLang.filter(l => l !== 'xx');
+async function clear() {
+  if(!currentSettings.value) return;
+  const socket = await useSocket(settings.server);
+  socket.emit('changeSettings', { ...currentSettings.value, langs: ['xx'] }, (newSettings) => {
+    currentSettings.value = newSettings;
+  });
 }
 
-function selectAll() {
-  settings.i18n.ignored = [];
+async function selectAll() {
+  if(!currentSettings.value) return;
+  const socket = await useSocket(settings.server);
+  socket.emit('changeSettings', { ...currentSettings.value, langs: mirrorsLang as unknown as mirrorsLangsType[] }, (newSettings) => {
+    currentSettings.value = newSettings;
+  });
 }
 
-function unselectAll() {
-  settings.i18n.ignored = mirrorsLang.filter(l => l !== 'xx');
+async function unselectAll() {
+  if(!currentSettings.value) return;
+  const socket = await useSocket(settings.server);
+  socket.emit('changeSettings', { ...currentSettings.value, langs: ['xx'] }, (newSettings) => {
+    currentSettings.value = newSettings;
+  });
 }
+
+onBeforeMount(async () => {
+  const socket = await useSocket(settings.server);
+  socket.emit('getSettings', (globalSettings) => {
+    currentSettings.value = globalSettings;
+  });
+});
 </script>
 <template>
   <q-card
@@ -170,20 +201,5 @@ function unselectAll() {
       </q-banner>
     </q-card-section>
     <q-card-section />
-    <!-- <q-card-section class="row">
-      <div
-        v-for="(lang ,i) in models"
-        :key="i"
-        class="col-lg-2 col-sm-4"
-      >
-        <q-checkbox
-          :model-value="!settings.i18n.ignored.includes(lang)"
-          :label="$t(`languages.${lang}`)"
-          color="orange-4"
-          keep-color
-          @update:model-value="(val:boolean) => updateval(lang, val)"
-        />
-      </div>
-    </q-card-section> -->
   </q-card>
 </template>

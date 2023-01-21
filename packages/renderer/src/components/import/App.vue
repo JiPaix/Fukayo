@@ -2,7 +2,7 @@
 import type Importer from '@api/models/imports/interfaces';
 import type { ImportResults } from '@api/models/imports/types';
 import type { importErrorMessage } from '@api/models/types/errors';
-import type { appLangsType } from '@i18n';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
@@ -69,6 +69,8 @@ disabledimporters = ref<Importer['showInfo'][]>([]),
 currentImporter = ref<Importer['showInfo']|null>(null),
 /** list of mangas */
 mangas = ref<ImportResults[]>([]),
+/** list of languages */
+langs = ref(mirrorsLang as unknown as mirrorsLangsType[]),
 /** errors */
 error = ref<null|importErrorMessage>(null),
 /** loading mangas */
@@ -110,7 +112,7 @@ async function getMangas(importer: Importer['showInfo']) {
   currentImporter.value = importer;
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
-  socket.emit('showImports',reqId, importer.name, mirrorsLang.filter(l=> !settings.i18n.ignored.includes(l)));
+  socket.emit('showImports',reqId, importer.name, langs.value);
   socket.on('showImports', (id, resp) => {
     if(reqId !== id) return;
     if(typeof resp === 'number') expected.value = resp;
@@ -135,7 +137,7 @@ async function startImport() {
   importing.value = true;
   const socket = await useSocket(settings.server);
   selection.value.filter(s=> !s.inLibrary).forEach((s) =>{
-    socket.emit('showManga', reqId, { mirror: s.mirror.name, langs: mirrorsLang.filter(l=> !settings.i18n.ignored.includes(l)), url: s.url});
+    socket.emit('showManga', reqId, { mirror: s.mirror.name, langs: langs.value, url: s.url});
   });
   socket.on('showManga', (id, manga) => {
     if(id!==reqId) return;
@@ -166,6 +168,18 @@ async function startImport() {
 /** get list of import sources */
 async function On() {
   const socket = await useSocket(settings.server);
+
+  function getLanguages():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getSettings', (globalSettings) => {
+        langs.value = globalSettings.langs;
+        resolve();
+      });
+    });
+  }
+
+  await getLanguages();
+
   socket.emit('getImports', true, (imps) => {
     imps.forEach(im=> {
       if(im.enabled) importers.value.push(im);

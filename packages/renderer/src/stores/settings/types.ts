@@ -1,5 +1,4 @@
 import type { MangaInDB } from '@api/models/types/manga';
-import type { mirrorsLangsType } from '@i18n';
 
 type ServerSettings = {
   /** user's login */
@@ -71,11 +70,6 @@ type LibrarySettings = {
   firstTimer: 1 | 2 | 3
 }
 
-type I18N = {
-  /** list of languages that user wants to ignore globally */
-  ignored: mirrorsLangsType[]
-}
-
 export type Settings = {
   /** color scheme */
   theme: 'dark' | 'light'
@@ -92,6 +86,4 @@ export type Settings = {
   }
   /** Library settings */
   library: LibrarySettings,
-  /** i18n settings */
-  i18n: I18N
 }

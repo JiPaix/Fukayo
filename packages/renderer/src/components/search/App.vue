@@ -3,6 +3,7 @@ import type { SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import { mirrorsLang } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
 import { setupMirrorFilters, sortLangs, toggleAllLanguages, toggleAllMirrors, toggleLang, toggleMirror } from '@renderer/components/helpers/mirrorFilters';
@@ -59,7 +60,10 @@ includedLangsRAW = ref<mirrorsLangsType[]>([]),
 /** list of available mirrors */
 mirrorsList = ref<mirrorInfo[]>([]),
 /** mirror(s) to include in the query and/or results */
-includedMirrors = ref<string[]>([]);
+includedMirrors = ref<string[]>([]),
+/** ignored languages */
+ignoredLangs = ref(mirrorsLang as unknown as mirrorsLangsType[]);
+
 
 // computed
 const
@@ -137,7 +141,7 @@ function qformResize() {
 
 /** include/exclude a mirror from the filter, also affects the language filter */
 function pickMirror(mirror:string) {
-  toggleMirror(mirror, mirrorsList.value, includedMirrors, includedLangsRAW, settings.i18n.ignored);
+  toggleMirror(mirror, mirrorsList.value, includedMirrors, includedLangsRAW, ignoredLangs.value);
 }
 
 /** include/exclude all mirrors from the filter */
@@ -147,7 +151,7 @@ function pickallMirrors() {
 
 /** include/exclude a language from the filter, also affects the mirror filter */
 function pickLang(lang:mirrorsLangsType) {
-  toggleLang(lang, includedLangsRAW, mirrorsList.value, includedMirrors, settings.i18n.ignored);
+  toggleLang(lang, includedLangsRAW, mirrorsList.value, includedMirrors, ignoredLangs.value);
 }
 
 /** include/exclude all languages from the filter */
@@ -237,9 +241,18 @@ async function research() {
 /** get available mirrors before rendering and start the search if params are present */
 async function On() {
   const socket = await useSocket(settings.server);
+  function getIgnoredLangs():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getSettings', (globalSettings) => {
+        ignoredLangs.value = mirrorsLang.filter(l => !globalSettings.langs.includes(l));
+        resolve();
+      });
+    });
+  }
+  await getIgnoredLangs();
   const queryParam = route.query.q as string;
   socket.emit('getMirrors', false, (mirrors) => {
-    setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, settings.i18n.ignored);
+    setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, ignoredLangs.value);
     if(queryParam) {
       query.value = queryParam;
       research();
@@ -477,7 +490,7 @@ onBeforeUnmount(Off);
               :group="group.manga"
               :group-name="group.name"
               :mirror="group.manga.mirrorinfo"
-              :hide-langs="settings.i18n.ignored"
+              :hide-langs="ignoredLangs"
               :covers="group.covers"
               class="q-my-lg"
             />

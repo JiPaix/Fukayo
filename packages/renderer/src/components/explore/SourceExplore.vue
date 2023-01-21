@@ -2,7 +2,7 @@
 import type { RecommendErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { appLangsType } from '@i18n';
+import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import GroupCard from '@renderer/components/explore/GroupCard.vue';
@@ -42,7 +42,9 @@ recommendation = ref<SearchResult[]>([]),
 /** loading state */
 loading = ref(true),
 /** error message */
-error = ref<null|RecommendErrorMessage>(null);
+error = ref<null|RecommendErrorMessage>(null),
+/** ignored languages */
+ignoredLangs = ref(mirrorsLang as unknown as mirrorsLangsType[]);
 
 // computed
 const
@@ -76,6 +78,19 @@ function qheaderResize() {
 
 async function On() {
   const socket = await useSocket(settings.server);
+
+  function getLangs():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getSettings', (globalSettings) => {
+        ignoredLangs.value = mirrorsLang.map(x=>x).filter(l => !globalSettings.langs.includes(l));
+        resolve();
+      });
+    });
+  }
+
+  await getLangs();
+
+
   socket.emit('getMirrors', false, (m) => {
     const found = m.find((mirror) => mirror.name === route.params.mirror);
     if(found) mirror.value = found;
@@ -89,7 +104,7 @@ async function On() {
     name = route.params.mirror;
   }
 
-  socket.emit('showRecommend', now, name,mirrorsLang.filter(l => !settings.i18n.ignored.includes(l)));
+  socket.emit('showRecommend', now, name,mirrorsLang.filter(l => !ignoredLangs.value.includes(l)));
   socket.on('showRecommend', (id, result) => {
     if(id === now) {
       if(Array.isArray(result)){
@@ -212,7 +227,7 @@ onBeforeUnmount(Off);
               :mirror="mirror"
               :covers="group.covers.map(c => transformIMGurl(c, settings))"
               class="q-my-lg"
-              :hide-langs="settings.i18n.ignored"
+              :hide-langs="ignoredLangs"
             />
           </div>
         </q-scroll-area>

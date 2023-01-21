@@ -2,6 +2,7 @@
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { mirrorInfo } from '@api/models/types/shared';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
+import { mirrorsLang } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
@@ -78,6 +79,8 @@ mangaRaw = ref<PartialBy<MangaInDB | MangaPage, 'chapters'>>(),
 nodata = ref<string[]|null>(null),
 /** selected language */
 selectedLanguage = ref(props.lang),
+/** ignored langs */
+ignoredLangs = ref(mirrorsLang as unknown as mirrorsLangsType[]),
 /** mirror info */
  mirrorinfo = ref<mirrorInfo|undefined>(),
 /** carrousel slides */
@@ -527,8 +530,8 @@ async function startFetch() {
         nodata.value = null;
         // When the manga is fetched from recommendation no language filter is applied we have to this ourself
         if(!mg.inLibrary) { // making sure we don't hide something that might be in the user's library
-          mg.langs = mg.langs.filter(l => !settings.i18n.ignored.includes(l));
-          mg.chapters = mg.chapters.filter(c => !settings.i18n.ignored.includes(c.lang));
+          mg.langs = mg.langs.filter(l => !ignoredLangs.value.includes(l));
+          mg.chapters = mg.chapters.filter(c => !ignoredLangs.value.includes(c.lang));
         }
         if(!selectedLanguage.value) selectedLanguage.value = mg.langs[0];
         mangaRaw.value = { ...mg, covers: mg.covers.map(c => transformIMGurl(c, settings)), userCategories: mg.userCategories.sort() };
@@ -570,7 +573,17 @@ async function startFetch() {
 
 }
 
-function On() {
+async function On() {
+  const socket = await useSocket(settings.server);
+  function getIgnoredLangs():Promise<void> {
+    return new Promise(resolve => {
+      socket.emit('getSettings', (globalSettings) => {
+        ignoredLangs.value = mirrorsLang.filter(l => !globalSettings.langs.includes(l));
+        resolve();
+      });
+    });
+  }
+  await getIgnoredLangs();
   window.scrollTo(0, 0);
 }
 
