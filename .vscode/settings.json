@@ -272,6 +272,6 @@
     ],
     "volar.autoCompleteRefs": true,
     "volar.doctor.checkVueTsc": true,
-    "volar.vueserver.textDocumentSync": "incremental",
-    "volar.icon.preview": false,
+    "volar.vueserver.textDocumentSync": "full",
+    "volar.icon.preview": false
 }
