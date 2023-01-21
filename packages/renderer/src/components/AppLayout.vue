@@ -54,7 +54,7 @@ async function listenUpdates() {
   socket.on('startMangasUpdate', () => updating.value = true);
   socket.on('finishedMangasUpdate', () => updating.value = false);
   isUpdating();
-  interval = setInterval(isUpdating, 60000);
+  interval = setInterval(isUpdating, 1000*5);
 }
 
 /** Force mangas update */
