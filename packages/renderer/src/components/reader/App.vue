@@ -720,11 +720,30 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
     scrollArea.setScrollPosition('vertical', pos.top+add);
     if(!localReaderSettings.value.longStrip) return;
   }
-  displayNextPrevDiv();
+  displayNextPrevDiv(add);
+}
+
+let xy = {x: 0, y: 0};
+
+function updateTouch(e: TouchEvent) {
+  xy = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}
+
+function displayNextPrevDivTouch(e: TouchEvent) {
+  const { ev, prev } = e.touches[0].clientX > e.touches[0].clientY ? { ev: e.touches[0].clientX, prev: xy.x }: { ev: e.touches[0].clientY, prev: xy.y };
+  const invert = localReaderSettings.value.longStripDirection === 'horizontal' && localReaderSettings.value.rtl ? true : false;
+  if(ev < prev) {
+    if(invert) displayNextPrevDiv(-53);
+    else displayNextPrevDiv(53);
+  } else {
+    if(invert) displayNextPrevDiv(53);
+    else displayNextPrevDiv(-53);
+  }
+  updateTouch(e);
 }
 
 /** display next/prev chapter buffer div if required  */
-async function displayNextPrevDiv() {
+async function displayNextPrevDiv(add:number) {
   if(ignoreScroll.value) return;
   if(!virtscroll.value) return;
   if(!currentPage.value || !currentChapterFormatted.value) return;
@@ -732,8 +751,8 @@ async function displayNextPrevDiv() {
   const scrollArea = virtscroll.value.$refs['imagestack'] as InstanceType<typeof ImageStack>;
   const { left, top } = scrollArea.getScrollPercentage();
   if(localReaderSettings.value.longStripDirection === 'horizontal') {
-    if(left >= 0.9) showNextBuffer.value = true;
-    if(left <= 0.1) {
+    if(left >= 0.99 && currentPage.value >= currentChapterFormatted.value.imgsExpectedLength-1 && add > 0) showNextBuffer.value = true;
+    if(left <= 0.01 && add < 0) {
       if(!showPrevBuffer.value) {
         const multiplier = localReaderSettings.value.rtl ? -1 : 1;
         showPrevBuffer.value = true;
@@ -742,13 +761,12 @@ async function displayNextPrevDiv() {
       }
     }
   } else {
-    if(top >= 0.9) showNextBuffer.value = true;
-    if(top <= 0.1) {
+    if(top >= 0.99 && currentPage.value >= currentChapterFormatted.value.imgsExpectedLength-1 && add > 0) showNextBuffer.value = true;
+    if(top <= 0.01 && add < 0) {
       if(!showPrevBuffer.value) {
-        const multiplier = localReaderSettings.value.rtl ? -1 : 1;
         showPrevBuffer.value = true;
         await nextTick();
-        scrollArea.setScrollPosition('vertical', ($q.screen.width/1.5)*multiplier);
+        scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5));
       }
     }
   }
@@ -894,7 +912,8 @@ onMounted(hideOverlay);
         class="fit chapters zoom"
       >
         <div
-          @touchmove="displayNextPrevDiv"
+          @touchstart="updateTouch"
+          @touchmove="displayNextPrevDivTouch"
           @wheel.stop="useWheelToScrollHorizontally"
         >
           <images-container
