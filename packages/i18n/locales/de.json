@@ -321,7 +321,7 @@
         "warning": "Some entries are marked as broken and requires your attention."
     },
     "migration": {
-        "results": "Migration's candidate"
+        "results": "Migration candidates"
     },
     "reader": {
         "book_mode": "Display as a book",
