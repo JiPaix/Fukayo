@@ -218,31 +218,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     }
   }
 
-  restart() {
-    clearTimeout(this.#intervals.cache);
-    clearTimeout(this.#intervals.updates);
-    if(this.cacheEnabled) {
-      this.#intervals.cache = setTimeout(this.update.bind(this), 60000);
-      this.#intervals.nextcache = Date.now() + 60000;
-    }
-    this.#intervals.nextupdate = Date.now() + 60000;
-    this.#intervals.updates = setTimeout(this.#clearcache.bind(this), 60000);
-  }
-
-  restartUpdate() {
-    clearTimeout(this.#intervals.updates);
-    this.#intervals.updates = setTimeout(this.update.bind(this), 60000);
-    this.#intervals.nextupdate = Date.now() + 60000;
-  }
-
-  restartCache() {
-    clearTimeout(this.#intervals.cache);
-    if(this.cacheEnabled) {
-      this.#intervals.cache = setTimeout(this.#clearcache.bind(this), 60000);
-      this.#intervals.nextcache = Date.now() + 60000;
-    }
-  }
-
   /**
    * List all mangas that needs to be updated and start updates
    * @param force if true, will force the update of all the mangas
