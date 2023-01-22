@@ -15,6 +15,7 @@ import { QForm, QLinearProgress, useQuasar } from 'quasar';
 import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
+import Fuse from 'fuse.js';
 
 // config
 const
@@ -77,7 +78,7 @@ headerSize = computed(() => {
 }),
 /** search results filtered and sorted */
 results = computed(() => {
-  return rawResults.value.map<SearchResult>(r => {
+  const filtered = rawResults.value.map<SearchResult>(r => {
     const mirrorinfo = mirrorsList.value.find(m => m.name === r.mirrorinfo.name);
     if(!mirrorinfo) throw Error($t('search.not_found', { source: r.mirrorinfo.name }));
       return {
@@ -86,11 +87,12 @@ results = computed(() => {
       };
   })
   .filter(r => includedMirrors.value.includes(r.mirrorinfo.name))
-  .filter(r => includedLangsRAW.value.some(l => r.mirrorinfo.langs.includes(l)))
-  .sort((a,b) => {
-    if(sortAZ.value) return a.name.localeCompare(b.name);
-    return b.name.localeCompare(a.name);
-  });
+  .filter(r => includedLangsRAW.value.some(l => r.mirrorinfo.langs.includes(l)));
+
+  const fuse = new Fuse(filtered, {keys: ['name'], shouldSort: true });
+  console.log('searching', query.value);
+  const res = fuse.search(query.value);
+  return res.map(r=>r.item);
 }),
 /** search results grouped */
 mangaGroups = computed(() => {

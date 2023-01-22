@@ -78,10 +78,10 @@ async function search(origin: typeof props.mangas[0], selectedMirrors: string[],
 
   let search = await internalSearch(origin, selectedMirrors);
 
-  const fuse = new Fuse(search, {keys: ['name', 'displayName'], shouldSort: true });
-  const result = fuse.search('tion');
+  const fuse = new Fuse(search, {keys: ['name'], shouldSort: true });
+  const result = fuse.search(origin.name);
 
-  search = result.map(r=>r.item).reverse();
+  search = result.map(r=>r.item);
 
   for(const s of search) {
     try {
