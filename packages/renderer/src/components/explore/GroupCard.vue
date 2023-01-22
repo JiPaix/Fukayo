@@ -1,13 +1,12 @@
 <script lang="ts" setup>
 import type { SearchResult } from '@api/models/types/search';
 import type { mirrorInfo } from '@api/models/types/shared';
-import type { appLangsType, mirrorsLangsType } from '@i18n';
-import type en from '@i18n/../locales/en.json';
+import type { mirrorsLangsType } from '@i18n';
+import CarouselSlide from '@renderer/components/explore/CarouselSlide.vue';
 import GroupMenu from '@renderer/components/explore/GroupMenu.vue';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useQuasar } from 'quasar';
 import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
 /** props */
@@ -24,9 +23,7 @@ const
 /** quasar */
 $q = useQuasar(),
 /** router */
-router = useRouter(),
-/** i18n */
-$t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+router = useRouter();
 
 // globals
 const
@@ -101,6 +98,7 @@ function OpenDialogOrRedirect() {
       @update-dialog="dialog = !dialog"
     />
     <q-carousel
+      v-if="covers.length"
       v-model="slide"
       animated
       autoplay
@@ -108,49 +106,31 @@ function OpenDialogOrRedirect() {
       class="cursor-pointer"
       :style="size"
     >
-      <q-carousel-slide
+      <carousel-slide
         v-for="(cover, i) in covers"
         :key="i"
         :name="i"
-        :img-src="cover"
-      >
-        <div
-          class="absolute-top-left w-100 text-white q-px-sm"
-          style="background-color: rgba(29, 29, 29, 0.8) !important;"
-        >
-          <div class="flex justify-between items-center ellipsis">
-            <div class="flex flex-center">
-              <q-img
-                :src="mirror.icon"
-                width="16px"
-                height="16px"
-              />
-              <span class="text-caption q-ml-sm">
-                {{ mirror.displayName }}
-              </span>
-            </div>
-            <q-badge
-              v-if="group.inLibrary"
-              color="red"
-            >
-              {{ $t('mangas.inlibrary') }}
-            </q-badge>
-          </div>
-        </div>
-        <div
-          class="absolute-bottom w-100 ellipsis text-white text-center q-px-sm"
-          style="background-color: rgba(29, 29, 29, 0.49) !important;"
-        >
-          <span class="text-h6">{{ groupName }}</span>
-          <q-tooltip
-            anchor="bottom middle"
-            self="top middle"
-            :offset="[10, 10]"
-          >
-            {{ groupName }}
-          </q-tooltip>
-        </div>
-      </q-carousel-slide>
+        :group-in-library="group.inLibrary"
+        :group-name="group.name"
+        :mirror-display-name="mirror.displayName"
+        :mirror-icon="mirror.icon"
+        :cover="cover"
+      />
+    </q-carousel>
+    <q-carousel
+      v-else
+      v-model="slide"
+      class="cursor-pointer"
+      :style="size"
+      :dark="$q.dark.isActive"
+    >
+      <carousel-slide
+        :name="0"
+        :group-in-library="group.inLibrary"
+        :group-name="group.name"
+        :mirror-display-name="mirror.displayName"
+        :mirror-icon="mirror.icon"
+      />
     </q-carousel>
   </q-card>
 </template>
