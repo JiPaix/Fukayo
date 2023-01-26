@@ -16,7 +16,8 @@ import axios, { AxiosError } from 'axios';
 import type { AnyNode, CheerioAPI, CheerioOptions } from 'cheerio';
 import { load } from 'cheerio';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import net from 'net';
+import http from 'http';
+import https from 'https';
 import { resolve } from 'path';
 import { env } from 'process';
 import type { socketInstance } from '@api/server/types';
@@ -187,24 +188,32 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     return init;
   }
 
-  protected checkOnline():Promise<boolean> {
-    const socket = new net.Socket();
-    socket.setTimeout(2500);
-    const port = this.options.port as number || (this.host.includes('https') ? 443 : 80);
-    const host = this.options.host as string || this.host.replace(/http(s?):\/\//, '');
-    return new Promise(ok => {
-      const resolve = (bool:boolean) => {
-        socket.removeAllListeners();
-        socket.destroy();
-        this.logger('is', bool ? 'online' : 'offline');
-        this.isOnline = bool;
-        ok(bool);
-      };
-      socket
-        .on('connect', () => resolve(true))
-        .on('error', ()=> resolve(false))
-        .on('timeout', () => resolve(false))
-        .connect(port, host);
+  protected checkOnline(socket?:socketInstance):Promise<boolean> {
+    let req:typeof http | typeof https;
+    if(this.host.includes('https') || this.options.protocol === 'https') req = https;
+    else req = http;
+
+    const host = ((this.options.host as string) || this.host).replace(/http(s?):\/\//, '') ;
+
+    let port = 80;
+    if(this.options.port) port = this.options.port as number;
+    else if(this.host.includes('https')) port = 443;
+
+    return new Promise(resolve => {
+      req.get({
+        hostname: host,
+        port: port,
+        timeout: 5000,
+      }, (res) => {
+        this.logger('is online');
+        if(socket) socket.emit('isOnline', this.name, typeof res.statusCode !== 'undefined');
+        resolve(typeof res.statusCode !== 'undefined');
+      })
+      .once('error', () => {
+        this.logger('is online');
+        if(socket) socket.emit('isOnline', this.name, false);
+        resolve(false);
+      });
     });
   }
 
