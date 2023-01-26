@@ -94,64 +94,64 @@
         }
     },
     "app": {
-        "description": "A simple electron app to read mangas",
+        "description": "Een simpele electron app om mangas te lezen",
         "name": "Fukayo",
         "loading": {
-            "please_wait": "Please wait…",
-            "initializing": "Initializing <b>sources and databases</b>",
-            "checking_internet": "Checking your internet connection status",
-            "checking_internet_takes_a_while": "This might takes a while..."
+            "please_wait": "Even geduld…",
+            "initializing": "Initialiseren van <b>bronnen en databases</b>",
+            "checking_internet": "De status van uw internetverbinding controleren",
+            "checking_internet_takes_a_while": "Dit kan even duren..."
         }
     },
     "electron": {
         "systemtray": {
-            "quit": "Quit",
-            "show": "Show"
+            "quit": "Afsluiten",
+            "show": "Openen"
         }
     },
-    "error": "Error",
+    "error": "Fout",
     "explore": {
         "meta": {
-            "popularity": "Popularity",
-            "quality": "Quality",
-            "speed": "Speed"
+            "popularity": "Populariteit",
+            "quality": "Kwaliteit",
+            "speed": "Snelheid"
         },
-        "placeholder": "Filter sources by name",
-        "tab": "Explore"
+        "placeholder": "Bronnen filteren op naam",
+        "tab": "Ontdekken"
     },
     "import": {
-        "active_sources": "Available sources",
-        "close": "Close",
-        "failed": "Error",
-        "in_library": "Imported",
-        "not_in_library": "Not imported",
-        "sources_config_required": "Sources requiring configuration",
-        "start_import": "Import",
-        "subtitle": "Import titles you've saved to an external source",
-        "tab": "Import",
-        "title": "Import titles",
-        "unauthorized": "Unauthorized: wrong credentials (?)"
+        "active_sources": "Beschikbare bronnen",
+        "close": "Sluiten",
+        "failed": "Fout",
+        "in_library": "Geïmporteerd",
+        "not_in_library": "Niet geïmporteerd",
+        "sources_config_required": "Bronnen die moeten worden geconfigureerd",
+        "start_import": "Importeer",
+        "subtitle": "Importeer titels die je hebt opgeslagen in een externe bron",
+        "tab": "Importeer",
+        "title": "Importeer titels",
+        "unauthorized": "Ongeautoriseerd: onjuiste gegevens (?)"
     },
     "languages": {
         "aa": "Afar",
-        "ab": "Abkhazian",
-        "ae": "Avestan",
+        "ab": "Abchazisch",
+        "ae": "Avestisch",
         "af": "Afrikaans",
         "ak": "Akan",
-        "am": "Amharic",
-        "an": "Aragonese",
-        "ar": "Arabic",
-        "as": "Assamese",
-        "av": "Avaric",
+        "am": "Amhaars",
+        "an": "Aragonees",
+        "ar": "Arabisch",
+        "as": "Assamees",
+        "av": "Avaars",
         "ay": "Aymara",
-        "az": "Azerbaijani",
-        "ba": "Bashkir",
-        "be": "Belarusian",
-        "bg": "Bulgarian",
+        "az": "Azerbeidzjaans",
+        "ba": "Basjkiers",
+        "be": "Wit-Russisch",
+        "bg": "Bulgaars",
         "bi": "Bislama",
         "bm": "Bambara",
-        "bn": "Bengali",
-        "bo": "Tibetan",
+        "bn": "Bengaals",
+        "bo": "Tibetaans",
         "br": "Breton",
         "bs": "Bosnian",
         "ca": "Catalan, Valencian",
@@ -227,7 +227,7 @@
         "kw": "Cornish",
         "ky": "Kirghiz, Kyrgyz",
         "la": "Latin",
-        "language": "Language | Languages",
+        "language": "Taal | Talen",
         "lb": "Luxembourgish, Letzeburgesch",
         "lg": "Ganda",
         "li": "Limburgan, Limburger, Limburgish",
@@ -326,12 +326,12 @@
         "zu": "Zulu"
     },
     "library": {
-        "change_settings_anytime": "You can change these settings any time you want here:",
-        "filter_by_name": "Search your library",
-        "hide_unread": "Hide mangas for which you have read all the chapters",
+        "change_settings_anytime": "Je kunt deze instellingen hier op elk moment wijzigen:",
+        "filter_by_name": "Zoeken in uw bibliotheek",
+        "hide_unread": "Verberg mangas waarvan je alle hoofdstukken hebt gelezen",
         "letsgo": "Let's go!",
-        "ready": "You're ready to enjoy tons of mangas!",
-        "setup_preferences": "Setup Fukayo to your liking:",
+        "ready": "Je bent klaar om te genieten van heel veel mangas!",
+        "setup_preferences": "Stel Fukayo naar je eigen wens in:",
         "show_unread": "Show manga for which you have read all chapters",
         "sort_by_name": "Sort by name",
         "sort_by_read": "Sort by number of unread chapters",
@@ -460,41 +460,41 @@
         "webtoon": "Webtoon mode"
     },
     "setup": {
-        "address": "Address",
+        "address": "Adres",
         "address_errors": {
-            "length": "Required",
+            "length": "Vereist",
             "protocol": "URL must start with <b>https://</b>",
-            "space": "URL cannot contain spaces"
+            "space": "URL kan geen spaties bevatten"
         },
-        "address_hint": "Example: <b>https://mywebsite.com</b>",
+        "address_hint": "Bijvoorbeeld: <b>https://mywebsite.com</b>",
         "badpassword": "Wrong password",
         "error": "Error",
-        "login": "Login",
-        "message": "Before we start a little setup is needed:",
+        "login": "Inloggen",
+        "message": "Voordat we beginnen is er een kleine voorbereiding nodig:",
         "password": "Password",
         "password_hints": {
-            "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",
+            "average": "Sterkte: <b class=\"text-warning\">AVERAGE</b>",
             "default": "Password must be at least 6 characters long",
-            "strong": "Strength: <b class=\"text-positive\">STRONG</b>",
-            "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
+            "strong": "Sterkte: <b class=\"text-positive\">STRONG</b>",
+            "weak": "Sterkte: <b class=\"text-negative\">WEAK</b>"
         },
         "port": "Port",
-        "port_error": "Port must be between 1024 and 65535",
+        "port_error": "Poort moet tussen 1024 en 65535 zijn",
         "retry": "Retry",
         "security": {
-            "app": "Auto",
+            "app": "Automatisch",
             "app_description": "I want the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access",
             "cancel": "Cancel",
-            "certificate": "Certificate",
-            "choose": "Choose a security policy",
-            "none": "None",
-            "none_description": "I don't need https and/or intend to use a service such as cloudflare",
+            "certificate": "Certificaat",
+            "choose": "Kies een beveiligingsbeleid",
+            "none": "Geen",
+            "none_description": "Ik heb geen https nodig en/of ben van plan een dienst als cloudflare te gebruiken",
             "ok": "OK",
             "pastcert": "Past your certificate",
             "pastprivkey": "Past your key",
             "privkey": "Private key",
-            "provided": "Provided",
-            "provided_description": "I want to use my own key and certificate",
+            "provided": "Geleverd",
+            "provided_description": "Ik wil mijn eigen sleutel en certificaat gebruiken",
             "selfsigned": "Self-signed certificate"
         },
         "unexpectederror": "Unexpected error"
