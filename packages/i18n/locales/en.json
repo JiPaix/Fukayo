@@ -318,10 +318,11 @@
         "select_candidate": "Migrate",
         "select_mirror": "Select one or multiple sources",
         "solutions": "Available migration options",
-        "warning": "Some entries are marked as broken and requires your attention."
+        "warning": "Some entries are marked as broken and requires your attention.",
+        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry"
     },
     "migration": {
-        "results": "Migration's candidate"
+        "results": "Migration candidates"
     },
     "reader": {
         "book_mode": "Display as a book",
@@ -445,8 +446,7 @@
             "excludedUploaders": "Uploaders to ignore",
             "host": "Hostname",
             "markAsRead": "Mark chapters as read on source website",
-            "protocol": "Protocol",
-            "validUUID": "Please use a valid UUID"
+            "protocol": "Protocol"
         },
         "source_is_offline": "This source appears to be offline",
         "source_requires_setup": "This source requires a setup to be active",
