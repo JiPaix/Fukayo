@@ -58,6 +58,15 @@ type book = {
   },
 }
 
+type claim = {
+  isClaimed: boolean
+}
+
+type violation = {
+  fieldName: string
+  message: string
+}
+
 class Komga extends SelfHosted implements MirrorInterface {
   #logged = false;
   constructor() {
@@ -133,18 +142,18 @@ class Komga extends SelfHosted implements MirrorInterface {
         this.#logged = false;
         return false;
       }
-      const data = await this.fetch({ url: this.#path('/'), auth: { username: login, password } }, 'json');
-      if(data) {
-        if(socket) socket.emit('loggedIn', this.name, true);
-        this.#logged = true;
-        this.logger('is logged-in');
-        return true;
-      } else {
-        this.logger('not logged in');
+      const data = await this.fetch<claim | violation[]>({ url: this.#path('/claim'), auth: { username: login, password } }, 'json');
+      if(!data || (data as violation[]).length || !(data as claim).isClaimed) {
+        this.logger('not logged in:', data);
         if(socket) socket.emit('loggedIn', this.name, false);
         this.#logged = true;
         return false;
       }
+
+      if(socket) socket.emit('loggedIn', this.name, true);
+      this.#logged = true;
+      this.logger('is logged-in');
+      return true;
     } catch(e) {
       this.logger('not logged in', e);
       if(socket) socket.emit('loggedIn', this.name, false);
