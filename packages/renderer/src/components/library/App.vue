@@ -188,6 +188,7 @@ async function fetchLibrary() {
 /** sort and parse library */
 function parseLibrary(mangas:MangaInDB[]) {
   fetching.value = false;
+  deadMangas.value = [];
   mangasRAW.value = [];
   mangas.forEach(manga => {
     const mirrorInfo = mirrors.value.find(mirror => mirror.name === manga.mirror.name);
