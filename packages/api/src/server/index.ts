@@ -12,6 +12,7 @@ import type { ServerToClientEvents, socketInstance } from '@api/server/types';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
 import { env } from 'process';
+import type { Socket } from 'socket.io';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
 import { Crawler } from '@api/utils/crawler';
@@ -45,7 +46,7 @@ export default class IOWrapper {
     this.logger('mirrors databases loaded');
     await Scheduler.getInstance().registerIO(this.io);
     this.logger('scheduler is ready');
-    this.use();
+    this.io.use(this.#use.bind(this));
     this.io.on('connection', this.routes.bind(this));
     this.#isReady = true;
   }
@@ -96,14 +97,11 @@ export default class IOWrapper {
     });
   }
 
-  use() {
-    this.io.use(async (socket, next) => {
+  async #use(socket: Socket<ClientToServerEvents, ServerToClientEvents>, next:(err?: ExtendedError | undefined) => void) {
 
       // delay all responses until databases and the scheduler are ready
-      if(!this.#isReady) {
-        await this.#waitUntilReady();
-      }
-      this.logger('server is ready');
+      if(!this.#isReady) await this.#waitUntilReady();
+
 
       // use token to authenticate
       if(socket.handshake.auth.token) {
@@ -154,7 +152,7 @@ export default class IOWrapper {
         }
       }
       return this.unauthorize({socket, next});
-    });
+
   }
 
   routes(socket:socketInstance) {
