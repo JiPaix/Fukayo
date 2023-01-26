@@ -437,7 +437,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   /** change the mirror settings */
-  changeSettings(opts: Record<string, unknown>, socket?: socketInstance) {
+  async changeSettings(opts: Record<string, unknown>, socket?: socketInstance) {
     this.options = { ...this.options, ...opts };
     // update this.host if mirror is self-hosted
     if(opts.host || opts.protocol || opts.port) {
@@ -446,7 +446,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(this.options.port && typeof this.options.port === 'number') this.host = this.host + ':' + this.options.port;
     }
     if(opts.login || opts.password || (this.selfhosted && (opts.host || opts.port || opts.protocol))) {
-      this.login(socket);
+      await this.checkOnline(socket);
+      await this.login(socket);
     }
   }
 
