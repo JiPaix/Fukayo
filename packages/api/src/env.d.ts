@@ -60,6 +60,8 @@ declare global {
         DOWNLOAD_DATA: string,
         /** `"production"` or `"development"` (optional) */
         MODE?: string,
+        /** show console outputs */
+        VERBOSE?: string
       }
   }
 }

@@ -32,6 +32,7 @@ export class forkAPI {
       USER_DATA: app.getPath('userData'),
       DOWNLOAD_DATA: app.getPath('downloads'),
       MODE: import.meta.env.MODE,
+      VERBOSE: `${payload.verbose}`,
     };
   }
 

@@ -72,6 +72,7 @@ export default class Ready {
           clearInterval(check);
         });
       }, 5*60*1000);
+
     } catch(e) {
       console.log('[main]', 'failed to check for updates', e);
     }
@@ -85,6 +86,7 @@ export default class Ready {
     const login = app.commandLine.getSwitchValue('login');
     const password = app.commandLine.getSwitchValue('password');
     const portStr = app.commandLine.getSwitchValue('port');
+    const verbose = app.commandLine.hasSwitch('verbose');
 
     // checking values
     if(!login.length) throw new Error('--login cannot be an empty string');
@@ -94,7 +96,7 @@ export default class Ready {
     if(isNaN(port)) throw new Error(`--port unexpected value: ${typeof portStr}, ${port}`);
     if(port <= 1024 || port >= 65535) throw new Error(`--port must be between 1024 and 65535: got ${port}`);
 
-    this.#api = new forkAPI({login,password, port, ssl: 'false' });
+    this.#api = new forkAPI({login, password, port, ssl: 'false', verbose });
     const { fork } = await this.#api.start();
     if(!fork) throw Error('couldnt start server');
     fork.on('message', (msg:ForkResponse) => {
@@ -130,7 +132,7 @@ export default class Ready {
 
     // start the server from the UI
     ipcMain.handle('start-server', async (ev,  payload: startPayload) => {
-      this.#api = new forkAPI(payload);
+      this.#api = new forkAPI({...payload, verbose: app.commandLine.hasSwitch('verbose')});
       const start = await this.#api.start();
       return start.resp;
     });

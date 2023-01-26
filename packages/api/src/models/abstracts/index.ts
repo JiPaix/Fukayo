@@ -284,7 +284,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   }
 
   protected logger(...args: unknown[]) {
-    if(env.MODE === 'development') console.log('[api]', `(\x1b[32m${this.name}\x1b[0m)` ,...args);
+    const prefix = env.VERBOSE === 'true' ? `${new Date().toLocaleString()} [api] (${this.constructor.name})` : `[api] (\x1b[32m${this.constructor.name}\x1b[0m)`;
+    if(env.MODE === 'development' || env.VERBOSE === 'true') console.log(prefix ,...args);
   }
 
   /** check if the fetched manga is part of the library */

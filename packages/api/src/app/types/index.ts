@@ -27,4 +27,5 @@ export type startPayload = {
   ssl: 'false' | 'provided' | 'app',
   cert?: string | null,
   key?: string | null,
+  verbose?:boolean
 }

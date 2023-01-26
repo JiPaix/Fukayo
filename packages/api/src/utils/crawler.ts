@@ -24,7 +24,8 @@ export class Crawler {
   }
 
   protected logger(...args: unknown[]) {
-    if(env.MODE === 'development') console.log('[api]', `(\x1b[33m${this.constructor.name}\x1b[0m)` ,...args);
+    const prefix = env.VERBOSE === 'true' ? `${new Date().toLocaleString()} [api] (${this.constructor.name})` : `[api] (\x1b[33m${this.constructor.name}\x1b[0m)`;
+    if(env.MODE === 'development' || env.VERBOSE === 'true') console.log(prefix ,...args);
   }
 
   async #init() {
