@@ -318,7 +318,8 @@
         "solutions": "Options de migration disponibles",
         "warning": "Certaines entrées sont marquées comme cassées et nécessitent votre attention.",
         "source_do_not_have_lang": "Cette source ne contient aucune des langues utilisées dans cette entrée",
-        "source_status": "Statut de la source"
+        "source_status": "Statut de la source",
+        "select_source": "Select one or multiple sources"
     },
     "migration": {
         "results": "Candidats à la migration"
