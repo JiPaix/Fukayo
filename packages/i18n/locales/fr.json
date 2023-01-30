@@ -315,7 +315,6 @@
         "old": "Ancien",
         "search_candidates": "Commencez à chercher des candidats à la migration",
         "select_candidate": "Migrer",
-        "select_mirror": "Sélectionnez une ou plusieurs sources",
         "solutions": "Options de migration disponibles",
         "warning": "Certaines entrées sont marquées comme cassées et nécessitent votre attention.",
         "source_do_not_have_lang": "Cette source ne contient aucune des langues utilisées dans cette entrée",
