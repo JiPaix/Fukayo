@@ -318,7 +318,8 @@
         "solutions": "Available migration options",
         "warning": "Some entries are marked as broken and requires your attention.",
         "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
-        "source_status": "Source's status"
+        "source_status": "Source's status",
+        "select_source": "Select one or multiple sources"
     },
     "migration": {
         "results": "Migration candidates"
