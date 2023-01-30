@@ -110,8 +110,8 @@ async function On() {
     allLangs.value = includedLangsRAW.value;
   });
 
-  const updateMirror = (key: 'isLoggedIn'|'isOnline', mirror: string, status:boolean) => {
-    const source = mirrorsRAW.value.find(m => m.name === mirror);
+  const updateMirror = (key: 'isLoggedIn'|'isOnline', mirrorName: string, status:boolean) => {
+    const source = mirrorsRAW.value.find(m => m.name === mirrorName);
     if(!source) return;
     if(key === 'isLoggedIn') source.loggedIn = status;
     else source.isOnline = status;
