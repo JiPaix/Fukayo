@@ -1,0 +1,1 @@
+Bienvenue sur le Wiki de Fukayo!
