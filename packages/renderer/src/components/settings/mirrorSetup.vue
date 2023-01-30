@@ -35,7 +35,7 @@ modifying = ref<Record<'online'|'credentials', boolean>>({online: false, credent
 const
 /** icon representing the status of mirror */
 mirrorStatusIcon = computed(() => {
-  if(props.mirror.isDead) return { color: 'negative', icon: 'o_broken_image', tooltip: $t('settings.mirror_is_dead')};
+  if(props.mirror.isDead) return { color: 'negative', icon: 'o_broken_image', tooltip: $t('settings.source_is_dead')};
   else if(!props.mirror.isOnline && props.mirror.selfhosted && props.mirror.options.host) return { color: 'red', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
   else if(!props.mirror.isOnline && props.mirror.selfhosted) return {color: 'orange', icon: 'o_login', tooltip: $t('settings.source_requires_setup') };
   else if(!props.mirror.isOnline) return { color: 'negative', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };

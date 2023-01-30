@@ -176,7 +176,7 @@ function search() {
             <q-item-label>{{ $t('migrate.bug') }}</q-item-label>
             <q-item-label caption>
               <span>
-                {{ $t('migrate.mirror_status') }}:
+                {{ $t('migrate.source_status') }}:
               </span>
               <span
                 v-if="manga.dead"
@@ -233,7 +233,7 @@ function search() {
                 v-model="migrationMirror"
                 :options="mirrors.filter(m => manga.dead ? manga.mirror !== m.name : true).map(m => { return {...m, matching: m.langs.filter(l => manga.langs.includes(l)).length }})"
                 multiple
-                :label="$t('migrate.select_mirror')"
+                :label="$t('migrate.select_source')"
               >
                 <template #option="scope">
                   <q-item v-bind="scope.itemProps">
