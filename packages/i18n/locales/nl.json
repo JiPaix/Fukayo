@@ -408,7 +408,6 @@
         "old": "Old",
         "search_candidates": "Start searching for migration candidates",
         "select_candidate": "Migrate",
-        "select_mirror": "Select one or multiple sources",
         "solutions": "Available migration options",
         "warning": "Some entries are marked as broken and requires your attention.",
         "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
