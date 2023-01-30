@@ -135,7 +135,7 @@
             "save": "Click here to save changes"
         },
         "language": {
-            "description": "Choose the languages you want to read in",
+            "description": "Hangi dillerde okumak istediğinizi seçin",
             "selectall": "Select All",
             "unselectall": "Unselect All"
         },
@@ -192,13 +192,13 @@
     "setup": {
         "address": "Address",
         "security": {
-            "choose": "Choose a security policy",
+            "choose": "Güvenlik politikası seçin",
             "app": "Auto",
             "app_description": "I want the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access",
             "cancel": "Cancel",
             "certificate": "Certificate",
-            "none": "None",
-            "none_description": "I don't need https and/or intend to use a service such as cloudflare",
+            "none": "Yok",
+            "none_description": "Https'ye ihtiyacım yok veya cloudflare gibi servisleri kullanmaya niyetim yok",
             "ok": "OK",
             "pastcert": "Past your certificate",
             "pastprivkey": "Past your key",
@@ -216,27 +216,27 @@
         "address_hint": "Example: <b>https://mywebsite.com</b>",
         "badpassword": "Wrong password",
         "error": "Error",
-        "login": "Login",
-        "message": "Before we start a little setup is needed:",
-        "password": "Password",
+        "login": "Kullanıcı adı",
+        "message": "Başlamadan önce birkaç ayar yapmamız gerek:",
+        "password": "Şifre",
         "password_hints": {
-            "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",
-            "default": "Password must be at least 6 characters long",
-            "strong": "Strength: <b class=\"text-positive\">STRONG</b>",
-            "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
+            "average": "Şifre Güvenliği: <b class=\"text-warning\">ORTA</b>",
+            "default": "Şifreler en az 6 karakter uzunluğunda olmalı",
+            "strong": "Şifre Güvenliği: <b class=\"text-positive\">GÜÇLÜ</b>",
+            "weak": "Şifre Güvenliği: <b class=\"text-negative\">ZAYIF</b>"
         },
         "port": "Port",
         "port_error": "Port must be between 1024 and 65535",
         "retry": "Retry"
     },
     "app": {
-        "description": "A simple electron app to read mangas",
+        "description": "Manga okumak için yazılmış basit bir electron uygulaması",
         "name": "Fukayo",
         "loading": {
-            "please_wait": "Please wait…",
+            "please_wait": "Lütfen bekleyin…",
             "initializing": "Initializing <b>sources and databases</b>",
-            "checking_internet": "Checking your internet connection status",
-            "checking_internet_takes_a_while": "This might takes a while..."
+            "checking_internet": "Bağlantı durumunuz kontrol ediliyor",
+            "checking_internet_takes_a_while": "Biraz uzun sürebilir..."
         }
     },
     "electron": {
@@ -257,7 +257,7 @@
     },
     "import": {
         "active_sources": "Available sources",
-        "close": "Close",
+        "close": "Kapat",
         "failed": "Error",
         "in_library": "Imported",
         "not_in_library": "Not imported",
