@@ -186,7 +186,8 @@
             "hour": "Hour | Hours",
             "minute": "Minute | Minutes",
             "wait": "Update chapters lists every"
-        }
+        },
+        "source_is_dead": "This source has been reported as inactive"
     },
     "setup": {
         "address": "Address",
