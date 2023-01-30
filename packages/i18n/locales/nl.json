@@ -89,7 +89,8 @@
             "hour": "Hour | Hours",
             "minute": "Minute | Minutes",
             "wait": "Update chapters lists every"
-        }
+        },
+        "source_is_dead": "This source has been reported as inactive"
     },
     "app": {
         "description": "Een simpele electron app om mangas te lezen",
