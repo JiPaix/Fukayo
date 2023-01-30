@@ -408,7 +408,6 @@
         },
         "logs": "Logs",
         "longstripDirection": "Choose the image orientation",
-        "mirror_is_dead": "This source has been reported as inactive",
         "reader": {
             "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
             "overlay": "Display navigation overlay when hovering images",
