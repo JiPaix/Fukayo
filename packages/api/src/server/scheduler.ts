@@ -86,6 +86,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
 
     if(connected) {
       this.io?.emit('connectivity', true);
+      if(!this.connectivity) this.logger('Internet access: OK');
       this.connectivity = true;
       if(attempt > 1) {
         clearInterval(this.#intervals.connectivity);
@@ -98,6 +99,7 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
     this.io?.emit('connectivity', false);
     this.connectivity = false;
     clearInterval(this.#intervals.connectivity);
+    this.logger('Internet access: NOK - retrying in', (attempt*5000)/1000, 'seconds' );
     this.#intervals.connectivity = setInterval(this.#checkOnline.bind(this), attempt*5000);
 
   }
@@ -109,8 +111,6 @@ export default class Scheduler extends (EventEmitter as new () => TypedEmitter<S
       const resolve = (bool:boolean) => {
         socket.removeAllListeners();
         socket.destroy();
-        this.logger('is', bool ? 'online' : 'offline');
-
         ok(bool);
       };
       socket
