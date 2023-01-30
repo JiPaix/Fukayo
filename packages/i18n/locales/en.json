@@ -311,15 +311,15 @@
         "entry_status": "Entry status",
         "hidden": "those entries are currently hidden from your library",
         "insepect": "Inspect",
-        "mirror_status": "Source status",
         "new": "New",
         "old": "Old",
         "search_candidates": "Start searching for migration candidates",
         "select_candidate": "Migrate",
-        "select_mirror": "Select one or multiple sources",
         "solutions": "Available migration options",
         "warning": "Some entries are marked as broken and requires your attention.",
-        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry"
+        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
+        "source_status": "Source's status",
+        "select_source": "Select one or multiple sources"
     },
     "migration": {
         "results": "Migration candidates"
@@ -408,7 +408,6 @@
         },
         "logs": "Logs",
         "longstripDirection": "Choose the image orientation",
-        "mirror_is_dead": "This source has been reported as inactive",
         "reader": {
             "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
             "overlay": "Use navigation overlay",
@@ -456,7 +455,8 @@
             "hour": "Hour | Hours",
             "minute": "Minute | Minutes",
             "wait": "Update chapters lists every"
-        }
+        },
+        "source_is_dead": "This source has been reported as inactive"
     },
     "setup": {
         "address": "Address",

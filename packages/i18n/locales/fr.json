@@ -311,15 +311,15 @@
         "entry_status": "Statut d'entrée",
         "hidden": "ces entrées sont actuellement masquées dans votre bibliothèque",
         "insepect": "Inspecter",
-        "mirror_status": "Statut de la source",
         "new": "Nouveau",
         "old": "Ancien",
         "search_candidates": "Commencez à chercher des candidats à la migration",
         "select_candidate": "Migrer",
-        "select_mirror": "Sélectionnez une ou plusieurs sources",
         "solutions": "Options de migration disponibles",
         "warning": "Certaines entrées sont marquées comme cassées et nécessitent votre attention.",
-        "source_do_not_have_lang": "Cette source ne contient aucune des langues utilisées dans cette entrée"
+        "source_do_not_have_lang": "Cette source ne contient aucune des langues utilisées dans cette entrée",
+        "source_status": "Statut de la source",
+        "select_source": "Sélectionnez une ou plusieurs sources"
     },
     "migration": {
         "results": "Candidats à la migration"
@@ -408,7 +408,6 @@
         },
         "logs": "Journaux",
         "longstripDirection": "Choisissez l'orientation des images",
-        "mirror_is_dead": "Cette source a été signalée comme inactive",
         "reader": {
             "info": "Les paramètres ci-dessous sont les paramètres par défaut,\nIls sont automatiquement attribués aux nouveaux titres\n\nSi vous modifiez l'un de ces paramètres lors de la lecture d'un titre alors seul celui-ci sera affecté par les changements.",
             "overlay": "Utiliser la superposition de navigation",
@@ -456,7 +455,8 @@
             "hour": "Heure | Heures",
             "minute": "Minute | Minutes",
             "wait": "Mettre à jour les listes de chapitres tous les"
-        }
+        },
+        "source_is_dead": "This source has been reported as inactive"
     },
     "setup": {
         "address": "Adresse",
