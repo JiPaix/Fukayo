@@ -72389,14 +72389,13 @@ async function go() {
         releasenotes.forEach(r => {
             const key = r.scope ? `${replaceHeader(r.type)}` : r.type
             if(!grouped[key]) grouped[key] = []
-            const val = r.scope ? `- ${r.scope}: ${r.subject}` : `- ${r.subject}`
+            const val = r.scope ? `- [${r.scope}] ${r.subject}` : `- ${r.subject}`
             grouped[key].push(val)
         })
 
         const sortedNotes = Object.keys(grouped)
         .map(k => {
           const value = grouped[k]
-          .sort()
           .join('\r\n')
           .substring(1020, 0);
           return {
@@ -72411,7 +72410,7 @@ async function go() {
 
         const Embed = new EmbedBuilder()
             .setColor(VERSION.includes('-beta') ? 0x0099FF : 0xFF9900)
-            .setTitle(`Fukayo release ${VERSION}`)
+            .setTitle(`Fukayo ${VERSION}`)
             .setDescription(`Release notes`)
             .setURL(`https://github.com/JiPaix/Fukayo/releases/tag/${VERSION}`)
             .setThumbnail('https://github.com/JiPaix/Fukayo/raw/beta/buildResources/icon_128.png')
