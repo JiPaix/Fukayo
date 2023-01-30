@@ -318,7 +318,8 @@
         "select_mirror": "Select one or multiple sources",
         "solutions": "Available migration options",
         "warning": "Some entries are marked as broken and requires your attention.",
-        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry"
+        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
+        "source_status": "Source's status"
     },
     "migration": {
         "results": "Migration candidates"
