@@ -39,9 +39,9 @@ type Manga = {
   sourceId: string,
   title: string,
   thumbnailUrl: string,
-  artist: string,
-  author: string,
-  description: string,
+  artist?: string,
+  author?: string,
+  description?: string,
   status: 'ONGOING' | 'PUBLISHING_FINISHED' | 'ON_HIATUS' | 'CANCELLED'
   genre: string[],
 }
@@ -309,7 +309,11 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
           status = 'unknown';
       }
       const synopsis = manga.description;
-      const authors = (manga.author + (manga.author.length ? ', ' : '') + manga.artist).split(',').map(a => a.trim());
+
+      const writers = manga.author ? manga.author.split(',').map(a => a.trim()) : [];
+      const drawers = manga.artist ? manga.artist.split(',').map(a => a.trim()) : [];
+      const authors = Array.from(new Set([...writers, ...drawers]));
+
       const tags = manga.genre;
 
       const chapters: MangaPage['chapters'] = [];
