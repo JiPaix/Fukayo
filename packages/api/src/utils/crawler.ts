@@ -16,7 +16,7 @@ export class Crawler {
   cluster?: Cluster<ClusterJob> = undefined;
   #puppeteer?: ReturnType<typeof addExtra> = undefined;
   #userAgent: UserAgent;
-  #revision = '1069273';
+  #revision = '1083080';
   runningTask = 0;
   #specs = { cores: 0, speedMax: 0, mem: 0 };
   constructor() {
