@@ -209,8 +209,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
         if(socket) socket.emit('isOnline', this.name, typeof res.statusCode !== 'undefined');
         resolve(typeof res.statusCode !== 'undefined');
       })
-      .once('error', () => {
-        this.logger('is online');
+      .once('error', (e) => {
+        this.logger('is offline', e.message);
         if(socket) socket.emit('isOnline', this.name, false);
         resolve(false);
       });
