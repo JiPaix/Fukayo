@@ -352,7 +352,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         authors,
         tags,
         synopsis,
-        langs,
+        langs: [lang],
         chapters,
         status,
       });
