@@ -431,35 +431,44 @@ defineExpose({
     </div>
     <!-- Single page -->
     <div v-else>
-      <div
-        v-for="(group, i) of packed[currentIndex].group"
-        :key="i"
-        class="flex flex-center justify-center items-center group"
-        :style="{minHeight: ($q.screen.height - headerSize)+'px'}"
-      >
-        <img
-          v-if="isChapterImage(group)"
-          :src="transformIMGurl(group.src, storeSettings)"
-          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
-          loading="lazy"
-          @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
-        >
+      <div v-if="packed[currentIndex] && packed[currentIndex].group">
         <div
-          v-else
-          class="bg-negative flex"
-          :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
-          @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
+          v-for="(group, i) of packed[currentIndex].group"
+          :key="i"
+          class="flex flex-center justify-center items-center group"
+          :style="{minHeight: ($q.screen.height - headerSize)+'px'}"
         >
-          <span>
-            {{ group.error }}
-          </span>
-          <span v-if="group.trace">{{ group.trace }}</span>
-          <q-btn
-            icon="broken_image"
-            :label="$t('reader.reloadImage')"
-            @click="reload(group.index)"
-          />
+          <img
+            v-if="isChapterImage(group)"
+            :src="transformIMGurl(group.src, storeSettings)"
+            :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
+            loading="lazy"
+            @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
+          >
+          <div
+            v-else
+            class="bg-negative flex"
+            :style="{...verticalNoBook, maxWidth: ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0))+'px' }"
+            @load="packed[currentIndex].indexes.forEach(i => loaded[i] = true)"
+          >
+            <span>
+              {{ group.error }}
+            </span>
+            <span v-if="group.trace">{{ group.trace }}</span>
+            <q-btn
+              icon="broken_image"
+              :label="$t('reader.reloadImage')"
+              @click="reload(group.index)"
+            />
+          </div>
         </div>
+      </div>
+      <div
+        v-else
+        :style="{minHeight: ($q.screen.height - headerSize)+'px'}"
+        class="flex q-mt-auto flex-center"
+      >
+        <q-spinner size="10vw" />
       </div>
     </div>
   </q-scroll-area>
