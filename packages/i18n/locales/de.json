@@ -445,7 +445,8 @@
             "excludedUploaders": "Uploaders to ignore",
             "host": "Hostname",
             "markAsRead": "Mark chapters as read on source website",
-            "protocol": "Protocol"
+            "protocol": "Protocol",
+            "field_required": "This field is required"
         },
         "source_is_offline": "This source appears to be offline",
         "source_requires_setup": "This source requires a setup to be active",
