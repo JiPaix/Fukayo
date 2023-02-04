@@ -352,6 +352,12 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
       const nbOfPages = $($('img', $('.viewer-cnt #ppp').prev())).length;
       if(callback) callback(nbOfPages);
 
+      if(nbOfPages < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       if(cancel) return;
       const res:string[] = [];
       $('img', $('.viewer-cnt #ppp').prev()).each((i, el) => {

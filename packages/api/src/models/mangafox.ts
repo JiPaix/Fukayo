@@ -314,6 +314,12 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
       if(cancel) return;
       if(callback) callback(typeof retryIndex === 'number' ? 1 : imagecount);
 
+      if(imagecount < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       for(const [i] of [...Array(imagecount)].entries()) {
         if(cancel) break;
         // if the user requested a specific page, we will skip the others

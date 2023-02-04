@@ -404,6 +404,13 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       const nbOfPages = res.pageCount;
       if (callback) callback(nbOfPages);
       if (cancel) return;
+
+      if(nbOfPages < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       for (let i = 0; i < nbOfPages; i++) {
         if (cancel) break;
         if (typeof retryIndex === 'number' && i !== retryIndex) continue;

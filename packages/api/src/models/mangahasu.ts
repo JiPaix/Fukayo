@@ -258,6 +258,13 @@ class MangaHasu extends Mirror implements MirrorInterface {
       if(callback) callback(nbOfPages);
 
       if(cancel) return;
+
+      if(nbOfPages < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       for(const [i, el] of $('.img-chapter img').toArray().entries()) {
         if(cancel) break;
         // if the user requested a specific page, we will skip the others

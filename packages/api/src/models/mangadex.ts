@@ -884,6 +884,14 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
 
       const type = this.options.dataSaver ? 'dataSaver' : 'data';
 
+      const pagecount = Array.from(resp.chapter[type].entries()).length;
+
+      if(pagecount < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       for(const [i, v] of resp.chapter[type].entries()) {
         if(cancel) break;
         if(typeof retryIndex === 'number' && i !== retryIndex) continue;

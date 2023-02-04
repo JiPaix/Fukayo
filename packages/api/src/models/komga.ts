@@ -360,6 +360,13 @@ class Komga extends SelfHosted implements MirrorInterface {
       const nbOfPages = res.media.pagesCount;
       if(callback) callback(nbOfPages);
       if(cancel) return;
+
+      if(nbOfPages < 1) {
+        socket.emit('showChapter', id, { error: 'chapter_error_no_pages' });
+        if(stopListening) stopListening();
+        return;
+      }
+
       // loop for each page
 
       for(let i = 0; i < nbOfPages; i++) {
