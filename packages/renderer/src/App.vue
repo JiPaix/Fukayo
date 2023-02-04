@@ -70,20 +70,24 @@ function waitForStart() {
  * @param {authByLogin} auth user login and password
  * @param beforeMount weither or not the function was called by vue itself
  */
-async function connect(auth?: LoginAuth, beforeMount?: boolean) {
+async function connect(auth?: LoginAuth, beforeMount?: boolean):Promise<unknown> {
   Loading.hide('start');
+  loading.value = false;
+  badPassword.value = false;
   waitForConnectivity();
-  loading.value = true;
+
+  let socket: Awaited<ReturnType<typeof useSocket>> | undefined;
   try {
-    const socket = await useSocket(settings.server, auth);
+    socket = await useSocket(settings.server, auth);
     connected.value = true;
     badPassword.value = false;
-    loading.value = false;
     socket.on('connectivity', (value) => {
-      if(value) Loading.hide();
+      if(value) Loading.hide('connectivity');
       else waitForConnectivity();
     });
   } catch(e) {
+    if(socket) socket.off('connectivity');
+    if(isElectron && !beforeMount) return setTimeout(() => connect(auth, beforeMount), 1000);
     Loading.hide();
     loading.value = false;
     if(e === 'badpassword') badPassword.value = true;
