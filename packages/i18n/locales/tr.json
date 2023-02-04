@@ -176,7 +176,8 @@
             "excludedUploaders": "Görmezden gelinecek yükleyiciler",
             "host": "Hostname",
             "markAsRead": "Bölümleri kaynak sitede de okundu olarak işaretle",
-            "protocol": "Protocol"
+            "protocol": "Protocol",
+            "field_required": "This field is required"
         },
         "source_is_offline": "Bu kaynak çevrimdışı / kapalı gibi duruyor",
         "source_requires_setup": "Bu kaynağın kullanılabilmesi için ayarlamalar yapılmalı",
@@ -205,7 +206,7 @@
             "privkey": "Şifre(Anahtar)",
             "provided": "Özel",
             "provided_description": "Kendi sertifikamı ve şifremi(anahtarımı) kullanmak istiyorum",
-            "selfsigned": ""
+            "selfsigned": "Self-signed certificate"
         },
         "unexpectederror": "Beklenmedik bir hata meydana geldi",
         "address_errors": {
