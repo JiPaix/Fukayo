@@ -183,8 +183,10 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
     this.#imageSize = is.default;
     // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     this.#fileTypeFromBuffer = (await (eval('import("file-type")') as Promise<typeof import('file-type')>)).fileTypeFromBuffer;
-    this.isOnline = await this.checkOnline();
-    if(this.isOnline) await this.login();
+    this.checkOnline().then(online => {
+      this.isOnline = online;
+      if(this.isOnline) this.login();
+    });
     return init;
   }
 
