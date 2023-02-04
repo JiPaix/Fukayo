@@ -302,9 +302,9 @@ type Routes = {
 class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataSaver: boolean, markAsRead: boolean, excludedGroups:string[], excludedUploaders:string[]}> implements MirrorInterface {
   #scanlatorCache:Set<{id:string, name:string}> = new Set();
   #openID = {
-    auth: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/auth?client_id=thirdparty-oauth-client&redirect_uri=http://localhost&response_type=code',
+    auth: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/auth?client_id=thirdparty-oauth-client&redirect_uri=http://127.0.0.1&response_type=code',
     token: 'https://auth.mangadex.dev/realms/mangadex/protocol/openid-connect/token',
-    redirect_uri: 'http://localhost',
+    redirect_uri: 'http://127.0.0.1',
     client_id: 'thirdparty-oauth-client',
   };
   #tokens = {

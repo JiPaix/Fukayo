@@ -66,7 +66,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     super({
       version: 1,
       isDead: false,
-      host: 'http://localhost',
+      host: 'http://127.0.0.1',
       name: 'tachidesk',
       displayName: 'Tachidesk',
       langs: mirrorsLang.map(x => x), // makes mirrorsLang mutable

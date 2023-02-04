@@ -8,6 +8,6 @@ export function transformIMGurl(url: string, settings:ReturnType<typeof useSetti
   // remove leading slash if it's present
   if(url.startsWith('/')) url = url.substring(1);
   // in dev mode the protocol and port of the file server are different from the current page
-  if(isElectron) return `${settings.server.ssl === 'false' ? 'http' : 'https'}://localhost:${settings.server.port}/${url}`;
+  if(isElectron) return `${settings.server.ssl === 'false' ? 'http' : 'https'}://127.0.0.1:${settings.server.port}/${url}`;
   return `${settings.server.ssl === 'false' ? 'http' : 'https'}://${location.hostname}:${settings.server.port}/${url}`;
 }

@@ -54,7 +54,7 @@ export default class socket {
   }
 
   private getServer() {
-    const location = 'localhost:'+this.settings.port;
+    const location = '127.0.0.1:'+this.settings.port;
     // When the server is running in standalone mode, the client uses localhost
     if(!window) return (this.settings.ssl === 'false' ? 'http://': 'https://') + location;
 

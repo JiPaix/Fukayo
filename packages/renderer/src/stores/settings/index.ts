@@ -8,7 +8,7 @@ const defaultSettings:Settings = {
     password: null,
     port : 4444,
     ssl: 'false',
-    hostname: 'https://localhost',
+    hostname: 'https://127.0.0.1',
     cert: null,
     key: null,
     accessToken: null,
