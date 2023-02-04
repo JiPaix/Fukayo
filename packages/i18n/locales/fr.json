@@ -456,7 +456,7 @@
             "minute": "Minute | Minutes",
             "wait": "Mettre à jour les listes de chapitres tous les"
         },
-        "source_is_dead": "This source has been reported as inactive"
+        "source_is_dead": "Cette source a été signalée comme inactive"
     },
     "setup": {
         "address": "Adresse",
