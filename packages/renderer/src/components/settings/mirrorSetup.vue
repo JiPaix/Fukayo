@@ -36,9 +36,9 @@ const
 /** icon representing the status of mirror */
 mirrorStatusIcon = computed(() => {
   if(props.mirror.isDead) return { color: 'negative', icon: 'o_broken_image', tooltip: $t('settings.source_is_dead')};
-  else if(!props.mirror.isOnline && props.mirror.selfhosted && props.mirror.options.host) return { color: 'red', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
   else if(!props.mirror.isOnline && props.mirror.selfhosted) return {color: 'orange', icon: 'o_login', tooltip: $t('settings.source_requires_setup') };
-  else if(!props.mirror.isOnline) return { color: 'negative', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
+  else if(!props.mirror.isOnline) return { color: 'red', icon: 'o_cloud_off', tooltip: $t('settings.source_is_offline') };
+  else if(props.mirror.isOnline && props.mirror.credentialsRequired && !props.mirror.loggedIn) return {color: 'orange', icon: 'o_login', tooltip: $t('settings.source_requires_setup') };
   else if(!props.mirror.enabled) return { color: 'negative', icon: 'not_interested'};
   else return { color: 'positive', icon: 'done'};
 });
@@ -251,7 +251,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
         </q-item>
       </div>
       <!-- Customized Login -->
-      <div v-if="mirror.options.hasOwnProperty('login')">
+      <div v-if="mirror.credentialsRequired || mirror.options.hasOwnProperty('login')">
         <div
           dense
           style="background:rgba(255, 255, 255, 0.2)"
@@ -280,6 +280,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
             :model-value="asTypeOrUndefined(mirror.options.login as string) || ''"
             :dark="$q.dark.isActive"
             :loading="modifying['credentials']"
+            :rules="mirror.credentialsRequired ? [val => !!val || $t('settings.source.field_required')] : undefined"
             @update:model-value="(v:unknown) => changeOption(mirror.name, 'login', v)"
           >
             <template #append>
@@ -293,7 +294,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
         </q-item>
       </div>
       <!-- Customized Password -->
-      <div v-if="mirror.options.hasOwnProperty('password')">
+      <div v-if="mirror.credentialsRequired || mirror.options.hasOwnProperty('password')">
         <q-item
           :dark="$q.dark.isActive"
           style="background:rgba(255, 255, 255, 0.3)"
@@ -313,6 +314,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
             :model-value="asTypeOrUndefined(mirror.options.password as string) || ''"
             :dark="$q.dark.isActive"
             :loading="modifying['credentials']"
+            :rules="mirror.credentialsRequired ? [val => !!val || $t('settings.source.field_required')] : undefined"
             @update:model-value="(v:unknown) => changeOption(mirror.name, 'password', v)"
           >
             <template #append>
@@ -326,7 +328,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
         </q-item>
       </div>
       <!-- Customized host -->
-      <div v-if="mirror.options.hasOwnProperty('host')">
+      <div v-if="mirror.selfhosted">
         <q-item
           :dark="$q.dark.isActive"
           style="background:rgba(255, 255, 255, 0.3)"
@@ -346,6 +348,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
             :model-value="asTypeOrUndefined(mirror.options.host as string) || ''"
             :dark="$q.dark.isActive"
             :loading="modifying['online']"
+            :rules="mirror.selfhosted ? [val => !!val || $t('settings.source.field_required')] : undefined"
             @update:model-value="(v:unknown) => changeOption(mirror.name, 'host', v)"
           >
             <template #append>
@@ -359,7 +362,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
         </q-item>
       </div>
       <!-- Customized port -->
-      <div v-if="mirror.options.hasOwnProperty('port')">
+      <div v-if="mirror.selfhosted">
         <q-item
           :dark="$q.dark.isActive"
           style="background:rgba(255, 255, 255, 0.3)"
@@ -379,6 +382,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
             :model-value="asTypeOrUndefined(mirror.options.port as number) || 8080"
             :dark="$q.dark.isActive"
             :loading="modifying['online']"
+            :rules="mirror.selfhosted ? [val => !!val || $t('settings.source.field_required')] : undefined"
             @update:model-value="(v:unknown) => changeOption(mirror.name, 'port', v)"
           >
             <template #append>
@@ -392,7 +396,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
         </q-item>
       </div>
       <!-- Customized protocol -->
-      <div v-if="mirror.options.hasOwnProperty('protocol')">
+      <div v-if="mirror.selfhosted">
         <q-item
           :dark="$q.dark.isActive"
           style="background:rgba(255, 255, 255, 0.3)"
@@ -413,6 +417,7 @@ async function changeOption(mirrorName:string, property:string, value:unknown) {
             :dark="$q.dark.isActive"
             :options="['http', 'https']"
             :loading="modifying['online']"
+            :rules="mirror.selfhosted ? [val => !!val || $t('settings.source.field_required')] : undefined"
             @update:model-value="(v:unknown) => changeOption(mirror.name, 'protocol', v)"
           >
             <template #append>

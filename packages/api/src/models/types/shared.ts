@@ -26,6 +26,8 @@ export type mirrorInfo = {
   host:string,
   /** is the site self hosted? */
   selfhosted:boolean,
+  /** do the site requires credentials */
+  credentialsRequired:boolean,
   /**
    * Whether the mirror is enabled
    */

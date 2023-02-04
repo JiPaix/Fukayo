@@ -49,6 +49,8 @@ export type MirrorConstructor<S = Record<string, unknown>, T = S & { enabled: bo
    * ```
    */
   entryLanguageHasItsOwnURL?: boolean,
+  /** crendentials required? */
+  credentialsRequired?: boolean;
   /** Meta information */
   meta: {
     /**

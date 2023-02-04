@@ -6,7 +6,7 @@ import mangafox from '@api/models/mangafox';
 import mangahasu from '@api/models/mangahasu';
 import scanfr from '@api/models/scan-fr';
 import tachidesk from '@api/models/tachidesk';
-import type MirrorInterface from './interfaces';
+import type MirrorInterface from '@api/models/interfaces';
 
 /** Every mirrors */
 const mirrors: (Mirror & MirrorInterface)[] = [

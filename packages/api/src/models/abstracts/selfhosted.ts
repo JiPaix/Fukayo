@@ -1,5 +1,5 @@
 import Mirror from '@api/models/abstracts';
-import type { MirrorConstructor } from './../types/constructor';
+import type { MirrorConstructor } from '@api/models/types/constructor';
 
 type options = {
   login?: string | null,
@@ -12,14 +12,12 @@ type options = {
 
 export class SelfHosted extends Mirror<options> {
   selfhosted = true;
-  #credentialRequired: boolean;
-  constructor(opts: MirrorConstructor<options>, credentialRequired:boolean) {
+  constructor(opts: MirrorConstructor<options>) {
     super(opts);
-    this.#credentialRequired = credentialRequired;
   }
 
   public get enabled(): boolean {
-    if(this.#credentialRequired) {
+    if(this.credentialsRequired) {
       const { enabled, host, port, password, login} = this.options;
       if(enabled && host && port && password && login && this.isOnline) return true;
       return false;
@@ -33,4 +31,5 @@ export class SelfHosted extends Mirror<options> {
   set enabled(val: boolean) {
     this.options.enabled = val;
   }
+
 }

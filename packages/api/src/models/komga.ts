@@ -78,6 +78,7 @@ class Komga extends SelfHosted implements MirrorInterface {
       displayName: 'Komga',
       langs: mirrorsLang.map(x=>x), // makes mirrorsLang mutable
       entryLanguageHasItsOwnURL: true,
+      credentialsRequired: true,
       requestLimits: {
         time: 10,
         concurrent: 5,
@@ -98,7 +99,7 @@ class Komga extends SelfHosted implements MirrorInterface {
         protocol: 'http',
         markAsRead: true,
       },
-    }, true);
+    });
   }
 
   get enabled():boolean {

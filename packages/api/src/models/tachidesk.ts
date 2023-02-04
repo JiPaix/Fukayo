@@ -74,6 +74,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         time: 10,
         concurrent: 5,
       },
+      credentialsRequired: false,
       icon,
       meta: {
         speed: 1,
@@ -90,7 +91,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
         protocol: 'http',
         markAsRead: true,
       },
-    }, false);
+    });
     this.#sourcelist = null;
   }
 

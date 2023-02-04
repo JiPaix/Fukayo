@@ -70,6 +70,8 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
   althost?: string[];
   /** is the site self hosted? (komga/tachidesk etc..) */
   selfhosted?: boolean;
+  /** crendentials required? */
+  credentialsRequired?: boolean;
   /**
    * Languages supported by the mirror
    *
@@ -275,6 +277,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       loggedIn: this.loggedIn,
       displayName: this.displayName,
       selfhosted: this.selfhosted || false,
+      credentialsRequired: this.credentialsRequired || false,
       host: this.host,
       enabled: this.enabled,
       icon: this.icon,
