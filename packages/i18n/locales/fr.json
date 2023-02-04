@@ -446,7 +446,7 @@
             "host": "Nom d'hôte",
             "markAsRead": "Marquer les chapitres comme lu sur le site de la source",
             "protocol": "Protocole",
-            "field_required": "This field is required"
+            "field_required": "Ce champ est obligatoire"
         },
         "source_is_offline": "Cette source semble être hors ligne",
         "source_requires_setup": "Cette source nécessite une configuration pour être active",
