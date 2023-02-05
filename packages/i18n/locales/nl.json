@@ -130,7 +130,8 @@
         "subtitle": "Importeer titels die je hebt opgeslagen in een externe bron",
         "tab": "Importeer",
         "title": "Importeer titels",
-        "unauthorized": "Ongeautoriseerd: onjuiste gegevens (?)"
+        "unauthorized": "Ongeautoriseerd: onjuiste gegevens (?)",
+        "search_elsewhere": "Search for this manga elsewhere"
     },
     "languages": {
         "aa": "Afar",

@@ -267,7 +267,8 @@
         "subtitle": "Harici kaynaklarda bulunan serilerini içe aktar",
         "tab": "İçe aktarma",
         "title": "Serileri içeri aktarma",
-        "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)"
+        "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)",
+        "search_elsewhere": "Search for this manga elsewhere"
     },
     "languages": {
         "aa": "Afarca",
