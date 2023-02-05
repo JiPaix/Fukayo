@@ -1,10 +1,10 @@
 {
     "app": {
-        "description": "Eine einfache electron-App zum Lesen von Mangas",
+        "description": "Eine einfache Electron-App zum Lesen von Mangas",
         "name": "Fukayo",
         "loading": {
             "please_wait": "Bitte warten…",
-            "initializing": "Initialisiere  <b>Quellen und Datenbanken</b>",
+            "initializing": "Initialisiere <b>Quellen und Datenbanken</b>",
             "checking_internet": "Überprüfe Status der Internetverbindung",
             "checking_internet_takes_a_while": "Dies könnte einen Moment dauern..."
         }
@@ -371,7 +371,7 @@
         "not_found": "Couldn't find source: {source}",
         "placeholder": "Search mangas",
         "tab": "Search",
-        "no_input": "Please type in something",
+        "no_input": "Bitte tippe etwas ein",
         "min_value": "Please type in at least {number} characters"
     },
     "settings": {
