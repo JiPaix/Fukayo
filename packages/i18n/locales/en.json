@@ -36,7 +36,8 @@
         "subtitle": "Import titles you've saved to an external source",
         "tab": "Import",
         "title": "Import titles",
-        "unauthorized": "Unauthorized: wrong credentials (?)"
+        "unauthorized": "Unauthorized: wrong credentials (?)",
+        "search_elsewhere": "Search for this manga elsewhere"
     },
     "languages": {
         "aa": "Afar",
