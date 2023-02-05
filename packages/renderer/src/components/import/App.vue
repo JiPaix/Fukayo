@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import type Importer from '@api/models/imports/interfaces';
-import type { ImportResults } from '@api/models/imports/types';
+import type { CantImportResults, ImportResults } from '@api/models/imports/types';
 import type { importErrorMessage } from '@api/models/types/errors';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import { mirrorsLang } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { routeTypeHelper } from '@renderer/components/helpers/routePusher';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isImportErrorMessage, isManga, isMangaInDB, isTaskDone } from '@renderer/components/helpers/typechecker';
+import { isCantImport, isImportErrorMessage, isManga, isMangaInDB, isTaskDone } from '@renderer/components/helpers/typechecker';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import type { QTableProps } from 'quasar';
 import { QTable, useQuasar } from 'quasar';
@@ -31,6 +31,8 @@ $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
 
 // globals
 const
+/** is electron */
+isElectron = typeof window.apiServer !== 'undefined' ? true : false,
 /** table column */
 columns:QTableProps['columns'] = [
   {
@@ -68,7 +70,7 @@ disabledimporters = ref<Importer['showInfo'][]>([]),
 /** selected importer */
 currentImporter = ref<Importer['showInfo']|null>(null),
 /** list of mangas */
-mangas = ref<ImportResults[]>([]),
+mangas = ref<(ImportResults|CantImportResults)[]>([]),
 /** list of languages */
 langs = ref(mirrorsLang as unknown as mirrorsLangsType[]),
 /** errors */
@@ -101,8 +103,39 @@ headerSize = computed(() => {
   else return 0;
 });
 
+function getMangas(importer: Importer['showInfo'], json?:boolean) {
+if(!json) return getMangasInternal(importer);
+  $q.dialog({
+    title: importer.displayName,
+    message: 'import the data',
+    prompt: {
+      model: '',
+      isValid: AMRValidJSON,
+      type: 'textarea',
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(data => {
+    getMangasInternal(importer, data);
+  });
 
-async function getMangas(importer: Importer['showInfo']) {
+}
+
+function AMRValidJSON(str:string) {
+  if(typeof str !== 'string') return false;
+  if(str.length < 1) return false;
+  try {
+    const json = JSON.parse(str);
+    if(!Array.isArray(json.mangas)) return false;
+    const manga = json.mangas[0] as Record<string, string> | undefined;
+    if(!manga || !manga.u) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getMangasInternal(importer: Importer['showInfo'], json?:string) {
   mangas.value = [];
   error.value = null;
   expected.value = 0;
@@ -112,23 +145,8 @@ async function getMangas(importer: Importer['showInfo']) {
   currentImporter.value = importer;
   const socket = await useSocket(settings.server);
   const reqId = Date.now();
-  socket.emit('showImports',reqId, importer.name, langs.value);
-  socket.on('showImports', (id, resp) => {
-    if(reqId !== id) return;
-    if(typeof resp === 'number') expected.value = resp;
-    else if(isImportErrorMessage(resp)) {
-      error.value = resp;
-      socket.removeAllListeners('showImports');
-    }
-    else if (isTaskDone(resp)) {
-      expected.value = 100;
-      loading.value = false;
-      socket.removeAllListeners('showImports');
-    } else {
-      if(Array.isArray(resp)) resp.forEach(r => mangas.value.push(r));
-      else mangas.value.push(resp);
-    }
-  });
+  socket.emit('showImports', reqId, importer.name, langs.value, json);
+
 }
 
 async function startImport() {
@@ -136,7 +154,7 @@ async function startImport() {
   let counter = selection.value.length;
   importing.value = true;
   const socket = await useSocket(settings.server);
-  selection.value.filter(s=> !s.inLibrary).forEach((s) =>{
+  selection.value.filter(s=> !s.inLibrary || !isCantImport(s)).forEach((s) =>{
     socket.emit('showManga', reqId, { mirror: s.mirror.name, langs: langs.value, url: s.url});
   });
   socket.on('showManga', (id, manga) => {
@@ -146,14 +164,14 @@ async function startImport() {
         selection.value = selection.value.filter(v => v.url !== manga.url);
         counter = counter-1;
         if(counter === 0) importing.value = false;
-        const mg = mangas.value.find(v => v.url === manga.url);
+        const mg = (mangas.value.filter(m => !isCantImport(m)) as ImportResults[]).find(v => v.url === manga.url);
         if(mg) mg.inLibrary = true;
       } else {
         socket.emit('addManga', { manga }, (res => {
           selection.value = selection.value.filter(v => v.url !== res.url);
           counter = counter-1;
           if(counter === 0) importing.value = false;
-          const mg = mangas.value.find(v => v.url === res.url);
+          const mg = (mangas.value.filter(m => !isCantImport(m)) as ImportResults[]).find(v => v.url === manga.url);
           if(mg) mg.inLibrary = true;
         }));
       }
@@ -163,6 +181,15 @@ async function startImport() {
       if(counter === 0) importing.value = false;
     }
   });
+}
+
+function searchElseWhere(name: string, langs?: mirrorsLangsType[]) {
+  const routeParams = router.resolve({name: 'search', query: { q: name, langs }});
+  if(isElectron) {
+    router.push(routeParams);
+  } else {
+    window.open(routeParams.href, '_blank');
+  }
 }
 
 /** get list of import sources */
@@ -185,6 +212,24 @@ async function On() {
       if(im.enabled) importers.value.push(im);
       else disabledimporters.value.push(im);
     });
+    importers.value = importers.value.sort((a, b) => a.name.localeCompare(b.name));
+    disabledimporters.value = disabledimporters.value.sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  socket.on('showImports', (id, resp) => {
+    if(typeof resp === 'number') expected.value = resp;
+    else if(isImportErrorMessage(resp)) {
+      error.value = resp;
+      socket.removeAllListeners('showImports');
+    }
+    else if (isTaskDone(resp)) {
+      expected.value = mangas.value.length;
+      loading.value = false;
+      socket.removeAllListeners('showImports');
+    } else {
+      if(Array.isArray(resp)) resp.forEach(r => mangas.value.push(r));
+      else mangas.value.push(resp);
+    }
   });
 }
 
@@ -241,7 +286,7 @@ onBeforeUnmount(Off);
                 style="background:rgba(255, 255, 255, 0.3)"
                 :class="$q.dark.isActive ? '' : 'bg-white'"
                 clickable
-                @click="getMangas(importer)"
+                @click="getMangas(importer, importer.name === 'amr')"
               >
                 <q-item-section>
                   <q-item-label class="text-h6">
@@ -336,7 +381,7 @@ onBeforeUnmount(Off);
                   class="q-ml-auto q-mb-lg q-mt-sm"
                   :disable="!selection.length"
                   :label="$t('import.start_import')"
-                  :loading="importing"
+                  :loading="importing || loading"
                   @click="startImport"
                 />
               </template>
@@ -369,20 +414,33 @@ onBeforeUnmount(Off);
               <template #body="props">
                 <q-tr
                   :props="props"
-                  @click="mangas.find(m=>m.name === props.row.name && m.inLibrary === false) ? props.selected = !props.selected : null"
+                  @click="props.row.inLibrary ? props.selected = !props.selected : null"
                 >
                   <q-td>
                     <q-checkbox
-                      v-if="mangas.find(m=>m.name === props.row.name && m.inLibrary === false)"
+                      v-if="props.row.inLibrary"
                       :model-value="props.selected"
                       @update:model-value="props.selected = !props.selected"
                     />
+                    <q-btn
+                      v-if="isCantImport(props.row)"
+                      flat
+                      icon="search"
+                      @click="searchElseWhere(props.row.name, props.row.langs)"
+                    >
+                      <q-tooltip>
+                        {{ $t('import.search_elsewhere') }}
+                      </q-tooltip>
+                    </q-btn>
                   </q-td>
                   <q-td
                     key="covers"
                     :props="props"
                   >
-                    <q-img :src="transformIMGurl(props.row.covers[0], settings)" />
+                    <q-img
+                      v-if="props.row.covers && props.row.covers.length"
+                      :src="transformIMGurl(props.row.covers[0], settings)"
+                    />
                   </q-td>
                   <q-td
                     key="name"

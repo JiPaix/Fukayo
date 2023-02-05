@@ -1,5 +1,6 @@
 import { SelfHosted } from '@api/models/abstracts/selfhosted';
 import icon from '@api/models/icons/tachidesk.png';
+import Importer from '@api/models/imports/abstracts';
 import type { ImportResults } from '@api/models/imports/types/index';
 import type MirrorInterface from '@api/models/interfaces';
 import type { importErrorMessage } from '@api/models/types/errors';
@@ -164,11 +165,11 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
     }
   }
 
-  async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | Scheduler, id: number) {
+  async search(query: string, langs: mirrorsLangsType[], socket: socketInstance | Scheduler | Importer, id: number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
-    if(!(socket instanceof Scheduler)) {
+    if(!(socket instanceof Scheduler) && !(socket instanceof Importer)) {
       stopListening = () => {
         cancel = true;
         socket.removeListener('searchInMirrors', stopListening as () => void);

@@ -1,5 +1,5 @@
 import type { ClientToServerEvents } from '@api/client/types';
-import type { ImportResults } from '@api/models/imports/types';
+import type { CantImportResults, ImportResults } from '@api/models/imports/types';
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage, importErrorMessage, MangaErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
@@ -21,7 +21,7 @@ export type ServerToClientEvents = {
   showChapter: (id:number, chapter:ChapterImage|ChapterImageErrorMessage|ChapterErrorMessage) => void;
   showRecommend: (id:number, mangas:SearchResult[]|SearchResult|RecommendErrorMessage|TaskDone) => void;
   showLibrary: (id:number, manga:MangaInDB[]) => void;
-  showImports: (id: number, /** number = nb of mangas to expect */ manga:number|importErrorMessage|ImportResults[]|ImportResults|TaskDone) => void;
+  showImports: (id: number, /** number = nb of mangas to expect */ manga:number|importErrorMessage|ImportResults[]|ImportResults|CantImportResults|CantImportResults[]|TaskDone) => void;
   finishedMangasUpdate: (nbOfUpdates:number) => void;
   startMangasUpdate: () => void;
 }

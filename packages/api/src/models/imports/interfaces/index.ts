@@ -11,5 +11,5 @@ export default interface ImporterInterface {
   get #login(): string
   get #password(): string
   get showInfo(): { url: string, name: string, displayName: string, enabled: boolean, icon:string }
-  getMangas(socket: socketInstance, id:number, langs:mirrorsLangsType[]):void
+  getMangas(socket: socketInstance, id:number, langs:mirrorsLangsType[], json?:string):void
 }

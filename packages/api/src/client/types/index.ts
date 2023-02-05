@@ -42,7 +42,7 @@ export type ClientToServerEvents = {
   getSettings: (callback:(settings:SettingsDB['data'])=>void) => void;
   changeSettings: (settings:SettingsDB['data'], callback:(settings:SettingsDB['data'])=>void) => void;
   markAsRead: ({ mirror, lang, url, chapterUrls, read, mangaId }: { mirror:string, lang:mirrorsLangsType, url:string, chapterUrls:string[], read:boolean, mangaId:string }) => void;
-  showImports: (id:number, mirrorName: string, langs:mirrorsLangsType[]) => void;
+  showImports: (id:number, mirrorName: string, langs:mirrorsLangsType[], json?:string) => void;
   stopShowImports: () => void;
 }
 

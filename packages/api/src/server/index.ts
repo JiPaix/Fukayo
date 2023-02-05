@@ -9,13 +9,13 @@ import type { MangaInDB } from '@api/models/types/manga';
 import { removeAllCacheFiles } from '@api/server/helpers';
 import Scheduler from '@api/server/scheduler';
 import type { ServerToClientEvents, socketInstance } from '@api/server/types';
+import { Crawler } from '@api/utils/crawler';
 import type { Server as HttpServer } from 'http';
 import type { Server as HttpsServer } from 'https';
 import { env } from 'process';
 import type { Socket } from 'socket.io';
 import { Server as ioServer } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace';
-import { Crawler } from '@api/utils/crawler';
 
 /**
  * Initialize a socket.io server
@@ -356,10 +356,10 @@ export default class IOWrapper {
       else cb(infos.filter(imp=>imp.enabled));
     });
 
-    socket.on('showImports', (id, mirrorName, langs) => {
+    socket.on('showImports', (id, mirrorName, langs, json) => {
       const importer = this.#importer.find(m=>m.name === mirrorName);
       if(!importer) return socket.emit('showImports', id, { error:'import_error', trace: 'importer_not_found' });
-      importer.getMangas(socket, id, langs);
+      importer.getMangas(socket, id, langs, json);
     });
   }
 }

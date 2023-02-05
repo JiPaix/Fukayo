@@ -1,14 +1,15 @@
 import { SelfHosted } from '@api/models/abstracts/selfhosted';
 import icon from '@api/models/icons/komga.png';
+import Importer from '@api/models/imports/abstracts';
+import type { ImportResults } from '@api/models/imports/types';
 import type MirrorInterface from '@api/models/interfaces';
+import type { importErrorMessage } from '@api/models/types/errors';
 import type { MangaPage } from '@api/models/types/manga';
 import type { SearchResult } from '@api/models/types/search';
 import Scheduler from '@api/server/scheduler';
 import type { socketInstance } from '@api/server/types';
 import type { mirrorsLangsType } from '@i18n';
 import { BC47_TO_ISO639_1, mirrorsLang } from '@i18n';
-import type { ImportResults } from './imports/types';
-import type { importErrorMessage } from './types/errors';
 
 //  /series?search=word
 type searchContent = {
@@ -163,11 +164,11 @@ class Komga extends SelfHosted implements MirrorInterface {
     }
   }
 
-  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler|Importer, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
-    if(!(socket instanceof Scheduler)) {
+    if(!(socket instanceof Scheduler) && !(socket instanceof Importer)) {
       stopListening = () => {
         cancel = true;
         socket.removeListener('stopSearchInMirrors', stopListening as () => void);

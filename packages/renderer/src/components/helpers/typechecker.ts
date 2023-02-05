@@ -1,3 +1,4 @@
+import type { CantImportResults } from '@api/models/imports/types';
 import type { ChapterImage } from '@api/models/types/chapter';
 import type { ChapterErrorMessage, ChapterImageErrorMessage, importErrorMessage, RecommendErrorMessage, SearchErrorMessage } from '@api/models/types/errors';
 import type { SearchResult } from '@api/models/types/search';
@@ -29,4 +30,8 @@ export function isTaskDone(res: SearchResult | SearchResult[] | SearchErrorMessa
 
 export function isImportErrorMessage(res:unknown) : res is importErrorMessage {
   return (res as importErrorMessage).error !== undefined;
+}
+
+export function isCantImport(res: unknown) : res is CantImportResults {
+  return (res as CantImportResults).mirror === undefined;
 }

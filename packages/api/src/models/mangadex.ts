@@ -1,5 +1,6 @@
 import Mirror from '@api/models/abstracts';
 import icon from '@api/models/icons/mangadex.png';
+import Importer from '@api/models/imports/abstracts';
 import type MirrorInterface from '@api/models/interfaces';
 import type { importErrorMessage } from '@api/models/types/errors';
 import type { MangaPage } from '@api/models/types/manga';
@@ -601,11 +602,12 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     if(stopListening) stopListening();
   }
 
-  async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+  async search(query:string, requestedLangs: mirrorsLangsType[], socket: socketInstance|Scheduler|Importer, id:number) {
     // we will check if user don't need results anymore at different intervals
+    this.logger('searching for', query, 'in', requestedLangs);
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
-    if(!(socket instanceof Scheduler)) {
+    if(!(socket instanceof Scheduler) && !(socket instanceof Importer)) {
       stopListening = () => {
         cancel = true;
         socket.removeListener('stopSearchInMirrors', stopListening as () => void);

@@ -14,10 +14,16 @@ export type readerRoute = {
   chapterId: string,
 }
 
+export type searchRoute = {
+  q: string,
+  langs?: mirrorsLangsType[],
+}
+
 export type settingsRoute = {
   tab: 'general' | 'sources' | 'languages' | 'files'
 }
 
+export function routeTypeHelper(routeName: 'search', params: searchRoute): {name: 'search', params: searchRoute }
 export function routeTypeHelper(routeName: 'settings', params: settingsRoute): {name: 'reader', params: settingsRoute }
 export function routeTypeHelper(routeName: 'reader', params: readerRoute): {name: 'reader', params: readerRoute }
 export function routeTypeHelper(routeName: 'manga', params: mangaRoute): {name: 'manga', params: mangaRoute }

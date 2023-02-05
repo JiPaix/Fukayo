@@ -1,5 +1,6 @@
 import Mirror from '@api/models/abstracts';
 import icon from '@api/models/icons/mangafox.png';
+import Importer from '@api/models/imports/abstracts';
 import type MirrorInterface from '@api/models/interfaces/index';
 import type { MangaPage } from '@api/models/types/manga';
 import Scheduler from '@api/server/scheduler';
@@ -56,11 +57,11 @@ class Mangafox extends Mirror<{adult: boolean}> implements MirrorInterface {
     return res;
   }
 
-  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler, id:number) {
+  async search(query:string, langs:mirrorsLangsType[], socket: socketInstance|Scheduler|Importer, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
-    if(!(socket instanceof Scheduler)) {
+    if(!(socket instanceof Scheduler) && !(socket instanceof Importer)) {
       stopListening = () => {
         cancel = true;
         socket.removeListener('stopSearchInMirrors', stopListening as () => void);

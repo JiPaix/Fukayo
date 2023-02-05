@@ -21,7 +21,7 @@ const router = createRouter({
         name: 'search',
         path: '/search',
         component: () => import('@renderer/components/search/App.vue'),
-        props: route => ({ query: route.query.q }),
+        props: route => ({ query: route.query.q, langs: route.query.langs }),
       },
       {
         name: 'manga',

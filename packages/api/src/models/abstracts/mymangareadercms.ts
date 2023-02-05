@@ -1,4 +1,5 @@
 import Mirror from '@api/models/abstracts';
+import Importer from '@api/models/imports/abstracts';
 import type MirrorInterface from '@api/models/interfaces';
 import type { MirrorConstructor } from '@api/models/types/constructor';
 import type { MangaPage } from '@api/models/types/manga';
@@ -54,11 +55,11 @@ export class MyMangaReaderCMS<T = Record<string, unknown>> extends Mirror implem
     return res;
   }
 
-  async search(query:string, langs: mirrorsLangsType[] , socket: socketInstance, id:number) {
+  async search(query:string, langs: mirrorsLangsType[], socket:socketInstance|Scheduler|Importer, id:number) {
     // we will check if user don't need results anymore at different intervals
     let cancel = false;
     let stopListening: (() => void) | undefined = undefined;
-    if(!(socket instanceof Scheduler)) {
+    if(!(socket instanceof Scheduler) && !(socket instanceof Importer)) {
       stopListening = () => {
         cancel = true;
         socket.removeListener('stopSearchInMirrors', stopListening as () => void);

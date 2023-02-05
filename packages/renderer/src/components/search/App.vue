@@ -170,7 +170,7 @@ async function research() {
   // We don't need to reload the page to trigger/display the search results
   // But we still need to update the url to reflect the current query
   // this way we the user can grab the url and share it
-  const refresh = window.location.href.replace(/\?.*/, '') + `?q=${query.value}`;
+  const refresh = window.location.href.replace(/\?.*/, '') + `?q=${query.value}${includedLangsRAW.value.join('&langs=')}`;
   window.history.pushState({ path: refresh }, '', refresh);
 
   // blur the input to hide the keyboard on touch devices
@@ -252,9 +252,14 @@ async function On() {
     });
   }
   await getIgnoredLangs();
-  const queryParam = route.query.q as string;
+  const queryParam = route.query.q as string | undefined;
+  const langParam = route.query.langs as mirrorsLangsType[] | undefined;
   socket.emit('getMirrors', false, (mirrors) => {
+
     setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, ignoredLangs.value);
+    pickAllLangs();
+
+    if(langParam) langParam.forEach(l => pickLang(l));
     if(queryParam) {
       query.value = queryParam;
       research();
