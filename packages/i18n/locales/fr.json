@@ -36,7 +36,8 @@
         "subtitle": "Importez les titres que vous avez enregistrés sur une source externe",
         "tab": "Importer",
         "title": "Importer des titres",
-        "unauthorized": "Non autorisé : identification erronées (?)"
+        "unauthorized": "Non autorisé : identification erronées (?)",
+        "search_elsewhere": "Search for this manga elsewhere"
     },
     "languages": {
         "aa": "Afar",
