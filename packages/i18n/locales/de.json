@@ -38,8 +38,7 @@
         "title": "Titel importieren",
         "unauthorized": "Nicht autorisiert: falsche Anmeldeinformationen (?)",
         "search_elsewhere": "Search for this manga elsewhere",
-        "cover": "COVER",
-        "name": "NAME"
+        "cover": "COVER"
     },
     "languages": {
         "aa": "Afar",
