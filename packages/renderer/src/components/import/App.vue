@@ -144,9 +144,9 @@ async function getMangasInternal(importer: Importer['showInfo'], json?:string) {
   importing.value = false;
   currentImporter.value = importer;
   const socket = await useSocket(settings.server);
+  listenImports(socket);
   const reqId = Date.now();
   socket.emit('showImports', reqId, importer.name, langs.value, json);
-
 }
 
 async function startImport() {
@@ -215,7 +215,9 @@ async function On() {
     importers.value = importers.value.sort((a, b) => a.name.localeCompare(b.name));
     disabledimporters.value = disabledimporters.value.sort((a, b) => a.name.localeCompare(b.name));
   });
+}
 
+async function listenImports(socket: Awaited<ReturnType<typeof useSocket>>) {
   socket.on('showImports', (id, resp) => {
     if(typeof resp === 'number') expected.value = resp;
     else if(isImportErrorMessage(resp)) {
