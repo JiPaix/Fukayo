@@ -37,7 +37,7 @@ isElectron = typeof window.apiServer !== 'undefined' ? true : false,
 columns:QTableProps['columns'] = [
   {
     name: 'covers',
-    label: 'cover',
+    label: $t('import.cover').toLocaleUpperCase(),
     align: 'left',
     field: (row:ImportResults) => row.covers,
     sortable: false,
@@ -45,7 +45,7 @@ columns:QTableProps['columns'] = [
   {
     name: 'name',
     required: true,
-    label: 'name',
+    label: $t('mangas.title').toLocaleUpperCase(),
     align: 'left',
     field: (row:ImportResults) => row.name,
     sortable: true,
