@@ -269,7 +269,8 @@
         "title": "Serileri içeri aktarma",
         "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)",
         "search_elsewhere": "Search for this manga elsewhere",
-        "cover": "COVER"
+        "cover": "COVER",
+        "name": "NAME"
     },
     "languages": {
         "aa": "Afarca",
