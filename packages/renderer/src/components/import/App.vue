@@ -429,11 +429,6 @@ onBeforeUnmount(Off);
                   @click="props.row.inLibrary ? props.selected = !props.selected : null"
                 >
                   <q-td>
-                    <q-checkbox
-                      v-if="props.row.inLibrary"
-                      :model-value="props.selected"
-                      @update:model-value="props.selected = !props.selected"
-                    />
                     <q-btn
                       v-if="isCantImport(props.row)"
                       flat
@@ -444,6 +439,11 @@ onBeforeUnmount(Off);
                         {{ $t('import.search_elsewhere') }}
                       </q-tooltip>
                     </q-btn>
+                    <q-checkbox
+                      v-else
+                      :model-value="props.selected"
+                      @update:model-value="props.selected = !props.selected"
+                    />
                   </q-td>
                   <q-td
                     key="covers"
