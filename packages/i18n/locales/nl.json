@@ -132,7 +132,8 @@
         "title": "Importeer titels",
         "unauthorized": "Ongeautoriseerd: onjuiste gegevens (?)",
         "search_elsewhere": "Search for this manga elsewhere",
-        "cover": "COVER"
+        "cover": "COVER",
+        "name": "NAME"
     },
     "languages": {
         "aa": "Afar",
