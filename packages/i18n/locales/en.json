@@ -37,7 +37,8 @@
         "tab": "Import",
         "title": "Import titles",
         "unauthorized": "Unauthorized: wrong credentials (?)",
-        "search_elsewhere": "Search for this manga elsewhere"
+        "search_elsewhere": "Search for this manga elsewhere",
+        "cover": "COVER"
     },
     "languages": {
         "aa": "Afar",
