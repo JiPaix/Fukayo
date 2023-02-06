@@ -2,12 +2,12 @@
     "library": {
         "tab": "Kütüphane",
         "change_settings_anytime": "Buradan ayarları istediğiniz zaman değiştirebilirsiniz:",
-        "filter_by_name": "Search your library",
+        "filter_by_name": "Kütüphanen de ara",
         "hide_unread": "Tüm bölümlerini okuduğun mangaları gizle",
         "letsgo": "Let's go!",
         "ready": "Tonla manga'nın tadını çıkarmak için hazırsın!",
         "setup_preferences": "Fukayo'yu keyfine göre ayarla:",
-        "show_unread": "Show manga for which you have read all chapters",
+        "show_unread": "Tüm bölümlerini okuduğunuz mangaları göster",
         "sort_by_name": "İsme göre sırala",
         "sort_by_read": "Okunmamış bölüm sayısına göre sırala"
     },
@@ -27,7 +27,7 @@
         "chapter": "Bölüm | Bölümler",
         "chapter_order": "Chapters order",
         "close_filter": "Close",
-        "date": "Date",
+        "date": "Tarih",
         "displayname": {
             "reset": "Reset manga's name to its default value"
         },
@@ -40,25 +40,25 @@
         "markasread": {
             "current": "Bu bölümü okundu olarak işaretle",
             "current_unread": "Bu bölümü okunmadı olarak işaretle",
-            "next": "Mark next chapters as read",
-            "next_unread": "Mark next chapters as unread",
-            "previous": "Mark previous chapters as read",
-            "previous_unread": "Mark previous chapters as unread"
+            "next": "Sonraki bölümleri okundu olarak işaretle",
+            "next_unread": "Sonraki bölümleri okunmadı olarak işaretle",
+            "previous": "Önceki bölümleri okundu olarak işaretle",
+            "previous_unread": "Önceki bölümleri okunmadı olarak işaretle"
         },
         "publication": "Yayım durumu:",
         "resume_reading": "Resume",
         "select_language": "Dil seç",
-        "source": "Kaynak | Kaynaklar",
-        "start_reading": "Start reading",
-        "status_cancelled": "cancelled",
-        "status_completed": "completed",
-        "status_hiatus": "hiatus",
-        "status_ongoing": "ongoing",
-        "status_unknown": "unknown",
+        "source": "Kaynak | Kaynak",
+        "start_reading": "Okumaya başla",
+        "status_cancelled": "bırakılmış",
+        "status_completed": "tamamlanmış",
+        "status_hiatus": "ara verilmiş",
+        "status_ongoing": "devam ediyor",
+        "status_unknown": "bilinmiyor",
         "synopsis": "Synopsis",
-        "tags": "Tags",
-        "title": "Title",
-        "volume": "Volume | Volumes",
+        "tags": "Etiketler",
+        "title": "Başlık",
+        "volume": "Cilt | Cilt",
         "open_in_new": {
             "chapter": "Open this chapter directly from the source",
             "manga": "Open this manga directly from the source"
@@ -66,13 +66,13 @@
     },
     "reader": {
         "error": {
-            "reload": "Reload",
+            "reload": "Yeniden yükle",
             "chapter": "Bölüm yüklenemedi",
             "chapterLang": "Selected language has no chapter"
         },
-        "loading": "Loading",
-        "book_mode": "Display as a book",
-        "book_mode_off": "Disable book mode",
+        "loading": "Yükleniyor",
+        "book_mode": "Kitap şeklinde oku",
+        "book_mode_off": "Kitap modunu kapat",
         "book_mode_offset": "Display as a book (offset the first page)",
         "copytoclipboard": "Resmi kopyala",
         "displaymode": {
@@ -87,27 +87,27 @@
         "longstrip": "Display the whole chapter as a long strip",
         "ltr": "Read from left to right",
         "manga": {
-            "add": "Add to library",
-            "remove": "Remove from the library"
+            "add": "Kütüphaneye ekle",
+            "remove": "Kütüphaneden kaldır"
         },
-        "next": "Go to the next chapter:",
-        "no_next_to_read": "This is the latest chapter",
-        "no_prev_to_read": "This is the first chapter",
+        "next": "Sonraki bölüme git:",
+        "no_next_to_read": "Sonuncu bölümdesin",
+        "no_prev_to_read": "İlk bölümdesin",
         "page": {
-            "count": "Page {current}/{total}"
+            "count": "Sayfa {current}/{total}"
         },
-        "previous": "Go back to the previous chapter:",
-        "reloadImage": "Reload this image",
-        "reload_chapter": "Reload this chapter",
-        "rtl": "Read from right to left",
-        "showpagenumber": "Show page number",
+        "previous": "Önceki bölüme git:",
+        "reloadImage": "Bu resmi yeniden yükle",
+        "reload_chapter": "Bu bölümü yeniden yükle",
+        "rtl": "Sağdan sola oku",
+        "showpagenumber": "Sayfa numarasını göster",
         "singlePage": "Display one page at a time",
         "vertical": "Display the whole chapter as a long vertical strip",
         "webtoon": "Webtoon modu"
     },
     "settings": {
         "logs": "Kayıtlar",
-        "server": "Server",
+        "server": "Sunucu",
         "app_ask_password": "Lütfen şifrenizi yazınız",
         "app_ask_password_retry": "Yanlış şifre",
         "app_client": "Client",
@@ -120,7 +120,7 @@
         "confirm": "CONFIRM",
         "credentials": "Giriş bilgileri",
         "darkmode": "Karanlık modu etkinleştir",
-        "displaymodes": "Display modes",
+        "displaymodes": "Okuma modları",
         "file": "File | Files",
         "files": {
             "tab": "Storage"
@@ -144,21 +144,21 @@
             "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
             "overlay": "Use navigation overlay",
             "preload": "Preload next chapter while reading",
-            "title": "Reader"
+            "title": "Okuyucu"
         },
         "scheduler": {
             "cache": {
-                "GB": "Gigabyte | Gigabytes",
+                "GB": "Gigabayt | Gigabayt",
                 "error": {
-                    "lessthan10min": "Cache age can't be lower than 10 minutes",
-                    "negative": "Cache age can't be negative",
-                    "size": "The cache size limit cannot be less than 1Gb"
+                    "lessthan10min": "Önbellek yaşı 10 dakikadan küçük olamaz",
+                    "negative": "Önbellek yaşı negatif bir değer olamaz",
+                    "size": "Önbellek limiti 1Gb'dan daha az olamaz"
                 }
             },
-            "cache_age": "Define the cache duration",
-            "cache_age_enable": "Limit cache duration",
-            "cache_enable": "Limit the size of cache",
-            "cache_size": "Define the cache limit",
+            "cache_age": "Önbelleğin ömrünü belirleyin",
+            "cache_age_enable": "Önbelleğin ömrü",
+            "cache_enable": "Önbellek limiti",
+            "cache_size": "Önbellek limitini belirle",
             "update": {
                 "error": {
                     "lessthan10min": "Time between updates cannot be lower than 10 minutes",
@@ -176,8 +176,8 @@
             "excludedUploaders": "Görmezden gelinecek yükleyiciler",
             "host": "Hostname",
             "markAsRead": "Bölümleri kaynak sitede de okundu olarak işaretle",
-            "protocol": "Protocol",
-            "field_required": "This field is required"
+            "protocol": "Protokol",
+            "field_required": "Bu kısım gerekli"
         },
         "source_is_offline": "Bu kaynak çevrimdışı / kapalı gibi duruyor",
         "source_requires_setup": "Bu kaynağın kullanılabilmesi için ayarlamalar yapılmalı",
@@ -186,7 +186,7 @@
             "day": "Gün | Gün",
             "hour": "Saat | Saat",
             "minute": "Dakika | Dakika",
-            "wait": "Her bölümleri güncelle"
+            "wait": "Bölümleri her güncelle"
         },
         "source_is_dead": "Bu kaynak inaktif olarak bildirildi"
     },
@@ -206,15 +206,15 @@
             "privkey": "Şifre(Anahtar)",
             "provided": "Özel",
             "provided_description": "Kendi sertifikamı ve şifremi(anahtarımı) kullanmak istiyorum",
-            "selfsigned": "Self-signed certificate"
+            "selfsigned": "Kendi imzalanmış sertifika(self-signed)"
         },
         "unexpectederror": "Beklenmedik bir hata meydana geldi",
         "address_errors": {
-            "length": "Required",
+            "length": "Gerekli",
             "protocol": "URL <b>https://</b> ile başlamalı",
             "space": "URL boşluk içeremez"
         },
-        "address_hint": "Example: <b>https://mywebsite.com</b>",
+        "address_hint": "Örneğin: <b>https://mywebsite.com</b>",
         "badpassword": "Yanlış şifre",
         "error": "Hata",
         "login": "Kullanıcı adı",
@@ -237,7 +237,7 @@
             "please_wait": "Lütfen bekleyin…",
             "initializing": "<b>Kaynaklar ve veritabanları</b> başlatılıyor",
             "checking_internet": "Bağlantı durumunuz kontrol ediliyor",
-            "checking_internet_takes_a_while": "Biraz uzun sürebilir..."
+            "checking_internet_takes_a_while": "Biraz uzun sürebilir…"
         }
     },
     "electron": {
@@ -268,7 +268,7 @@
         "tab": "İçe aktarma",
         "title": "Serileri içeri aktarma",
         "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)",
-        "search_elsewhere": "Search for this manga elsewhere",
+        "search_elsewhere": "Bu mangayı başka kaynaklarda ara",
         "cover": "COVER"
     },
     "languages": {
@@ -465,38 +465,38 @@
         "zu": "Zuluca"
     },
     "logs": {
-        "cache": "Cache",
+        "cache": "Önbellek",
         "cache_delete": "{number} tane silinmiş dosya",
         "cache_error": "Önbellek boşaltılamadı",
         "error_chapter": "Güncelleme başarısız oldu",
-        "found_chapter": "New chapter",
+        "found_chapter": "Yeni bölüm",
         "new_metadata": "Updated metadatas",
         "read_chapter": "Read markers imported"
     },
     "migrate": {
         "bug": "Issues",
         "close": "Close migration tool",
-        "entry_status": "Entry status",
+        "entry_status": "Girdi durumu",
         "hidden": "those entries are currently hidden from your library",
-        "insepect": "Inspect",
-        "new": "New",
-        "old": "Old",
+        "insepect": "İncele",
+        "new": "Yeni",
+        "old": "Eski",
         "search_candidates": "Start searching for migration candidates",
         "select_candidate": "Migrate",
         "solutions": "Available migration options",
         "warning": "Some entries are marked as broken and requires your attention.",
         "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
-        "source_status": "Source's status",
-        "select_source": "Select one or multiple sources"
+        "source_status": "Kaynağın durumu",
+        "select_source": "Bir veya daha fazla kaynak seçiniz"
     },
     "migration": {
         "results": "Migration candidates"
     },
     "search": {
         "all": "All",
-        "no_result_for": "No result for:",
-        "not_found": "Couldn't find source: {source}",
-        "placeholder": "Search mangas",
+        "no_result_for": "Şunun için sonuç bulunamadı:",
+        "not_found": "Kaynak bulunamadı: {source}",
+        "placeholder": "Manga ara",
         "tab": "Search",
         "no_input": "Lütfen bir şeyler yazın",
         "min_value": "Lütfen en az {number} karakter içeren bir şeyler yazın"
