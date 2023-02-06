@@ -94,7 +94,7 @@ showDialog = ref(false);
 const
 /** fetch progress */
 progress = computed(() => {
-  return Math.round((mangas.value.length*expected.value) / 100);
+  return mangas.value.length/expected.value;
 }),
 /** parent's QHeader height */
 headerSize = computed(() => {
@@ -347,21 +347,13 @@ onBeforeUnmount(Off);
               binary-state-sort
               row-key="name"
               dense
-              :loading="loading"
               :rows-per-page-options="[0]"
               column-sort-order="ad"
             >
-              <template #loading>
-                <q-linear-progress
-                  :loading="loading"
-                  color="orange"
-                  :value="progress"
-                />
-              </template>
               <template #top>
                 <div
                   v-if="currentImporter"
-                  class="flex"
+                  class="flex items-center w-100 justify-between q-py-md"
                 >
                   <q-chip
                     :color="$q.dark.isActive ? 'grey-9' : 'grey-3'"
@@ -373,17 +365,37 @@ onBeforeUnmount(Off);
                     />
                     <span class="text-h6">{{ currentImporter.displayName }}</span>
                   </q-chip>
+                  <q-circular-progress
+                    v-if="progress !== 1"
+                    size="100px"
+                    color="orange"
+                    class="q-ml-md"
+                    :show-value="true"
+                    :indeterminate="isNaN(progress)"
+                    :value="progress*100"
+                    :thickness="0.1"
+                    :center-color="$q.dark.isActive ? 'grey-8': 'grey-3'"
+                  >
+                    <template #default>
+                      <span class="text-caption">
+                        {{ mangas.length }} / {{ expected }}
+                      </span>
+                    </template>
+                  </q-circular-progress>
+                  <div
+                    v-else
+                    style="height:100px"
+                  />
+                  <q-btn
+                    color="orange"
+                    size="lg"
+                    class="q-ml-auto"
+                    :disable="!selection.length"
+                    :label="$t('import.start_import')"
+                    :loading="importing"
+                    @click="startImport"
+                  />
                 </div>
-
-                <q-btn
-                  color="orange"
-                  size="lg"
-                  class="q-ml-auto q-mb-lg q-mt-sm"
-                  :disable="!selection.length"
-                  :label="$t('import.start_import')"
-                  :loading="importing || loading"
-                  @click="startImport"
-                />
               </template>
               <template #header="props">
                 <q-tr
