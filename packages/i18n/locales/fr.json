@@ -37,7 +37,8 @@
         "tab": "Importer",
         "title": "Importer des titres",
         "unauthorized": "Non autorisé : identification erronées (?)",
-        "search_elsewhere": "Search for this manga elsewhere"
+        "search_elsewhere": "Chercher ce manga ailleurs",
+        "cover": "COUVERTURE"
     },
     "languages": {
         "aa": "Afar",

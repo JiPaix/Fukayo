@@ -131,7 +131,8 @@
         "tab": "Importeer",
         "title": "Importeer titels",
         "unauthorized": "Ongeautoriseerd: onjuiste gegevens (?)",
-        "search_elsewhere": "Search for this manga elsewhere"
+        "search_elsewhere": "Search for this manga elsewhere",
+        "cover": "COVER"
     },
     "languages": {
         "aa": "Afar",
