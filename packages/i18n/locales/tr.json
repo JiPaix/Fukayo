@@ -1,20 +1,20 @@
 {
     "library": {
         "tab": "Kütüphane",
-        "change_settings_anytime": "Buradan ayarları istediğiniz zaman değiştirebilirsiniz:",
-        "filter_by_name": "Kütüphanen de ara",
+        "change_settings_anytime": "Buradan istediğiniz zaman ayarları değiştirebilirsiniz:",
+        "filter_by_name": "Ara",
         "hide_unread": "Tüm bölümlerini okuduğun mangaları gizle",
-        "letsgo": "Let's go!",
-        "ready": "Tonla manga'nın tadını çıkarmak için hazırsın!",
+        "letsgo": "Haydi bir şeyler okuyalım!",
+        "ready": "Tonla manganın tadını çıkarmaya hazırsın!",
         "setup_preferences": "Fukayo'yu keyfine göre ayarla:",
-        "show_unread": "Tüm bölümlerini okuduğunuz mangaları göster",
+        "show_unread": "Tüm bölümlerini okuduğun mangaları göster",
         "sort_by_name": "İsme göre sırala",
         "sort_by_read": "Okunmamış bölüm sayısına göre sırala"
     },
     "mangas": {
         "edit_categories": "…",
         "errors": {
-            "unknown": "Unexpected error",
+            "unknown": "Beklenmedik hata meydana geldi",
             "bad_request": "Bad request: {code}",
             "invalid_auth": "Authentication error",
             "invalid_json": "Couldn't get expected data (timeout or broken source)",
@@ -24,7 +24,7 @@
         },
         "authors_and_artists": "Authors and artists",
         "categories": "Kategoriler",
-        "chapter": "Bölüm | Bölümler",
+        "chapter": "Bölüm | Bölüm",
         "chapter_order": "Chapters order",
         "close_filter": "Close",
         "date": "Tarih",
@@ -236,7 +236,7 @@
         "loading": {
             "please_wait": "Lütfen bekleyin…",
             "initializing": "<b>Kaynaklar ve veritabanları</b> başlatılıyor",
-            "checking_internet": "Bağlantı durumunuz kontrol ediliyor",
+            "checking_internet": "İnternet bağlantınızın durumu kontrol ediliyor",
             "checking_internet_takes_a_while": "Biraz uzun sürebilir…"
         }
     },
@@ -251,9 +251,9 @@
         "meta": {
             "popularity": "Popülarite",
             "quality": "Kalite",
-            "speed": "Hız"
+            "speed": "Yayımlanma Hızı"
         },
-        "placeholder": "Kaynak ara",
+        "placeholder": "Kaynakları isimlerine göre filtreleyin",
         "tab": "Keşfet"
     },
     "import": {
@@ -269,7 +269,7 @@
         "title": "Serileri içeri aktarma",
         "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)",
         "search_elsewhere": "Bu mangayı başka kaynaklarda ara",
-        "cover": "COVER"
+        "cover": "KAPAK RESMİ"
     },
     "languages": {
         "aa": "Afarca",
@@ -466,11 +466,11 @@
     },
     "logs": {
         "cache": "Önbellek",
-        "cache_delete": "{number} tane silinmiş dosya",
+        "cache_delete": "{number} tane dosya silindi",
         "cache_error": "Önbellek boşaltılamadı",
         "error_chapter": "Güncelleme başarısız oldu",
         "found_chapter": "Yeni bölüm",
-        "new_metadata": "Updated metadatas",
+        "new_metadata": "Metaverileri güncellendi",
         "read_chapter": "Read markers imported"
     },
     "migrate": {
