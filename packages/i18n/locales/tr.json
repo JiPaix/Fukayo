@@ -15,23 +15,23 @@
         "edit_categories": "…",
         "errors": {
             "unknown": "Beklenmedik hata meydana geldi",
-            "bad_request": "Bad request: {code}",
-            "invalid_auth": "Authentication error",
-            "invalid_json": "Couldn't get expected data (timeout or broken source)",
-            "invalid_link": "Couldn't validate manga's url: {url}",
+            "bad_request": "Hatalı istek: {code}",
+            "invalid_auth": "Kimlik doğrulama hatası",
+            "invalid_json": "Beklenen veriler alınamadı (zaman aşımı veya bozuk kaynak)",
+            "invalid_link": "Manga'nın url'si doğrulanamadı: {url}",
             "nodata": "Manga yüklenemedi",
-            "timeout": "No response from host (timeout): {source}"
+            "timeout": "Ana bilgisayardan yanıt yok (zaman aşımı): {source}"
         },
-        "authors_and_artists": "Authors and artists",
+        "authors_and_artists": "Yazarlar ve sanatçılar",
         "categories": "Kategoriler",
         "chapter": "Bölüm | Bölüm",
-        "chapter_order": "Chapters order",
-        "close_filter": "Close",
+        "chapter_order": "Bölüm sırası",
+        "close_filter": "Kapat",
         "date": "Tarih",
         "displayname": {
-            "reset": "Reset manga's name to its default value"
+            "reset": "Manga adını öntanımlı değerine sıfırla"
         },
-        "forceupdate": "Update",
+        "forceupdate": "Güncelle",
         "hide_scanlators_click": "Click to select scanlation groups to filter out",
         "hide_scanlators_tap": "Tap to select scanlation groups to filter out",
         "hide_unread": "Hide read chapters",
@@ -231,7 +231,7 @@
         "retry": "Tekrar dene"
     },
     "app": {
-        "description": "Manga okumak için yazılmış basit bir electron uygulaması",
+        "description": "Manga okumak için basit bir electron uygulaması",
         "name": "Fukayo",
         "loading": {
             "please_wait": "Lütfen bekleyin…",
@@ -267,7 +267,7 @@
         "subtitle": "Harici kaynaklarda bulunan serilerini içe aktar",
         "tab": "İçe aktarma",
         "title": "Serileri içeri aktarma",
-        "unauthorized": "Unauthorized: yanlış giriş bilgileri (?)",
+        "unauthorized": "Yetkisiz: yanlış kimlik bilgileri (?)",
         "search_elsewhere": "Bu mangayı başka kaynaklarda ara",
         "cover": "KAPAK RESMİ"
     },
@@ -466,12 +466,12 @@
     },
     "logs": {
         "cache": "Önbellek",
-        "cache_delete": "{number} tane dosya silindi",
+        "cache_delete": "{number} dosya silindi",
         "cache_error": "Önbellek boşaltılamadı",
         "error_chapter": "Güncelleme başarısız oldu",
         "found_chapter": "Yeni bölüm",
-        "new_metadata": "Metaverileri güncellendi",
-        "read_chapter": "Read markers imported"
+        "new_metadata": "Üst veriler güncellendi",
+        "read_chapter": "Okundu işaretleri içe aktarıldı"
     },
     "migrate": {
         "bug": "Issues",
