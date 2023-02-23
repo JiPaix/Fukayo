@@ -34,7 +34,7 @@
         "forceupdate": "Güncelle",
         "hide_scanlators_click": "Click to select scanlation groups to filter out",
         "hide_scanlators_tap": "Tap to select scanlation groups to filter out",
-        "hide_unread": "Hide read chapters",
+        "hide_unread": "Okunmuş bölümleri gizle",
         "inlibrary": "library",
         "komga_tries_its_best": "Sort entries by filenames (KOMGA: experimental)",
         "markasread": {
@@ -46,7 +46,7 @@
             "previous_unread": "Önceki bölümleri okunmadı olarak işaretle"
         },
         "publication": "Yayım durumu:",
-        "resume_reading": "Resume",
+        "resume_reading": "Devam et",
         "select_language": "Dil seç",
         "source": "Kaynak | Kaynak",
         "start_reading": "Okumaya başla",
@@ -55,13 +55,13 @@
         "status_hiatus": "ara verilmiş",
         "status_ongoing": "devam ediyor",
         "status_unknown": "bilinmiyor",
-        "synopsis": "Synopsis",
+        "synopsis": "Özet",
         "tags": "Etiketler",
         "title": "Başlık",
         "volume": "Cilt | Cilt",
         "open_in_new": {
-            "chapter": "Open this chapter directly from the source",
-            "manga": "Open this manga directly from the source"
+            "chapter": "Bu bölümü doğrudan kaynağından aç",
+            "manga": "Bu mangayı doğrudan kaynağından aç"
         }
     },
     "reader": {
