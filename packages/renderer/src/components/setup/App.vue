@@ -393,6 +393,7 @@ onMounted(() => {
           id="start"
           size="100px"
           round
+          type="submit"
           :loading="starting"
           :color="!readyToStart ? 'warning' : 'negative'"
           :disabled="!readyToStart || starting"
