@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
@@ -14,6 +15,7 @@ const props = defineProps<{
   inLibrary: boolean
   readerSettings: MangaInDB['meta']['options']
   headerSize: number
+  erroneousPages: ChapterImageErrorMessage[]
 }>();
 
 /** emits */
@@ -22,6 +24,7 @@ const emit = defineEmits<{
   (event: 'toggleInLibrary'): void
   (event: 'toggleRead', index:number): void
   (event: 'updateSettings', newSettings:MangaInDB['meta']['options'], oldSettings:MangaInDB['meta']['options']): void
+  (event: 'reload', pageIndex:number, chapterId: string, callback:() =>void): void
 }>();
 
 // settings
@@ -30,6 +33,15 @@ const
 $q = useQuasar(),
 /** i18n */
 $t = useI18n<{message: typeof en}, appLangsType>().t.bind(useI18n());
+
+
+// refs
+const
+/** reloading erroneous images at once */
+reloading = ref(false),
+/** which page is currently being reloaded */
+reloadStack = ref<number[]>([]);
+
 
 // computed
 const
@@ -187,6 +199,26 @@ function open() {
   window.open(url, '_blank');
 }
 
+function reload(index:number) {
+  emit('reload', index, props.currentChapterId, reloadHandle);
+}
+
+function reloadHandle() {
+  if(!reloadStack.value.length) return reloading.value = false;
+  reloadStack.value.shift();
+  emit('reload', reloadStack.value[0], props.currentChapterId, reloadHandle);
+}
+
+/** reload all images at once */
+function reloadAll() {
+  reloading.value = true;
+  setTimeout(() => {
+    reloadStack.value = props.erroneousPages.map(e => e.index);
+    if(!reloadStack.value.length) return reloading.value = false;
+    reload(reloadStack.value[0]);
+  }, 500);
+}
+
 /** update the label when currentChapterId changes */
 watch(() => props.currentChapterId, () => {
     selectedChap.value = { label: chapterLabel(props.chapters[currentChapterIndex.value].number, props.chapters[currentChapterIndex.value].name), value: currentChapterIndex.value };
@@ -338,7 +370,23 @@ watch(() => localSettings.value, (nval, oval) => {
         </q-btn>
       </q-btn-group>
     </div>
-    <div class="q-mt-lg flex">
+    <div
+      v-if="erroneousPages.length"
+      class="flex flex-center q-mt-lg"
+    >
+      <q-btn
+        class="q-mb-none"
+        color="negative"
+        size="md"
+        dense
+        :loading="reloading"
+        icon="o_broken_image"
+        @click="() => reloadAll()"
+      >
+        {{ '&nbsp;' + $t('reader.error.reload_all_at_once') }}
+      </q-btn>
+    </div>
+    <div class="q-mt-sm flex">
       <div class="w-100 flex flex-center justify-around q-mb-xs q-mt-lg">
         <q-slide-transition>
           <q-btn-group>

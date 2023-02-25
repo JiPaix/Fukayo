@@ -6,7 +6,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isChapterErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
+import { isChapterErrorMessage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
 import type ImageStack from '@renderer/components/reader/ImageStack.vue';
@@ -842,7 +842,7 @@ onMounted(hideOverlay);
       :behavior="$q.screen.lt.md ? 'mobile' : 'desktop'"
     >
       <right-drawer
-        v-if="manga"
+        v-if="manga && currentChapterFormatted"
         :style="{ background:'rgba(255, 255, 255, 0.15)', height: `${$q.screen.height - ($q.screen.lt.md ? 0 : headerSize)}px` }"
         :open="rightDrawerOpen"
         :dark="$q.dark.isActive"
@@ -852,6 +852,7 @@ onMounted(hideOverlay);
         :in-library="manga.inLibrary"
         :reader-settings="isMangaInDB(manga) ? manga.meta.options : settings.reader"
         :header-size="headerSize"
+        :erroneous-pages="currentChapterFormatted.imgs.filter(c => isChapterImageErrorMessage(c)) as ChapterImageErrorMessage[]"
         @load-index="loadIndex"
         @toggle-in-library="toggleInLibrary"
         @toggle-read="toggleRead"
