@@ -101,7 +101,8 @@
             "initializing": "Initialiseren van <b>bronnen en databases</b>",
             "checking_internet": "De status van uw internetverbinding controleren",
             "checking_internet_takes_a_while": "Dit kan even duren..."
-        }
+        },
+        "autostart": "Automatically start the server"
     },
     "electron": {
         "systemtray": {

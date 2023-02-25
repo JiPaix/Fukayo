@@ -7,7 +7,8 @@
             "initializing": "Initialisation des <b>sources et bases de données</b>",
             "checking_internet": "Vérification de l'état de votre connexion internet",
             "checking_internet_takes_a_while": "Cela pourrait prendre un moment…"
-        }
+        },
+        "autostart": "Démarrer automatiquement le serveur"
     },
     "electron": {
         "systemtray": {
@@ -341,7 +342,7 @@
             "chapter": "Le chapitre n'a pas pu être chargé",
             "chapterLang": "La langue sélectionnée n'a pas de chapitre",
             "reload": "Recharger",
-            "reload_all_at_once": "reload all erroneous images at once"
+            "reload_all_at_once": "recharger toutes les images erronées en une seule fois"
         },
         "first": "Retourner au premier chapitre :",
         "horizontal": "Afficher tout le chapitre sous la forme d'une longue bande horizontale",

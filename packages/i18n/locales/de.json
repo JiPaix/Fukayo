@@ -7,7 +7,8 @@
             "initializing": "Initialisiere <b>Quellen und Datenbanken</b>",
             "checking_internet": "Überprüfe Status der Internetverbindung",
             "checking_internet_takes_a_while": "Dies könnte einen Moment dauern …"
-        }
+        },
+        "autostart": "Automatically start the server"
     },
     "electron": {
         "systemtray": {
