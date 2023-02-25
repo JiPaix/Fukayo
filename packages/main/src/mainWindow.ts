@@ -3,10 +3,14 @@ import { BrowserWindow, globalShortcut, nativeImage } from 'electron';
 import { join } from 'path';
 import { URL } from 'url';
 
-async function createWindow() {
+async function createWindow(bounds?: Electron.Rectangle) {
   const browserWindow = new BrowserWindow({
     roundedCorners: true,
     show: false, // Use 'ready-to-show' event to show window
+    x: bounds?.x,
+    y: bounds?.y,
+    height: bounds?.height,
+    width: bounds?.width,
     webPreferences: {
       webviewTag: false, // The webview tag is not recommended. Consider alternatives like iframe or Electron's BrowserView. https://www.electronjs.org/docs/latest/api/webview-tag#warning
       preload: join(__dirname, '../../preload/dist/index.cjs'),
@@ -62,11 +66,11 @@ async function createWindow() {
 /**
  * Restore existing BrowserWindow or Create new BrowserWindow
  */
-export async function restoreOrCreateWindow() {
+export async function restoreOrCreateWindow(bounds?: Electron.Rectangle) {
   let window = BrowserWindow.getAllWindows().find(w => !w.isDestroyed());
 
   if (window === undefined) {
-    window = await createWindow();
+    window = await createWindow(bounds);
   }
 
   if (window.isMinimized()) {

@@ -3,6 +3,8 @@ import icon from '@buildResources/icon_32.png';
 import { findAppLocale, loadLocale } from '@i18n';
 import type { Paths } from '@preload/config';
 import { app, clipboard, ipcMain, Menu, nativeImage, Tray } from 'electron';
+import fs from 'fs';
+import path from 'path';
 import type { ForkResponse } from './../../api/src/app/types/index';
 import { forkAPI } from './forkAPI';
 import { restoreOrCreateWindow, showWindow } from './mainWindow';
@@ -12,12 +14,14 @@ export default class Ready {
   #api: forkAPI | undefined;
   #tray: Tray|undefined;
   #headless: boolean;
-
+  #bounds?:Electron.Rectangle;
+  #windowStateFile = path.join(app.getPath('userData'), 'electron.bounds.json');
   constructor() {
     this.#isAppQuitting = false;
     this.#api = undefined;
     this.#headless = app.commandLine.hasSwitch('server');
     /** close the API before quitting */
+    this.#bounds = this.#getBounds();
     const setup = import.meta.env.DEV ? this.devSetup : this.prodSetup;
     setup().then(() => this.#headless ? this.serverSetup() : this.desktopSetup());
     app.on('before-quit', this.quit.bind(this));
@@ -107,12 +111,29 @@ export default class Ready {
 
   async desktopSetup() {
     // create window
-    const win = await restoreOrCreateWindow();
+    const win = await restoreOrCreateWindow(this.#bounds);
+
     // Prevent application from closing when main window is closed.
     win.on('close', (evt) => {
       if (!this.#isAppQuitting) {
         evt.preventDefault();
         win.hide();
+      }
+    });
+
+    win.on('move', () => {
+      const {x, y} = win.getBounds();
+      if(x !== this.#bounds?.x || y !== this.#bounds.y) {
+        this.#bounds = win.getBounds();
+        this.#saveBounds();
+      }
+    });
+
+    win.on('resize', () => {
+      const { height, width } = win.getBounds();
+      if(height !== this.#bounds?.height || width !== this.#bounds.width) {
+        this.#bounds = win.getBounds();
+        this.#saveBounds();
       }
     });
 
@@ -147,5 +168,23 @@ export default class Ready {
       return clipboard.writeImage(img);
     });
 
+  }
+
+  #saveBounds() {
+    try {
+      return fs.writeFileSync(this.#windowStateFile, JSON.stringify(this.#bounds || {}), 'utf-8');
+    } catch {
+      return;
+    }
+  }
+
+  #getBounds() {
+    if(fs.existsSync(this.#windowStateFile)) {
+      try {
+        return JSON.parse(fs.readFileSync(this.#windowStateFile).toString()) as Electron.Rectangle;
+      } catch {
+        return;
+      }
+    }
   }
 }

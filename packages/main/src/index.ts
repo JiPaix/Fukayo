@@ -16,7 +16,7 @@ if (!isSingleInstance) {
   app.quit();
   process.exit(0);
 }
-app.on('second-instance', restoreOrCreateWindow);
+app.on('second-instance', () => restoreOrCreateWindow);
 
 /**
  * Shout down background process if all windows was closed
@@ -29,7 +29,7 @@ app.on('window-all-closed', () => {
 /**
  * @see https://www.electronjs.org/docs/v14-x-y/api/app#event-activate-macos Event: 'activate'
  */
-app.on('activate', restoreOrCreateWindow);
+app.on('activate', () => restoreOrCreateWindow);
 
 /** Ignore SSL errors */
 app.commandLine.appendSwitch('ignore-certificate-errors');
