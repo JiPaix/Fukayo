@@ -323,7 +323,7 @@ async function chapterTransition(opts: { chapterId:string, PageToShow:number }) 
 
   showPageSelector.value = false;
   currentChapterId.value = opts.chapterId;
-  currentPage.value = opts.PageToShow+1;
+  currentPage.value = opts.PageToShow || 1;
   setTimeout(() => loadingAchapter.value = false, 500);
   ignoreScroll.value = true;
   await scrollToPage(opts.PageToShow, true);
@@ -343,6 +343,7 @@ async function getChapter(
   chapterId = props.chapterId,
   opts: Partial<{ prefetch: boolean, scrollup: boolean, reloadIndex:number, resume: boolean, callback: () => void }>,
 ):Promise<unknown> {
+  console.log(currentPage.value);
   if(!manga.value) return;
   if(!settings.readerGlobal.preloadNext && opts.prefetch) return;
   // prepare the requests
