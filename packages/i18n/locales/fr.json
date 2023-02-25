@@ -8,7 +8,7 @@
             "checking_internet": "Vérification de l'état de votre connexion internet",
             "checking_internet_takes_a_while": "Cela pourrait prendre un moment…"
         },
-        "autostart": "Automatically start the server"
+        "autostart": "Démarrer automatiquement le serveur"
     },
     "electron": {
         "systemtray": {
