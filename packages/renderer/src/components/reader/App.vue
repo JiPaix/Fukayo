@@ -6,16 +6,16 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
-import { isChapterErrorMessage, isChapterImage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
+import { isChapterErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
 import type ImageStack from '@renderer/components/reader/ImageStack.vue';
 import ReaderHeader from '@renderer/components/reader/ReaderHeader.vue';
 import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
+import ThumbnailNavigation from '@renderer/components/reader/ThumbnailNavigation.vue';
 import { useHistoryStore } from '@renderer/stores/history';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { debounce, QDrawer, QVirtualScroll, useQuasar } from 'quasar';
+import { debounce, QDrawer, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -57,7 +57,7 @@ showMobileOverlayHint = ref($q.platform.has.touch),
 /** current page */
 currentPage = ref(0),
 /** thumbnail scrollbar */
-thumbscroll = ref<null|QVirtualScroll>(),
+thumbscroll = ref<null|InstanceType<typeof ThumbnailNavigation>>(),
 /** image container div */
 virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null),
 /** if this is put to true mousewheel scrolls are ignored */
@@ -382,9 +382,10 @@ async function getChapter(
       }, 100);
     }
     const needToFetch = alreadyFetched.imgsExpectedLength < alreadyFetched.imgs.length;
-    if(needToFetch) return getChapter(alreadyFetched.id, { resume: true });
+    if(needToFetch) return getChapter(alreadyFetched.id, { resume: true, callback: opts.callback });
     else {
-      if(!nextChapter.value || nextChapter.value.id === chapterId) return;
+      if(opts.callback) opts.callback();
+      if(!nextChapter.value || nextChapter.value.id === chapterId) return opts.callback ? opts.callback() : undefined;
       return getChapter(nextChapter.value.id, { prefetch: true });
     }
   }
@@ -625,7 +626,11 @@ function scrollToNextPage() {
 
 /** Redirect vertical scrolls into horizontal */
 function thumbnailScroll(evt:WheelEvent) {
-  if(thumbscroll.value) thumbscroll.value.$el.scrollLeft += evt.deltaY;
+  // if(thumbscroll.value) thumbscroll.value.$el.scrollLeft += evt.deltaY;
+  if(!thumbscroll.value) return;
+  let {left} = thumbscroll.value.getScrollPosition();
+  left = left += evt.deltaY;
+  thumbscroll.value.setScrollPosition('horizontal', left);
 }
 
 /** initial setup */
@@ -955,59 +960,15 @@ onMounted(hideOverlay);
               :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px'"
               style="opacity:0.9;"
             >
-              <q-virtual-scroll
+              <thumbnail-navigation
                 ref="thumbscroll"
-                v-slot="{ item, index }"
-                :items="currentChapterFormatted.imgs"
-                virtual-scroll-horizontal
-                class="q-ml-auto q-mr-auto rounded-borders"
-                style="max-width:500px;max-height:250px;"
-                :dir="rtl ? 'rtl':'ltr'"
-              >
-                <div
-                  :key="index"
-                  class="row items-center"
-                  :class="$q.dark.isActive ? 'bg-grey-9': 'bg-grey-3'"
-                  @wheel="thumbnailScroll"
-                >
-                  <q-item
-
-                    clickable
-                  >
-                    <q-item-section>
-                      <q-item-label>
-                        #{{ index+1 }}
-                      </q-item-label>
-                      <q-item-label>
-                        <img
-                          v-if="isChapterImage(item)"
-                          :src="transformIMGurl(item.src, settings)"
-                          style="max-height:200px;max-width:160px"
-                          loading="lazy"
-                          @click="scrollToPage(item.index)"
-                        >
-                        <q-card
-                          v-else
-                          class="bg-negative"
-                          @click="scrollToPage(item.index)"
-                        >
-                          <q-card-section>
-                            <q-icon
-                              name="o_broken_image"
-                              size="lg"
-                            />
-                          </q-card-section>
-                        </q-card>
-                      </q-item-label>
-                    </q-item-section>
-                  </q-item>
-
-                  <q-separator
-                    vertical
-                    spaced
-                  />
-                </div>
-              </q-virtual-scroll>
+                :images="currentChapterFormatted.imgs"
+                :rtl="localReaderSettings.rtl"
+                :chapter-id="currentChapterFormatted.id"
+                @wheel="thumbnailScroll"
+                @scroll-to-page="(i) => scrollToPage(i)"
+                @reload="(reloadIndex, id, callback) => getChapter(id, { reloadIndex, callback})"
+              />
             </div>
           </q-slide-transition>
           <div
@@ -1028,7 +989,7 @@ onMounted(hideOverlay);
               />
               <q-btn
                 rounded
-                @click="showPageSelector = !showPageSelector;thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage-2, 'start') : null"
+                @click="showPageSelector = !showPageSelector;thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage+1) : null"
               >
                 {{ currentPage }} / {{ currentPagesLength }}
               </q-btn>
