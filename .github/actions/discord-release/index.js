@@ -556,8 +556,8 @@ class OidcClient {
             const res = yield httpclient
                 .getJson(id_token_url)
                 .catch(error => {
-                throw new Error(`Failed to get ID Token. \n 
-        Error Code : ${error.statusCode}\n 
+                throw new Error(`Failed to get ID Token. \n
+        Error Code : ${error.statusCode}\n
         Error Message: ${error.result.message}`);
             });
             const id_token = (_a = res.result) === null || _a === void 0 ? void 0 : _a.value;
@@ -72167,7 +72167,7 @@ module.exports = {"version":"14.6.0"};
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __nccwpck_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -72181,7 +72181,7 @@ module.exports = {"version":"14.6.0"};
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		var threw = true;
 /******/ 		try {
@@ -72190,14 +72190,14 @@ module.exports = {"version":"14.6.0"};
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__nccwpck_require__.m = __webpack_modules__;
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	/* webpack/runtime/create fake namespace object */
 /******/ 	(() => {
@@ -72228,7 +72228,7 @@ module.exports = {"version":"14.6.0"};
 /******/ 			return ns;
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -72240,7 +72240,7 @@ module.exports = {"version":"14.6.0"};
 /******/ 			}
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/ensure chunk */
 /******/ 	(() => {
 /******/ 		__nccwpck_require__.f = {};
@@ -72253,7 +72253,7 @@ module.exports = {"version":"14.6.0"};
 /******/ 			}, []));
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/get javascript chunk filename */
 /******/ 	(() => {
 /******/ 		// This function allow to reference async chunks
@@ -72262,12 +72262,12 @@ module.exports = {"version":"14.6.0"};
 /******/ 			return "" + chunkId + ".index.js";
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -72278,23 +72278,23 @@ module.exports = {"version":"14.6.0"};
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
 /******/ 	})();
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/compat */
-/******/ 	
+/******/
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
-/******/ 	
+/******/
 /******/ 	/* webpack/runtime/require chunk loading */
 /******/ 	(() => {
 /******/ 		// no baseURI
-/******/ 		
+/******/
 /******/ 		// object to store loaded chunks
 /******/ 		// "1" means "loaded", otherwise not loaded yet
 /******/ 		var installedChunks = {
 /******/ 			179: 1
 /******/ 		};
-/******/ 		
+/******/
 /******/ 		// no on chunks loaded
-/******/ 		
+/******/
 /******/ 		var installChunk = (chunk) => {
 /******/ 			var moreModules = chunk.modules, chunkIds = chunk.ids, runtime = chunk.runtime;
 /******/ 			for(var moduleId in moreModules) {
@@ -72305,26 +72305,26 @@ module.exports = {"version":"14.6.0"};
 /******/ 			if(runtime) runtime(__nccwpck_require__);
 /******/ 			for(var i = 0; i < chunkIds.length; i++)
 /******/ 				installedChunks[chunkIds[i]] = 1;
-/******/ 		
+/******/
 /******/ 		};
-/******/ 		
+/******/
 /******/ 		// require() chunk loading for javascript
 /******/ 		__nccwpck_require__.f.require = (chunkId, promises) => {
 /******/ 			// "1" is the signal for "already loaded"
 /******/ 			if(!installedChunks[chunkId]) {
 /******/ 				if(true) { // all chunks have JS
 /******/ 					installChunk(require("./" + __nccwpck_require__.u(chunkId)));
-/******/ 				} else installedChunks[chunkId] = 1;
+/******/ 				} else { }
 /******/ 			}
 /******/ 		};
-/******/ 		
+/******/
 /******/ 		// no external install chunk
-/******/ 		
+/******/
 /******/ 		// no HMR
-/******/ 		
+/******/
 /******/ 		// no HMR manifest
 /******/ 	})();
-/******/ 	
+/******/
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
@@ -72389,7 +72389,7 @@ async function go() {
         releasenotes.forEach(r => {
             const key = r.scope ? `${replaceHeader(r.type)}` : r.type
             if(!grouped[key]) grouped[key] = []
-            const val = r.scope ? `- [${r.scope}] ${r.subject}` : `- ${r.subject}`
+            const val = r.scope ? `- [${r.scope}]: ${r.subject}` : `- ${r.subject}`
             grouped[key].push(val)
         })
 
@@ -72401,9 +72401,6 @@ async function go() {
           return {
             name: k, value: value.length === 1020 ? value+' ...' : value
           }
-        })
-        .sort((a, b) => {
-          return a.name.localeCompare(b.name)
         })
 
         client.login(TOKEN);
