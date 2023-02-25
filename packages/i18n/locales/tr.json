@@ -68,7 +68,8 @@
         "error": {
             "reload": "Yeniden yükle",
             "chapter": "Bölüm yüklenemedi",
-            "chapterLang": "Selected language has no chapter"
+            "chapterLang": "Selected language has no chapter",
+            "reload_all_at_once": "reload all erroneous images at once"
         },
         "loading": "Yükleniyor",
         "book_mode": "Kitap şeklinde oku",
