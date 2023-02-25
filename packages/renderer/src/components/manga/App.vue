@@ -203,10 +203,17 @@ chapters = computed(() => {
 }),
 resume = computed(() => {
   if(!chapters.value || !chapters.value.length) return { label:  $t('mangas.start_reading') };
-  const firstChap = settings.mangaPage.chapters.sort === 'ASC' ? chapters.value[0] : chapters.value[chapters.value.length-1];
-  const readChaps = chapters.value.filter(c => c.read);
-  if(readChaps.length) return { label: $t('mangas.resume_reading'), value: readChaps[settings.mangaPage.chapters.sort === 'ASC' ? 0 : readChaps.length-1] };
-  return { label:  $t('mangas.start_reading'), value: firstChap };
+
+  const hasRead = chapters.value.filter(c => c.read).length > 0;
+  const chapterToRead = chapters.value.reduce((prev, curr) => {
+    if(!curr.read) return prev;
+    if(curr.number > prev.number) return curr;
+    return prev;
+  });
+
+  const label = hasRead ? $t('mangas.resume_reading') : $t('mangas.start_reading');
+  return { label, value: chapterToRead };
+
 }),
 /** the number of chapters */
 nbOfChapters = computed(() => {
