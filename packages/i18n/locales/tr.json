@@ -239,7 +239,8 @@
             "initializing": "<b>Kaynaklar ve veritabanları</b> başlatılıyor",
             "checking_internet": "İnternet bağlantınızın durumu kontrol ediliyor",
             "checking_internet_takes_a_while": "Biraz uzun sürebilir…"
-        }
+        },
+        "autostart": "Automatically start the server"
     },
     "electron": {
         "systemtray": {
