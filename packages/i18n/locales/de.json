@@ -340,7 +340,8 @@
         "error": {
             "chapter": "Couldn't load chapter",
             "chapterLang": "Selected language has no chapter",
-            "reload": "Reload"
+            "reload": "Reload",
+            "reload_all_at_once": "reload all erroneous images at once"
         },
         "first": "Go back to the first chapter:",
         "horizontal": "Display the whole chapter as a long horizontal strip",
