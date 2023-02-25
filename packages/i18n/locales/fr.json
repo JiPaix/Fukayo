@@ -341,7 +341,7 @@
             "chapter": "Le chapitre n'a pas pu être chargé",
             "chapterLang": "La langue sélectionnée n'a pas de chapitre",
             "reload": "Recharger",
-            "reload_all_at_once": "reload all erroneous images at once"
+            "reload_all_at_once": "recharger toutes les images erronées en une seule fois"
         },
         "first": "Retourner au premier chapitre :",
         "horizontal": "Afficher tout le chapitre sous la forme d'une longue bande horizontale",
