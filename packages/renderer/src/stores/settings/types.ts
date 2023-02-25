@@ -25,6 +25,8 @@ type ServerSettings = {
   accessToken: string|null
   /** API refresh token */
   refreshToken: string|null
+  /** Automatically start server if credentials are filled */
+  autostart: boolean
 }
 
 type MangaPageSettings = {

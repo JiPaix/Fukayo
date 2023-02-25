@@ -5,7 +5,7 @@ import type en from '@i18n/../locales/en.json';
 import { certifColor, hostNameHint, isHostNameValid, isLoginValid, isPasswordValid, isPortValid, isProvidedCertificateValid, isProvidedKeyValid, keyColor, passwordHint } from '@renderer/components/helpers/login';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 /** emit */
@@ -104,6 +104,10 @@ async function startServer () {
     }
   }
 }
+
+onMounted(() => {
+  if(readyToStart.value) return startServer();
+});
 </script>
 <template>
   <div
@@ -221,6 +225,16 @@ async function startServer () {
               {{ $t('setup.port_error') }}
             </template>
           </q-input>
+        </div>
+        <div class="col-12">
+          <q-checkbox
+            v-model="settings.server.autostart"
+            dense
+            :label="$t('app.autostart')"
+            type="checkbox"
+            checked-icon="task_alt"
+            unchecked-icon="highlight_off"
+          />
         </div>
       </div>
       <div class="col-6 q-pa-lg">

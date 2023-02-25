@@ -13,6 +13,7 @@ const defaultSettings:Settings = {
     key: null,
     accessToken: null,
     refreshToken: null,
+    autostart: false,
   },
   mangaPage: {
     chapters: {

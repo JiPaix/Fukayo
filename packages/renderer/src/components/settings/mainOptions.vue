@@ -382,6 +382,29 @@ onBeforeMount(getSettings);
                   </q-item-section>
                 </q-item>
                 <q-item
+                  v-if="isElectron"
+                  style="background:rgba(255, 255, 255, 0.3)"
+                  class="flex items-center"
+                  :dark="$q.dark.isActive"
+                >
+                  <q-item-section>
+                    <q-item-label>
+                      {{ $t('app.autostart') }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section
+                    side
+                  >
+                    <q-toggle
+                      v-model="settings.server.autostart"
+                      :icon="settings.server.autostart ? 'start' : 'stop'"
+                      :dark="$q.dark.isActive"
+                      :size="$q.screen.gt.md ? 'md' : 'xl'"
+                      :dense="$q.screen.gt.md"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item
                   style="background:rgba(255, 255, 255, 0.3)"
                   class="flex items-center"
                   :dark="$q.dark.isActive"
