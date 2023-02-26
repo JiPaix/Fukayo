@@ -3,6 +3,7 @@ import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
+import { checkSettingsCompatibilty } from '@renderer/components/settings/helpers/checkReaderSettings';
 import { useQuasar } from 'quasar';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -160,35 +161,6 @@ async function toggleInLibrary() {
 /** toggle chapter's read status */
 async function toggleRead() {
   emit('toggleRead', currentChapterIndex.value);
-}
-
-/** make sure options are compatible with each others */
-async function checkSettingsCompatibilty(key: keyof typeof localSettings.value) {
-
-  if(key === 'book' && localSettings.value.book) {
-    if(localSettings.value.zoomMode === 'stretch-height' && localSettings.value.longStripDirection === 'vertical') localSettings.value.zoomMode = 'auto';
-    if(localSettings.value.webtoon) localSettings.value.webtoon = false;
-    if( (!localSettings.value.longStrip && localSettings.value.book) || (localSettings.value.longStrip && localSettings.value.longStripDirection === 'vertical')) {
-      if(localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
-    }
-  }
-
-  if(key === 'longStrip' && !localSettings.value.longStrip) {
-    localSettings.value.webtoon = false;
-  }
-
-  if(key === 'webtoon' && localSettings.value.webtoon) {
-    if(localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
-  }
-
-  if(key === 'longStripDirection' && localSettings.value.longStripDirection === 'vertical') {
-    if(localSettings.value.book && localSettings.value.zoomMode === 'stretch-height') localSettings.value.zoomMode = 'auto';
-  }
-
-  if(key === 'longStripDirection' && localSettings.value.longStripDirection === 'horizontal') {
-    if(localSettings.value.zoomMode === 'stretch-width') localSettings.value.zoomMode = 'auto';
-  }
-
 }
 
 /** open chapter in new tab */
@@ -421,7 +393,7 @@ watch(() => localSettings.value, (nval, oval) => {
         <q-slide-transition>
           <q-btn-group>
             <q-btn
-              :color="localSettings.rtl ? '':'orange'"
+              :color="localSettings.rtl ? '' : 'orange'"
               dense
               icon="format_textdirection_l_to_r"
               @click="localSettings.rtl = false;checkSettingsCompatibilty('rtl')"
@@ -432,7 +404,7 @@ watch(() => localSettings.value, (nval, oval) => {
               :color="localSettings.rtl ? 'orange':''"
               dense
               icon="format_textdirection_r_to_l"
-              @click="localSettings.rtl = true"
+              @click="localSettings.rtl = true;checkSettingsCompatibilty('rtl')"
             >
               <q-tooltip>{{ $t('reader.rtl') }}</q-tooltip>
             </q-btn>
@@ -476,7 +448,7 @@ watch(() => localSettings.value, (nval, oval) => {
         :keep-color="localSettings.book || !localSettings.longStrip"
         :label="$t('reader.webtoon')"
         :dark="$q.dark.isActive"
-        @update:model-value="localSettings.webtoon = true;checkSettingsCompatibilty('webtoon');"
+        @update:model-value="localSettings.webtoon = !localSettings.webtoon;checkSettingsCompatibilty('webtoon')"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
