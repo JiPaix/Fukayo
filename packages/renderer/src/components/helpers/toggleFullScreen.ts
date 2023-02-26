@@ -1,29 +1,11 @@
 import { ref } from 'vue';
+import { AppFullscreen } from 'quasar';
 
 const isElectron = typeof window.apiServer !== 'undefined' ? true : false;
 
 export const isFullScreen = ref(false);
 
-export function toggleFullScreen() {
-  if(isFullScreen.value) return windowed();
-  else return fullscreen();
-}
-
-async function fullscreen() {
-  isFullScreen.value = true;
-  if(isElectron) window.apiServer.toggleFullScreen();
-  else {
-    const app = document.querySelector('#app');
-    if(!app) return;
-    await app.requestFullscreen();
-  }
-}
-
-
-async function windowed() {
-  isFullScreen.value = false;
-  if(isElectron) window.apiServer.toggleFullScreen();
-  else {
-    await document.exitFullscreen();
-  }
+export async function toggleFullScreen():Promise<void> {
+  if(isElectron) return window.apiServer.toggleFullScreen();
+  else return AppFullscreen.toggle();
 }
