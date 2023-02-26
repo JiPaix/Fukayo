@@ -64,7 +64,7 @@ const router = createRouter({
 });
 
 // Quasar
-import { Dialog, Loading, Notify, Quasar } from 'quasar';
+import { Dialog, Loading, Notify, Quasar, AppFullscreen } from 'quasar';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 /** @ts-ignore */
 import('@fontsource/roboto');
@@ -74,7 +74,7 @@ import('@quasar/extras/material-icons-round/material-icons-round.css');
 import('quasar/dist/quasar.css');
 
 const QuasarConfig = {
-  plugins: { Dialog, Notify, Loading },
+  plugins: { Dialog, Notify, Loading, AppFullscreen },
   config: {
     brand: {
       primary: '#3d75ad',

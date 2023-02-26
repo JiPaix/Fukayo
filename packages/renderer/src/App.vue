@@ -5,12 +5,13 @@ import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import AppLayout from '@renderer/components/AppLayout.vue';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import Login from '@renderer/components/login/App.vue';
 import Setup from '@renderer/components/setup/App.vue';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useFavicon } from '@vueuse/core';
 import { Loading, QSpinnerRadio, useQuasar } from 'quasar';
-import { onBeforeMount, ref } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 // settings
@@ -104,10 +105,24 @@ async function connect(auth?: LoginAuth, beforeMount?: boolean):Promise<unknown>
   }
 }
 
+
+
+function listenFullScreenEvents() {
+  if(!isElectron) watch(() => $q.fullscreen.isActive, val => isFullScreen.value = val);
+  else window.apiServer.onFullScreen(fs => isFullScreen.value = fs);
+
+  document.addEventListener('keyup', e => {
+    if(e.key !== 'F11') return;
+    e.preventDefault();
+    return toggleFullScreen();
+  }, { passive: false });
+}
+
 /**
  * try to connect non-electron browser to the websocket server using stored credentials
  */
 function On() {
+  listenFullScreenEvents();
   if(!isElectron) {
     const [host, port] = new URL(window.location.href).host.split(':');
     settings.server.ssl = new URL(window.location.href).protocol === 'https:' ? 'app' : 'false';

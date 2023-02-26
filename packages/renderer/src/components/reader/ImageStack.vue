@@ -24,6 +24,7 @@ const props = defineProps<{
     showPrevBuffer:boolean
     showNextBuffer:boolean
     showMobileOverlayHint:boolean
+    headerSize: number
   }>();
 
 /** emits */
@@ -68,12 +69,6 @@ reloading = ref<boolean[]>(reloadingArray);
 
 // computed
 const
-/** parent's QHeader + QHeader heights */
-headerSize = computed(() => {
-  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
-  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
-  return topHeader.offsetHeight + subHeader.offsetHeight;
-}),
 /** QScrollArea CSS */
 cssVars = computed(() => {
   return {
@@ -81,7 +76,7 @@ cssVars = computed(() => {
     '--bg-color-hover': $q.dark.isActive ? colors.getPaletteColor('grey-9') : colors.getPaletteColor('grey-3'),
     '--bg-color-active': $q.dark.isActive ? colors.getPaletteColor('grey-7') : colors.getPaletteColor('grey-5'),
     '--orange': colors.getPaletteColor('orange'),
-    height: ($q.screen.height-headerSize.value)+'px',
+    height: ($q.screen.height-props.headerSize)+'px',
   };
 }),
 /** Images grouped in set of 2's, or 1's if their width > height */
@@ -141,7 +136,7 @@ verticalNoBook = computed<CSSProperties>(() => {
   let width:CSSProperties['width'] = undefined;
   let marginBottom:CSSProperties['marginBottom'] = undefined;
   if(!props.settings.webtoon && props.settings.longStrip) marginBottom = '20px';
-  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height-headerSize.value) + 'px';
+  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height-props.headerSize) + 'px';
   if(props.settings.zoomMode === 'stretch-width') width = ($q.screen.width - (props.drawerOpen && $q.screen.gt.sm ? 300 : 0)) + 'px';
   return {
     height,
@@ -151,10 +146,10 @@ verticalNoBook = computed<CSSProperties>(() => {
 }),
 /** img CSS for horizontal display */
 horizontal = computed<CSSProperties>(() => {
-  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - headerSize.value)+'px';
+  let maxHeight:CSSProperties['maxHeight'] = ($q.screen.height - props.headerSize)+'px';
   let marginBottom:CSSProperties['marginBottom'] = '-6px';
   let height:CSSProperties['height'] = undefined;
-  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height - headerSize.value) + 'px';
+  if(props.settings.zoomMode === 'stretch-height') height = ($q.screen.height - props.headerSize) + 'px';
   return {
     maxHeight,
     marginBottom,
@@ -217,7 +212,7 @@ function onLoaded(i: number[]) {
 /** dirty trick so RTL+HORIZONTAL isn't messed-up (blank images) */
 function groupIntersection() {
   if(!scrollArea.value) return;
-  const newVal = ($q.screen.height-headerSize.value-50)+'px';
+  const newVal = ($q.screen.height-props.headerSize-50)+'px';
   (scrollArea.value.$el as HTMLElement).style.height = newVal;
   //=> force re-render & does not apply new height
 }

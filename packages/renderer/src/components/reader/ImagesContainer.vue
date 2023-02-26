@@ -25,6 +25,7 @@ const props = defineProps<{
   nextChapterString?: string,
   prevChapterString?: string
   showMobileOverlayHint: boolean
+  headerSize: number
 }>();
 
 /** emits */
@@ -87,6 +88,7 @@ defineExpose({
     :expected-length="expectedLength"
     :settings="readerSettings"
     :show-mobile-overlay-hint="showMobileOverlayHint"
+    :header-size="headerSize"
     @load-next="() => emit('loadNext')"
     @load-prev="() => emit('loadPrev')"
     @toggle-drawer="() => emit('toggleDrawer')"

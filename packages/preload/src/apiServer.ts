@@ -16,3 +16,7 @@ export function copyImageToClipboard(string:string) {
 export function toggleFullScreen() {
   return ipcRenderer.invoke('toggle-fullscreen');
 }
+
+export function onFullScreen(cb: (fullscreen: boolean) => void) {
+  return ipcRenderer.on('fullscreen', (event, fullscreen) => cb(fullscreen));
+}

@@ -170,6 +170,7 @@ export default class Ready {
 
     ipcMain.handle('toggle-fullscreen', () => {
       win.setFullScreen(!win.fullScreen);
+      win.webContents.send('fullscreen', win.fullScreen);
     });
   }
 

@@ -6,6 +6,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
+import { isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { isChapterErrorMessage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
@@ -183,6 +184,7 @@ nextNavDisabled = computed(() => {
 
 /** update the header's height */
 function onHeaderResize() {
+  if(isFullScreen.value) return headerSize.value = 0;
   const top = document.querySelector<HTMLDivElement>('#top-header');
   if(top) headerSize.value = top.offsetHeight;
 }
@@ -548,6 +550,7 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
 function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
   if(!currentChapterFormatted.value) return;
   if(isMouseEvent(event)) return;
+
   if(rtl.value && event.key === 'ArrowRight') {
     return scrollToPrevPage();
   }
@@ -915,9 +918,10 @@ onMounted(hideOverlay);
 </script>
 <template>
   <q-layout
-    view="lHh lpR lFf"
+    view="lHh lpr lFf"
   >
     <q-header
+      v-show="!isFullScreen"
       id="top-header"
       bordered
       class="bg-dark"
@@ -933,6 +937,8 @@ onMounted(hideOverlay);
         :chapter="currentChapter"
         :nb-of-pages="currentPagesLength"
         :page="currentPage"
+        :header-size="headerSize"
+        @header-resize="() => onHeaderResize()"
         @toggle-drawer="rightDrawerOpen = !rightDrawerOpen"
       />
       <q-resize-observer @resize="onHeaderResize" />
@@ -1043,6 +1049,7 @@ onMounted(hideOverlay);
             :imgs="currentChapterFormatted.imgs"
             :current-page="currentPage"
             :reader-settings="localReaderSettings"
+            :header-size="headerSize"
             @toggle-drawer="rightDrawerOpen = !rightDrawerOpen"
             @scroll-to-next-page="scrollToNextPage"
             @scroll-to-prev-page="scrollToPrevPage"

@@ -6,7 +6,6 @@ import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/tog
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
-import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
@@ -21,11 +20,13 @@ const props = defineProps<{
   progress:number
   progressError: boolean
   drawerOpen: boolean
+  headerSize: number
 }>();
 
 /** emits */
 const emit = defineEmits<{
   (event: 'toggleDrawer'): void
+  (event: 'headerResize'): void
 }>();
 
 // settings
@@ -39,15 +40,6 @@ settings = useSettingsStore(),
 /** router */
 router = useRouter();
 
-// computed
-const
-/** parent's QHeader + QHeader heights */
-headerSize = computed(() => {
-  const topHeader = (document.querySelector('#top-header') as HTMLDivElement || null) || document.createElement('div');
-  const subHeader = (document.querySelector('#sub-header') as HTMLDivElement || null) || document.createElement('div');
-  return topHeader.offsetHeight + subHeader.offsetHeight;
-});
-
 /** toggle on/off dark mode */
 function toggleDarkMode() {
   if (settings.theme === 'dark') {
@@ -59,6 +51,10 @@ function toggleDarkMode() {
   }
 }
 
+function fullscreen() {
+  toggleFullScreen();
+  emit('headerResize');
+}
 /** open chapter in new tab */
 function open() {
   if(!props.sourceURL) return;
@@ -114,7 +110,7 @@ function open() {
       flat
       round
       :icon="isFullScreen ? 'close_fullscreen' : 'fullscreen'"
-      @click="() => toggleFullScreen()"
+      @click="() => fullscreen()"
     />
     <q-btn
       flat

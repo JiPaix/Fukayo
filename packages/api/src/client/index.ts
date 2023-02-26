@@ -1,7 +1,9 @@
 import type { ForkResponse, startPayload } from '@api/app/types';
 import type { ClientToServerEvents, LoginAuth, SocketClientConstructor } from '@api/client/types';
 import type { ServerToClientEvents } from '@api/server/types';
+import type { IpcRenderer } from 'electron';
 import type { Socket } from 'socket.io-client';
+
 import io from 'socket.io-client';
 
 declare global {
@@ -11,6 +13,7 @@ declare global {
       stopServer: () => Promise<ForkResponse>;
       copyImageToClipboard: (string: string) => Promise<void>;
       toggleFullScreen: () => void;
+      onFullScreen(cb: (fullscreen: boolean) => void): IpcRenderer
       getEnv: string;
     }
   }

@@ -15,6 +15,7 @@ interface Window {
       stopServer: () => Promise<import('../api/src/app/types').ForkResponse>;
       copyImageToClipboard: (string: string) => Promise<void>;
       toggleFullScreen: () => void;
+      onFullScreen(cb: (fullscreen: boolean) => void): Electron.IpcRenderer
       getEnv: string;
     };
 }
