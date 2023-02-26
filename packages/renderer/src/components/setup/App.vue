@@ -106,7 +106,11 @@ async function startServer () {
 }
 
 onMounted(() => {
-  if(readyToStart.value) return startServer();
+  if(readyToStart.value && settings.server.autostart) {
+    return setTimeout(() => {
+      return startServer();
+    },500);
+  }
 });
 </script>
 <template>
