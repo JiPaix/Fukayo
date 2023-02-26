@@ -448,7 +448,7 @@ watch(() => localSettings.value, (nval, oval) => {
         :keep-color="localSettings.book || !localSettings.longStrip"
         :label="$t('reader.webtoon')"
         :dark="$q.dark.isActive"
-        @update:model-value="localSettings.webtoon = !localSettings.webtoon;checkSettingsCompatibilty('webtoon')"
+        @update:model-value="checkSettingsCompatibilty('webtoon')"
       />
       <q-toggle
         v-model="localSettings.showPageNumber"
