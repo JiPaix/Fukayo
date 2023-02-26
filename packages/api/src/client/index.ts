@@ -10,6 +10,7 @@ declare global {
       startServer: (payload: startPayload) => Promise<ForkResponse>;
       stopServer: () => Promise<ForkResponse>;
       copyImageToClipboard: (string: string) => Promise<void>;
+      toggleFullScreen: () => void;
       getEnv: string;
     }
   }

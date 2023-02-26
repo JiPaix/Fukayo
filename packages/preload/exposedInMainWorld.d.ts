@@ -14,6 +14,7 @@ interface Window {
       startServer: (payload: import('../api/src/app/types').startPayload) => Promise<import('../api/src/app/types').ForkResponse>;
       stopServer: () => Promise<import('../api/src/app/types').ForkResponse>;
       copyImageToClipboard: (string: string) => Promise<void>;
+      toggleFullScreen: () => void;
       getEnv: string;
     };
 }

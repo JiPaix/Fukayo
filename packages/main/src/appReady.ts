@@ -168,6 +168,9 @@ export default class Ready {
       return clipboard.writeImage(img);
     });
 
+    ipcMain.handle('toggle-fullscreen', () => {
+      win.setFullScreen(!win.fullScreen);
+    });
   }
 
   #saveBounds() {

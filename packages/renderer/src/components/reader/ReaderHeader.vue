@@ -1,13 +1,14 @@
 <script lang="ts" setup>
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
+import type en from '@i18n/../locales/en.json';
+import { toggleFullScreen, isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import type en from '@i18n/../locales/en.json';
 
 /** props */
 const props = defineProps<{
@@ -106,7 +107,14 @@ function open() {
       flat
       round
       icon="contrast"
-      @click="toggleDarkMode()"
+      @click="() => toggleDarkMode()"
+    />
+    <q-btn
+      dense
+      flat
+      round
+      :icon="isFullScreen ? 'close_fullscreen' : 'fullscreen'"
+      @click="() => toggleFullScreen()"
     />
     <q-btn
       flat
@@ -114,7 +122,7 @@ function open() {
       dense
       icon="menu"
       class="q-mx-sm"
-      @click="emit('toggleDrawer')"
+      @click="() => emit('toggleDrawer')"
     />
   </q-toolbar>
   <q-bar

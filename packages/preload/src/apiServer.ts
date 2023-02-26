@@ -12,3 +12,7 @@ export async function stopServer() {
 export function copyImageToClipboard(string:string) {
   return ipcRenderer.invoke('copy-image-to-clipboard', string);
 }
+
+export function toggleFullScreen() {
+  return ipcRenderer.invoke('toggle-fullscreen');
+}

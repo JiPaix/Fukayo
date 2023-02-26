@@ -2,7 +2,7 @@
  * @module preload
  */
 
-import { copyImageToClipboard, startServer, stopServer } from '@preload/apiServer';
+import { copyImageToClipboard, startServer, stopServer, toggleFullScreen } from '@preload/apiServer';
 import { getPath } from '@preload/config';
 import { contextBridge } from 'electron';
 
@@ -35,4 +35,4 @@ contextBridge.exposeInMainWorld('versions', process.versions);
   * intended to be used in a vuex store plugin
   */
 contextBridge.exposeInMainWorld('getPath', getPath);
-contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE, copyImageToClipboard });
+contextBridge.exposeInMainWorld('apiServer', { startServer, stopServer, getEnv: import.meta.env.MODE, copyImageToClipboard, toggleFullScreen });
