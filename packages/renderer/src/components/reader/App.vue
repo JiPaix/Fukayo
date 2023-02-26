@@ -343,7 +343,6 @@ async function getChapter(
   chapterId = props.chapterId,
   opts: Partial<{ prefetch: boolean, scrollup: boolean, reloadIndex:number, resume: boolean, callback: () => void }>,
 ):Promise<unknown> {
-  console.log(currentPage.value);
   if(!manga.value) return;
   if(!settings.readerGlobal.preloadNext && opts.prefetch) return;
   // prepare the requests
@@ -559,12 +558,112 @@ function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
     return scrollToPrevPage();
   }
   else if(event.key === 'ArrowRight') {
+
     return scrollToNextPage();
   }
 }
 
+function scrollBack():void {
+  console.log('scrollback');
+  const { longStripDirection, longStrip, rtl } = localReaderSettings.value;
+  if(!virtscroll.value?.imagestack) return;
+  const { getScrollPercentage, getScrollPosition, setScrollPosition } = virtscroll.value.imagestack;
+
+
+  const pos = getScrollPosition();
+  const perc = getScrollPercentage();
+
+  const isHorizontal = longStripDirection === 'horizontal' && longStrip;
+  const isVertical = !longStrip || longStripDirection === 'vertical';
+
+  const notAlreadyBack = rtl ?
+    (isHorizontal && perc.left < 0) || (isVertical && perc.top > 0) :
+    (isHorizontal && perc.left > 0) || (isVertical && perc.top > 0);
+
+    const newPos = rtl ?
+    isVertical ?
+      (pos.top - ($q.screen.height/2)) :
+      (pos.left - ($q.screen.width/2))
+      :
+    isVertical ?
+      (pos.top + ($q.screen.height/2)) :
+      (pos.left + ($q.screen.width/2));
+
+  if(notAlreadyBack && isHorizontal) setScrollPosition('horizontal', newPos, 100);
+  if(notAlreadyBack && isVertical) setScrollPosition('vertical', newPos, 100);
+
+  setTimeout(() => {
+    if(currentPage.value > 1) return;
+    const perc = getScrollPercentage();
+    const notAlreadyBack = rtl ?
+      (isHorizontal && perc.left < 0) || (isVertical && perc.top > 0) :
+      (isHorizontal && perc.left > 0) || (isVertical && perc.top > 0);
+
+    if(notAlreadyBack) return console.log(perc);
+
+    setTimeout(() => doubleTapLeft.value = 0, 500);
+
+    doubleTapLeft.value++;
+    if(doubleTapLeft.value <= 1) return;
+
+    doubleTapRight.value = 0;
+    doubleTapLeft.value = 0;
+    return rtl ? loadPrev() : loadNext();
+  }, 150);
+}
+
+function scrollFront():void {
+  const { longStripDirection, longStrip, rtl } = localReaderSettings.value;
+  if(!virtscroll.value?.imagestack) return;
+  const { getScrollPercentage, getScrollPosition, setScrollPosition } = virtscroll.value.imagestack;
+
+
+  const pos = getScrollPosition();
+  const perc = getScrollPercentage();
+
+  const isHorizontal = longStripDirection === 'horizontal' && longStrip;
+  const isVertical = !longStrip || longStripDirection === 'vertical';
+
+  const notAlreadyFront = rtl ?
+    (isHorizontal && perc.left > -0.99) || (isVertical && perc.top < 0.99) :
+    (isHorizontal && perc.left < 0.99) || (isVertical && perc.top < 0.99);
+
+  const newPos = rtl ?
+  isVertical ?
+    (pos.top + ($q.screen.height/2)) :
+    (pos.left + ($q.screen.width/2))
+    :
+  isVertical ?
+    (pos.top - ($q.screen.height/2)) :
+    (pos.left - ($q.screen.width/2));
+
+
+  if(notAlreadyFront && isHorizontal) setScrollPosition('horizontal', newPos, 100);
+  if(notAlreadyFront && isVertical) setScrollPosition('vertical', newPos, 100);
+
+  setTimeout(() => {
+    if(currentPage.value !== currentChapterFormatted.value?.imgsExpectedLength) return;
+    const perc = getScrollPercentage();
+    const notAlreadyFront = rtl ?
+      (isHorizontal && perc.left > -0.99) || (isVertical && perc.top < 0.99) :
+      (isHorizontal && perc.left < 0.99) || (isVertical && perc.top < 0.99);
+
+    if(notAlreadyFront) return console.log(perc);
+
+    setTimeout(() => doubleTapRight.value = 0, 500);
+
+    doubleTapRight.value++;
+    if(doubleTapRight.value <= 0.99) return;
+
+    doubleTapRight.value = 0;
+    doubleTapLeft.value = 0;
+    return rtl ? loadNext() : loadPrev();
+  }, 150);
+}
+
 /** scroll to previous page */
 function scrollToPrevPage() {
+  if(localReaderSettings.value.webtoon) return scrollBack();
   if(!virtscroll.value?.imagestack) return;
 
   const currentIndex = currentPage.value - 1;
@@ -584,6 +683,8 @@ function scrollToPrevPage() {
   if(!targetStack) {
       doubleTapLeft.value++;
       if(doubleTapLeft.value <= 1) return;
+      setTimeout(() => doubleTapLeft.value = 0, 500);
+      doubleTapRight.value = 0;
       doubleTapLeft.value = 0;
       return loadPrev();
   }
@@ -596,6 +697,7 @@ function scrollToPrevPage() {
 
 /** scroll to next page */
 function scrollToNextPage() {
+  if(localReaderSettings.value.webtoon) return scrollFront();
   if(!currentChapterFormatted.value) return;
   if(!virtscroll.value?.imagestack) return;
 
@@ -616,7 +718,9 @@ function scrollToNextPage() {
   if(!targetStack) {
     doubleTapRight.value++;
       if(doubleTapRight.value <= 1) return;
+      setTimeout(() => doubleTapRight.value = 0, 500);
       doubleTapRight.value = 0;
+      doubleTapLeft.value = 0;
       return loadPrev();
   }
   const target = Math.max(...targetStack.indexes);
@@ -641,7 +745,8 @@ async function turnOn() {
   if($q.platform.has.touch) {
     showMobileOverlayHint.value = true;
   }
-  window.addEventListener('keyup', listenKeyboardArrows, { passive: true });
+  window.addEventListener('keyup', (e) => e.preventDefault(), { passive: false });
+  window.addEventListener('keyup', listenKeyboardArrows, { passive: false });
 }
 
 /** removes listeners */

@@ -204,9 +204,9 @@ function setScrollPercentage(dir: 'horizontal'|'vertical', percentage:number) {
   scrollArea.value.setScrollPercentage(dir, percentage);
 }
 /** refactor of QScrollArea.setScrollPosition */
-function setScrollPosition(dir: 'horizontal'|'vertical', pos:number) {
+function setScrollPosition(dir: 'horizontal'|'vertical', pos:number, duration?: number) {
   if(!scrollArea.value) throw Error('scroll area not init');
-  scrollArea.value.setScrollPosition(dir, pos);
+  scrollArea.value.setScrollPosition(dir, pos, duration);
 }
 
 /** mark group's images as loaded */
@@ -240,10 +240,10 @@ function touch(ev:TouchEvent) {
   const {left, top} = scrollArea.value.getScrollPosition();
 
   const addX = (touchTrack.screenX - current.screenX)*2;
-  scrollArea.value.setScrollPosition('horizontal', left+addX);
+  scrollArea.value.setScrollPosition('horizontal', left+addX, 100);
 
   const addY = (touchTrack.screenY - current.screenY)*2;
-  scrollArea.value.setScrollPosition('vertical', top+addY);
+  scrollArea.value.setScrollPosition('vertical', top+addY, 100);
 
   touchTrack.screenX = current.screenX;
   touchTrack.screenY = current.screenY;
@@ -276,9 +276,9 @@ defineExpose({
       :drawer-open="drawerOpen"
       :rtl="settings.rtl"
       position="left"
-      @next-page="emit('scrollToNextPage')"
-      @prev-page="emit('scrollToPrevPage')"
-      @show-menu="emit('toggleDrawer')"
+      @next-page="() => emit('scrollToNextPage')"
+      @prev-page="() => emit('scrollToPrevPage')"
+      @show-menu="() => emit('toggleDrawer')"
       @touchstart="setTouch"
       @touchmove="touch"
       @touchend="resetTouch"
