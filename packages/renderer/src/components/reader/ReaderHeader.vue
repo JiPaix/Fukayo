@@ -2,7 +2,7 @@
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
-import { toggleFullScreen, isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';

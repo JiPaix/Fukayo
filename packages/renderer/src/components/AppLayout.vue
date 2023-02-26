@@ -2,13 +2,12 @@
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
 import { onBeforeMount, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import { isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 
 defineProps<{
   /** App's logo */

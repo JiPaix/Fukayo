@@ -5,13 +5,25 @@ const isElectron = typeof window.apiServer !== 'undefined' ? true : false;
 export const isFullScreen = ref(false);
 
 export function toggleFullScreen() {
-  if(isElectron) window.apiServer.toggleFullScreen();
-  else {
-    const doc = window.document;
-    const docEl = doc.documentElement;
-    if(doc.fullscreenEnabled) doc.exitFullscreen.call(docEl);
-    else docEl.requestFullscreen();
-  }
-  isFullScreen.value = !isFullScreen.value;
+  if(isFullScreen.value) return windowed();
+  else return fullscreen();
 }
 
+async function fullscreen() {
+  isFullScreen.value = true;
+  if(isElectron) window.apiServer.toggleFullScreen();
+  else {
+    const app = document.querySelector('#app');
+    if(!app) return;
+    await app.requestFullscreen();
+  }
+}
+
+
+async function windowed() {
+  isFullScreen.value = false;
+  if(isElectron) window.apiServer.toggleFullScreen();
+  else {
+    await document.exitFullscreen();
+  }
+}
