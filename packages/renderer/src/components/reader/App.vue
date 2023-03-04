@@ -6,7 +6,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { focusMode, isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { isChapterErrorMessage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
@@ -186,7 +186,7 @@ nextNavDisabled = computed(() => {
 
 /** update the header's height */
 function onHeaderResize() {
-  if(isFullScreen.value) return headerSize.value = 0;
+  if(isFullScreen.value || focusMode.value) return headerSize.value = 0;
   const top = document.querySelector<HTMLDivElement>('#top-header');
   if(top) headerSize.value = top.offsetHeight;
 }
@@ -554,6 +554,7 @@ function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
   if(isMouseEvent(event)) return;
 
   if(event.key === 'Escape' && isFullScreen.value) toggleFullScreen();
+  if(event.key === 'Escape' && focusMode.value) focusMode.value = false;
 
   if(rtl.value && event.key === 'ArrowRight') {
     return scrollToPrevPage();
@@ -932,7 +933,7 @@ onMounted(hideOverlay);
     view="lHh lpr lFf"
   >
     <q-header
-      v-show="!isFullScreen"
+      v-show="!isFullScreen && !focusMode"
       id="top-header"
       bordered
       class="bg-dark"

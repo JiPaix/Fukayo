@@ -2,10 +2,11 @@
 import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
-import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { focusMode, isFullScreen, notify, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
 import { useQuasar } from 'quasar';
+import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 
@@ -61,6 +62,11 @@ function open() {
   const url = `${props.sourceURL}${props.chapter.url}`;
   window.open(url, '_blank');
 }
+
+watch(() => [focusMode.value, isFullScreen.value], val => {
+  if(val[0]) notify($t('reader.exit_focusMode'));
+  if(val[1]) notify($t('app.exit_fullscreen'));
+});
 </script>
 <template>
   <q-toolbar>
@@ -109,9 +115,28 @@ function open() {
       dense
       flat
       round
-      :icon="isFullScreen ? 'close_fullscreen' : 'fullscreen'"
+      :icon="isFullScreen ? 'close_fullscreen' : 'aspect_ratio'"
       @click="() => fullscreen()"
-    />
+    >
+      <q-tooltip>
+        <span class="text-uppercase">
+          {{ $t('app.fullscreen') }}
+        </span>
+      </q-tooltip>
+    </q-btn>
+    <q-btn
+      dense
+      flat
+      round
+      icon="filter_center_focus"
+      @click="() => focusMode = !focusMode"
+    >
+      <q-tooltip>
+        <span class="text-uppercase">
+          {{ $t('reader.focusMode') }}
+        </span>
+      </q-tooltip>
+    </q-btn>
     <q-btn
       flat
       round

@@ -4,6 +4,7 @@ import type { ChapterImageErrorMessage } from '@api/models/types/errors';
 import type { MangaInDB } from '@api/models/types/manga';
 import type { appLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
+import { focusMode, isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { transformIMGurl } from '@renderer/components/helpers/transformIMGurl';
 import { isChapterImage } from '@renderer/components/helpers/typechecker';
 import NavOverlay from '@renderer/components/reader/NavOverlay.vue';
@@ -155,6 +156,11 @@ horizontal = computed<CSSProperties>(() => {
     marginBottom,
     height,
   };
+}),
+/** scrollbar background color */
+bgScrollbar = computed(() => {
+  if(focusMode.value || isFullScreen.value) return 'rgba(0,0,0,0)';
+  else return 'orange';
 });
 
 
@@ -259,8 +265,8 @@ defineExpose({
   <q-scroll-area
     ref="scrollArea"
     :style="cssVars"
-    :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '5px', marginBottom: '5px' }"
-    :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: 'orange' }"
+    :bar-style="{ borderRadius: '5px', background: bgScrollbar, marginTop: '5px', marginBottom: '5px' }"
+    :thumb-style="{ marginTop: '5px', marginBottom: '5px', background: bgScrollbar }"
     :dir="settings.rtl ? 'rtl' : 'ltr'"
     :visible="false"
   >

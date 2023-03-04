@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { QIcon, useQuasar, getCssVar, colors } from 'quasar';
+import { focusMode, isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { colors, getCssVar, QIcon, useQuasar } from 'quasar';
 import { computed } from 'vue';
 
 /** props */
@@ -44,10 +45,16 @@ const style = computed(() => {
 
 });
 
+const shouldHint = computed(() => {
+  if(isFullScreen.value || focusMode.value) return false;
+  if($q.platform.has.touch) return false;
+  return true;
+});
+
 /** QIcons class names */
-const hoverColorClass = computed(() => $q.platform.has.touch ? undefined : 'hoverColor');
+const hoverColorClass = computed(() => shouldHint.value ? 'hoverColor' : undefined);
 /** QIcons class names */
-const hintColorClass = computed(() => $q.platform.has.touch ? 'transparent' : props.hintColor);
+const hintColorClass = computed(() => shouldHint.value ? props.hintColor: 'transparent');
 </script>
 
 <template>
