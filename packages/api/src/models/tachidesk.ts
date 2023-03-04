@@ -154,7 +154,7 @@ export class Tachidesk extends SelfHosted implements MirrorInterface {
       } else {
         this.logger('not logged in');
         if(socket) socket.emit('loggedIn', this.name, false);
-        this.#logged = true;
+        this.#logged = false;
         return false;
       }
     } catch(e) {

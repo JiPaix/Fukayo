@@ -161,8 +161,11 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       return Promise.reject(error);
     });
 
-    setTimeout(() => {
-      this.checkOnline();
+    setInterval(() => {
+      this.checkOnline().then(online => {
+        this.isOnline = online;
+        if(this.isOnline) this.login();
+      });
     }, 1000*60*15);
   }
 
@@ -452,7 +455,7 @@ export default class Mirror<T extends Record<string, unknown> = Record<string, u
       if(this.options.port && typeof this.options.port === 'number') this.host = this.host + ':' + this.options.port;
     }
     if(opts.login || opts.password || (this.selfhosted && (opts.host || opts.port || opts.protocol))) {
-      await this.checkOnline(socket);
+      this.isOnline = await this.checkOnline(socket);
       await this.login(socket);
     }
   }

@@ -312,7 +312,6 @@ class MangaDex extends Mirror<{login?: string|null, password?:string|null, dataS
     session: null as string | null | undefined,
     refresh_token: null as string | null | undefined,
   };
-
   constructor() {
     super({
       version: 1,

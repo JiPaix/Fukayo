@@ -159,7 +159,7 @@ class Komga extends SelfHosted implements MirrorInterface {
     } catch(e) {
       this.logger('not logged in', e);
       if(socket) socket.emit('loggedIn', this.name, false);
-      this.#logged = true;
+      this.#logged = false;
       return false;
     }
   }
