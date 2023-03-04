@@ -5,6 +5,7 @@ import sanitize from 'sanitize-filename';
 export class FileServer {
   static #instance: FileServer;
   folder: string;
+  /** default file's lifetime in seconds */
   #defaultLifeTime = 60*60*24;
   #timeouts: {filename: string, timeout: NodeJS.Timeout}[];
   /**
@@ -88,7 +89,7 @@ export class FileServer {
     return false;
   }
 
-  #initFile(filename: string, buffer:Buffer, lifetime = 600) {
+  #initFile(filename: string, buffer:Buffer, lifetime = this.#defaultLifeTime) {
     try {
       writeFileSync(this.#resolveFile(filename), buffer);
       this.#timeouts.push({filename, timeout: setTimeout(() => {
@@ -104,12 +105,13 @@ export class FileServer {
    *
    * @param data the data to serv
    * @param filename its filename
+   * @param lifetime how lang is the file available (in seconds)
    */
-  serv (data: Buffer, filename:string, lifetime?: number) {
-    const exist = this.#resetFile(filename, lifetime||this.#defaultLifeTime);
+  serv (data: Buffer, filename:string, lifetime = this.#defaultLifeTime) {
+    const exist = this.#resetFile(filename, lifetime);
     if(exist) return `/files/${filename}`;
 
-    const create = this.#initFile(filename, data, lifetime||this.#defaultLifeTime);
+    const create = this.#initFile(filename, data, lifetime);
     if(create) return `/files/${filename}`;
 
     return `/files/${filename}`;
@@ -130,8 +132,8 @@ export class FileServer {
   }
 
   /** renew lifetime */
-  renew(filename:string, lifetime?:number) {
-    return this.#resetFile(filename, lifetime||this.#defaultLifeTime);
+  renew(filename:string, lifetime = this.#defaultLifeTime) {
+    return this.#resetFile(filename, lifetime);
   }
 
   /** get file */
