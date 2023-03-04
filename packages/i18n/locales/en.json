@@ -8,7 +8,8 @@
             "checking_internet": "Checking your internet connection status",
             "checking_internet_takes_a_while": "This might takes a while…"
         },
-        "autostart": "Automatically start the server"
+        "autostart": "Automatically start the server",
+        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen"
     },
     "electron": {
         "systemtray": {
@@ -367,7 +368,8 @@
         "showpagenumber": "Show page number",
         "singlePage": "Display one page at a time",
         "vertical": "Display the whole chapter as a long vertical strip",
-        "webtoon": "Webtoon mode"
+        "webtoon": "Webtoon mode",
+        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit immersive mode"
     },
     "search": {
         "all": "All",
