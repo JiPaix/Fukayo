@@ -46,6 +46,7 @@ optionsRAW = mirrorsLang
       label: $t('languages.'+l),
     };
   })
+  .filter(l => l.value !== 'xx')
   .sort((a, b) => a.label.localeCompare(b.label));
 
 // states
@@ -78,6 +79,7 @@ async function updateval(val: { value: mirrorsLangsType, label: string }[]) {
   if(!val || !val.length) return clear();
   if(!currentSettings.value) return;
   const values = val.map(x=>x.value);
+  if(!values.includes('xx')) values.push('xx');
   const socket = await useSocket(settings.server);
   socket.emit('changeSettings', { ...currentSettings.value, langs: values }, (newSettings) => {
     currentSettings.value = newSettings;
@@ -86,6 +88,7 @@ async function updateval(val: { value: mirrorsLangsType, label: string }[]) {
 
 async function remove(val:mirrorsLangsType) {
   if(!currentSettings.value) return;
+  if(val === 'xx') return;
   const socket = await useSocket(settings.server);
   const values = currentSettings.value.langs.filter(l => l !== val);
   socket.emit('changeSettings', { ...currentSettings.value, langs: values }, (newSettings) => {
