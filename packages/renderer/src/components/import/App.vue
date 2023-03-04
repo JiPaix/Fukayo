@@ -167,7 +167,7 @@ async function startImport() {
         const mg = (mangas.value.filter(m => !isCantImport(m)) as ImportResults[]).find(v => v.url === manga.url);
         if(mg) mg.inLibrary = true;
       } else {
-        socket.emit('addManga', { manga }, (res => {
+        socket.emit('addManga', { manga, settings: settings.reader }, (res => {
           selection.value = selection.value.filter(v => v.url !== res.url);
           counter = counter-1;
           if(counter === 0) importing.value = false;
