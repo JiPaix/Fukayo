@@ -8,7 +8,8 @@
             "checking_internet": "Sprawdzanie stanu połączenia internetowego",
             "checking_internet_takes_a_while": "To może zająć chwilę…"
         },
-        "autostart": "Uruchom serwer automatycznie"
+        "autostart": "Uruchom serwer automatycznie",
+        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen"
     },
     "electron": {
         "systemtray": {
@@ -331,7 +332,8 @@
         "rtl": "Czytaj od prawej do lewej",
         "showpagenumber": "Pokaż numer strony",
         "singlePage": "Wyświetl jedną stronę na raz",
-        "vertical": "Wyświetl cały rozdział jako długi pionowy pasek"
+        "vertical": "Wyświetl cały rozdział jako długi pionowy pasek",
+        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode"
     },
     "settings": {
         "language": {

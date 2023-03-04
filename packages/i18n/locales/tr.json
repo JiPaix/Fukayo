@@ -35,8 +35,8 @@
         "hide_scanlators_click": "Click to select scanlation groups to filter out",
         "hide_scanlators_tap": "Tap to select scanlation groups to filter out",
         "hide_unread": "Okunmuş bölümleri gizle",
-        "inlibrary": "library",
-        "komga_tries_its_best": "Sort entries by filenames (KOMGA: experimental)",
+        "inlibrary": "kütüphanede",
+        "komga_tries_its_best": "Girdileri isimlerine göre sırala (KOMGA: deneysel)",
         "markasread": {
             "current": "Bu bölümü okundu olarak işaretle",
             "current_unread": "Bu bölümü okunmadı olarak işaretle",
@@ -68,8 +68,8 @@
         "error": {
             "reload": "Yeniden yükle",
             "chapter": "Bölüm yüklenemedi",
-            "chapterLang": "Selected language has no chapter",
-            "reload_all_at_once": "reload all erroneous images at once"
+            "chapterLang": "Bu dilde hiç bölüm yok",
+            "reload_all_at_once": "sorunlu resimleri tek seferde yeniden yükle"
         },
         "loading": "Yükleniyor",
         "book_mode": "Kitap şeklinde oku",
@@ -77,14 +77,14 @@
         "book_mode_offset": "Display as a book (offset the first page)",
         "copytoclipboard": "Resmi kopyala",
         "displaymode": {
-            "auto": "Auto",
+            "auto": "Otomatik",
             "compatibility": "webtoon moduna uygun değil",
             "stretch-height": "Stretch to screen's height",
             "stretch-width": "Stretch to screen's width"
         },
-        "first": "Go back to the first chapter:",
+        "first": "İlk bölüme dön:",
         "horizontal": "Display the whole chapter as a long horizontal strip",
-        "last": "Go to the latest chapter:",
+        "last": "Son bölüme git:",
         "longstrip": "Display the whole chapter as a long strip",
         "ltr": "Read from left to right",
         "manga": {
@@ -104,18 +104,19 @@
         "showpagenumber": "Sayfa numarasını göster",
         "singlePage": "Display one page at a time",
         "vertical": "Display the whole chapter as a long vertical strip",
-        "webtoon": "Webtoon modu"
+        "webtoon": "Webtoon modu",
+        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode"
     },
     "settings": {
         "logs": "Kayıtlar",
         "server": "Sunucu",
         "app_ask_password": "Lütfen şifrenizi yazınız",
         "app_ask_password_retry": "Yanlış şifre",
-        "app_client": "Client",
+        "app_client": "İstemci",
         "app_confirm_quit": "Sunucuyu kapatmak istediğinizden emin misiniz?",
-        "app_env": "Environment",
-        "app_shutdown": "Shutdown",
-        "app_version": "Version",
+        "app_env": "Ortam",
+        "app_shutdown": "Sunucuyu Kapat",
+        "app_version": "Sürüm",
         "bookmode": "Display as a book",
         "cache": "Cache",
         "confirm": "CONFIRM",
@@ -124,21 +125,21 @@
         "displaymodes": "Okuma modları",
         "file": "File | Files",
         "files": {
-            "tab": "Storage"
+            "tab": "Depolama"
         },
         "general": {
-            "tab": "General"
+            "tab": "Genel"
         },
         "global": {
             "title": "global settings"
         },
         "globalSettings": {
-            "save": "Click here to save changes"
+            "save": "Değişiklikleri kaydetmek için tıklayın"
         },
         "language": {
             "description": "Hangi dillerde okumak istediğinizi seçin",
-            "selectall": "Select All",
-            "unselectall": "Unselect All"
+            "selectall": "Tümünü Seç",
+            "unselectall": "Tüm Seçimleri Kaldır"
         },
         "longstripDirection": "Choose the image orientation",
         "reader": {
@@ -175,7 +176,7 @@
             "excludedGroups": "Görmezden gelinecek çeviri grupları",
             "excludedGroupsHints": "Type an ID and press enter to add it",
             "excludedUploaders": "Görmezden gelinecek yükleyiciler",
-            "host": "Hostname",
+            "host": "Sunucu Adresi",
             "markAsRead": "Bölümleri kaynak sitede de okundu olarak işaretle",
             "protocol": "Protokol",
             "field_required": "Bu kısım gerekli"
@@ -240,7 +241,8 @@
             "checking_internet": "İnternet bağlantınızın durumu kontrol ediliyor",
             "checking_internet_takes_a_while": "Biraz uzun sürebilir…"
         },
-        "autostart": "Automatically start the server"
+        "autostart": "Sunucuyu otomatik olarak başlat",
+        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen"
     },
     "electron": {
         "systemtray": {

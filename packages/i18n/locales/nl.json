@@ -102,7 +102,8 @@
             "checking_internet": "De status van uw internetverbinding controleren",
             "checking_internet_takes_a_while": "Dit kan even duren..."
         },
-        "autostart": "Automatically start the server"
+        "autostart": "Automatically start the server",
+        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen"
     },
     "electron": {
         "systemtray": {
@@ -461,7 +462,8 @@
         "showpagenumber": "Show page number",
         "singlePage": "Display one page at a time",
         "vertical": "Display the whole chapter as a long vertical strip",
-        "webtoon": "Webtoon mode"
+        "webtoon": "Webtoon mode",
+        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode"
     },
     "setup": {
         "address": "Adres",
