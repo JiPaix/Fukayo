@@ -840,29 +840,26 @@ async function useWheelToScrollHorizontally(ev: {deltaY : WheelEvent['deltaY'] }
       else scrollArea.setScrollPosition('horizontal', (pos.left+add));
     }
   } else {
-    scrollArea.setScrollPosition('vertical', pos.top+add);
-    if(!localReaderSettings.value.longStrip) return;
+    if(localReaderSettings.value.overlay) scrollArea.setScrollPosition('vertical', pos.top+add);
   }
   displayNextPrevDiv(add);
 }
 
-let xy = {x: 0, y: 0};
+const xy = {x: 0, y: 0};
 
 function updateTouch(e: TouchEvent) {
-  xy = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  xy.x = e.touches[0].clientX;
+  xy.y = e.touches[0].clientY;
 }
 
 function displayNextPrevDivTouch(e: TouchEvent) {
-  const { ev, prev } = e.touches[0].clientX > e.touches[0].clientY ? { ev: e.touches[0].clientX, prev: xy.x }: { ev: e.touches[0].clientY, prev: xy.y };
-  const invert = localReaderSettings.value.longStripDirection === 'horizontal' && localReaderSettings.value.rtl ? true : false;
-  if(ev < prev) {
-    if(invert) displayNextPrevDiv(-53);
-    else displayNextPrevDiv(53);
+  let add = 0;
+  if(localReaderSettings.value.longStrip && localReaderSettings.value.longStripDirection === 'horizontal') {
+    add = xy.x - e.touches[0].clientX;
   } else {
-    if(invert) displayNextPrevDiv(53);
-    else displayNextPrevDiv(-53);
+    add = xy.y - e.touches[0].clientY;
   }
-  updateTouch(e);
+  displayNextPrevDiv(add);
 }
 
 /** display next/prev chapter buffer div if required  */
@@ -871,27 +868,40 @@ async function displayNextPrevDiv(add:number) {
   if(!virtscroll.value) return;
   if(!currentPage.value || !currentChapterFormatted.value) return;
   if(!localReaderSettings.value.longStrip) return;
+
   const scrollArea = virtscroll.value.$refs['imagestack'] as InstanceType<typeof ImageStack>;
   const { left, top } = scrollArea.getScrollPercentage();
-  if(localReaderSettings.value.longStripDirection === 'horizontal') {
-    if(left >= 0.99 && currentPage.value >= currentChapterFormatted.value.imgsExpectedLength-1 && add > 0) showNextBuffer.value = true;
-    if(left <= 0.01 && add < 0) {
-      if(!showPrevBuffer.value) {
-        const multiplier = localReaderSettings.value.rtl ? -1 : 1;
-        showPrevBuffer.value = true;
-        await nextTick();
-        scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*multiplier);
-      }
+
+  const lastPage = currentPage.value >= currentChapterFormatted.value.imgsExpectedLength-1;
+  const firstPage = currentPage.value === 1;
+  const horizontal = localReaderSettings.value.longStripDirection === 'horizontal' && localReaderSettings.value.longStrip;
+  const rtl = localReaderSettings.value.rtl;
+
+  if(!lastPage && !firstPage) return;
+
+  if(horizontal && rtl) {
+    if(left <= -0.99 && add > 0 && !showNextBuffer.value) showNextBuffer.value = true;
+    if(left >= -0.01 && add < 0 && !showPrevBuffer.value) {
+      showPrevBuffer.value = true;
+      await nextTick();
+      scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*-1);
     }
-  } else {
-    if(top >= 0.99 && currentPage.value >= currentChapterFormatted.value.imgsExpectedLength-1 && add > 0) showNextBuffer.value = true;
-    if(top <= 0.01 && add < 0) {
-      if(!showPrevBuffer.value) {
-        showPrevBuffer.value = true;
-        await nextTick();
-        scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5));
-      }
+  }
+  else if(horizontal && !rtl) {
+    if(left <= 0.01 && add < 0 && !showPrevBuffer.value) {
+      showPrevBuffer.value = true;
+      await nextTick();
+      scrollArea.setScrollPosition('horizontal', ($q.screen.width/1.5)*1);
     }
+    if(left >= 0.99 && add > 0 && !showNextBuffer.value) showNextBuffer.value = true;
+  }
+  else {
+    if(top <= 0.01 && add < 0 && !showPrevBuffer.value) {
+      showPrevBuffer.value = true;
+      await nextTick();
+      scrollArea.setScrollPosition('vertical', ($q.screen.height/1.5));
+    }
+    if(top >= 0.99 && add > 0 && !showNextBuffer.value) showNextBuffer.value = true;
   }
 }
 
@@ -1044,12 +1054,11 @@ onMounted(hideOverlay);
         v-else-if="currentChapterFormatted && currentChapter && !loadingAchapter"
         ref="chaptersRef"
         class="fit chapters zoom"
+        @wheel.passive="useWheelToScrollHorizontally"
+        @touchstart.passive="updateTouch"
+        @touchmove.passive="displayNextPrevDivTouch"
       >
-        <div
-          @touchstart.passive="updateTouch"
-          @touchmove.passive="displayNextPrevDivTouch"
-          @wheel.passive="useWheelToScrollHorizontally"
-        >
+        <div>
           <images-container
             ref="virtscroll"
             :show-mobile-overlay-hint="showMobileOverlayHint"
