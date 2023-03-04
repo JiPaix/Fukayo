@@ -213,7 +213,7 @@ onBeforeUnmount(Off);
                 </q-item>
                 <q-separator />
                 <q-item
-                  v-for="lang in allLangs"
+                  v-for="lang in allLangs.filter(l => l !== 'xx')"
                   :key="lang"
                   clickable
                   :dark="$q.dark.isActive"
@@ -278,7 +278,7 @@ onBeforeUnmount(Off);
                   </div>
                   <div class="flex q-mt-xs">
                     <q-chip
-                      v-for="lang in mirror.langs.filter(l => !ignoredLangs.includes(l))"
+                      v-for="lang in mirror.langs.filter(l => !ignoredLangs.includes(l) && l !== 'xx')"
                       :key="lang"
                       dense
                       size="sm"

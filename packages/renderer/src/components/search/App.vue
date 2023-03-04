@@ -457,7 +457,7 @@ onBeforeUnmount(Off);
                 </q-item>
                 <q-separator />
                 <q-item
-                  v-for="lang in allLangs"
+                  v-for="lang in allLangs.filter(l => l !== 'xx')"
                   :key="lang"
                   clickable
                   :dark="$q.dark.isActive"

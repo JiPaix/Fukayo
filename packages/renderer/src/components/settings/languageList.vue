@@ -120,6 +120,7 @@ async function unselectAll() {
 onBeforeMount(async () => {
   const socket = await useSocket(settings.server);
   socket.emit('getSettings', (globalSettings) => {
+    globalSettings.langs = globalSettings.langs.filter(l => l !== 'xx');
     currentSettings.value = globalSettings;
   });
 });

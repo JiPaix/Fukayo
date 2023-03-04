@@ -4,7 +4,7 @@ import { env } from 'process';
 import type { mirrorsLangsType } from '@i18n';
 
 const defaultSettings = {
-  langs: ['en', 'fr', 'de', 'pt', 'pt-br', 'es', 'es-la', 'ru', 'tr', 'ja', 'id', 'zh', 'zh-hk'] as mirrorsLangsType[],
+  langs: ['en', 'fr', 'de', 'pt', 'pt-br', 'es', 'es-la', 'ru', 'tr', 'ja', 'id', 'zh', 'zh-hk', 'xx'] as mirrorsLangsType[],
   cache: {
     age : {
       max: 1000 * 60 * 60 * 24 * 7, // 1 week
