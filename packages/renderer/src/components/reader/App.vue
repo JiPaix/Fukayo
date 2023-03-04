@@ -6,7 +6,7 @@ import type { MangaInDB, MangaPage } from '@api/models/types/manga';
 import type { appLangsType, mirrorsLangsType } from '@i18n';
 import type en from '@i18n/../locales/en.json';
 import { useSocket } from '@renderer/components/helpers/socket';
-import { isFullScreen } from '@renderer/components/helpers/toggleFullScreen';
+import { isFullScreen, toggleFullScreen } from '@renderer/components/helpers/toggleFullScreen';
 import { isChapterErrorMessage, isChapterImageErrorMessage, isManga, isMangaInDB } from '@renderer/components/helpers/typechecker';
 import { formatChapterInfoToString, isMouseEvent } from '@renderer/components/reader/helpers';
 import ImagesContainer from '@renderer/components/reader/ImagesContainer.vue';
@@ -552,6 +552,8 @@ async function updateReaderSettings(newSettings:MangaInDB['meta']['options'], ol
 function listenKeyboardArrows(event: KeyboardEvent|MouseEvent) {
   if(!currentChapterFormatted.value) return;
   if(isMouseEvent(event)) return;
+
+  if(event.key === 'Escape' && isFullScreen.value) toggleFullScreen();
 
   if(rtl.value && event.key === 'ArrowRight') {
     return scrollToPrevPage();
