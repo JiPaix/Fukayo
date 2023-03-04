@@ -80,7 +80,7 @@ jobs:
 
       - name: Delete outdated drafts
         if: steps.version-updated.outputs.has-updated == 'true'
-        uses: hugo19941994/delete-draft-releases@v1.0.0
+        uses: hugo19941994/delete-draft-releases@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
