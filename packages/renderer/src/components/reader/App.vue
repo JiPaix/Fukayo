@@ -16,7 +16,7 @@ import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import ThumbnailNavigation from '@renderer/components/reader/ThumbnailNavigation.vue';
 import { useHistoryStore } from '@renderer/stores/history';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { debounce, QBtnGroup, QDrawer, useQuasar } from 'quasar';
+import { debounce, QBtnGroup, QDrawer, QMenu, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -59,6 +59,8 @@ showMobileOverlayHint = ref($q.platform.has.touch),
 currentPage = ref(0),
 /** thumbnail scrollbar */
 thumbscroll = ref<null|InstanceType<typeof ThumbnailNavigation>>(),
+/** thumbnail QMenu */
+thumbnailQMenu = ref<null|QMenu>(null),
 /** image container div */
 virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null),
 /** bottom pagination div */
@@ -671,6 +673,7 @@ function scrollFront():void {
 
 /** scroll to previous page */
 function scrollToPrevPage() {
+  if(thumbnailQMenu.value) thumbnailQMenu.value.hide();
   if(localReaderSettings.value.webtoon) return scrollBack();
   if(!virtscroll.value?.imagestack) return;
 
@@ -705,6 +708,7 @@ function scrollToPrevPage() {
 
 /** scroll to next page */
 function scrollToNextPage() {
+  if(thumbnailQMenu.value) thumbnailQMenu.value.hide();
   if(localReaderSettings.value.webtoon) return scrollFront();
   if(!currentChapterFormatted.value) return;
   if(!virtscroll.value?.imagestack) return;
@@ -783,6 +787,8 @@ async function scrollToPage(
   /** skip smooth scrolling */
   fastforward?:boolean,
 ) {
+  if(thumbnailQMenu.value) thumbnailQMenu.value.hide();
+
   if(!localReaderSettings.value.longStrip) {
     const target = virtscroll.value?.imagestack?.indexes.find(i => i.indexes.includes(index));
     if(target) {
@@ -799,8 +805,6 @@ async function scrollToPage(
 
   const div = document.querySelector(`.group[data-indexes*="${index}"]`);
 
-  // in order for scroll to happen the thumbnail previews must be closed first.
-  showPageSelector.value = false;
   await nextTick();
 
 
@@ -1042,9 +1046,9 @@ onMounted(hideOverlay);
         class="fit chapters zoom"
       >
         <div
-          @touchstart="updateTouch"
-          @touchmove="displayNextPrevDivTouch"
-          @wheel.stop="useWheelToScrollHorizontally"
+          @touchstart.passive="updateTouch"
+          @touchmove.passive="displayNextPrevDivTouch"
+          @wheel.passive="useWheelToScrollHorizontally"
         >
           <images-container
             ref="virtscroll"
@@ -1077,28 +1081,10 @@ onMounted(hideOverlay);
         <div
           v-if="currentChapterFormatted"
           class="absolute-bottom"
-          style="margin-bottom:15px;"
+          style="opacity:0.9;margin-bottom:15px;"
         >
-          <q-slide-transition>
-            <div
-              v-show="showPageSelector"
-              class="q-mb-xs"
-              :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px'"
-              style="opacity:0.9;"
-            >
-              <thumbnail-navigation
-                ref="thumbscroll"
-                :images="currentChapterFormatted.imgs"
-                :rtl="localReaderSettings.rtl"
-                :chapter-id="currentChapterFormatted.id"
-                @wheel="thumbnailScroll"
-                @scroll-to-page="(i) => scrollToPage(i)"
-                @reload="(reloadIndex, id, callback) => getChapter(id, { reloadIndex, callback})"
-              />
-            </div>
-          </q-slide-transition>
           <div
-            class="flex flex-center"
+            class="flex flex-center bottom-nav"
             :style="rightDrawerOpen ? 'margin-right:300px;': 'margin-right:0px;'"
           >
             <q-btn-group
@@ -1118,7 +1104,7 @@ onMounted(hideOverlay);
               />
               <q-btn
                 rounded
-                @click="showPageSelector = !showPageSelector;thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage+1) : null"
+                @click="thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage+1) : null;"
               >
                 <span
                   class="text-bold text-weight-bold"
@@ -1126,6 +1112,28 @@ onMounted(hideOverlay);
                 >
                   {{ currentPage }} / {{ currentPagesLength }}
                 </span>
+                <q-menu
+                  ref="thumbnailQMenu"
+                  class="bg-transparent no-shadow"
+                  target=".bottom-nav"
+                  anchor="top left"
+                  self="bottom middle"
+                  fit
+                  transition-hide="jump-down"
+                  transition-show="jump-up"
+                  @hide="showPageSelector = false"
+                  @show="showPageSelector = true;thumbscroll?.scrollTo(currentPage+1)"
+                >
+                  <thumbnail-navigation
+                    ref="thumbscroll"
+                    :images="currentChapterFormatted.imgs"
+                    :rtl="localReaderSettings.rtl"
+                    :chapter-id="currentChapterFormatted.id"
+                    @wheel.passive="thumbnailScroll"
+                    @scroll-to-page="(i) => scrollToPage(i)"
+                    @reload="(reloadIndex, id, callback) => getChapter(id, { reloadIndex, callback})"
+                  />
+                </q-menu>
               </q-btn>
               <q-btn
                 rounded

@@ -32,14 +32,20 @@ const scrollarea = ref<QScrollArea|null>();
 
 function hoverIN(ev:MouseEvent) {
   const div = ev.target as HTMLDivElement;
-  div.classList.add('bg-orange-3');
-  div.classList.remove('bg-orange');
+  const span = div.children[0]?.children[0];
+
+  div.style.backgroundColor = '#ff9800';
+  span.classList.add('text-white');
+  span.classList.remove('text-black');
 }
 
 function hoverOUT(ev:MouseEvent) {
   const div = ev.target as HTMLDivElement;
-  div.classList.add('bg-orange');
-  div.classList.remove('bg-orange-3');
+  const span = div.children[0]?.children[0];
+
+  div.style.backgroundColor = 'rgba(255,180,0, 0.5)';
+  span.classList.add('text-black');
+  span.classList.remove('text-white');
 }
 
 
@@ -72,11 +78,8 @@ defineExpose({ scrollTo, getScrollPosition, setScrollPosition });
 <template>
   <q-scroll-area
     ref="scrollarea"
-    style="width: 498px;height:160px;margin-left:auto;margin-right:auto;"
+    style="max-width: 498px;height:173px;margin-left:auto;margin-right:auto;border-radius: 10px;border:2px solid black;overflow:hidden;"
     :visible="true"
-    class="rounded-borders"
-    :bar-style="{ borderRadius: '5px', background: 'orange', marginTop: '0px', marginBottom: '0px', marginLeft: '8px', marginRight: '10px' }"
-    :thumb-style="{ marginTop: '0px', marginBottom: '1px', background: 'orange', marginLeft: '2px', marginRight: '4px' }"
   >
     <div
       class="row no-wrap"
@@ -85,35 +88,53 @@ defineExpose({ scrollTo, getScrollPosition, setScrollPosition });
         v-for="(image, i) in images"
         :id="`thumb-${i}`"
         :key="i"
-        style="max-width: 100px;border-right:2px solid black"
-        class="text-center bg-orange cursor-pointer flex"
+        style="max-width: 100px;background-color: rgba(255,180,0, 0.5);"
+        :style="{ borderLeft: i === 0 ? undefined : '2px solid black'}"
+        class="text-center cursor-pointer flex"
         @mouseenter="$event => hoverIN($event)"
         @mouseleave="$event => hoverOUT($event)"
         @click="() => emit('scrollToPage', i) "
       >
-        <span class="text-bold text-caption text-black">#{{ i+1 }}</span>
-        <q-img
-          v-if="isChapterImage(image)"
-          class="self-center"
-          :src="transformIMGurl(image.src, settings)"
-          width="99px"
-          loading="lazy"
-        />
         <div
-          v-else
-          class="bg-white flex items-center"
-          style="height:140px;"
+          class="flex w-100 h-100"
         >
-          <q-btn
-            :loading="reloading[i]"
-            class="q-mx-sm"
-            color="negative"
-            size="30px"
-            icon="broken_image"
-            @click="() => reload(i)"
+          <span
+            class="text-black text-bold q-mx-auto"
+          >
+            #{{ i+1 }}
+          </span>
+
+          <q-img
+            v-if="isChapterImage(image)"
+            style="opacity:0.9;margin-bottom:auto;"
+            :src="transformIMGurl(image.src, settings)"
+            width="99px"
+            fit="contain"
+            loading="lazy"
+            img-class="q-px-xs"
+            :img-style="{ borderRadius: image.width > image.height ? '8px!important' : '10px!important'}"
           />
+          <div
+            v-else
+            class="flex items-center"
+            style="height:140px;"
+          >
+            <q-btn
+              :loading="reloading[i]"
+              class="q-mx-sm"
+              color="negative"
+              size="30px"
+              icon="broken_image"
+              @click="() => reload(i)"
+            />
+          </div>
         </div>
       </div>
     </div>
   </q-scroll-area>
 </template>
+<style lang="css" scoped>
+.h-100 {
+  height:169px!important;
+}
+</style>
