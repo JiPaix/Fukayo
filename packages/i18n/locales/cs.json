@@ -9,7 +9,8 @@
             "checking_internet_takes_a_while": "This might takes a while…"
         },
         "autostart": "Automatically start the server",
-        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen"
+        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen",
+        "fullscreen": "Fullscreen"
     },
     "languages": {
         "km": "Central Khmer",
@@ -270,7 +271,8 @@
         "singlePage": "Display one page at a time",
         "vertical": "Display the whole chapter as a long vertical strip",
         "webtoon": "Webtoon mode",
-        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode"
+        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode",
+        "focusMode": "Immersive mode"
     },
     "settings": {
         "server": "Server",

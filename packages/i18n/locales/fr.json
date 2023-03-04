@@ -9,7 +9,8 @@
             "checking_internet_takes_a_while": "Cela pourrait prendre un moment…"
         },
         "autostart": "Démarrer automatiquement le serveur",
-        "exit_fullscreen": "Utilisez la touche <b>ÉCHAP</b> pour quitter le mode plein écran"
+        "exit_fullscreen": "Utilisez la touche <b>ÉCHAP</b> pour quitter le mode plein écran",
+        "fullscreen": "Plein écran"
     },
     "electron": {
         "systemtray": {
@@ -369,7 +370,8 @@
         "singlePage": "N'afficher qu'une page après l'autre",
         "vertical": "Afficher tout le chapitre sous la forme d'une longue bande verticale",
         "webtoon": "Mode Webtoon",
-        "exit_focusMode": "Utilisez la touche <b>ÉCHAP</b> pour quitter le mode immersif"
+        "exit_focusMode": "Utilisez la touche <b>ÉCHAP</b> pour quitter le mode immersif",
+        "focusMode": "Mode immersif"
     },
     "search": {
         "all": "Tous",
