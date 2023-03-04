@@ -271,7 +271,7 @@ defineExpose({
     :visible="false"
   >
     <nav-overlay
-      v-if="settings.overlay"
+      v-if="settings.overlay && !$q.platform.has.touch"
       :hint-color="settings.overlay ? $q.dark.isActive ? 'warning' : 'dark' : undefined"
       :mobile-hint="showMobileOverlayHint"
       :drawer-open="drawerOpen"

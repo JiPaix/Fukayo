@@ -93,6 +93,9 @@ options = computed(() => {
     value: index,
     read: chapter.read,
   })).sort((a, b) => a.value - b.value);
+}),
+overlay = computed(() => {
+  return localSettings.value.overlay && !$q.platform.has.touch;
 });
 
 // states
@@ -457,10 +460,12 @@ watch(() => localSettings.value, (nval, oval) => {
         :dark="$q.dark.isActive"
       />
       <q-toggle
-        v-model="localSettings.overlay"
+        v-model:model-value="overlay"
         :label="$t('settings.reader.overlay')"
-        color="orange"
+        :color="$q.platform.has.touch ? 'negative' : 'orange'"
+        :keep-color="$q.platform.has.touch"
         :dark="$q.dark.isActive"
+        :disable="$q.platform.has.touch"
       />
       <div class="w-100 flex flex-center justify-around q-mt-sm q-mb-xs">
         <q-slide-transition>
