@@ -16,7 +16,7 @@ import RightDrawer from '@renderer/components/reader/RightDrawer.vue';
 import ThumbnailNavigation from '@renderer/components/reader/ThumbnailNavigation.vue';
 import { useHistoryStore } from '@renderer/stores/history';
 import { useStore as useSettingsStore } from '@renderer/stores/settings';
-import { debounce, QDrawer, useQuasar } from 'quasar';
+import { debounce, QBtnGroup, QDrawer, useQuasar } from 'quasar';
 import { computed, nextTick, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -61,6 +61,8 @@ currentPage = ref(0),
 thumbscroll = ref<null|InstanceType<typeof ThumbnailNavigation>>(),
 /** image container div */
 virtscroll = ref<null|InstanceType<typeof ImagesContainer>>(null),
+/** bottom pagination div */
+qchip = ref<null|QBtnGroup>(null),
 /** if this is put to true mousewheel scrolls are ignored */
 ignoreScroll = ref(false),
 /** manga data */
@@ -886,6 +888,13 @@ async function displayNextPrevDiv(add:number) {
   }
 }
 
+/** toggle a background to the page number indicator (bottom) */
+function toggleQchip(show:boolean) {
+  if(!qchip.value) return;
+  if(show) qchip.value.$el.classList.add('bg-dark');
+  else qchip.value.$el.classList.remove('bg-dark');
+ }
+
 /**
  * looking at reader's display settings that affects which page is currently on view and tries to scroll back to the one we were reading
  */
@@ -1091,26 +1100,35 @@ onMounted(hideOverlay);
           >
             <q-btn-group
               v-if="localReaderSettings.showPageNumber"
-              class="bg-dark q-mb-sm text-white"
+              ref="qchip"
+              class="q-mb-sm text-white"
               rounded
-              style="opacity:0.7"
+              @mouseover="() => toggleQchip(true)"
+              @mouseleave="() => toggleQchip(false)"
             >
               <q-btn
                 rounded
                 icon="arrow_back_ios"
                 :disabled="localReaderSettings.rtl ? nextNavDisabled : prevNavDisabled"
+                style="text-shadow: 0px 0px 2px rgba(0,0,0,1);"
                 @click="localReaderSettings.rtl ? scrollToNextPage() : scrollToPrevPage()"
               />
               <q-btn
                 rounded
                 @click="showPageSelector = !showPageSelector;thumbscroll && showPageSelector ? thumbscroll.scrollTo(currentPage+1) : null"
               >
-                {{ currentPage }} / {{ currentPagesLength }}
+                <span
+                  class="text-bold text-weight-bold"
+                  style="text-shadow: 0px 0px 2px rgba(0,0,0,1);"
+                >
+                  {{ currentPage }} / {{ currentPagesLength }}
+                </span>
               </q-btn>
               <q-btn
                 rounded
                 icon="arrow_forward_ios"
                 :disabled="localReaderSettings.rtl ? prevNavDisabled : nextNavDisabled"
+                style="text-shadow: 0px 0px 2px rgba(0,0,0,1);"
                 @click="localReaderSettings.rtl ? scrollToPrevPage() : scrollToNextPage() "
               />
             </q-btn-group>
