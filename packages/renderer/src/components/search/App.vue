@@ -257,7 +257,7 @@ async function On() {
   socket.emit('getMirrors', false, (mirrors) => {
 
     setupMirrorFilters(mirrors, mirrorsList, includedLangsRAW, allLangs, includedMirrors, ignoredLangs.value);
-    pickAllLangs();
+    allLangs.value.forEach(l => !includedLangsRAW.value.includes(l) ? includedLangsRAW.value.push(l) : null);
 
     if(langParam) langParam.forEach(l => pickLang(l));
     if(queryParam) {
