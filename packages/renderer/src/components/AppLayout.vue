@@ -282,4 +282,18 @@ onBeforeUnmount(() => {
   .drawer, aside {
     background-color: #ff9800!important;
   }
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #ffffff25;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #ff9800 !important;
+  border-radius: 10px;
+  border: 3px solid #ffffff15;
+}
 </style>
