@@ -201,6 +201,17 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
   if(isFile) {
     return instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
   }
+  if(type === 'json') {
+    const json = instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
+    if(json instanceof Buffer) {
+      try {
+        return json.toString();
+      } catch(e) {
+        return e;
+      }
+    }
+    return json;
+  }
   return instance.execute(data, crawler.task.bind(crawler)) as Promise<string | Error | undefined>;
 }
 
