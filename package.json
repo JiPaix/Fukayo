@@ -123,7 +123,7 @@
     "socket.io": "^4.6.1",
     "socket.io-client": "^4.6.1",
     "systeminformation": "^5.17.10",
-    "user-agents": "^1.0.1295",
+    "user-agents": "^1.0.1326",
     "uuid": "^9.0.0",
     "vue-i18n": "^9.2.2",
     "vue-router": "^4.1.6"
