@@ -1,7 +1,7 @@
 {
     "app": {
         "name": "Fukayo",
-        "description": "Prosta aplikacja do czytania mangi napisana w języki electron",
+        "description": "Prosta aplikacja do czytania mangi napisana w języku electron",
         "loading": {
             "please_wait": "Proszę czekać…",
             "initializing": "Inicjalizowanie <b>źródeł i baz danych</b>",

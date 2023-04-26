@@ -32,8 +32,8 @@
             "reset": "Manga adını öntanımlı değerine sıfırla"
         },
         "forceupdate": "Güncelle",
-        "hide_scanlators_click": "Click to select scanlation groups to filter out",
-        "hide_scanlators_tap": "Tap to select scanlation groups to filter out",
+        "hide_scanlators_click": "Filtrelemek amacıyla tarama gruplarını seçmek için tıklayın",
+        "hide_scanlators_tap": "Filtrelemek üzere tarama gruplarını seçmek için dokunun",
         "hide_unread": "Okunmuş bölümleri gizle",
         "inlibrary": "kütüphanede",
         "komga_tries_its_best": "Girdileri isimlerine göre sırala (KOMGA: deneysel)",
@@ -74,19 +74,19 @@
         "loading": "Yükleniyor",
         "book_mode": "Kitap şeklinde oku",
         "book_mode_off": "Kitap modunu kapat",
-        "book_mode_offset": "Display as a book (offset the first page)",
+        "book_mode_offset": "Kitap olarak göster (ilk sayfayı kaydır)",
         "copytoclipboard": "Resmi kopyala",
         "displaymode": {
             "auto": "Otomatik",
             "compatibility": "webtoon moduna uygun değil",
-            "stretch-height": "Stretch to screen's height",
-            "stretch-width": "Stretch to screen's width"
+            "stretch-height": "Ekranın yüksekliğine göre uzat",
+            "stretch-width": "Ekranın genişliğine göre uzat"
         },
         "first": "İlk bölüme dön:",
-        "horizontal": "Display the whole chapter as a long horizontal strip",
+        "horizontal": "Tüm bölümü uzun bir yatay şerit olarak görüntüleyin",
         "last": "Son bölüme git:",
-        "longstrip": "Display the whole chapter as a long strip",
-        "ltr": "Read from left to right",
+        "longstrip": "Tüm bölümü uzun bir şerit olarak görüntüleyin",
+        "ltr": "Soldan sağa doğru oku",
         "manga": {
             "add": "Kütüphaneye ekle",
             "remove": "Kütüphaneden kaldır"
@@ -102,11 +102,11 @@
         "reload_chapter": "Bu bölümü yeniden yükle",
         "rtl": "Sağdan sola oku",
         "showpagenumber": "Sayfa numarasını göster",
-        "singlePage": "Display one page at a time",
-        "vertical": "Display the whole chapter as a long vertical strip",
+        "singlePage": "Tek seferde bir sayfa görüntüle",
+        "vertical": "Tüm bölümü uzun bir dikey şerit olarak görüntüleyin",
         "webtoon": "Webtoon modu",
-        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode",
-        "focusMode": "Immersive mode"
+        "exit_focusMode": "<b>ESCAPE</b> tuşunu kullanarak odak modundan çıkın",
+        "focusMode": "Sürükleyici mod"
     },
     "settings": {
         "logs": "Kayıtlar",
@@ -118,13 +118,13 @@
         "app_env": "Ortam",
         "app_shutdown": "Sunucuyu Kapat",
         "app_version": "Sürüm",
-        "bookmode": "Display as a book",
-        "cache": "Cache",
-        "confirm": "CONFIRM",
+        "bookmode": "Kitap olarak görüntüle",
+        "cache": "Önbellek",
+        "confirm": "ONAYLA",
         "credentials": "Giriş bilgileri",
         "darkmode": "Karanlık modu etkinleştir",
         "displaymodes": "Okuma modları",
-        "file": "File | Files",
+        "file": "Dosya | Dosyalar",
         "files": {
             "tab": "Depolama"
         },
@@ -132,7 +132,7 @@
             "tab": "Genel"
         },
         "global": {
-            "title": "global settings"
+            "title": "Genel ayarlar"
         },
         "globalSettings": {
             "save": "Değişiklikleri kaydetmek için tıklayın"
@@ -142,11 +142,11 @@
             "selectall": "Tümünü Seç",
             "unselectall": "Tüm Seçimleri Kaldır"
         },
-        "longstripDirection": "Choose the image orientation",
+        "longstripDirection": "Görüntü yönünü seçiniz",
         "reader": {
-            "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
-            "overlay": "Use navigation overlay",
-            "preload": "Preload next chapter while reading",
+            "info": "Aşağıdaki parametreler varsayılan ayarlardır,\nOtomatik olarak yeni başlıklara atanırlar.\n\nBir başlığı okurken bu ayarlardan herhangi birini değiştirirseniz, değişikliklerden yalnızca o başlık etkilenir.",
+            "overlay": "Bindirmeli navigasyon (Navigasyonun tüm ekran boyunca menüyü kaplamasını sağlar)",
+            "preload": "Okurken bir sonraki bölümü önyükle",
             "title": "Okuyucu"
         },
         "scheduler": {
@@ -164,18 +164,18 @@
             "cache_size": "Önbellek limitini belirle",
             "update": {
                 "error": {
-                    "lessthan10min": "Time between updates cannot be lower than 10 minutes",
-                    "negative": "Time between updates cannot be negative"
+                    "lessthan10min": "Güncellemeler arası zaman aralığı 10 dakikadan az olamaz",
+                    "negative": "Güncellemeler arasındaki süre negatif olamaz"
                 }
             }
         },
         "source": {
-            "adult": "Adult content",
+            "adult": "Yetişkin içerik",
             "dataSaver": "Bant genişliği kullanımı azalt",
-            "description": "Configure the different sources. Activate or deactivate them, connect to synchronize the playback progress or enabled advanced options",
+            "description": "Farklı kaynakları yapılandırın. Bunları etkinleştirin veya devre dışı bırakın, oynatma ilerlemesini senkronize etmek için bağlanın veya gelişmiş seçenekleri etkinleştirin",
             "enabled": "Etkinleştirildi",
             "excludedGroups": "Görmezden gelinecek çeviri grupları",
-            "excludedGroupsHints": "Type an ID and press enter to add it",
+            "excludedGroupsHints": "Eklemek için bir kimlik yazın ve \"enter\"a basın.",
             "excludedUploaders": "Görmezden gelinecek yükleyiciler",
             "host": "Sunucu Adresi",
             "markAsRead": "Bölümleri kaynak sitede de okundu olarak işaretle",
@@ -184,7 +184,7 @@
         },
         "source_is_offline": "Bu kaynak çevrimdışı / kapalı gibi duruyor",
         "source_requires_setup": "Bu kaynağın kullanılabilmesi için ayarlamalar yapılmalı",
-        "tab": "Configuration",
+        "tab": "Yapılandırma",
         "update": {
             "day": "Gün | Gün",
             "hour": "Saat | Saat",
@@ -194,11 +194,11 @@
         "source_is_dead": "Bu kaynak inaktif olarak bildirildi"
     },
     "setup": {
-        "address": "Address",
+        "address": "Adres",
         "security": {
             "choose": "Güvenlik politikası seçin",
             "app": "Otomatik",
-            "app_description": "I want the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access",
+            "app_description": "Uygulamanın güvenliği halletmesini istiyorum, ancak uygulamanın dışından panelime erişirken tarayıcımın ilk erişimde yanlış bir güvenlik uyarısı vereceğini biliyorum.",
             "cancel": "İptal et",
             "certificate": "Sertifika",
             "none": "Yok",
@@ -243,8 +243,8 @@
             "checking_internet_takes_a_while": "Biraz uzun sürebilir…"
         },
         "autostart": "Sunucuyu otomatik olarak başlat",
-        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen",
-        "fullscreen": "Fullscreen"
+        "exit_fullscreen": "Tam ekrandan çıkmak için <b>ESCAPE</b> tuşunu kullanınız",
+        "fullscreen": "Tam Ekran"
     },
     "electron": {
         "systemtray": {
@@ -480,30 +480,30 @@
         "read_chapter": "Okundu işaretleri içe aktarıldı"
     },
     "migrate": {
-        "bug": "Issues",
-        "close": "Close migration tool",
+        "bug": "Sorunlar",
+        "close": "Geçiş aracını kapat",
         "entry_status": "Girdi durumu",
-        "hidden": "those entries are currently hidden from your library",
+        "hidden": "bu girişler şu anda kitaplığınızda gizli bulunmaktadır",
         "insepect": "İncele",
         "new": "Yeni",
         "old": "Eski",
-        "search_candidates": "Start searching for migration candidates",
-        "select_candidate": "Migrate",
-        "solutions": "Available migration options",
-        "warning": "Some entries are marked as broken and requires your attention.",
-        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
+        "search_candidates": "Geçiş adaylarını aramaya başlayın",
+        "select_candidate": "Geçiş, göç",
+        "solutions": "Mevcut taşıma seçenekleri",
+        "warning": "Bazı girdiler bozuk olarak işaretlendi ve onlarla ilgilenmeniz gerekmektedir",
+        "source_do_not_have_lang": "Bu kaynak, bu yazıda(girişte) kullanılan dillerden hiçbirine sahip değil",
         "source_status": "Kaynağın durumu",
         "select_source": "Bir veya daha fazla kaynak seçiniz"
     },
     "migration": {
-        "results": "Migration candidates"
+        "results": "Geçiş adayları"
     },
     "search": {
-        "all": "All",
+        "all": "Hepsi",
         "no_result_for": "Şunun için sonuç bulunamadı:",
         "not_found": "Kaynak bulunamadı: {source}",
         "placeholder": "Manga ara",
-        "tab": "Search",
+        "tab": "Ara",
         "no_input": "Lütfen bir şeyler yazın",
         "min_value": "Lütfen en az {number} karakter içeren bir şeyler yazın"
     }
