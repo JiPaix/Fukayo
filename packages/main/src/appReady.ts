@@ -48,8 +48,9 @@ export default class Ready {
 
   async devSetup() {
     try {
-      const imp = await import('electron-devtools-installer');
-      await imp.default(
+      const imp = (await import('electron-devtools-installer')).default;
+      const install = imp as unknown as { default: typeof imp};
+      await install.default(
         {
           id: 'nhdogjmejiglipccpnnnanhbledajbpd',
           electron: '>=18.0.2',

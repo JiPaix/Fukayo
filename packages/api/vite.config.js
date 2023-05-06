@@ -14,6 +14,7 @@ const externals = [
   'puppeteer-extra',
   'puppeteer-extra-plugin-stealth',
   'puppeteer-extra-plugin-adblocker-no-vulnerabilities',
+  '@puppeteer/browsers',
   'systeminformation',
   'axios',
   'cheerio',
@@ -25,6 +26,8 @@ const externals = [
   'form-data',
   'connect-history-api-fallback',
   'openid-client',
+  'electron-devtools-installer',
+  'image-size',
 ];
 
 

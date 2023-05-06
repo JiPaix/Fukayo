@@ -53,6 +53,7 @@ const config = {
       input: resolve('index.html'),
       external: [
         ...builtinModules.flatMap(p => [p, `node:${p}`]),
+        'filenamify',
       ],
       output: {
         manualChunks(id) {

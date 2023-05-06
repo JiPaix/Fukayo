@@ -45,7 +45,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
 
   async loadExternalLibraries() {
       // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-      const imp = await (eval('import("filenamify")') as Promise<typeof import('filenamify')>);
+      const imp = await import('filenamify');
       this.#filenamify = imp.default;
   }
 

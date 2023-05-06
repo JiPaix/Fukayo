@@ -1,4 +1,5 @@
 import type { ClusterJob } from '@api/utils/types/crawler';
+import browser, { detectBrowserPlatform, resolveBuildId } from '@puppeteer/browsers';
 import { resolve } from 'path';
 import { env } from 'process';
 import type { Page } from 'puppeteer';
@@ -16,9 +17,10 @@ export class Crawler {
   cluster?: Cluster<ClusterJob> = undefined;
   #puppeteer?: ReturnType<typeof addExtra> = undefined;
   #userAgent: UserAgent;
-  #revision = '1121455';
+  #revision = '1140545';
   runningTask = 0;
   #specs = { cores: 0, speedMax: 0, mem: 0 };
+  #chromium?: string;
   constructor() {
     this.#userAgent = new UserAgent(/Chrome/);
   }
@@ -29,23 +31,37 @@ export class Crawler {
   }
 
   async #init() {
-    const browserFetch = vanillaPuppeteer.createBrowserFetcher({});
     try {
-      await browserFetch.download(this.#revision, (x:number, y:number) => {
-        this.logger({x, y});
+      const platform = detectBrowserPlatform();
+      if(!platform || (platform.includes('linux') || platform.includes('win'))) throw new Error('Your platform is not supported');
+      // keeping chromium up to date
+      const buildId = await resolveBuildId(browser.Browser.CHROME, platform, this.#revision);
+      const { path } = await browser.install({
+        browser: browser.Browser.CHROMIUM,
+        buildId: buildId,
+        cacheDir: resolve(env.USER_DATA, '.chromium'),
+        downloadProgressCallback: (dl, total) => {
+          this.logger(`updating chromium ${dl}/${total}`);
+        },
       });
-      this.logger(vanillaPuppeteer.executablePath());
+
+      // we have to manually provide the path to the executable
+      if(platform.includes('linux')) this.#chromium = resolve(path, 'chrome-linux', 'chrome');
+      else if(platform.includes('win')) this.#chromium = resolve(path, 'chrome-win', 'chrome.exe');
+      else throw Error(`platform ${platform} isn't supported`);
+
+      // loading plugins
       this.#puppeteer = addExtra(vanillaPuppeteer);
       this.#puppeteer.use(StealthPlugin());
       this.#puppeteer.use(AdblockerPlugin());
-      // PC specs
+
+      // PC specs (use to define how many concurrencies can be run)
       const cores = (await si.cpu()).physicalCores;
       const speedMax = (await si.cpu()).speedMax;
       const mem = parseFloat(((await si.mem()).available / 1024 / 1024 / 1024).toFixed(2));
       this.#specs = { cores, speedMax, mem };
     } catch(e) {
       this.logger(e);
-      throw e;
     }
   }
 
@@ -70,38 +86,45 @@ export class Crawler {
     const CPU_max_speed_1s = Math.floor(CPU_max_speed_inGhz / 1);
     // how many Ghz of CPU is available?
     const CPU_max_speed_with_cores = CPU_max_speed_1s * CPU_cores_count;
-    // returns median betwen CPU_max_speed_with_cores and MEM_available_500s
-    return Math.floor((CPU_max_speed_with_cores + MEM_available_500s) / 2);
+    // median betwen CPU_max_speed_with_cores and MEM_available_500s
+    const median = Math.floor((CPU_max_speed_with_cores + MEM_available_500s) / 2);
+    if(median < 1) return 1;
+    return median;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async useCluster():Promise<Cluster<ClusterJob, any>> {
+  async useCluster():Promise<Cluster<ClusterJob, any> | undefined> {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     if(typeof this.#puppeteer === 'undefined') throw Error('call init() before');
+    if(typeof this.#chromium === 'undefined') throw Error('Puppeteer needs chromium to be installed');
     if(this.cluster) return this.cluster;
-
-    const cluster = await Cluster.launch({
-      concurrency: Cluster.CONCURRENCY_PAGE,
-      maxConcurrency: this.#benchmark(),
-      timeout: 1000*20,
-      puppeteer: this.#puppeteer,
-      puppeteerOptions: {
-        userDataDir: resolve(env.USER_DATA, '.cache', 'puppeteer'),
-        headless: env.MODE === 'development' ? false : true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-infobars',
-          '--window-position=0,0',
-          '--ignore-certifcate-errors',
-          '--ignore-certifcate-errors-spki-list',
-          '--disable-gpu',
-          `--user-agent="${this.#userAgent.random().toString()}"`,
-        ],
-      },
-    });
-    this.cluster = cluster;
-    return cluster;
+    try {
+      const cluster = await Cluster.launch({
+        concurrency: Cluster.CONCURRENCY_PAGE,
+        maxConcurrency: this.#benchmark(),
+        timeout: 1000*20,
+        puppeteer: this.#puppeteer,
+        puppeteerOptions: {
+          executablePath: this.#chromium,
+          userDataDir: resolve(env.USER_DATA, '.cache', 'puppeteer'),
+          headless: env.MODE === 'development' ? false : true,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-infobars',
+            '--window-position=0,0',
+            '--ignore-certifcate-errors',
+            '--ignore-certifcate-errors-spki-list',
+            '--disable-gpu',
+            `--user-agent="${this.#userAgent.random().toString()}"`,
+          ],
+        },
+      });
+      this.cluster = cluster;
+      return cluster;
+    } catch(e) {
+      this.logger(e);
+    }
   }
 
   async closeClusterIfAllDone(closeAfter = 60) {
@@ -199,10 +222,10 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
   // const instance = await useCluster();
   if(type) data.type = type;
   if(isFile) {
-    return instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
+    return instance?.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
   }
   if(type === 'json') {
-    const json = instance.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
+    const json = instance?.execute(data, crawler.taskFile.bind(crawler)) as Promise<Buffer | Error | undefined>;
     if(json instanceof Buffer) {
       try {
         return json.toString();
@@ -212,7 +235,7 @@ export async function crawler(data: ClusterJob, isFile: boolean, type?: 'html'|'
     }
     return json;
   }
-  return instance.execute(data, crawler.task.bind(crawler)) as Promise<string | Error | undefined>;
+  return instance?.execute(data, crawler.task.bind(crawler)) as Promise<string | Error | undefined>;
 }
 
 export async function puppeteerExec<T = void>(callback: ({ page }: { page: Page }) => Promise<T>) {
@@ -220,7 +243,7 @@ export async function puppeteerExec<T = void>(callback: ({ page }: { page: Page 
   crawler.runningTask++;
   try {
     const instance = await crawler.useCluster();
-    const exec = instance.execute(callback);
+    const exec = instance?.execute(callback);
     crawler.runningTask--;
     crawler.closeClusterIfAllDone();
     return exec;
