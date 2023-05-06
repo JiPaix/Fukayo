@@ -33,7 +33,8 @@ export class Crawler {
   async #init() {
     try {
       const platform = detectBrowserPlatform();
-      if(!platform || (platform.includes('linux') || platform.includes('win'))) throw new Error('Your platform is not supported');
+      if(!platform || (!platform.includes('linux') || !platform.includes('win'))) throw new Error('Your platform is not supported');
+      if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
       // keeping chromium up to date
       const buildId = await resolveBuildId(browser.Browser.CHROME, platform, this.#revision);
       const { path } = await browser.install({
