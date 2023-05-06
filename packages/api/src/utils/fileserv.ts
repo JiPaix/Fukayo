@@ -1,10 +1,26 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
 import { env } from 'process';
 import sanitize from 'sanitize-filename';
+
+
+function* getFiles(dir: string):Generator<string, void, unknown> {
+  const dirents = readdirSync(dir, { withFileTypes: true });
+  for (const dirent of dirents.filter(f => f.name !== 'fileserver')) {
+    const res = resolve(dir, dirent.name);
+    if (dirent.isDirectory()) {
+      yield* getFiles(res);
+    } else {
+      yield res;
+    }
+  }
+}
+
+
 export class FileServer {
   static #instance: FileServer;
   folder: string;
+  cacheFolder: string;
   /** default file's lifetime in seconds */
   #defaultLifeTime = 60*60*24;
   #timeouts: {filename: string, timeout: NodeJS.Timeout}[];
@@ -15,6 +31,7 @@ export class FileServer {
   constructor(folder:string) {
     if(!env.USER_DATA) throw new Error('USER_DATA not set');
     this.folder = resolve(env.USER_DATA, '.cache', folder);
+    this.cacheFolder = resolve(env.USER_DATA, '.cache');
     this.#timeouts = [];
     this.setup();
     this.empty();
@@ -63,6 +80,10 @@ export class FileServer {
     return resolve(this.folder, sanitize(filename));
   }
 
+  #resolveFilesFromCache() {
+    return getFiles(this.cacheFolder);
+  }
+
   #resetFile(filename: string, lifetime: number) {
     const path = this.#resolveFile(filename);
     const fileExist = existsSync(path);
@@ -101,6 +122,13 @@ export class FileServer {
     }
   }
 
+  #findFromCache(filename: string) {
+    const files = this.#resolveFilesFromCache();
+    for(const f of files) {
+      if(f.includes(sanitize(filename))) return f;
+    }
+  }
+
   /**
    *
    * @param data the data to serv
@@ -108,6 +136,9 @@ export class FileServer {
    * @param lifetime how lang is the file available (in seconds)
    */
   serv (data: Buffer, filename:string, lifetime = this.#defaultLifeTime) {
+    const cached = this.#findFromCache(filename);
+    if(cached) return `/cache/${basename(dirname(cached))}/${filename}`;
+
     const exist = this.#resetFile(filename, lifetime);
     if(exist) return `/files/${filename}`;
 
