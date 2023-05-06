@@ -127,18 +127,11 @@ jobs:
         run: echo "$RELEASE_NOTE" >> ./buildResources/release-notes.md
 
       # Compile app and upload artifacts
-      - name: Compile & release Electron app
+      - name: Compile & release
         run: |
           npm run build
           if [ "$RUNNER_OS" == "Linux" ]; then
-              npm run publish:linux
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-              npm run publish:win
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-              npm run publish:mac
-          else
-              echo "$RUNNER_OS not supported"
-              exit 1
+              npm publish
           fi
         shell: bash
         env:

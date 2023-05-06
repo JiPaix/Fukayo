@@ -16,7 +16,7 @@ export class Crawler {
   cluster?: Cluster<ClusterJob> = undefined;
   #puppeteer?: ReturnType<typeof addExtra> = undefined;
   #userAgent: UserAgent;
-  #revision = '1095492';
+  #revision = '1121455';
   runningTask = 0;
   #specs = { cores: 0, speedMax: 0, mem: 0 };
   constructor() {
@@ -31,7 +31,7 @@ export class Crawler {
   async #init() {
     const browserFetch = vanillaPuppeteer.createBrowserFetcher({});
     try {
-      await browserFetch.download(this.#revision, (x, y) => {
+      await browserFetch.download(this.#revision, (x:number, y:number) => {
         this.logger({x, y});
       });
       this.logger(vanillaPuppeteer.executablePath());

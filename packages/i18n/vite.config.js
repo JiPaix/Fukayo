@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { chrome } from '../../.electron-vendors.cache.json';
+import VueI18nPlugin from '@intlify/unplugin-vue-i18n/vite';
 
 const PACKAGE_ROOT = __dirname;
 
@@ -11,6 +12,9 @@ const config = {
   mode: process.env.MODE,
   root: PACKAGE_ROOT,
   envDir: process.cwd(),
+  plugins: [
+    VueI18nPlugin({ strictMessage: false }),
+  ],
   resolve: {
     alias: {
       '@renderer': join(PACKAGE_ROOT, '..', 'renderer', 'src'),

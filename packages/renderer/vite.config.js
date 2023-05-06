@@ -34,6 +34,7 @@ const config = {
     vue({template: transformAssetUrls}),
     vueI18n({
       include: join(PACKAGE_ROOT, '..', 'i18n', 'locales') + '/**',
+      strictMessage: false,
     }),
     quasar(),
   ],

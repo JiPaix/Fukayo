@@ -26,7 +26,7 @@ export async function setI18nLanguage(i18n:I18n<unknown, unknown, unknown, strin
   const messages = await loadLocale(locale);
   i18n.global.locale = locale;
   i18n.global.setLocaleMessage(locale, messages);
-
+  i18n.global.warnHtmlInMessage = 'off';
   const imported = await importLocale(locale);
   Quasar.lang.set(imported.quasar);
   dayjs.locale(imported.dayjs);
