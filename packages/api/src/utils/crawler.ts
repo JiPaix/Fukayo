@@ -33,7 +33,8 @@ export class Crawler {
   async #init() {
     try {
       const platform = detectBrowserPlatform();
-      if(!platform || (!platform.includes('linux') || !platform.includes('win'))) throw new Error('Your platform is not supported');
+      this.logger('THE PLATFORM IS '+platform);
+      if(!platform || (!platform.includes('linux') && !platform.includes('win'))) throw new Error('Your platform is not supported');
       if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
       // keeping chromium up to date
       const buildId = await resolveBuildId(browser.Browser.CHROME, platform, this.#revision);
@@ -49,7 +50,7 @@ export class Crawler {
       // we have to manually provide the path to the executable
       if(platform.includes('linux')) this.#chromium = resolve(path, 'chrome-linux', 'chrome');
       else if(platform.includes('win')) this.#chromium = resolve(path, 'chrome-win', 'chrome.exe');
-      else throw Error(`platform ${platform} isn't supported`);
+      else throw new Error('Your platform is not supported - '+platform);
 
       // loading plugins
       this.#puppeteer = addExtra(vanillaPuppeteer);
