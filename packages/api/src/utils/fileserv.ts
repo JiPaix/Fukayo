@@ -21,9 +21,11 @@ export class FileServer {
   static #instance: FileServer;
   folder: string;
   cacheFolder: string;
+  coversFolder: string;
   /** default file's lifetime in seconds */
   #defaultLifeTime = 60*60*24;
   #timeouts: {filename: string, timeout: NodeJS.Timeout}[];
+
   /**
    *
    * @param folder folder to serve files from (relative to %appdata%/.cache)
@@ -33,6 +35,7 @@ export class FileServer {
     this.folder = resolve(env.USER_DATA, '.cache', folder);
     this.cacheFolder = resolve(env.USER_DATA, '.cache');
     this.#timeouts = [];
+    this.coversFolder = resolve(env.USER_DATA, '.mangasdb');
     this.setup();
     this.empty();
   }
@@ -84,6 +87,10 @@ export class FileServer {
     return getFiles(this.cacheFolder);
   }
 
+  #resolveFilesFromCovers() {
+    return getFiles(this.coversFolder);
+  }
+
   #resetFile(filename: string, lifetime: number) {
     const path = this.#resolveFile(filename);
     const fileExist = existsSync(path);
@@ -129,6 +136,13 @@ export class FileServer {
     }
   }
 
+  #findFromCovers(filename: string) {
+    const files = this.#resolveFilesFromCovers();
+    for(const f of files) {
+      if(f.includes(sanitize(filename))) return f;
+    }
+  }
+
   /**
    *
    * @param data the data to serv
@@ -138,6 +152,9 @@ export class FileServer {
   serv (data: Buffer, filename:string, lifetime = this.#defaultLifeTime) {
     const cached = this.#findFromCache(filename);
     if(cached) return `/cache/${basename(dirname(cached))}/${filename}`;
+
+    const cover = this.#findFromCovers(filename);
+    if(cover) return `/covers/${filename}`;
 
     const exist = this.#resetFile(filename, lifetime);
     if(exist) return `/files/${filename}`;
