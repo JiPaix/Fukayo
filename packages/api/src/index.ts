@@ -142,7 +142,7 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
     });
   });
 
-  app.get('/covers/:fileName', async (req, res, next) => {
+  app.get('/covers/:fileName', limiter, async (req, res, next) => {
     const token = req.query.token;
     if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
       return res.status(401).send('Authentication required.'); // custom message
