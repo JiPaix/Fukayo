@@ -10,6 +10,8 @@ import express from 'express';
 import morgan from 'morgan';
 import { join, resolve } from 'path';
 import { env } from 'process';
+import TokenDatabase from '@api/db/tokens';
+import MangasDatabase from '@api/db/mangas';
 
 export default function useFork(settings: ForkEnv = env):Promise<{ client: client, fork:Fork }> {
 
@@ -47,8 +49,39 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
 
   // serve the files
   app.get('/files/:fileName', (req, res, next) => {
+    const token = req.query.token;
+    if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
+      return res.status(401).send('Authentication required.'); // custom message
+    }
+
     const options = {
       root: fileServer.folder,
+      dotfiles: 'deny',
+      headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true,
+      },
+    };
+
+    const fileName = req.params.fileName;
+    res.sendFile(fileName, options, (err) => {
+      if (err) {
+        next(err);
+      } else {
+        fileServer.renew(fileName);
+      }
+    });
+  });
+
+    // serve the files
+  app.get('/cache/:folderName/:fileName', (req, res, next) => {
+    const token = req.query.token;
+    if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
+      return res.status(401).send('Authentication required.'); // custom message
+    }
+
+    const options = {
+      root: resolve(fileServer.cacheFolder, req.params.folderName),
       dotfiles: 'deny',
       headers: {
         'x-timestamp': Date.now(),
@@ -65,58 +98,30 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
     });
   });
 
-    // serve the files
-    app.get('/cache/:folderName/:fileName', (req, res, next) => {
-      const options = {
-        root: resolve(fileServer.cacheFolder, req.params.folderName),
-        dotfiles: 'deny',
-        headers: {
-          'x-timestamp': Date.now(),
-          'x-sent': true,
-        },
-      };
-      const fileName = req.params.fileName;
-      res.sendFile(fileName, options, (err) => {
-        if (err) {
-          next(err);
-        } else {
-          fileServer.renew(fileName);
-        }
-      });
+  app.get('/covers/:fileName', async (req, res, next) => {
+    const token = req.query.token;
+    if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
+      return res.status(401).send('Authentication required.'); // custom message
+    }
+    if(req.params.fileName.endsWith('.json')) res.status(404); // custom message
+    const mangadb = await MangasDatabase.getInstance();
+    const options = {
+      root: mangadb.path,
+      dotfiles: 'deny',
+      headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true,
+      },
+    };
+
+    const fileName = req.params.fileName;
+    res.sendFile(fileName, options, (err) => {
+      if (err) {
+        next(err);
+      } else {
+        fileServer.renew(fileName);
+      }
     });
-
-  // force authentication for file requests
-  app.use('/files', (req, res, next) => {
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const strauth = Buffer.from(b64auth, 'base64').toString();
-    const splitIndex = strauth.indexOf(':');
-    const login = strauth.substring(0, splitIndex);
-    const password = strauth.substring(splitIndex + 1);
-    if(login !== env.LOGIN || password !== env.PASSWORD) {
-      // Access denied...
-      res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
-      res.status(401).send('Authentication required.'); // custom message
-    } else {
-      // Access granted...
-      next();
-    }
-  });
-
-  // force authentication for cache requests
-  app.use('/cache', (req, res, next) => {
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const strauth = Buffer.from(b64auth, 'base64').toString();
-    const splitIndex = strauth.indexOf(':');
-    const login = strauth.substring(0, splitIndex);
-    const password = strauth.substring(splitIndex + 1);
-    if(login !== env.LOGIN || password !== env.PASSWORD) {
-      // Access denied...
-      res.set('WWW-Authenticate', 'Basic realm="401"'); // change this
-      res.status(401).send('Authentication required.'); // custom message
-    } else {
-      // Access granted...
-      next();
-    }
   });
 
   // serve the view if any

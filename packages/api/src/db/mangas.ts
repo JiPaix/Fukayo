@@ -26,13 +26,13 @@ type Mangas = {
 
 export default class MangasDatabase extends DatabaseIO<Mangas> {
   static #instance: MangasDatabase;
-  #path: string;
+  path: string;
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   #filenamify?: typeof import('filenamify').default;
   constructor() {
     if(typeof env.USER_DATA === 'undefined') throw Error('USER_DATA is not defined');
     super('Mangas',resolve(env.USER_DATA, '.mangasdb', 'index.json'), { mangas: [] });
-    this.#path = resolve(env.USER_DATA, '.mangasdb');
+    this.path = resolve(env.USER_DATA, '.mangasdb');
   }
 
   static async getInstance(): Promise<MangasDatabase> {
@@ -64,7 +64,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
 
       // If manga exists but lang isn't registered we get the reader's settings from the database
       let alreadyInDB_DATA = undefined;
-      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(payload.manga.id, resolve(this.#path, `${filename}.json`), {} as MangaInDB).read();
+      if(alreadyInDB) alreadyInDB_DATA = await new DatabaseIO(payload.manga.id, resolve(this.path, `${filename}.json`), {} as MangaInDB).read();
 
       // We define "meta" for this new entry:
       // and past "meta.options" from either the payload, the database (if any), or use default settings
@@ -120,7 +120,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
         await this.write(db);
 
         // update the manga database
-        const mangadb = new DatabaseIO(index.id, resolve(this.#path, `${index.file}.json`), manga);
+        const mangadb = new DatabaseIO(index.id, resolve(this.path, `${index.file}.json`), manga);
         const data = await mangadb.read();
         data.langs = data.langs.filter(l => l !== lang);
         data.chapters = data.chapters.filter(c => c.lang !== lang);
@@ -128,8 +128,8 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
 
         if(!data.langs.length && !data.chapters.length) {
           // remove manga database file if there's nothing in.
-          unlinkSync(resolve(this.#path, `${index.file}.json`));
-          data.covers.forEach(c => unlinkSync(resolve(this.#path, c.replace(/(.*files\/)?/g, ''))));
+          unlinkSync(resolve(this.path, `${index.file}.json`));
+          data.covers.forEach(c => unlinkSync(resolve(this.path, c.replace(/(.*files\/)?/g, ''))));
           unDBify.inLibrary = false;
           return unDBify;
         }
@@ -151,7 +151,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
     const mg = db.mangas.find(m => m.id === mangaId && m.langs.includes(lang));
     if(!mg) return;
 
-    const mangadb = new DatabaseIO(mg.id, resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(mg.id, resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
     data.chapters = data.chapters.map(c => {
       if(chaptersUrls.includes(c.url) && c.lang === lang) {
@@ -178,7 +178,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
     if(!mg) return;
 
     // return the manga
-    const mangadb = new DatabaseIO(mg.id, resolve(this.#path, `${mg.file}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(mg.id, resolve(this.path, `${mg.file}.json`), {} as MangaInDB);
     const data = await mangadb.read();
     const covers = this.#getCovers(data.covers);
     return {
@@ -194,7 +194,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
 
   /** @important do not use if you aren't 100% sure the filename points to an existing database */
   async getByFilename(filename:string) {
-    const mangadb = new DatabaseIO(filename, resolve(this.#path, `${filename}.json`), {} as MangaInDB);
+    const mangadb = new DatabaseIO(filename, resolve(this.path, `${filename}.json`), {} as MangaInDB);
     return mangadb.read();
   }
 
@@ -227,13 +227,13 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
    */
   async #upsert(manga:MangaInDB, filename:string, alreadyInDB:boolean, updatedByScheduler?:boolean):Promise<MangaInDB> {
     try {
-      this.logger('opening', resolve(this.#path, `${filename}.json`));
+      this.logger('opening', resolve(this.path, `${filename}.json`));
 
       const mirror = mirrors.find(m => m.name === manga.mirror.name);
       if(!mirror) throw new Error(`Mirror ${manga.mirror} doesn't exist`);
 
       // create or get file
-      const mangadb = new DatabaseIO(filename, resolve(this.#path, `${filename}.json`), manga);
+      const mangadb = new DatabaseIO(filename, resolve(this.path, `${filename}.json`), manga);
       const db = await this.read();
       let data = await mangadb.read();
       // get the scheduler instance
@@ -329,7 +329,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
 
   /** save base64 images to files and returns their filenames */
   #saveCovers(covers:string[]) {
-    const path = resolve(this.#path);
+    const path = resolve(this.path);
     const coversAlreadySaved = readdirSync(path, {withFileTypes: true})
       .filter(item => !item.isDirectory() && !item.name.endsWith('.json') && covers.includes(item.name))
       .map(item => item.name);
@@ -340,7 +340,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
       if(coversAlreadySaved.includes(c)) return c;
       // new cover, save to file
       const coverFileName = `${i}_cover_${c}`;
-      const path = resolve(this.#path, coverFileName);
+      const path = resolve(this.path, coverFileName);
       if(!existsSync(path)) {
         const data = FileServer.getInstance('fileserver').get(c);
         if(data) writeFileSync(path, data);
@@ -354,7 +354,7 @@ export default class MangasDatabase extends DatabaseIO<Mangas> {
   #getCovers(filenames: string[]) {
     const res:string[] = [];
     filenames.forEach(f => {
-      const path = resolve(this.#path, f);
+      const path = resolve(this.path, f);
       if(existsSync(path)) {
         const serv = FileServer.getInstance('fileserver').serv(readFileSync(path),f);
         res.push(serv);

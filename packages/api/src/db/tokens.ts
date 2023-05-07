@@ -37,8 +37,9 @@ export default class TokenDatabase extends Database<Tokens> {
     this.write();
   }
 
-  static getInstance(tokens: { accessToken: string, refreshToken: string }): TokenDatabase {
+  static getInstance(tokens?: { accessToken: string, refreshToken: string }): TokenDatabase {
     if (!this.#instance) {
+      if(!tokens) throw Error('getInstance requires constructor tokens');
       this.#instance = new this(tokens);
     }
     return this.#instance;
@@ -50,6 +51,13 @@ export default class TokenDatabase extends Database<Tokens> {
   areParent(parent:RefreshToken, child:AuthorizedToken) {
     return parent.token === child.parent;
   }
+
+  isValidAccessToken(token: string) {
+    const tok = this.findAccessToken(token);
+    if(!tok) return false;
+    return tok.expire > Date.now();
+  }
+
   async generateAccess(refresh: RefreshToken, master = false) {
     const token = crypto.randomBytes(32).toString('hex');
     const in5minutes = Date.now() + (5 * 60 * 1000);
@@ -64,6 +72,7 @@ export default class TokenDatabase extends Database<Tokens> {
     await this.addRefreshToken(refresh);
     return refresh;
   }
+
   findAccessToken(token: string) {
     return this.data.authorizedTokens.find(t => t.token === token);
   }
