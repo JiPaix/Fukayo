@@ -12,6 +12,7 @@ import { join, resolve } from 'path';
 import { env } from 'process';
 import TokenDatabase from '@api/db/tokens';
 import MangasDatabase from '@api/db/mangas';
+import rateLimit from 'express-rate-limit';
 
 export default function useFork(settings: ForkEnv = env):Promise<{ client: client, fork:Fork }> {
 
@@ -40,6 +41,49 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
     origin: '*',
   }));
 
+  function isLocal(ip:string) {
+    // loopback
+    if(ip === '127.0.0.1') return true;
+    const blocks = ip.split('.').map(b => parseInt(b));
+
+    // check if anything's wrong
+    if(blocks.length < 4 || blocks.some(b => isNaN(b))) return false;
+
+    // 24-bit block
+    // 10.0.0.0 – 10.255.255.255
+    if(blocks[0] === 10) {
+      if([blocks[1], blocks[2], blocks[3]].some(b => b > 255)) return false;
+      return true;
+    }
+
+    // 20-bit block
+    // 172.16.0.0 – 172.31.255.255
+    if(blocks[0] === 172) {
+      if(blocks[1] < 16 && blocks[1] > 31) return false;
+      if([blocks[2], blocks[3]].some(b => b > 255)) return false;
+      return true;
+    }
+
+    // 16-bit block
+    // 192.168.0.0 – 192.168.255.255
+    if(blocks[0] === 192 && blocks[1] === 168) {
+      if([blocks[2], blocks[3]].some(b => b > 255)) return false;
+      return true;
+    }
+
+    return false;
+  }
+
+  // rate limit
+  const limiter = rateLimit({
+    windowMs: 1000,
+    max: async (request) => {
+      const ip = request.ip.replace('::ffff:', '');
+      if(isLocal(ip)) return 999999999;
+      return 50;
+    },
+  });
+
   // robots.txt
   app.get('/robots.txt', function (req, res) {
     res.type('text/plain');
@@ -48,7 +92,7 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
 
 
   // serve the files
-  app.get('/files/:fileName', (req, res, next) => {
+  app.use('/files/:fileName', limiter, (req, res, next) => {
     const token = req.query.token;
     if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
       return res.status(401).send('Authentication required.'); // custom message
@@ -74,7 +118,7 @@ export default function useFork(settings: ForkEnv = env):Promise<{ client: clien
   });
 
     // serve the files
-  app.get('/cache/:folderName/:fileName', (req, res, next) => {
+  app.use('/cache/:folderName/:fileName', limiter, (req, res, next) => {
     const token = req.query.token;
     if(typeof token !== 'string' || !TokenDatabase.getInstance().isValidAccessToken(token)) {
       return res.status(401).send('Authentication required.'); // custom message
