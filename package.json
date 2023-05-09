@@ -83,7 +83,7 @@
     "rimraf": "^5.0.0",
     "simple-git": "^3.18.0",
     "simple-git-hooks": "2.8.1",
-    "terser": "^5.17.1",
+    "terser": "^5.17.3",
     "typed-emitter": "^2.1.0",
     "typescript": "5.0.4",
     "vite": "^4.3.5",
