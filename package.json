@@ -75,7 +75,7 @@
     "electron-devtools-installer": "3.2.0",
     "electron-updater": "5.3.0",
     "eslint": "^8.40.0",
-    "eslint-plugin-vue": "^9.11.0",
+    "eslint-plugin-vue": "^9.16.1",
     "happy-dom": "^9.10.9",
     "nano-staged": "0.8.0",
     "nock": "^13.3.1",
