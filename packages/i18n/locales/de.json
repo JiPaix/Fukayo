@@ -8,9 +8,9 @@
             "checking_internet": "Überprüfe Status der Internetverbindung",
             "checking_internet_takes_a_while": "Dies könnte einen Moment dauern …"
         },
-        "autostart": "Automatically start the server",
-        "exit_fullscreen": "Use the <b>ESCAPE</b> key to exit full-screen",
-        "fullscreen": "Fullscreen"
+        "autostart": "Server automatisch starten",
+        "exit_fullscreen": "Um den Vollbildmodus zu verlassen, drücken sie die <b>ESCAPE</b> Taste",
+        "fullscreen": "Vollbild"
     },
     "electron": {
         "systemtray": {
@@ -190,51 +190,51 @@
         "sd": "Sindhi",
         "se": "Nördlicher Sami",
         "sg": "Sango",
-        "si": "Sinhala, Sinhalese",
-        "sk": "Slovak",
-        "sl": "Slovenian",
-        "sm": "Samoan",
+        "si": "Singhalesisch",
+        "sk": "Slowakisch",
+        "sl": "Slowenisch",
+        "sm": "Samoanisch",
         "sn": "Shona",
         "so": "Somali",
-        "sq": "Albanian",
-        "sr": "Serbian",
-        "ss": "Swati",
-        "st": "Southern Sotho",
-        "su": "Sundanese",
-        "sv": "Swedish",
+        "sq": "Albanisch",
+        "sr": "Serbisch",
+        "ss": "Siswati",
+        "st": "Sesotho",
+        "su": "Sundanesisch",
+        "sv": "Schwedisch",
         "sw": "Swahili",
         "ta": "Tamil",
         "te": "Telugu",
-        "tg": "Tajik",
-        "th": "Thai",
+        "tg": "Tadschikisch",
+        "th": "Thailändisch",
         "ti": "Tigrinya",
-        "tk": "Turkmen",
+        "tk": "Turkmenisch",
         "tl": "Tagalog",
-        "tn": "Tswana",
-        "to": "Tonga (Tonga Islands)",
-        "tr": "Turkish",
-        "ts": "Tsonga",
-        "tt": "Tatar",
+        "tn": "Setswana",
+        "to": "Tongaisch",
+        "tr": "Türkisch",
+        "ts": "Xitsonga",
+        "tt": "Tatarisch",
         "tw": "Twi",
-        "ty": "Tahitian",
-        "ug": "Uighur, Uyghur",
-        "uk": "Ukrainian",
+        "ty": "Tahitianisch",
+        "ug": "Uigurisch",
+        "uk": "Ukrainisch",
         "ur": "Urdu",
-        "uz": "Uzbek",
-        "ve": "Venda",
-        "vi": "Vietnamese",
+        "uz": "Usbekisch",
+        "ve": "Tshivenda",
+        "vi": "Vietnamesisch",
         "vo": "Volapük",
-        "wa": "Walloon",
+        "wa": "Wallonisch",
         "wo": "Wolof",
         "xh": "Xhosa",
         "xx": "Unbekannt",
-        "yi": "Yiddish",
+        "yi": "Jiddisch",
         "yo": "Yoruba",
-        "za": "Zhuang, Chuang",
+        "za": "Zhuang",
         "zh": "Chinesisch (vereinfacht)",
         "zh-hk": "Chinesisch (traditionell)",
         "zh-ro": "Chinesisch (romanisiert)",
-        "zu": "Zulu"
+        "zu": "isiZulu"
     },
     "library": {
         "change_settings_anytime": "Du kannst diese Einstellungen jederzeit ändern hier:",
@@ -243,7 +243,7 @@
         "letsgo": "Los geht's!",
         "ready": "Du bist bereit tonnenweise Mangas zu genießen!",
         "setup_preferences": "Richte Fukayo nach deinen Wünschen ein:",
-        "show_unread": "Zeige Mangas, von denen du alle Kapitel gelesen hast",
+        "show_unread": "Zeige Mangas, in denen du alle Kapitel gelesen hast",
         "sort_by_name": "Sortieren nach Namen",
         "sort_by_read": "Sortieren nach Anzahl der ungelesenen Kapitel",
         "tab": "Bibliothek"
@@ -321,190 +321,190 @@
         "search_candidates": "Beginn der Suche nach Migrationskandidaten",
         "select_candidate": "Migrieren",
         "solutions": "Verfügbare Migrationsoptionen",
-        "warning": "Some entries are marked as broken and requires your attention.",
-        "source_do_not_have_lang": "This source doesn't have any of the languages used in this entry",
-        "source_status": "Source's status",
-        "select_source": "Select one or multiple sources"
+        "warning": "Manche Einträge sind als beschädigt markiert und benötigen deine Aufmerksamkeit.",
+        "source_do_not_have_lang": "Diese Quelle hat keine der in diesem Eintrag verwendeten Sprachen",
+        "source_status": "Status der Quelle",
+        "select_source": "Wähle eine oder mehrere Quellen aus"
     },
     "migration": {
-        "results": "Migration candidates"
+        "results": "Migrationskandidaten"
     },
     "reader": {
         "book_mode": "Als Buch anzeigen",
         "book_mode_off": "Buch-modus ausschalten",
-        "book_mode_offset": "Display as a book (offset the first page)",
+        "book_mode_offset": "Als Buch anzeigen (um eine Seite versetzt)",
         "copytoclipboard": "Bild in die Zwischenablage kopieren",
         "displaymode": {
             "auto": "Automatisch",
             "compatibility": "nicht kompatibel mit webtoon modus",
             "stretch-height": "Zu Höhe des Bildschirms anpassen",
-            "stretch-width": "Stretch to screen's width"
+            "stretch-width": "Auf Bildschirmbreite strecken"
         },
         "error": {
-            "chapter": "Couldn't load chapter",
-            "chapterLang": "Selected language has no chapter",
-            "reload": "Reload",
-            "reload_all_at_once": "reload all erroneous images at once"
+            "chapter": "Kapitel konnte nicht geladen werden",
+            "chapterLang": "Die ausgewählte Sprache hat kein Kapitel",
+            "reload": "Neu laden",
+            "reload_all_at_once": "Alle großen Bilder auf einmal neu laden"
         },
-        "first": "Go back to the first chapter:",
-        "horizontal": "Display the whole chapter as a long horizontal strip",
-        "last": "Go to the latest chapter:",
-        "loading": "Loading",
-        "longstrip": "Display the whole chapter as a long strip",
-        "ltr": "Read from left to right",
+        "first": "Gehe zurück zum ersten Kapitel:",
+        "horizontal": "Zeige das ganze Kapitel als langes horizontales Band an",
+        "last": "Gehe zum neuesten Kapitel:",
+        "loading": "Lädt",
+        "longstrip": "Zeige das ganze Kapitel als langen Streifen an",
+        "ltr": "Von links nach rechts lesen",
         "manga": {
-            "add": "Add to library",
-            "remove": "Remove from the library"
+            "add": "Zur Bibliothek hinzufügen",
+            "remove": "Aus der Bibliothek entfernen"
         },
-        "next": "Go to the next chapter:",
-        "no_next_to_read": "This is the latest chapter",
-        "no_prev_to_read": "This is the first chapter",
+        "next": "Gehe zum nächsten Kapitel:",
+        "no_next_to_read": "Das ist das neueste Kapitel",
+        "no_prev_to_read": "Das ist das erste Kapitel",
         "page": {
-            "count": "Page {current}/{total}"
+            "count": "Seite {current}/{total}"
         },
-        "previous": "Go back to the previous chapter:",
-        "reloadImage": "Reload this image",
-        "reload_chapter": "Reload this chapter",
-        "rtl": "Read from right to left",
-        "showpagenumber": "Show page number",
-        "singlePage": "Display one page at a time",
-        "vertical": "Display the whole chapter as a long vertical strip",
-        "webtoon": "Webtoon mode",
-        "exit_focusMode": "Use the <b>ESCAPE</b> key to exit focus mode",
-        "focusMode": "Immersive mode"
+        "previous": "Gehe zurück zum vorherigen Kapitel:",
+        "reloadImage": "Dieses Bild neu laden",
+        "reload_chapter": "Dieses Kapitel neu laden",
+        "rtl": "Von rechts nach links lesen",
+        "showpagenumber": "Seitenzahl anzeigen",
+        "singlePage": "Eine Seite nach der anderen anzeigen",
+        "vertical": "Zeige das ganze Kapitel als langes vertikales Band an",
+        "webtoon": "Webtoon-Modus",
+        "exit_focusMode": "Um den Immersiven modus zu verlassen, drücken sie die <b>ESCAPE</b> Taste",
+        "focusMode": "Immersiver Modus"
     },
     "search": {
-        "all": "All",
-        "no_result_for": "No result for:",
-        "not_found": "Couldn't find source: {source}",
-        "placeholder": "Search mangas",
-        "tab": "Search",
+        "all": "Alle",
+        "no_result_for": "Kein Ergebnis für:",
+        "not_found": "Die Quelle konnte nicht gefunden werden: {source}",
+        "placeholder": "Mangas suchen",
+        "tab": "Suchen",
         "no_input": "Bitte tippe etwas ein",
-        "min_value": "Please type in at least {number} characters"
+        "min_value": "Bitte gibt mindestens {number} Zeichen ein"
     },
     "settings": {
-        "app_ask_password": "Please type in your password",
-        "app_ask_password_retry": "Wrong password",
+        "app_ask_password": "Bitte geben sie ihr Passwort an",
+        "app_ask_password_retry": "Benutzername oder Passwort inkorrekt",
         "app_client": "Client",
-        "app_confirm_quit": "Are you sure you want to close the server?",
-        "app_env": "Environment",
-        "app_shutdown": "Shutdown",
+        "app_confirm_quit": "Sind sie sicher, dass sie den Server Schließen wollen?",
+        "app_env": "Umgebung",
+        "app_shutdown": "Herunterfahren",
         "app_version": "Version",
-        "bookmode": "Display as a book",
+        "bookmode": "Als Buch anzeigen",
         "cache": "Cache",
-        "confirm": "CONFIRM",
-        "credentials": "Credentials",
-        "darkmode": "Enable dark mode",
-        "displaymodes": "Display modes",
-        "file": "File | Files",
+        "confirm": "BESTÄTIGEN",
+        "credentials": "Zugangsdaten",
+        "darkmode": "Dunklen Modus aktivieren",
+        "displaymodes": "Anzeigemodus",
+        "file": "Datei | Dateien",
         "files": {
-            "tab": "Storage"
+            "tab": "Speicher"
         },
         "general": {
-            "tab": "General"
+            "tab": "Allgemein"
         },
         "global": {
-            "title": "global settings"
+            "title": "Globale Einstellungen"
         },
         "globalSettings": {
-            "save": "Click here to save changes"
+            "save": "Hier klicken um Änderungen zu speichern"
         },
         "language": {
-            "description": "Choose the languages you want to read in",
-            "selectall": "Select All",
-            "unselectall": "Unselect All"
+            "description": "Bitte wählen sie ihre Lesesprache aus",
+            "selectall": "Alle auswählen",
+            "unselectall": "Nichts auswählen"
         },
-        "logs": "Logs",
-        "longstripDirection": "Choose the image orientation",
+        "logs": "Protokolle",
+        "longstripDirection": "Wählen sie die Bildausrichtung",
         "reader": {
-            "info": "The following parameters are the default settings,\nThey are automatically assigned to new titles\n\nIf you change any of these settings while reading a title then only that title will be affected by the changes.",
-            "overlay": "Display navigation overlay when hovering images",
-            "preload": "Preload next chapter while reading",
+            "info": "Die folgenden Parameter sind Standardwerte für die Einstellungen,\nSie werden automatisch zu neuen Titeln zugewiesen\n\nWen diese Einstellungen während des Lesens verändert werden, ist nur der Titel betroffen.",
+            "overlay": "Navigationsoberfläche benutzen",
+            "preload": "Nächstes Kapitel während des Lesens vorladen",
             "title": "Reader"
         },
         "scheduler": {
             "cache": {
-                "GB": "Gigabyte | Gigabytes",
+                "GB": "Gigabyte | Gigabyte",
                 "error": {
-                    "lessthan10min": "Cache age can't be lower than 10 minutes",
-                    "negative": "Cache age can't be negative",
-                    "size": "The cache size limit cannot be less than 1Gb"
+                    "lessthan10min": "Alter des Cache kann nicht unter 10 Minuten sein",
+                    "negative": "Alter des Cache darf nicht negativ sein",
+                    "size": "Die Größenbegrenzung des Cache darf nicht kleiner als 1 Gb sein"
                 }
             },
-            "cache_age": "Define the cache duration",
-            "cache_age_enable": "Limit cache duration",
-            "cache_enable": "Limit the size of cache",
-            "cache_size": "Define the cache limit",
+            "cache_age": "Definition der Cache-Laufzeit",
+            "cache_age_enable": "Limit der Cache-Laufzeit",
+            "cache_enable": "Limit der Cache-Größe",
+            "cache_size": "Definition des Cache-Limits",
             "update": {
                 "error": {
-                    "lessthan10min": "Time between updates cannot be lower than 10 minutes",
-                    "negative": "Time between updates cannot be negative"
+                    "lessthan10min": "Die Zeit zwischen Aktualisierungen darf nicht unter 10 Minuten liegen",
+                    "negative": "Die Zeit zwischen Aktualisierungen darf nicht Negativ sein"
                 }
             }
         },
         "server": "Server",
         "source": {
-            "adult": "Adult content",
-            "dataSaver": "Save bandwidth",
-            "description": "Configure the different sources. Activate or deactivate them, connect to synchronize the playback progress or enabled advanced options",
-            "enabled": "Enabled",
-            "excludedGroups": "Scanlators groups to ignore",
-            "excludedGroupsHints": "Type an ID and press enter to add it",
-            "excludedUploaders": "Uploaders to ignore",
+            "adult": "Inhalt für Erwachsene",
+            "dataSaver": "Bandbreite speichern",
+            "description": "Konfigurierung der verschiedenen Quellen. Aktivieren, um Wiedergabe zu synchronisieren oder erweiterte Optionen freizuschalten",
+            "enabled": "Aktiviert",
+            "excludedGroups": "Ignorierte Scanlator-Gruppen",
+            "excludedGroupsHints": "Zum hinzufügen, ID eingeben und enter drücken",
+            "excludedUploaders": "Ignorierte Uploader",
             "host": "Hostname",
-            "markAsRead": "Mark chapters as read on source website",
-            "protocol": "Protocol",
-            "field_required": "This field is required"
+            "markAsRead": "Kapitel auf der Quellseite als gelesen markieren",
+            "protocol": "Protokol",
+            "field_required": "Dies ist ein Pflichtfeld"
         },
-        "source_is_offline": "This source appears to be offline",
-        "source_requires_setup": "This source requires a setup to be active",
-        "tab": "Configuration",
+        "source_is_offline": "Diese Quelle scheint offline zu sein",
+        "source_requires_setup": "Diese Quelle muss zur Aktivierung eingerichtet werden",
+        "tab": "Konfiguration",
         "update": {
-            "day": "Day | Days",
-            "hour": "Hour | Hours",
-            "minute": "Minute | Minutes",
-            "wait": "Update chapters lists every"
+            "day": "Tag | Tage",
+            "hour": "Stunde | Stunden",
+            "minute": "Minute | Minuten",
+            "wait": "Aktualisierung der Kapitelseite in jeder"
         },
-        "source_is_dead": "This source has been reported as inactive"
+        "source_is_dead": "Diese Quelle wurde als inaktiv gemeldet"
     },
     "setup": {
-        "address": "Address",
+        "address": "Addresse",
         "address_errors": {
-            "length": "Required",
-            "protocol": "URL must start with <b>https://</b>",
-            "space": "URL cannot contain spaces"
+            "length": "Notwendig",
+            "protocol": "URL muss mit <b>https://</b> starten",
+            "space": "URL darf keine Leerzeichen enthalten"
         },
-        "address_hint": "Example: <b>https://mywebsite.com</b>",
-        "badpassword": "Wrong Password",
-        "error": "Error",
-        "login": "Login",
-        "message": "Before we start a little setup is needed:",
-        "password": "Password",
+        "address_hint": "Beispiel: <b>https://mywebsite.com</b>",
+        "badpassword": "Benutzername oder Passwort inkorrekt",
+        "error": "Fehler",
+        "login": "Anmeldung",
+        "message": "Vor dem start ist eine kleine Einrichtung notwendig:",
+        "password": "Passwort",
         "password_hints": {
-            "average": "Strength: <b class=\"text-warning\">AVERAGE</b>",
-            "default": "Password must be at least 6 characters long",
-            "strong": "Strength: <b class=\"text-positive\">STRONG</b>",
-            "weak": "Strength: <b class=\"text-negative\">WEAK</b>"
+            "average": "Stärke: <b class=\"text-warning\">DURCHSCHNITTLICH</b>",
+            "default": "Passwort muss mindestens 6 Zeichen lang sein",
+            "strong": "Stärke: <b class=\"text-positive\">STARK</b>",
+            "weak": "Stärke: <b class=\"text-negative\">SCHWACH</b>"
         },
         "port": "Port",
-        "port_error": "Port must be between 1024 and 65535",
-        "retry": "Retry",
+        "port_error": "Port muss zwischen 1024 und 65535 liegen",
+        "retry": "Erneut versuchen",
         "security": {
             "app": "Auto",
-            "app_description": "I want the app to handle the security but understand that when accessing my panel from outside the application my browser will give a false security warning upon first access",
-            "cancel": "Cancel",
-            "certificate": "Certificate",
-            "choose": "Choose a security policy",
-            "none": "None",
-            "none_description": "I don't need https and/or intend to use a service such as cloudflare",
+            "app_description": "Ich möchte, das die App die Sicherheit übernimmt aber verstehe, dass wenn ich von außen auf diese zugreife, mein Browser eine falsche Sicherheitswarnung anzeigen wird, wenn die erste Verbindung stattfindet",
+            "cancel": "Abbrechen",
+            "certificate": "Zertifikat",
+            "choose": "Wählen sie eine Sicherheitsrichtlinie",
+            "none": "Keine",
+            "none_description": "Ich brauche kein https und/oder will keinen Service wie Cloudflare nutzen",
             "ok": "OK",
-            "pastcert": "Past your certificate",
+            "pastcert": "Fügen sie ihr Zertifikat ein",
             "pastprivkey": "Past your key",
-            "privkey": "Private key",
-            "provided": "Provided",
-            "provided_description": "I want to use my own key and certificate",
-            "selfsigned": "Self-signed certificate"
+            "privkey": "Privater Schlüssel",
+            "provided": "Zur verfügung gestellt",
+            "provided_description": "Ich möchte meinen eigenen Schlüssel und Zertifikat benutzen",
+            "selfsigned": "Selbst-Signiertes Zertifikat"
         },
-        "unexpectederror": "Unexpected error"
+        "unexpectederror": "Ein unerwarteter Fehler ist aufgetreten"
     }
 }
