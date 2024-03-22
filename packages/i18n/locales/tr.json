@@ -2,7 +2,7 @@
     "library": {
         "tab": "Kütüphane",
         "change_settings_anytime": "Buradan istediğiniz zaman ayarları değiştirebilirsiniz:",
-        "filter_by_name": "Ara",
+        "filter_by_name": "Kitaplıkta ara",
         "hide_unread": "Tüm bölümlerini okuduğun mangaları gizle",
         "letsgo": "Haydi bir şeyler okuyalım!",
         "ready": "Tonla manganın tadını çıkarmaya hazırsın!",
@@ -175,7 +175,7 @@
             "description": "Farklı kaynakları yapılandırın. Bunları etkinleştirin veya devre dışı bırakın, oynatma ilerlemesini senkronize etmek için bağlanın veya gelişmiş seçenekleri etkinleştirin",
             "enabled": "Etkinleştirildi",
             "excludedGroups": "Görmezden gelinecek çeviri grupları",
-            "excludedGroupsHints": "Eklemek için bir kimlik yazın ve \"enter\"a basın.",
+            "excludedGroupsHints": "Eklemek için bir kimlik yazın ve \"enter\"a basın",
             "excludedUploaders": "Görmezden gelinecek yükleyiciler",
             "host": "Sunucu Adresi",
             "markAsRead": "Bölümleri kaynak sitede de okundu olarak işaretle",
@@ -198,7 +198,7 @@
         "security": {
             "choose": "Güvenlik politikası seçin",
             "app": "Otomatik",
-            "app_description": "Uygulamanın güvenliği halletmesini istiyorum, ancak uygulamanın dışından panelime erişirken tarayıcımın ilk erişimde yanlış bir güvenlik uyarısı vereceğini biliyorum.",
+            "app_description": "Uygulamanın güvenliği halletmesini istiyorum, ancak uygulamanın dışından panelime erişirken tarayıcımın ilk erişimde yanlış bir güvenlik uyarısı vereceğini biliyorum",
             "cancel": "İptal et",
             "certificate": "Sertifika",
             "none": "Yok",
@@ -275,7 +275,7 @@
         "title": "Serileri içeri aktarma",
         "unauthorized": "Yetkisiz: yanlış kimlik bilgileri (?)",
         "search_elsewhere": "Bu mangayı başka kaynaklarda ara",
-        "cover": "KAPAK RESMİ"
+        "cover": "Kapak Resmi"
     },
     "languages": {
         "aa": "Afarca",
@@ -490,7 +490,7 @@
         "search_candidates": "Geçiş adaylarını aramaya başlayın",
         "select_candidate": "Geçiş, göç",
         "solutions": "Mevcut taşıma seçenekleri",
-        "warning": "Bazı girdiler bozuk olarak işaretlendi ve onlarla ilgilenmeniz gerekmektedir",
+        "warning": "Bazı girdiler bozuk olarak işaretlendi ve onlarla ilgilenmeniz gerekmektedir.",
         "source_do_not_have_lang": "Bu kaynak, bu yazıda(girişte) kullanılan dillerden hiçbirine sahip değil",
         "source_status": "Kaynağın durumu",
         "select_source": "Bir veya daha fazla kaynak seçiniz"
